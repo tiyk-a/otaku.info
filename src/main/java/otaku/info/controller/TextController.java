@@ -11,6 +11,7 @@ public class TextController {
 
     public String twitter(TwiDto twiDto) {
         String result = "新商品の情報です！%0A%0A" + twiDto.title + "%0A" + twiDto.url;
+//        System.out.println(twiDto.title);
         return result;
     }
 }

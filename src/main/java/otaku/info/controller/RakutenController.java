@@ -3,6 +3,7 @@ package otaku.info.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
 import otaku.info.searvice.db.ItemService;
@@ -32,7 +33,6 @@ public class RakutenController {
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : searchList) {
-                System.out.println(key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
@@ -64,14 +64,13 @@ public class RakutenController {
                 //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
                 JsonNode node = mapper.readTree(script).get("Items");
                 for (int i=0; i<node.size();i++) {
-                    System.out.println(node.get(i).get("Item").get("itemName").toString());
                     Item item = new Item();
-                    item.setItem_code(node.get(i).get("Item").get("itemCode").toString());
+                    item.setItem_code(node.get(i).get("Item").get("itemCode").toString().replaceAll("^\"|\"$", ""));
                     item.setSite_id(1);
                     item.setTeam_id(1);
                     item.setPrice(Integer.parseInt(node.get(i).get("Item").get("itemPrice").toString()));
-                    item.setTitle(node.get(i).get("Item").get("itemName").toString());
-                    item.setUrl(node.get(i).get("Item").get("affiliateUrl").toString());
+                    item.setTitle(node.get(i).get("Item").get("itemName").toString().replaceAll("^\"|\"$", ""));
+                    item.setUrl(node.get(i).get("Item").get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
                     resultList.add(item);
                 }
                 }
@@ -90,11 +89,14 @@ public class RakutenController {
         return true;
     }
 
-    public void saveItems(List<Item> itemList) {
+    public List<Item> saveItems(List<Item> itemList) {
+        List<Item> savedItemList = new ArrayList<>();
         for (Item item : itemList) {
             if (!itemService.hasData(item.getItem_code())){
-                itemService.saveItem(item);
+                Item saveItem = itemService.saveItem(item);
+                savedItemList.add(saveItem);
             }
         }
+        return savedItemList;
     }
 }

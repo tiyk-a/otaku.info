@@ -7,6 +7,7 @@ import otaku.info.entity.Item;
 import otaku.info.repository.ItemRepository;
 
 import javax.transaction.Transactional;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -15,15 +16,19 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
-    public boolean saveItem(Item item) {
+    public Item saveItem(Item item) {
         if (!hasData(item.getItem_code())) {
-            itemRepository.save(item);
+            return itemRepository.save(item);
         }
-        return true;
+        return new Item();
     }
 
     public boolean hasData(String itemCode) {
         Long result = itemRepository.hasItemCode(itemCode);
         return result!=0;
+    }
+
+    public Optional<Item> findByItemId(Long itemId) {
+        return itemRepository.findById(itemId);
     }
 }

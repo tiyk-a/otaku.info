@@ -6,42 +6,29 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Date;
 
-@Entity(name = "Item")
+@Entity(name = "Team")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Item")
-public class Item {
+@Table(name = "Team")
+public class Team {
 
     @Id
     @GeneratedValue
-    private Long item_id;
-
-    @Column(nullable = false)
-    private int site_id;
-
-    @Column(nullable = false)
-    private String item_code;
+    private Long team_id;
 
     @Column(nullable = true)
-    private String url;
+    private String name;
 
     @Column(nullable = true)
-    private int price;
-
-    @Column(nullable = false)
-    private int team_id;
+    private String kana;
 
     @Column(nullable = true)
-    private int artist_id;
+    private String mnemonic;
 
     @Column(nullable = true)
-    private String title;
-
-    @Column(nullable = true)
-    private Date publication_date;
+    private String anniversary;
 
     @Column(nullable = true)
     private Timestamp created_at;

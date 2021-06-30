@@ -23,7 +23,6 @@ public class Controller {
         List<List<String>> searchList = csvService.getCsv(CSV_PATH);
         List<String> resultList = new ArrayList<>();
         searchList.forEach(arr -> resultList.add(String.join(" ",artist, arr.get(0).replaceAll("\"", ""))));
-        System.out.println(resultList.toString());
         return resultList;
     }
 }

@@ -1,0 +1,7 @@
+-- 露出ジャンルテーブル
+CREATE TABLE IF NOT EXISTS master.exp_genre(
+    exp_genre_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    exp_genre varchar(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

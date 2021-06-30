@@ -1,0 +1,12 @@
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('雑誌');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('CD');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('DVD');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('TV');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('カレンダー');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('写真集');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('ツアー');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('ラジオ');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('YouTube');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('舞台');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('Twitter');
+INSERT INTO EXP_GENRE (exp_genre) VALUES ('Instagram');

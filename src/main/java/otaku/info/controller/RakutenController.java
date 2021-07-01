@@ -73,6 +73,11 @@ public class RakutenController {
                     item.setUrl(node.get(i).get("Item").get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
                     resultList.add(item);
                 }
+                try{
+                    Thread.sleep(10000);
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
                 }
         } catch (Exception e) {
             e.printStackTrace();

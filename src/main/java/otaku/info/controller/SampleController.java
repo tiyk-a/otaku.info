@@ -79,7 +79,7 @@ public class SampleController {
 //    public String post(Map<String, String> headers, String json) {
     public String post(String text) throws JSONException {
 
-        String url = "http://localhost:5000/twi";
+        String url = "https://pytwi2.herokuapp.com/twi";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

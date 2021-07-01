@@ -37,7 +37,12 @@ public class TwitterTasklet implements Tasklet {
             sampleController.sample2(artist);
             System.out.println("***** END: " + artist + "*****");
             try{
-                Thread.sleep(1000);
+                Thread.sleep(10000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
+            try{
+                Thread.sleep(10000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }

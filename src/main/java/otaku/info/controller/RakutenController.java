@@ -40,7 +40,7 @@ public class RakutenController {
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCaption%2CitemCode%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
+                String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCaption%2CitemCode%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
                 System.out.println("③パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
@@ -72,7 +72,6 @@ public class RakutenController {
                     Item item = new Item();
                     item.setItem_code(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
                     item.setSite_id(1);
-                    item.setTeam_id(1);
                     item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
                     System.out.println("⑥：node.get(i).get(\"itemCode\").toString()" + node.get(i).get("itemCode").toString());
                     item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
@@ -94,20 +93,8 @@ public class RakutenController {
         return resultList;
     }
 
-    public boolean saveItem() {
-        Item item = new Item();
-        item.setSite_id(1);
-        item.setTeam_id(1);
-        item.setItem_code("Dummy2");
-        itemService.saveItem(item);
-        return true;
-    }
-
     public List<Item> saveItems(List<Item> itemList) {
         System.out.println("Itemの保存を始めます。リストは以下");
-        for (Item item: itemList){
-            System.out.println(item.getTitle());
-        }
         List<Item> savedItemList = new ArrayList<>();
         for (Item item : itemList) {
             if (!itemService.hasData(item.getItem_code())){

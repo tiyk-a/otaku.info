@@ -35,18 +35,23 @@ public class SampleController {
     @Autowired
     RestTemplate restTemplate;
 
-//    @GetMapping("/{artistId}")
-//    public String sample(@PathVariable String artistId) {
-//        List<String> list = controller.affiliSearchWord(artistId);
-//        List<Item> itemList = rakutenController.search(list);
-//        rakutenController.saveItems(itemList);
-//        return "Hello2";
-//    }
+    @GetMapping("/testdesu/{artistId}")
+    public String sample3(@PathVariable String artistId) throws JSONException {
+        Item item = new Item();
+        item.setSite_id(1);
+        item.setPrice(100);
+        item.setUrl("hjjkl");
+        item.setItem_code("dfghj");
+        item.setTeam_id(8);
+        Item item1 = itemService.saveItem(item);
+        return item1.toString();
+    }
 
     @GetMapping("/twi/{artistId}")
     public String sample1(@PathVariable String artistId) throws JSONException {
         List<String> list = controller.affiliSearchWord(artistId);
         List<Item> itemList = rakutenController.search(list);
+
         List<Item> savedItemList = rakutenController.saveItems(itemList);
         if (savedItemList.size() > 0) {
             for (Item item: savedItemList) {
@@ -55,18 +60,19 @@ public class SampleController {
                 System.out.println(item.getUrl());
                 twiDto.title = item.getTitle();
                 String result = textController.twitter(twiDto);
-                post(result);
+                post(item.getTeam_id(), result);
             }
         }
         return "Ok";
     }
 
-    public String sample2(String artistId) throws JSONException {
-        List<String> list = controller.affiliSearchWord(artistId);
+    public String sample2(Long teamId, String artist) throws JSONException {
+        List<String> list = controller.affiliSearchWord(artist);
         List<Item> itemList = rakutenController.search(list);
         System.out.println("➓楽天APIから受信したItemのリスト");
         for (Item item : itemList) {
-            System.out.println("11：Item.getTitle()：" + item.getTitle());
+            item.setTeam_id(Math.toIntExact(teamId));
+            System.out.println(item.getTeam_id());
         }
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(itemList);
@@ -77,18 +83,17 @@ public class SampleController {
                 System.out.println("１４；保存するItemはこちら");
                 System.out.println(item.getTitle());
                 TwiDto twiDto = new TwiDto();
-                twiDto.url =item.getUrl();
-                twiDto.title = item.getTitle();
-                System.out.println("TweetするItemをDTOにセットしました " + twiDto.getTitle());
+                twiDto.setUrl(item.getUrl());
+                twiDto.setTitle(item.getTitle());
                 String result = textController.twitter(twiDto);
-                post(result);
+                post(item.getTeam_id(), result);
             }
         }
         return "Ok";
     }
 
 //    public String post(Map<String, String> headers, String json) {
-    public String post(String text) throws JSONException {
+    public String post(Integer teamId, String text) throws JSONException {
         System.out.println("これをTweetします " + text);
 
         String url = "https://pytwi2.herokuapp.com/twi";
@@ -98,6 +103,7 @@ public class SampleController {
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         Map<String, Object> map = new HashMap<>();
         map.put("title", text);
+        map.put("teamId", teamId);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));

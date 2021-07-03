@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CsvService {
-    static final String CSV_PATH = "src/main/resources/static/csv/";
+    static final String CSV_PATH = "~/";
 
     /**
      * CSVの全データを取得します。

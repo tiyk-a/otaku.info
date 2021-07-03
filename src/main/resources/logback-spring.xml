@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- デフォルト設定読み込み -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!--　保存先の設定　value保存先 -->
+    <springProperty name="logFileName" source="setting.log.absolutePath"/>
+
+    <!--　アプリケーションログのファイル書き出し設定を定義 name任意 class絶対クラス名 -->
+    <appender name="API_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logFileName}/api-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--　ログの出力 -->
+    <logger name="hasechi.api.filter.AccessLogFilter" level="INFO" additivity="false">
+        <appender-ref ref="API_LOG"/>
+    </logger>
+</configuration>

@@ -1,11 +1,13 @@
 package otaku.info.controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,13 +64,22 @@ public class SampleController {
     public String sample2(String artistId) throws JSONException {
         List<String> list = controller.affiliSearchWord(artistId);
         List<Item> itemList = rakutenController.search(list);
+        System.out.println("➓楽天APIから受信したItemのリスト");
+        for (Item item : itemList) {
+            System.out.println("11：Item.getTitle()：" + item.getTitle());
+        }
+        System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(itemList);
+        System.out.println("１２：楽天APIから受信したItemのリストをDB保存しました");
         if (savedItemList.size() > 0) {
+            System.out.println("13：保存したItemをTweetします");
             for (Item item: savedItemList) {
+                System.out.println("１４；保存するItemはこちら");
+                System.out.println(item.getTitle());
                 TwiDto twiDto = new TwiDto();
                 twiDto.url =item.getUrl();
-                System.out.println(item.getUrl());
                 twiDto.title = item.getTitle();
+                System.out.println("TweetするItemをDTOにセットしました " + twiDto.getTitle());
                 String result = textController.twitter(twiDto);
                 post(result);
             }
@@ -78,6 +89,7 @@ public class SampleController {
 
 //    public String post(Map<String, String> headers, String json) {
     public String post(String text) throws JSONException {
+        System.out.println("これをTweetします " + text);
 
         String url = "https://pytwi2.herokuapp.com/twi";
 
@@ -88,14 +100,15 @@ public class SampleController {
         map.put("title", text);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request Successful");
-            System.out.println(response.getBody());
+            System.out.println(text);
         } else {
             System.out.println("Request Failed");
-            System.out.println(response.getStatusCode());
+            System.out.println(text);
         }
         return "done";
     }

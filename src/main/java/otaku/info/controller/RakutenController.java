@@ -30,15 +30,18 @@ public class RakutenController {
 
         //0. 外部APIに接続して
         HttpURLConnection conn = null;
+        System.out.println("①楽天APIに接続");
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : searchList) {
+                System.out.println("②検索ワード：" + key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&keyword=" + key + "&hits=5&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
+                String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCaption%2CitemCode%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
+                System.out.println("③パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -49,13 +52,15 @@ public class RakutenController {
                 StringBuffer sb = new StringBuffer();
                 String line = "";
                 //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
+                    System.out.println("④受信Json中身：" + line);
                     sb.append(line);
                 }
 //                stream.close();
                 String script = sb.toString();
+                System.out.println("⑤Json中身string：" + script);
 
                 //3. 解析して中身をとりだします。
                 //ObjectMapperオブジェクトの宣言
@@ -65,13 +70,17 @@ public class RakutenController {
                 JsonNode node = mapper.readTree(script).get("Items");
                 for (int i=0; i<node.size();i++) {
                     Item item = new Item();
-                    item.setItem_code(node.get(i).get("Item").get("itemCode").toString().replaceAll("^\"|\"$", ""));
+                    item.setItem_code(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
                     item.setSite_id(1);
                     item.setTeam_id(1);
-                    item.setPrice(Integer.parseInt(node.get(i).get("Item").get("itemPrice").toString()));
-                    item.setTitle(node.get(i).get("Item").get("itemName").toString().replaceAll("^\"|\"$", ""));
-                    item.setUrl(node.get(i).get("Item").get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                    item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
+                    System.out.println("⑥：node.get(i).get(\"itemCode\").toString()" + node.get(i).get("itemCode").toString());
+                    item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
+                    System.out.println("⑦node.get(i).get(\"itemCode\").toString().replaceAll(\"^\\\"|\\\"$\", \"\")：" + node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
+                    item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                    System.out.println(item.getUrl());
                     resultList.add(item);
+                    System.out.println("⑧Item.getTitle()：" + item.getTitle());
                 }
                 try{
                     Thread.sleep(10000);
@@ -95,10 +104,15 @@ public class RakutenController {
     }
 
     public List<Item> saveItems(List<Item> itemList) {
+        System.out.println("Itemの保存を始めます。リストは以下");
+        for (Item item: itemList){
+            System.out.println(item.getTitle());
+        }
         List<Item> savedItemList = new ArrayList<>();
         for (Item item : itemList) {
             if (!itemService.hasData(item.getItem_code())){
                 Item saveItem = itemService.saveItem(item);
+                System.out.println("保存しました：" + saveItem.getTitle());
                 savedItemList.add(saveItem);
             }
         }

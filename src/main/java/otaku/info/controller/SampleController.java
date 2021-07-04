@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -17,7 +16,6 @@ import otaku.info.entity.Item;
 import otaku.info.searvice.db.ItemService;
 
 @RestController("/")
-//@AllArgsConstructor
 public class SampleController {
 
     @Autowired
@@ -35,18 +33,13 @@ public class SampleController {
     @Autowired
     RestTemplate restTemplate;
 
-    @GetMapping("/testdesu/{artistId}")
-    public String sample3(@PathVariable String artistId) throws JSONException {
-        Item item = new Item();
-        item.setSite_id(1);
-        item.setPrice(100);
-        item.setUrl("hjjkl");
-        item.setItem_code("dfghj");
-        item.setTeam_id(8);
-        Item item1 = itemService.saveItem(item);
-        return item1.toString();
-    }
-
+    /**
+     * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
+     *
+     * @param artistId
+     * @return
+     * @throws JSONException
+     */
     @GetMapping("/twi/{artistId}")
     public String sample1(@PathVariable String artistId) throws JSONException {
         List<String> list = controller.affiliSearchWord(artistId);
@@ -66,13 +59,29 @@ public class SampleController {
         return "Ok";
     }
 
+    /**
+     * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド
+     *
+     * @param teamId
+     * @param artist
+     * @return
+     * @throws JSONException
+     */
     public String sample2(Long teamId, String artist) throws JSONException {
         List<String> list = controller.affiliSearchWord(artist);
         List<Item> itemList = rakutenController.search(list);
         System.out.println("➓楽天APIから受信したItemのリスト");
+
+        // 検索の誤引っ掛かりした商品をストアするリスト
+        List<Item> removeList = new ArrayList<>();
         for (Item item : itemList) {
             item.setTeam_id(Math.toIntExact(teamId));
-            System.out.println(item.getTeam_id());
+            // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
+            if (!containsTeamName(artist, item.getTitle())) {
+                removeList.add(item);
+            }
+            // 保存する商品リストから不要な商品リストを削除する
+            itemList.removeAll(removeList);
         }
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(itemList);
@@ -80,7 +89,6 @@ public class SampleController {
         if (savedItemList.size() > 0) {
             System.out.println("13：保存したItemをTweetします");
             for (Item item: savedItemList) {
-                System.out.println("１４；保存するItemはこちら");
                 System.out.println(item.getTitle());
                 TwiDto twiDto = new TwiDto();
                 twiDto.setUrl(item.getUrl());
@@ -92,6 +100,14 @@ public class SampleController {
         return "Ok";
     }
 
+    /**
+     * Pythonにツイートするようにデータを送る
+     *
+     * @param teamId
+     * @param text
+     * @return
+     * @throws JSONException
+     */
 //    public String post(Map<String, String> headers, String json) {
     public String post(Integer teamId, String text) throws JSONException {
         System.out.println("これをTweetします " + text);
@@ -110,13 +126,25 @@ public class SampleController {
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
         if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request Successful");
-            System.out.println(text);
+            System.out.println("Request Successful: " + text);
         } else {
-            System.out.println("Request Failed");
-            System.out.println(text);
+            System.out.println("Request Failed: " + text);
         }
         return "done";
+    }
+
+    /**
+     * アーティスト名がテキストの中に含まれているかどうかをチェックする
+     *
+     * @param teamName
+     * @param text
+     * @return
+     */
+    public boolean containsTeamName(String teamName, String text) {
+        if (text.contains(teamName)) {
+            return true;
+        }
+        return false;
     }
 }
 

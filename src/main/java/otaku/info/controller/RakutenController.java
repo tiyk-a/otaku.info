@@ -3,7 +3,6 @@ package otaku.info.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
 import otaku.info.searvice.db.ItemService;

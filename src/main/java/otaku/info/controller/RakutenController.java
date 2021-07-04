@@ -72,13 +72,10 @@ public class RakutenController {
                     item.setItem_code(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
                     item.setSite_id(1);
                     item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
-                    System.out.println("⑥：node.get(i).get(\"itemCode\").toString()" + node.get(i).get("itemCode").toString());
                     item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                    System.out.println("⑦node.get(i).get(\"itemCode\").toString().replaceAll(\"^\\\"|\\\"$\", \"\")：" + node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
+                    item.setItem_caption(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""));
                     item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
-                    System.out.println(item.getUrl());
                     resultList.add(item);
-                    System.out.println("⑧Item.getTitle()：" + item.getTitle());
                 }
                 try{
                     Thread.sleep(10000);

@@ -40,6 +40,9 @@ public class Item {
     @Column(nullable = true)
     private String title;
 
+    @Column(nullable = false)
+    private String item_caption;
+
     @Column(nullable = true)
     private Date publication_date;
 

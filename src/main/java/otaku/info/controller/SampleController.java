@@ -33,6 +33,17 @@ public class SampleController {
     @Autowired
     RestTemplate restTemplate;
 
+    @GetMapping("/tmpMethod")
+    public String tempMethod() {
+        List<String> itemCodeList = itemService.tmpMethod();
+        List<Item> itemList = rakutenController.search1(itemCodeList);
+        for (Item item : itemList) {
+            Long id = itemService.findItemId(item.getItem_code());
+            item.setItem_id(id);
+            itemService.updateItem(item);
+        }
+        return "Done";
+    }
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
      *
@@ -80,23 +91,24 @@ public class SampleController {
             if (!containsTeamName(artist, item.getTitle())) {
                 removeList.add(item);
             }
-            // 保存する商品リストから不要な商品リストを削除する
-            itemList.removeAll(removeList);
         }
+        // 保存する商品リストから不要な商品リストを削除する
+        itemList.removeAll(removeList);
+
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(itemList);
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存しました");
-        if (savedItemList.size() > 0) {
-            System.out.println("13：保存したItemをTweetします");
-            for (Item item: savedItemList) {
-                System.out.println(item.getTitle());
-                TwiDto twiDto = new TwiDto();
-                twiDto.setUrl(item.getUrl());
-                twiDto.setTitle(item.getTitle());
-                String result = textController.twitter(twiDto);
-                post(item.getTeam_id(), result);
-            }
-        }
+//        if (savedItemList.size() > 0) {
+//            System.out.println("13：保存したItemをTweetします");
+//            for (Item item: savedItemList) {
+//                System.out.println(item.getTitle());
+//                TwiDto twiDto = new TwiDto();
+//                twiDto.setUrl(item.getUrl());
+//                twiDto.setTitle(item.getTitle());
+//                String result = textController.twitter(twiDto);
+//                post(item.getTeam_id(), result);
+//            }
+//        }
         return "Ok";
     }
 

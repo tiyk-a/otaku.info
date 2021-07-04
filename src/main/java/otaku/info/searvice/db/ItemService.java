@@ -7,6 +7,7 @@ import otaku.info.entity.Item;
 import otaku.info.repository.ItemRepository;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,6 +17,17 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
+    public List<String> tmpMethod() {
+        return itemRepository.tmpMethod();
+    }
+
+    public Long findItemId(String code) {
+        return itemRepository.findItemIdByItemCode(code);
+    }
+
+    public void updateItem(Item item) {
+        itemRepository.save(item);
+    }
     public Item saveItem(Item item) {
         if (!hasData(item.getItem_code())) {
             return itemRepository.save(item);

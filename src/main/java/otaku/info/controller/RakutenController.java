@@ -34,7 +34,7 @@ public class RakutenController {
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&itemCode=" + key + "&elements=itemCaption&formatVersion=2&carrier=0&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
+                String parameter = "format=json&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&formatVersion=2&carrier=0&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
                 System.out.println("③パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
@@ -66,6 +66,7 @@ public class RakutenController {
                     Item item = new Item();
                     item.setItem_code(key);
                     item.setItem_caption(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""));
+                    item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
                     resultList.add(item);
                 }
                 try{

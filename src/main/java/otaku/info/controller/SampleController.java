@@ -5,6 +5,7 @@ import java.util.*;
 
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,13 +35,18 @@ public class SampleController {
     RestTemplate restTemplate;
 
     @GetMapping("/tmpMethod")
-    public String tempMethod() {
+    public String tempMethod() throws ChangeSetPersister.NotFoundException {
         List<String> itemCodeList = itemService.tmpMethod();
         List<Item> itemList = rakutenController.search1(itemCodeList);
         for (Item item : itemList) {
-            Long id = itemService.findItemId(item.getItem_code());
-            item.setItem_id(id);
-            itemService.updateItem(item);
+            Item originalItem = itemService.findByItemId(itemService.findItemId(item.getItem_code())).orElseThrow(ChangeSetPersister.NotFoundException::new);
+            if (item.getTitle() != null && originalItem.getTitle() == null) {
+                originalItem.setTitle(item.getTitle());
+            }
+            if (item.getItem_caption() != null && originalItem.getItem_caption() == null) {
+                originalItem.setItem_caption(item.getItem_caption());
+            }
+            itemService.updateItem(originalItem);
         }
         return "Done";
     }

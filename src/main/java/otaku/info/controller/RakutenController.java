@@ -35,7 +35,6 @@ public class RakutenController {
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
                 String parameter = "format=json&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&formatVersion=2&carrier=0&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                System.out.println("③パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -54,25 +53,31 @@ public class RakutenController {
                 }
 //                stream.close();
                 String script = sb.toString();
-                System.out.println("⑤Json中身string：" + script);
 
                 //3. 解析して中身をとりだします。
                 //ObjectMapperオブジェクトの宣言
                 ObjectMapper mapper = new ObjectMapper();
 
                 //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script).get("Items");
-                for (int i=0; i<node.size();i++) {
-                    Item item = new Item();
-                    item.setItem_code(key);
-                    item.setItem_caption(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""));
-                    item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                    resultList.add(item);
-                }
-                try{
-                    Thread.sleep(10000);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
+                JsonNode node = mapper.readTree(script);
+                if (node != null) {
+                    node = node.get("Items");
+                    for (int i=0; i<node.size();i++) {
+                        try {
+                            Item item = new Item();
+                            item.setItem_code(key);
+                            item.setItem_caption(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""));
+                            item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
+                            resultList.add(item);
+                        } catch (Exception e) {
+                            System.out.println(e);
+                        }
+                    }
+                    try{
+                        Thread.sleep(10000);
+                    }catch(InterruptedException e){
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -152,11 +157,11 @@ public class RakutenController {
         System.out.println("Itemの保存を始めます。リストは以下");
         List<Item> savedItemList = new ArrayList<>();
         for (Item item : itemList) {
-//            if (!itemService.hasData(item.getItem_code())){
+            if (!itemService.hasData(item.getItem_code())){
                 Item saveItem = itemService.saveItem(item);
                 System.out.println("保存しました：" + saveItem.getTitle());
                 savedItemList.add(saveItem);
-//            }
+            }
         }
         return savedItemList;
     }

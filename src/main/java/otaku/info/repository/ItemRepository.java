@@ -12,7 +12,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT COUNT(*) FROM Item WHERE ITEM_CODE = ?1")
     Long hasItemCode(String itemCode);
 
-    @Query("SELECT item_code FROM Item WHERE (TITLE IS NULL or ITEM_CAPTION IS NULL)")
+    @Query("SELECT item_code FROM Item WHERE title IS NULL or item_caption = ''")
     List<String> tmpMethod();
 
     @Query("SELECT item_id FROM Item WHERE ITEM_CODE = ?1")

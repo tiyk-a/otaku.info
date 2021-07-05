@@ -104,17 +104,17 @@ public class SampleController {
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(itemList);
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存しました");
-//        if (savedItemList.size() > 0) {
-//            System.out.println("13：保存したItemをTweetします");
-//            for (Item item: savedItemList) {
-//                System.out.println(item.getTitle());
-//                TwiDto twiDto = new TwiDto();
-//                twiDto.setUrl(item.getUrl());
-//                twiDto.setTitle(item.getTitle());
-//                String result = textController.twitter(twiDto);
-//                post(item.getTeam_id(), result);
-//            }
-//        }
+        if (savedItemList.size() > 0) {
+            System.out.println("13：保存したItemをTweetします");
+            for (Item item: savedItemList) {
+                System.out.println(item.getTitle());
+                TwiDto twiDto = new TwiDto();
+                twiDto.setUrl(item.getUrl());
+                twiDto.setTitle(item.getTitle());
+                String result = textController.twitter(twiDto);
+                post(item.getTeam_id(), result);
+            }
+        }
         return "Ok";
     }
 

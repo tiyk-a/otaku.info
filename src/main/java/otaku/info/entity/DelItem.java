@@ -5,22 +5,21 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
-@Entity(name = "Item")
+@Entity(name = "del_item")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Item")
-public class Item {
+@Table(name = "del_item")
+public class DelItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long item_id;
+    private Long del_item_id;
 
     @Column(nullable = false)
     private int site_id;
@@ -43,7 +42,7 @@ public class Item {
     @Column(nullable = true)
     private String title;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private String item_caption;
 
     @Column(nullable = true)
@@ -57,17 +56,17 @@ public class Item {
     @Column(nullable = true)
     private Timestamp updated_at;
 
-//    public DelItem convertToDelItem() {
-//        DelItem delItem = new DelItem();
-//        delItem.setArtist_id(artist_id);
-//        delItem.setItem_caption(item_caption);
-//        delItem.setItem_code(item_code);
-//        delItem.setPrice(price);
-//        delItem.setPublication_date(publication_date);
-//        delItem.setSite_id(site_id);
-//        delItem.setTeam_id(team_id);
-//        delItem.setTitle(title);
-//        delItem.setUrl(url);
-//        return delItem;
-//    }
+    public Item convertToItem() {
+        Item item = new Item();
+        item.setTitle(title);
+        item.setItem_caption(item_caption);
+        item.setTeam_id(team_id);
+        item.setItem_code(item_code);
+        item.setUrl(url);
+        item.setPrice(price);
+        item.setSite_id(site_id);
+        item.setArtist_id(artist_id);
+
+        return item;
+    }
 }

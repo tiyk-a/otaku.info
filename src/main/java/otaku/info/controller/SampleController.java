@@ -3,6 +3,8 @@ package otaku.info.controller;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.TwiDto;
+import otaku.info.entity.DelItem;
 import otaku.info.entity.Item;
+import otaku.info.searvice.db.DelItemService;
 import otaku.info.searvice.db.ItemService;
 
 @RestController("/")
@@ -30,6 +34,9 @@ public class SampleController {
 
     @Autowired
     private ItemService itemService;
+
+    @Autowired
+    private DelItemService delItemService;
 
     @Autowired
     RestTemplate restTemplate;
@@ -59,21 +66,48 @@ public class SampleController {
      */
     @GetMapping("/twi/{artistId}")
     public String sample1(@PathVariable String artistId) throws JSONException {
-        List<String> list = controller.affiliSearchWord(artistId);
-        List<Item> itemList = rakutenController.search(list);
+        Item tmp = new Item();
+        tmp.setSite_id(1);
+        tmp.setItem_code("adcfvgbhnaa");
+        tmp.setTeam_id(1);
+        itemService.saveItem(tmp);
+        DelItem tmpDel = new DelItem();
+        tmpDel.setSite_id(1);
+        tmpDel.setItem_code("asxcvbnmaa");
+        tmpDel.setTeam_id(1);
+        tmpDel.setItem_caption("aaaaaa");
+        delItemService.saveItem(tmpDel);
 
-        List<Item> savedItemList = rakutenController.saveItems(itemList);
-        if (savedItemList.size() > 0) {
-            for (Item item: savedItemList) {
-                TwiDto twiDto = new TwiDto();
-                twiDto.url =item.getUrl();
-                System.out.println(item.getUrl());
-                twiDto.title = item.getTitle();
-                String result = textController.twitter(twiDto);
-                post(item.getTeam_id(), result);
-            }
+        List<String> list = controller.affiliSearchWord(artistId);
+//        List<Item> itemList = rakutenController.search(list);
+        List<String> itemCodeList = rakutenController.search(list);
+
+        itemCodeList = itemService.findNewItemList(itemCodeList);
+        itemCodeList = delItemService.findNewItemList(itemCodeList);
+
+        List<Item> newItemList = new ArrayList<>();
+        if (itemCodeList.size() > 0) {
+            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
-        return "Ok";
+
+
+        System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
+        List<Item> savedItemList = rakutenController.saveItems(newItemList);
+        System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+//        System.out.println("13：保存したItemをTweetします");
+//        if (savedItemList.size() > 0) {
+//            for (Item item: savedItemList) {
+//                System.out.println(item.getTitle());
+//                TwiDto twiDto = new TwiDto();
+//                twiDto.setUrl(item.getUrl());
+//                twiDto.setTitle(item.getTitle());
+//                String result = textController.twitter(twiDto);
+//                post(item.getTeam_id(), result);
+//            }
+//        }
+        List<Item> itemList = itemService.findAll();
+        System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+        return itemList.toString();
     }
 
     /**
@@ -86,26 +120,41 @@ public class SampleController {
      */
     public String sample2(Long teamId, String artist) throws JSONException {
         List<String> list = controller.affiliSearchWord(artist);
-        List<Item> itemList = rakutenController.search(list);
-        System.out.println("➓楽天APIから受信したItemのリスト");
+//        List<Item> itemList = rakutenController.search(list);
+        List<String> itemCodeList = rakutenController.search(list);
+        System.out.println("➓楽天APIから受信したItemCodeのリスト");
+
+        itemCodeList = itemService.findNewItemList(itemCodeList);
+        itemCodeList = delItemService.findNewItemList(itemCodeList);
+
+        List<Item> newItemList = new ArrayList<>();
+        if (itemCodeList.size() > 0) {
+            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
+        }
 
         // 検索の誤引っ掛かりした商品をストアするリスト
         List<Item> removeList = new ArrayList<>();
-        for (Item item : itemList) {
-            item.setTeam_id(Math.toIntExact(teamId));
-            // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
-            if (!containsTeamName(artist, item.getTitle())) {
-                removeList.add(item);
+        if (newItemList.size() > 0) {
+            for (Item item : newItemList) {
+                item.setTeam_id(Math.toIntExact(teamId));
+                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
+                if (!containsTeamName(artist, item.getTitle())) {
+                    removeList.add(item);
+                }
             }
         }
+
         // 保存する商品リストから不要な商品リストを削除する
-        itemList.removeAll(removeList);
+        newItemList.removeAll(removeList);
+
+        // 不要商品リストに入った商品は不要商品テーブルに格納する
+        delItemService.saveAll(removeList);
 
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
-        List<Item> savedItemList = rakutenController.saveItems(itemList);
-        System.out.println("１２：楽天APIから受信したItemのリストをDB保存しました");
+        List<Item> savedItemList = rakutenController.saveItems(newItemList);
+        itemService.flush();
+        System.out.println("13：保存したItemをTweetします");
         if (savedItemList.size() > 0) {
-            System.out.println("13：保存したItemをTweetします");
             for (Item item: savedItemList) {
                 System.out.println(item.getTitle());
                 TwiDto twiDto = new TwiDto();
@@ -115,6 +164,7 @@ public class SampleController {
                 post(item.getTeam_id(), result);
             }
         }
+        List<Item> listItem = itemService.findAll();
         return "Ok";
     }
 

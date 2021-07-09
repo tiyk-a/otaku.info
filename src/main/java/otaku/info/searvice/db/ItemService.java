@@ -5,13 +5,15 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
 import otaku.info.repository.ItemRepository;
+import otaku.info.utils.StringUtils;
 
 import javax.transaction.Transactional;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
+@Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor
 public class ItemService {
 
@@ -26,13 +28,24 @@ public class ItemService {
     }
 
     public void updateItem(Item item) {
-        itemRepository.save(item);
+        itemRepository.saveAndFlush(item);
     }
     public Item saveItem(Item item) {
         if (!hasData(item.getItem_code())) {
-            return itemRepository.save(item);
+            return itemRepository.saveAndFlush(item);
         }
         return new Item();
+    }
+
+    public List<Item> saveAll(List<Item> itemList) {
+        itemRepository.saveAll(itemList);
+        return itemRepository.saveAll(itemList);
+    }
+
+    public List<String> findNewItemList(List<String> searchItemList) {
+        List<String> existItemCodeList = itemRepository.findItemCodeList(searchItemList);
+        searchItemList.removeAll(existItemCodeList);
+        return searchItemList;
     }
 
     public boolean hasData(String itemCode) {
@@ -42,5 +55,13 @@ public class ItemService {
 
     public Optional<Item> findByItemId(Long itemId) {
         return itemRepository.findById(itemId);
+    }
+
+    public void flush() {
+        itemRepository.flush();
+    }
+
+    public List<Item> findAll() {
+        return itemRepository.findAll();
     }
 }

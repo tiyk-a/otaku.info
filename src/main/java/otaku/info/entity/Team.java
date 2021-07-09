@@ -19,7 +19,7 @@ public class Team {
     private Long team_id;
 
     @Column(nullable = true)
-    private String name;
+    private String team_name;
 
     @Column(nullable = true)
     private String kana;

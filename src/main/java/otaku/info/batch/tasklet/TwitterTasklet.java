@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import lombok.AllArgsConstructor;
 import java.util.Map;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -13,13 +12,11 @@ import otaku.info.controller.SampleController;
 import otaku.info.entity.Team;
 import otaku.info.searvice.db.TeamService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 @Component
 @StepScope
-//@AllArgsConstructor
 public class TwitterTasklet implements Tasklet {
 
     @Autowired
@@ -33,18 +30,18 @@ public class TwitterTasklet implements Tasklet {
         System.out.println("--- TRANSACTION START ---");
         List<Team> teamList = teamService.findAllTeam();
         Map<Long, String> artistMap = new HashMap<Long, String>();
-        teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getName()));
+        teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
             System.out.println("***** START: " + artist.getValue() + "*****");
             sampleController.sample2(artist.getKey(), artist.getValue());
             System.out.println("***** END: " + artist + "*****");
             try{
-                Thread.sleep(10000);
+                Thread.sleep(1000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
             try{
-                Thread.sleep(10000);
+                Thread.sleep(1000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }

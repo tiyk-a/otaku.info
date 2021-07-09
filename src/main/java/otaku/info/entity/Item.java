@@ -61,17 +61,17 @@ public class Item {
     @Column(nullable = true)
     private Timestamp updated_at;
 
-//    public DelItem convertToDelItem() {
-//        DelItem delItem = new DelItem();
-//        delItem.setArtist_id(artist_id);
-//        delItem.setItem_caption(item_caption);
-//        delItem.setItem_code(item_code);
-//        delItem.setPrice(price);
-//        delItem.setPublication_date(publication_date);
-//        delItem.setSite_id(site_id);
-//        delItem.setTeam_id(team_id);
-//        delItem.setTitle(title);
-//        delItem.setUrl(url);
-//        return delItem;
-//    }
+    public DelItem convertToDelItem() {
+        DelItem delItem = new DelItem();
+        delItem.setArtist_id(artist_id);
+        delItem.setItem_caption(item_caption);
+        delItem.setItem_code(item_code);
+        delItem.setPrice(price);
+        delItem.setPublication_date(publication_date);
+        delItem.setSite_id(site_id);
+        delItem.setTeam_id(team_id);
+        delItem.setTitle(title);
+        delItem.setUrl(url);
+        return delItem;
+    }
 }

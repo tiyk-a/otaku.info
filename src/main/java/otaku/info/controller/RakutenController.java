@@ -183,7 +183,7 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    System.out.println("④受信Json中身：" + line);
+                    System.out.println("④受信Json：" + line);
                     sb.append(line);
                 }
 //                stream.close();
@@ -225,14 +225,8 @@ public class RakutenController {
      */
     public List<Item> saveItems(List<Item> itemList) {
         System.out.println("Itemの保存を始めます。リストは以下");
-        List<Item> savedItemList = new ArrayList<>();
-//        for (Item item : itemList) {
-//            if (!itemService.hasData(item.getItem_code())){
-//                Item saveItem = itemService.saveItem(item);
+        itemList.forEach(e -> System.out.println(e.getTitle()));
         List<Item> savedList = itemService.saveAll(itemList);
-//                savedItemList.add(saveItem);
-//            }
-//        }
         return savedList;
     }
 }

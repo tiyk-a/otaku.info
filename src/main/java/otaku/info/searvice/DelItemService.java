@@ -29,7 +29,7 @@ public class DelItemService {
 
     public void saveAll(List<Item> saveList) {
             List<DelItem> delItemList = new ArrayList<>();
-//            saveList.forEach(e -> delItemList.add(e.convertToDelItem()));
+            saveList.forEach(e -> delItemList.add(e.convertToDelItem()));
             delItemRepository.saveAll(delItemList);
     }
 

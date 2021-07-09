@@ -17,8 +17,8 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.DelItem;
 import otaku.info.entity.Item;
-import otaku.info.searvice.db.DelItemService;
-import otaku.info.searvice.db.ItemService;
+import otaku.info.searvice.DelItemService;
+import otaku.info.searvice.ItemService;
 
 @RestController("/")
 public class SampleController {
@@ -41,6 +41,13 @@ public class SampleController {
     @Autowired
     RestTemplate restTemplate;
 
+    /**
+     * URLでアクセスできるtmpのメソッドです。
+     * 任意に中身を変えます、テスト用。
+     *
+     * @return
+     * @throws ChangeSetPersister.NotFoundException
+     */
     @GetMapping("/tmpMethod")
     public String tempMethod() throws ChangeSetPersister.NotFoundException {
         List<String> itemCodeList = itemService.tmpMethod();
@@ -79,7 +86,6 @@ public class SampleController {
         delItemService.saveItem(tmpDel);
 
         List<String> list = controller.affiliSearchWord(artistId);
-//        List<Item> itemList = rakutenController.search(list);
         List<String> itemCodeList = rakutenController.search(list);
 
         itemCodeList = itemService.findNewItemList(itemCodeList);
@@ -94,17 +100,6 @@ public class SampleController {
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(newItemList);
         System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
-//        System.out.println("13：保存したItemをTweetします");
-//        if (savedItemList.size() > 0) {
-//            for (Item item: savedItemList) {
-//                System.out.println(item.getTitle());
-//                TwiDto twiDto = new TwiDto();
-//                twiDto.setUrl(item.getUrl());
-//                twiDto.setTitle(item.getTitle());
-//                String result = textController.twitter(twiDto);
-//                post(item.getTeam_id(), result);
-//            }
-//        }
         List<Item> itemList = itemService.findAll();
         System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
         return itemList.toString();
@@ -120,7 +115,6 @@ public class SampleController {
      */
     public String sample2(Long teamId, String artist) throws JSONException {
         List<String> list = controller.affiliSearchWord(artist);
-//        List<Item> itemList = rakutenController.search(list);
         List<String> itemCodeList = rakutenController.search(list);
         System.out.println("➓楽天APIから受信したItemCodeのリスト");
 

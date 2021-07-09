@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
-import otaku.info.searvice.db.ItemService;
+import otaku.info.searvice.ItemService;
 import otaku.info.utils.StringUtils;
 
 import java.io.*;
@@ -87,10 +87,10 @@ public class RakutenController {
         return resultList;
     }
     /**
-     * 楽天商品を検索します。
+     * 楽天商品をキーワード検索します。
+     * itemCodeだけを取得してきます。
      */
     public static List<String> search(List<String> searchList) {
-//        List<Item> resultList = new ArrayList<>();
         List<String> resultList = new ArrayList<>();
 
         //0. 外部APIに接続して
@@ -105,7 +105,6 @@ public class RakutenController {
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
-//                String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCaption%2CitemCode%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
                 String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCode&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
                 System.out.println("③パラメタ：" + parameter);
                 out.write(parameter);
@@ -126,7 +125,6 @@ public class RakutenController {
                 }
 //                stream.close();
                 String script = sb.toString();
-//                System.out.println("⑤Json中身string：" + script);
 
                 //3. 解析して中身をとりだします。
                 //ObjectMapperオブジェクトの宣言
@@ -135,14 +133,6 @@ public class RakutenController {
                 //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
                 JsonNode node = mapper.readTree(script).get("Items");
                 for (int i=0; i<node.size();i++) {
-//                    Item item = new Item();
-//                    item.setItem_code(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
-//                    item.setSite_id(1);
-//                    item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
-//                    item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-//                    item.setItem_caption(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""));
-//                    item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
-//                    resultList.add(item);
                     resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
                 }
                 try{
@@ -157,6 +147,12 @@ public class RakutenController {
         return resultList;
     }
 
+    /**
+     * 楽天商品を商品コードから検索、商品詳細を取得します。
+     *
+     * @param itemCodeList
+     * @return
+     */
     public List<Item> getDetailsByItemCodeList(List<String> itemCodeList) {
         List<Item> resultList = new ArrayList<>();
 
@@ -192,7 +188,6 @@ public class RakutenController {
                 }
 //                stream.close();
                 String script = sb.toString();
-//                System.out.println("⑤Json中身string：" + script);
 
                 //3. 解析して中身をとりだします。
                 //ObjectMapperオブジェクトの宣言
@@ -222,6 +217,12 @@ public class RakutenController {
         return resultList;
     }
 
+    /**
+     * 楽天商品のリストをDBに保存する指示を出します。
+     *
+     * @param itemList
+     * @return
+     */
     public List<Item> saveItems(List<Item> itemList) {
         System.out.println("Itemの保存を始めます。リストは以下");
         List<Item> savedItemList = new ArrayList<>();

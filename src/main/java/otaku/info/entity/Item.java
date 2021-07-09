@@ -11,6 +11,10 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
+/**
+ * 商品テーブル
+ *
+ */
 @Entity(name = "Item")
 @Data
 @NoArgsConstructor

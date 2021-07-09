@@ -1,4 +1,4 @@
-package otaku.info.searvice.db;
+package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,10 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 関係ない商品テーブルのサービス
+ *
+ */
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor

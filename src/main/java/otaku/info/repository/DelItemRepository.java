@@ -6,6 +6,10 @@ import otaku.info.entity.DelItem;
 
 import java.util.List;
 
+/**
+ * 関係ない商品テーブルのrepository
+ *
+ */
 public interface DelItemRepository extends JpaRepository<DelItem, Long> {
 
     @Query("SELECT item_code FROM del_item WHERE item_code IN ?1")

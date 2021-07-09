@@ -1,4 +1,4 @@
-package otaku.info.searvice.db;
+package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Example;
@@ -12,6 +12,10 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 商品テーブルのサービス
+ *
+ */
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor

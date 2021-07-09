@@ -10,6 +10,10 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
+/**
+ * 関係のない商品を保存するテーブル
+ *
+ */
 @Entity(name = "del_item")
 @Data
 @NoArgsConstructor

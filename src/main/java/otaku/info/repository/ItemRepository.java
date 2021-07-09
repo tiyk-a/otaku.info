@@ -7,6 +7,10 @@ import otaku.info.entity.Item;
 import java.util.List;
 
 
+/**
+ * 商品テーブルのrepository
+ *
+ */
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT COUNT(*) FROM Item WHERE ITEM_CODE = ?1")

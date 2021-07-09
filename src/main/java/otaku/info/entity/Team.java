@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.sql.Timestamp;
 
+/**
+ * グループのテーブル、商品検索に使う
+ *
+ */
 @Entity(name = "Team")
 @Data
 @NoArgsConstructor

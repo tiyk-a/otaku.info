@@ -4,6 +4,10 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * Twitter用、あまり活用できてない
+ *
+ */
 @Data
 public class TwiDto {
 

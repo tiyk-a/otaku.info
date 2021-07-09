@@ -1,4 +1,4 @@
-package otaku.info.searvice.db;
+package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,6 +8,10 @@ import otaku.info.repository.TeamRepository;
 import javax.transaction.Transactional;
 import java.util.List;
 
+/**
+ * グループテーブルのサービス
+ *
+ */
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor

@@ -1,12 +1,17 @@
 package otaku.info.controller;
 
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -19,6 +24,7 @@ import otaku.info.entity.DelItem;
 import otaku.info.entity.Item;
 import otaku.info.searvice.DelItemService;
 import otaku.info.searvice.ItemService;
+import otaku.info.searvice.TeamService;
 
 @RestController("/")
 public class SampleController {
@@ -33,10 +39,16 @@ public class SampleController {
     private Controller controller;
 
     @Autowired
+    private AnalyzeController analyzeController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
     private DelItemService delItemService;
+
+    @Autowired
+    private TeamService teamService;
 
     @Autowired
     RestTemplate restTemplate;
@@ -49,19 +61,44 @@ public class SampleController {
      * @throws ChangeSetPersister.NotFoundException
      */
     @GetMapping("/tmpMethod")
-    public String tempMethod() throws ChangeSetPersister.NotFoundException {
-        List<String> itemCodeList = itemService.tmpMethod();
-        List<Item> itemList = rakutenController.search1(itemCodeList);
+    public String tempMethod() throws ParseException {
+//        List<String> itemCodeList = itemService.tmpMethod();
+//        List<Item> itemList = rakutenController.search1(itemCodeList);
+//        for (Item item : itemList) {
+//            Item originalItem = itemService.findByItemId(itemService.findItemId(item.getItem_code())).orElseThrow(ChangeSetPersister.NotFoundException::new);
+//            if (item.getTitle() != null && originalItem.getTitle() == null) {
+//                originalItem.setTitle(item.getTitle());
+//            }
+//            if (item.getItem_caption() != null && originalItem.getItem_caption() == null) {
+//                originalItem.setItem_caption(item.getItem_caption());
+//            }
+//            itemService.updateItem(originalItem);
+//        }
+        List<Item> itemList = itemService.findAll();
         for (Item item : itemList) {
-            Item originalItem = itemService.findByItemId(itemService.findItemId(item.getItem_code())).orElseThrow(ChangeSetPersister.NotFoundException::new);
-            if (item.getTitle() != null && originalItem.getTitle() == null) {
-                originalItem.setTitle(item.getTitle());
+            // 年月日のデータを集める
+            Map<String, List<Date>> resultMap = analyzeController.extractPublishDate(item.getItem_caption());
+            if (resultMap.get("publishDateList").size() == 0) {
+                Map<String, List<Date>> resultMap2 = analyzeController.extractPublishDate(item.getTitle());
+                if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
+                    resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
+                }
+                if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
+                    resultMap.put("publishDateList", resultMap2.get("publishDateList"));
+                }
+                if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
+                    resultMap.put("dateList", resultMap2.get("dateList"));
+                }
             }
-            if (item.getItem_caption() != null && originalItem.getItem_caption() == null) {
-                originalItem.setItem_caption(item.getItem_caption());
+
+            if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0 ) {
+                item.setPublication_date(resultMap.get("publishDateList").get(0));
+                if (item.getPublication_date() == null) {
+                    item.setPublication_date(resultMap.get("dateList").get(0));
+                }
             }
-            itemService.updateItem(originalItem);
         }
+        itemService.saveAll(itemList);
         return "Done";
     }
     /**
@@ -113,7 +150,7 @@ public class SampleController {
      * @return
      * @throws JSONException
      */
-    public String sample2(Long teamId, String artist) throws JSONException {
+    public String sample2(Long teamId, String artist) throws JSONException, ParseException {
         List<String> list = controller.affiliSearchWord(artist);
         List<String> itemCodeList = rakutenController.search(list);
 
@@ -127,11 +164,36 @@ public class SampleController {
 
         // 検索の誤引っ掛かりした商品をストアするリスト
         List<Item> removeList = new ArrayList<>();
+
         if (newItemList.size() > 0) {
             for (Item item : newItemList) {
+                // 年月日のデータを集める
+                Map<String, List<Date>> resultMap = analyzeController.extractPublishDate(item.getItem_caption());
+                if (resultMap.get("publishDateList").size() == 0) {
+                    Map<String, List<Date>> resultMap2 = analyzeController.extractPublishDate(item.getTitle());
+                    if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
+                        resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
+                    }
+                    if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
+                        resultMap.put("publishDateList", resultMap2.get("publishDateList"));
+                    }
+                    if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
+                        resultMap.put("dateList", resultMap2.get("dateList"));
+                    }
+                }
+
+                if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0 ) {
+                    item.setPublication_date(resultMap.get("publishDateList").get(0));
+                    if (item.getPublication_date() == null) {
+                        item.setPublication_date(resultMap.get("dateList").get(0));
+                    }
+                }
+
                 item.setTeam_id(Math.toIntExact(teamId));
                 // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
-                if (!containsTeamName(artist, item.getTitle()) || !containsTeamName(artist, item.getItem_caption())) {
+                String mnemonic = teamService.getMnemonic(artist);
+                if (!containsTeamName(artist, item.getTitle()) && !containsTeamName(artist, item.getItem_caption())
+                && (mnemonic != null && !containsTeamName(mnemonic, item.getTitle())) && (mnemonic != null && !containsTeamName(mnemonic, item.getItem_caption()))) {
                     removeList.add(item);
                 }
             }
@@ -156,12 +218,17 @@ public class SampleController {
         if (savedItemList.size() > 0) {
             System.out.println("保存したItemをTweetします");
             for (Item item: savedItemList) {
-                System.out.println(item.getTitle());
-                TwiDto twiDto = new TwiDto();
-                twiDto.setUrl(item.getUrl());
-                twiDto.setTitle(item.getTitle());
-                String result = textController.twitter(twiDto);
-                post(item.getTeam_id(), result);
+                if (item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                    System.out.println(item.getTitle());
+                    TwiDto twiDto = new TwiDto();
+                    twiDto.setUrl(item.getUrl());
+                    twiDto.setTitle(item.getTitle());
+                    String result = textController.twitter(twiDto);
+                    post(item.getTeam_id(), result);
+                } else {
+                    System.out.println("未来商品ではないのでTweetしません");
+                    System.out.println(item.getTitle());
+                }
             }
         }
         return "Ok";
@@ -210,6 +277,13 @@ public class SampleController {
     public boolean containsTeamName(String teamName, String text) {
         if (text.contains(teamName)) {
             return true;
+        }
+
+        // アーティスト名にスペースがあったら切り取って検索もする
+        if (text.contains(" ")) {
+            if (text.replaceAll(" ", "").contains(teamName)) {
+                return true;
+            }
         }
         return false;
     }

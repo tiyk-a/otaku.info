@@ -22,4 +22,8 @@ public class TeamService {
     public List<Team> findAllTeam() {
         return teamRepository.findAll();
     }
+
+    public String getMnemonic(String teamName) {
+        return teamRepository.getMnemonic(teamName);
+    }
 }

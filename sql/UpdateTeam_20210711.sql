@@ -1,0 +1,11 @@
+UPDATE team SET team_name = "Snow Man", mnemonic = "すの", kana = 'スノーマン' WHERE team_id = 6;
+UPDATE team SET mnemonic = "関ジャニ", kana = 'カンジャニエイト' WHERE team_id = 7;
+UPDATE team SET mnemonic = "セクゾ", kana = 'セクシーゾーン' WHERE team_id = 8;
+UPDATE team SET kana = 'トキオ' WHERE team_id = 9;
+UPDATE team SET kana = 'ブイシックス' WHERE team_id = 10;
+UPDATE team SET mnemonic = "嵐", kana = 'アラシ' WHERE team_id = 11;
+UPDATE team SET kana = 'ニュース' WHERE team_id = 12;
+UPDATE team SET mnemonic = "キスマイ", kana = 'キスマイフットツー' WHERE team_id = 13;
+UPDATE team SET mnemonic = "エビ", kana = 'エービーシーズィー' WHERE team_id = 14;
+UPDATE team SET mnemonic = "ジャニスト", kana = 'ジャニーズウェスト' WHERE team_id = 15;
+UPDATE team SET mnemonic = "キンプリ", kana = 'キングアンドプリンス' WHERE team_id = 16;

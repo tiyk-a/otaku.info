@@ -70,6 +70,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>2.5.2</version>
 				<configuration>
 					<executable>true</executable>
 					<jvmArguments>-Dfile.encoding=UTF8 -Dspring.profiles.active="production"</jvmArguments>

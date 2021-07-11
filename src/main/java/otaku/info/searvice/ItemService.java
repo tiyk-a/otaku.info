@@ -42,7 +42,6 @@ public class ItemService {
     }
 
     public List<Item> saveAll(List<Item> itemList) {
-        itemRepository.saveAll(itemList);
         return itemRepository.saveAll(itemList);
     }
 

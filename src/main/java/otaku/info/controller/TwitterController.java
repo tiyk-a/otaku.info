@@ -13,7 +13,4 @@ public class TwitterController {
 
     private TextController textController;
 
-//    public void sample() {
-//        textController.twitter();
-//    }
 }

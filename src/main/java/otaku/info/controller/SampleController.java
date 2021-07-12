@@ -4,14 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.*;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -133,7 +131,6 @@ public class SampleController {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
 
-
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(newItemList);
         System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
@@ -214,15 +211,12 @@ public class SampleController {
             newItemList.forEach(e -> System.out.println(e.getTitle()));
             savedItemList = rakutenController.saveItems(newItemList);
         }
-//        itemService.flush();
         if (savedItemList.size() > 0) {
             System.out.println("保存したItemをTweetします");
             for (Item item: savedItemList) {
-                if (item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(item.getTitle());
-                    TwiDto twiDto = new TwiDto();
-                    twiDto.setUrl(item.getUrl());
-                    twiDto.setTitle(item.getTitle());
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
                     String result = textController.twitter(twiDto);
                     post(item.getTeam_id(), result);
                 } else {

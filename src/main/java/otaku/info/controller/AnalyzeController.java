@@ -124,22 +124,4 @@ public class AnalyzeController {
         }
         return publishDateList;
     }
-
-//    /**
-//     * 文字列から「発売日」「発売」の文字を見つけます。
-//     *
-//     * @param text
-//     * @return
-//     */
-//    public boolean isValidHatsubaibiString(String text) {
-//        String regex = "20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])";
-//        Pattern pattern = Pattern.compile(regex);
-//        Matcher matcher = pattern.matcher(text);
-//
-//        List<String> publishDateList = new ArrayList<>();
-//        while (matcher.find()) {
-//            publishDateList.add(matcher.group());
-//        }
-//        return publishDateList;
-//    }
 }

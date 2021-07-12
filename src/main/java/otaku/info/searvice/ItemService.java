@@ -67,4 +67,8 @@ public class ItemService {
     public List<Item> findAll() {
         return itemRepository.findAll();
     }
+
+    public List<Item> findFutureItemList() {
+        return itemRepository.findFutureItemList();
+    }
 }

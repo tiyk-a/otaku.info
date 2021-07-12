@@ -17,7 +17,7 @@ import java.util.List;
 
 @Component
 @StepScope
-public class TwitterTasklet implements Tasklet {
+public class RakutenSearchTasklet implements Tasklet {
 
     @Autowired
     SampleController sampleController;
@@ -35,11 +35,6 @@ public class TwitterTasklet implements Tasklet {
             System.out.println("***** START: " + artist.getValue() + "*****");
             sampleController.sample2(artist.getKey(), artist.getValue());
             System.out.println("***** END: " + artist + "*****");
-            try{
-                Thread.sleep(1000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
-            }
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){

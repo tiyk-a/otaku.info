@@ -1,55 +1,44 @@
 package otaku.info.batch.config;
 
+import lombok.AllArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import otaku.info.batch.tasklet.FutureItemReminderTasklet;
+import otaku.info.batch.tasklet.ItemCountdownTasklet;
+import otaku.info.batch.tasklet.PublishAnnounceTasklet;
 import otaku.info.batch.tasklet.RakutenSearchTasklet;
 
 @Configuration
+@AllArgsConstructor
 class BatchConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
     private final RakutenSearchTasklet rakutenSearchTasklet;
     private final FutureItemReminderTasklet futureItemReminderTasklet;
-
-    public BatchConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
-                       RakutenSearchTasklet rakutenSearchTasklet, FutureItemReminderTasklet futureItemReminderTasklet) {
-        this.jobBuilderFactory = jobBuilderFactory;
-        this.stepBuilderFactory = stepBuilderFactory;
-        this.rakutenSearchTasklet = rakutenSearchTasklet;
-        this.futureItemReminderTasklet = futureItemReminderTasklet;
-    }
+    private final ItemCountdownTasklet itemCountdownTasklet;
+    private final PublishAnnounceTasklet publishAnnounceTasklet;
 
     @Bean
-    Step step1() {
+    Step rakutenSearchStep() {
         return stepBuilderFactory.get("rakutenSearchStep") //Step名を指定
                 .tasklet(rakutenSearchTasklet) //実行するTaskletを指定
                 .build();
     }
 
     @Bean
-    Step step2() {
-        return stepBuilderFactory.get("step2").tasklet((contribution, chunkContext) -> {
-            System.out.println("step2 has run");
-            return RepeatStatus.FINISHED;
-        }).build();
-    }
-
-    @Bean
     Job rakutenSearchJob() {
         return this.jobBuilderFactory.get("rakutenSearchJob").incrementer(new RunIdIncrementer())
-            .start(step1()).next(step2()).build();
+            .start(rakutenSearchStep()).build();
     }
 
     @Bean
-    Step anotherStep() {
+    Step futureItemReminderStep() {
         return stepBuilderFactory.get("futureItemReminderStep") //Step名を指定
                 .tasklet(futureItemReminderTasklet) //実行するTaskletを指定
                 .build();
@@ -58,6 +47,32 @@ class BatchConfig {
     @Bean
     Job futureItemReminderJob() {
         return this.jobBuilderFactory.get("futureItemReminderJob").incrementer(new RunIdIncrementer())
-            .start(anotherStep()).build();
+            .start(futureItemReminderStep()).build();
+    }
+
+    @Bean
+    Step itemCountdownStep() {
+        return stepBuilderFactory.get("futureItemReminderStep") //Step名を指定
+                .tasklet(itemCountdownTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job itemCountdownJob() {
+        return this.jobBuilderFactory.get("itemCountdownJob").incrementer(new RunIdIncrementer())
+                .start(itemCountdownStep()).build();
+    }
+
+    @Bean
+    Step publishAnnouncementStep() {
+        return stepBuilderFactory.get("publishAnnouncementStep") //Step名を指定
+                .tasklet(publishAnnounceTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job publishAnnouncementJob() {
+        return this.jobBuilderFactory.get("publishAnnouncementJob").incrementer(new RunIdIncrementer())
+                .start(publishAnnouncementStep()).build();
     }
 }

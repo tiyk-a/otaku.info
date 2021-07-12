@@ -9,16 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.SampleController;
 import otaku.info.controller.TextController;
-import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 
-import java.util.Date;
 import java.util.List;
 
 @Component
 @StepScope
-public class FutureItemReminderTasklet implements Tasklet {
+public class ItemCountdownTasklet implements Tasklet {
 
     @Autowired
     SampleController sampleController;
@@ -31,19 +29,19 @@ public class FutureItemReminderTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 未発売商品リマインダー START ---");
-        // 1年以内に発売される商品リストを取得
-        List<Item> itemList = itemService.findFutureItemByDate(365);
+        System.out.println("--- 新商品カウントダウン START ---");
+        // 3日以内に発売する商品リストを取得
+        List<Item> itemList = itemService.findFutureItemByDate(3);
         for (Item item : itemList) {
-            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
-            sampleController.post(item.getTeam_id(), textController.futureItemReminder(twiDto));
+            String text = textController.countdown(item);
+            sampleController.post(item.getTeam_id(), text);
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 未発売商品リマインダー END ---");
+        System.out.println("--- 新商品カウントダウン END ---");
         return RepeatStatus.FINISHED;
     }
 }

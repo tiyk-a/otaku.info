@@ -27,7 +27,7 @@ public class RakutenSearchTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- TRANSACTION START ---");
+        System.out.println("--- 楽天新商品検索 START ---");
         List<Team> teamList = teamService.findAllTeam();
         Map<Long, String> artistMap = new HashMap<Long, String>();
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
@@ -41,7 +41,7 @@ public class RakutenSearchTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("--- TRANSACTION END ---");
+        System.out.println("--- 楽天新商品検索 END ---");
         return RepeatStatus.FINISHED;
     }
 }

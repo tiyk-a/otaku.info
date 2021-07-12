@@ -68,7 +68,11 @@ public class ItemService {
         return itemRepository.findAll();
     }
 
-    public List<Item> findFutureItemList() {
-        return itemRepository.findFutureItemList();
+    public List<Item> findFutureItemByDate(int date) {
+        return itemRepository.findFutureItemByDate(date);
+    }
+
+    public List<Item> findReleasedItemList() {
+        return itemRepository.findReleasedItemList();
     }
 }

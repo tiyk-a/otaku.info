@@ -25,6 +25,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT item_code FROM Item WHERE item_code IN ?1")
     List<String> findItemCodeList(List<String> itemCodelist);
 
-    @Query("SELECT t FROM Item t WHERE publication_date > CURDATE()")
-    List<Item> findFutureItemList();
+    @Query("SELECT t FROM Item t WHERE publication_date > CURRENT_DATE AND publication_date < CURRENT_DATE + ?1")
+    List<Item> findFutureItemByDate(int date);
+
+    @Query("SELECT t FROM Item t WHERE publication_date = CURRENT_DATE")
+    List<Item> findReleasedItemList();
 }

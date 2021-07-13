@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
@@ -15,6 +16,7 @@ import java.util.Date;
 @Controller
 public class TextController {
 
+    @Autowired
     private DateUtils dateUtils;
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy'年'MM'月'dd'日'");

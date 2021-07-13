@@ -1,14 +1,12 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
 import otaku.info.repository.ItemRepository;
-import otaku.info.utils.StringUtils;
+import otaku.info.utils.DateUtils;
 
 import javax.transaction.Transactional;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +18,8 @@ import java.util.Optional;
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor
 public class ItemService {
+
+    private DateUtils dateUtils;
 
     private final ItemRepository itemRepository;
 
@@ -68,8 +68,8 @@ public class ItemService {
         return itemRepository.findAll();
     }
 
-    public List<Item> findFutureItemByDate(int date) {
-        return itemRepository.findFutureItemByDate(date);
+    public List<Item> findFutureItemByDate(Integer days) {
+        return itemRepository.findFutureItemByDate(dateUtils.daysAfterToday(days));
     }
 
     public List<Item> findReleasedItemList() {

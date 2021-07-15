@@ -50,3 +50,19 @@ CREATE TABLE IF NOT EXISTS `del_item`
     unique key uq1 (del_item_id)
 ) ENGINE=InnoDB CHARSET = utf8mb4 comment='関係ない商品テーブル';
 
+-- メンバーテーブル
+CREATE TABLE IF NOT EXISTS `member`
+(
+    member_id bigint unsigned AUTO_INCREMENT NOT NULL,
+    team_id bigint not null,
+    member_name varchar(255),
+    kana varchar(255),
+    mnemonic varchar(255),
+    birthday date,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+    primary key (`member_id`),
+    foreign key team_id(team_id) references main.team(team_id),
+    unique key uq1 (member_id)
+);
+

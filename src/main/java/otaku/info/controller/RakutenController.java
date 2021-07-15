@@ -27,7 +27,6 @@ public class RakutenController {
 
         //0. 外部APIに接続して
         HttpURLConnection conn = null;
-        System.out.println("①楽天APIに接続");
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : searchList) {
@@ -95,18 +94,17 @@ public class RakutenController {
 
         //0. 外部APIに接続して
         HttpURLConnection conn = null;
-        System.out.println("①楽天APIに接続");
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : searchList) {
-                System.out.println("②検索ワード：" + key);
+                System.out.println("検索ワード：" + key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
                 String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCode&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                System.out.println("③パラメタ：" + parameter);
+                System.out.println("パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -120,7 +118,6 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    System.out.println("④受信Json中身：" + line);
                     sb.append(line);
                 }
 //                stream.close();
@@ -131,9 +128,11 @@ public class RakutenController {
                 ObjectMapper mapper = new ObjectMapper();
 
                 //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script).get("Items");
-                for (int i=0; i<node.size();i++) {
-                    resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
+                if (mapper.readTree(script).get("Items") != null) {
+                    JsonNode node = mapper.readTree(script).get("Items");
+                    for (int i=0; i<node.size();i++) {
+                        resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
+                    }
                 }
                 try{
                     Thread.sleep(1000);
@@ -158,18 +157,17 @@ public class RakutenController {
 
         //0. 外部APIに接続して
         HttpURLConnection conn = null;
-        System.out.println("①楽天APIに接続");
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : itemCodeList) {
-                System.out.println("②検索ワード：" + key);
+                System.out.println("検索ワード：" + key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
                 String parameter = "format=json&itemCode=" + key + "&availability=1&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                System.out.println("③パラメタ：" + parameter);
+                System.out.println("パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -183,7 +181,7 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    System.out.println("④受信Json：" + line);
+                    System.out.println("受信Json：" + line);
                     sb.append(line);
                 }
 //                stream.close();

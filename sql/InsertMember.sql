@@ -1,16 +1,3 @@
-INSERT INTO team (team_name, team_id) VALUES ("Snowman", 6);
-INSERT INTO team (team_name, team_id) VALUES ("関ジャニ∞", 7);
-INSERT INTO team (team_name, team_id) VALUES ("Sexy Zone", 8);
-INSERT INTO team (team_name, team_id) VALUES ("TOKIO", 9);
-INSERT INTO team (team_name, team_id) VALUES ("V6", 10);
-INSERT INTO team (team_name, team_id) VALUES ("ARASHI", 11);
-INSERT INTO team (team_name, team_id) VALUES ("NEWS", 12);
-INSERT INTO team (team_name, team_id) VALUES ("Kis-My-Ft2", 13);
-INSERT INTO team (team_name, team_id) VALUES ("A.B.C-Z", 14);
-INSERT INTO team (team_name, team_id) VALUES ("ジャニーズWEST", 15);
-INSERT INTO team (team_name, team_id) VALUES ("King & Prince", 16);
-INSERT INTO team (team_name, team_id, kana, mnemonic) VALUES ("SixTONES", 17, "ストーンズ", "ストンズ");
-
 INSERT INTO member (team_id, member_name, kana, mnemonic, birthday) VALUES (6,"岩本 照", "いわもと ひかる", "ひーくん ひかる", "1993-05-17");
 INSERT INTO member (team_id, member_name, kana, mnemonic, birthday) VALUES (6,"深澤 辰哉", "ふかさわ しんや", "ふっか", "1992-05-05");
 INSERT INTO member (team_id, member_name, kana, mnemonic, birthday) VALUES (6,"渡辺 翔太", "わたなべ しょうた", "しょっぴー", "1992-11-05");

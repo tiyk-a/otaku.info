@@ -8,11 +8,11 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import otaku.info.batch.tasklet.FutureItemReminderTasklet;
-import otaku.info.batch.tasklet.ItemCountdownTasklet;
-import otaku.info.batch.tasklet.PublishAnnounceTasklet;
-import otaku.info.batch.tasklet.RakutenSearchTasklet;
+import otaku.info.batch.tasklet.*;
 
+/**
+ * https://github.com/making/spring-boot-batch-multi-jobs
+ */
 @Configuration
 @AllArgsConstructor
 class BatchConfig {
@@ -23,6 +23,7 @@ class BatchConfig {
     private final FutureItemReminderTasklet futureItemReminderTasklet;
     private final ItemCountdownTasklet itemCountdownTasklet;
     private final PublishAnnounceTasklet publishAnnounceTasklet;
+    private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
 
     @Bean
     Step rakutenSearchStep() {
@@ -74,5 +75,23 @@ class BatchConfig {
     Job publishAnnouncementJob() {
         return this.jobBuilderFactory.get("publishAnnouncementJob").incrementer(new RunIdIncrementer())
                 .start(publishAnnouncementStep()).build();
+    }
+
+    /**
+     * 個人名で楽天商品を検索します
+     *
+     * @return
+     */
+    @Bean
+    Step rakutenSearchMemberStep() {
+        return stepBuilderFactory.get("rakutenSearchMemberStep") //Step名を指定
+                .tasklet(rakutenSearchMemberTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job rakutenSearchMemberJob() {
+        return this.jobBuilderFactory.get("rakutenSearchMemberJob").incrementer(new RunIdIncrementer())
+                .start(rakutenSearchMemberStep()).build();
     }
 }

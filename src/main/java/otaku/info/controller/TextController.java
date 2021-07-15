@@ -62,4 +62,12 @@ public class TextController {
         }
         return result;
     }
+
+    public String twitterPerson(TwiDto twiDto, String memberName) {
+        String result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        if (result.length() + memberName.length() < 139) {
+            result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
+        }
+        return result;
+    }
 }

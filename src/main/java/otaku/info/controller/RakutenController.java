@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
-import otaku.info.utils.StringUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -66,7 +66,7 @@ public class RakutenController {
                         try {
                             Item item = new Item();
                             item.setItem_code(key);
-                            item.setItem_caption(StringUtils.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
+                            item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
                             item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
                             resultList.add(item);
                         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class RakutenController {
                     item.setSite_id(1);
                     item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
                     item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                    item.setItem_caption(StringUtils.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
+                    item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
                     item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
                     resultList.add(item);
                 }

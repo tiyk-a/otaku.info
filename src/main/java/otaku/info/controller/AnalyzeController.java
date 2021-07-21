@@ -6,7 +6,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import org.springframework.stereotype.Controller;
-import otaku.info.utils.StringUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,41 +27,41 @@ public class AnalyzeController {
 
         // 予約締切日(reserveDue)を探す
         String reserveDueRegexYMD = "予約締切日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9])";
-        List<Date> reserveDueList = StringUtils.convertStringToDateList(regexExtract(reserveDueRegexYMD, text));
+        List<Date> reserveDueList = StringUtilsMine.convertStringToDateList(regexExtract(reserveDueRegexYMD, text));
 
         if (reserveDueList.size() == 0) {
             // 年月だけ探す
             String reserveDueRegexYM = "予約締切日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])";
-            reserveDueList = StringUtils.convertStringToDateList(regexExtract(reserveDueRegexYM, text));
+            reserveDueList = StringUtilsMine.convertStringToDateList(regexExtract(reserveDueRegexYM, text));
         }
 
         // 発売日(publishDate)を探す
         String publishDateRegexYMD = "発売日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9])";
-        List<Date> publishDateList = StringUtils.convertStringToDateList(regexExtract(publishDateRegexYMD, text));
+        List<Date> publishDateList = StringUtilsMine.convertStringToDateList(regexExtract(publishDateRegexYMD, text));
 
         if (publishDateList.size() == 0) {
             // 年月だけ探す
             String publishDateRegexYM = "発売日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])";
-            publishDateList = StringUtils.convertStringToDateList(regexExtract(publishDateRegexYM, text));
+            publishDateList = StringUtilsMine.convertStringToDateList(regexExtract(publishDateRegexYM, text));
         }
 
         // 発売日が見つからない場合、日付だけを探す(年月日)
         if (publishDateList.size() == 0) {
             String dateRegexYMD = "20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9])";
-            publishDateList = StringUtils.convertStringToDateList(regexExtract(dateRegexYMD, text));
+            publishDateList = StringUtilsMine.convertStringToDateList(regexExtract(dateRegexYMD, text));
         }
         // 発売日が見つからない場合、日付だけを探す(年月)
         if (publishDateList.size() == 0) {
             // 年月だけ探す
             String dateRegexYM = "20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])";
-            publishDateList = StringUtils.convertStringToDateList(regexExtract(dateRegexYM, text));
+            publishDateList = StringUtilsMine.convertStringToDateList(regexExtract(dateRegexYM, text));
         }
         // 発売日が見つからない場合、日付だけを探す(年)
         List<Date> dateList = new ArrayList<>();
         if (publishDateList.size() == 0) {
             // 年月だけ探す
             String dateRegexYM = "20[0-2]{1}[0-9]{1}";
-            dateList = StringUtils.convertStringToDateList(regexExtract(dateRegexYM, text));
+            dateList = StringUtilsMine.convertStringToDateList(regexExtract(dateRegexYM, text));
         }
 
         resultMap.put("reserveDueList", reserveDueList);

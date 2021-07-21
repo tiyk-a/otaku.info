@@ -66,3 +66,32 @@ CREATE TABLE IF NOT EXISTS `member`
     unique key uq1 (member_id)
 );
 
+-- 放送局テーブル
+CREATE TABLE IF NOT EXISTS `station`
+(
+    station_id bigint unsigned AUTO_INCREMENT NOT NULL,
+    station_name varchar(255),
+    keyword varchar(10) not null,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+    primary key (`station_id`),
+    unique key uq1 (station_name)
+);
+
+-- TV番組テーブル
+CREATE TABLE IF NOT EXISTS `program`
+(
+    program_id bigint unsigned AUTO_INCREMENT NOT NULL,
+    station_id bigint unsigned not null,
+    program_code varchar(10) not null,
+    title varchar(255),
+    description varchar(255),
+    on_air_date datetime not null,
+    team_id varchar(255) not null,
+    member_id varchar(255),
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp on update current_timestamp,
+    primary key (`program_id`),
+    foreign key station_id(station_id) references main.station(station_id),
+    unique key uq1 (program_code)
+);

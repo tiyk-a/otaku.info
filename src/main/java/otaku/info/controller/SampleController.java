@@ -61,44 +61,9 @@ public class SampleController {
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() throws ParseException {
-//        List<String> itemCodeList = itemService.tmpMethod();
-//        List<Item> itemList = rakutenController.search1(itemCodeList);
-//        for (Item item : itemList) {
-//            Item originalItem = itemService.findByItemId(itemService.findItemId(item.getItem_code())).orElseThrow(ChangeSetPersister.NotFoundException::new);
-//            if (item.getTitle() != null && originalItem.getTitle() == null) {
-//                originalItem.setTitle(item.getTitle());
-//            }
-//            if (item.getItem_caption() != null && originalItem.getItem_caption() == null) {
-//                originalItem.setItem_caption(item.getItem_caption());
-//            }
-//            itemService.updateItem(originalItem);
-//        }
-        List<Item> itemList = itemService.findAll();
-        for (Item item : itemList) {
-            // 年月日のデータを集める
-            Map<String, List<Date>> resultMap = analyzeController.extractPublishDate(item.getItem_caption());
-            if (resultMap.get("publishDateList").size() == 0) {
-                Map<String, List<Date>> resultMap2 = analyzeController.extractPublishDate(item.getTitle());
-                if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
-                    resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
-                }
-                if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
-                    resultMap.put("publishDateList", resultMap2.get("publishDateList"));
-                }
-                if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
-                    resultMap.put("dateList", resultMap2.get("dateList"));
-                }
-            }
-
-            if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0 ) {
-                item.setPublication_date(resultMap.get("publishDateList").get(0));
-                if (item.getPublication_date() == null) {
-                    item.setPublication_date(resultMap.get("dateList").get(0));
-                }
-            }
-        }
-        itemService.saveAll(itemList);
-        return "Done";
+        String str = "関西版[本/雑誌] 2021年7月2日号 【表紙";
+        Map<String, List<Date>> map = analyzeController.extractPublishDate(str);
+        return map.toString();
     }
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド

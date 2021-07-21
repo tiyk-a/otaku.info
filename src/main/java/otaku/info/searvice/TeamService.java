@@ -26,4 +26,8 @@ public class TeamService {
     public String getMnemonic(String teamName) {
         return teamRepository.getMnemonic(teamName);
     }
+
+    public List<Long> findTeamIdListByText(String text) {
+        return teamRepository.findTeamIdListByText(text);
+    }
 }

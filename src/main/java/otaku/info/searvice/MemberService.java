@@ -18,4 +18,8 @@ public class MemberService {
     public List<Member> findAllMember() {
         return memberRepository.findAll();
     }
+
+    public List<Long> findMemberIdByText(String text) {
+        return memberRepository.findMemberIdByText(text);
+    }
 }

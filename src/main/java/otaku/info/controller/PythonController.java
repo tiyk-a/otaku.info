@@ -57,6 +57,7 @@ public class PythonController {
             String memberIdStr = StringUtils.join(memberIdList, ',');
             program.setMember_id(memberIdStr);
             programService.save(program);
+            System.out.println(program.getCreated_at() + " Program Saved: " + program.getTitle());
         }
     }
 

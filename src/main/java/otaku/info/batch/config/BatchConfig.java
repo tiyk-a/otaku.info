@@ -25,6 +25,8 @@ class BatchConfig {
     private final PublishAnnounceTasklet publishAnnounceTasklet;
     private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
 
+    private final TvTasklet tvTasklet;
+
     @Bean
     Step rakutenSearchStep() {
         return stepBuilderFactory.get("rakutenSearchStep") //Step名を指定
@@ -93,5 +95,23 @@ class BatchConfig {
     Job rakutenSearchMemberJob() {
         return this.jobBuilderFactory.get("rakutenSearchMemberJob").incrementer(new RunIdIncrementer())
                 .start(rakutenSearchMemberStep()).build();
+    }
+
+    /**
+     * TV番組の検索を投げます
+     *
+     * @return
+     */
+    @Bean
+    Step tvStep() {
+        return stepBuilderFactory.get("tvStep") //Step名を指定
+                .tasklet(tvTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job tvJob() {
+        return this.jobBuilderFactory.get("tvJob").incrementer(new RunIdIncrementer())
+                .start(tvStep()).build();
     }
 }

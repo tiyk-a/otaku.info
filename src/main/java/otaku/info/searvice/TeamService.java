@@ -30,4 +30,12 @@ public class TeamService {
     public List<Long> findTeamIdListByText(String text) {
         return teamRepository.findTeamIdListByText(text);
     }
+
+    public List<Long> getAllId() {
+        return teamRepository.getAllId();
+    }
+
+    public String getTeamName(Long teamId) {
+        return teamRepository.findTeamNameById(teamId);
+    }
 }

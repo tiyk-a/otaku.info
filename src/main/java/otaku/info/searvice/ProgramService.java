@@ -6,6 +6,8 @@ import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -22,4 +24,9 @@ public class ProgramService  {
         Long result = programRepository.hasProgramCode(code);
         return result!=0;
     }
+
+    public List<Program> findByOnAirDate(Date date) {
+        return programRepository.findByOnAirDate(date);
+    }
+
 }

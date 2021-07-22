@@ -25,6 +25,10 @@ import otaku.info.searvice.DelItemService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 
+/**
+ * 楽天での商品検索指示〜Twitterポスト指示まで。
+ *
+ */
 @RestController("/")
 public class SampleController {
 
@@ -39,6 +43,9 @@ public class SampleController {
 
     @Autowired
     private AnalyzeController analyzeController;
+
+    @Autowired
+    private PythonController pythonController;
 
     @Autowired
     private ItemService itemService;
@@ -184,7 +191,7 @@ public class SampleController {
                     System.out.println(item.getTitle());
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
                     String result = textController.twitter(twiDto);
-                    post(item.getTeam_id(), result);
+                    pythonController.post(item.getTeam_id(), result);
                 } else {
                     System.out.println("未来商品ではないのでTweetしません");
                     System.out.println(item.getTitle());
@@ -273,7 +280,7 @@ public class SampleController {
                     System.out.println(item.getTitle());
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
                     String result = textController.twitterPerson(twiDto, dto.getMember_name());
-                    post(item.getTeam_id(), result);
+                    pythonController.post(item.getTeam_id(), result);
                 } else {
                     System.out.println("未来商品ではないのでTweetしません");
                     System.out.println(item.getTitle());
@@ -281,39 +288,6 @@ public class SampleController {
             }
         }
         return "Ok";
-    }
-
-    /**
-     * Pythonにツイートするようにデータを送る
-     *
-     * @param teamId
-     * @param text
-     * @return
-     * @throws JSONException
-     */
-//    public String post(Map<String, String> headers, String json) {
-    public String post(Integer teamId, String text) throws JSONException {
-        System.out.println("これをTweetします " + text);
-
-        String url = "https://pytwi2.herokuapp.com/twi";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        Map<String, Object> map = new HashMap<>();
-        map.put("title", text);
-        map.put("teamId", teamId);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
-
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request Successful: " + text);
-        } else {
-            System.out.println("Request Failed: " + text);
-        }
-        return "done";
     }
 
     /**

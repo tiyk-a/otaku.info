@@ -7,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.controller.PythonController;
 import otaku.info.controller.SampleController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
@@ -19,7 +20,7 @@ import java.util.List;
 public class PublishAnnounceTasklet implements Tasklet {
 
     @Autowired
-    SampleController sampleController;
+    PythonController pythonController;
 
     @Autowired
     TextController textController;
@@ -33,7 +34,7 @@ public class PublishAnnounceTasklet implements Tasklet {
         List<Item> itemList = itemService.findReleasedItemList();
         for (Item item : itemList) {
             String text = textController.releasedItemAnnounce(item);
-            sampleController.post(item.getTeam_id(), text);
+            pythonController.post(item.getTeam_id(), text);
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){

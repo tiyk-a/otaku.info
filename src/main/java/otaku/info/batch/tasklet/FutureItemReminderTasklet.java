@@ -7,13 +7,12 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import otaku.info.controller.SampleController;
+import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -21,7 +20,7 @@ import java.util.List;
 public class FutureItemReminderTasklet implements Tasklet {
 
     @Autowired
-    SampleController sampleController;
+    PythonController pythonController;
 
     @Autowired
     TextController textController;
@@ -36,7 +35,7 @@ public class FutureItemReminderTasklet implements Tasklet {
         List<Item> itemList = itemService.findFutureItemByDate(365);
         for (Item item : itemList) {
             TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
-            sampleController.post(item.getTeam_id(), textController.futureItemReminder(twiDto));
+            pythonController.post(item.getTeam_id(), textController.futureItemReminder(twiDto));
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){

@@ -24,6 +24,7 @@ class BatchConfig {
     private final ItemCountdownTasklet itemCountdownTasklet;
     private final PublishAnnounceTasklet publishAnnounceTasklet;
     private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
+    private final TvPostTasklet tvPostTasklet;
 
     private final TvTasklet tvTasklet;
 
@@ -113,5 +114,23 @@ class BatchConfig {
     Job tvJob() {
         return this.jobBuilderFactory.get("tvJob").incrementer(new RunIdIncrementer())
                 .start(tvStep()).build();
+    }
+
+    /**
+     * 取得済みTV番組の情報をグループごとに投稿します。
+     *
+     * @return
+     */
+    @Bean
+    Step tvPostStep() {
+        return stepBuilderFactory.get("tvPostStep") //Step名を指定
+                .tasklet(tvPostTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job tvPostJob() {
+        return this.jobBuilderFactory.get("tvPostJob").incrementer(new RunIdIncrementer())
+                .start(tvPostStep()).build();
     }
 }

@@ -40,6 +40,10 @@ public class Scheduler {
     @Qualifier("tvJob")
     private Job tvJob;
 
+    @Autowired
+    @Qualifier("tvPostJob")
+    private Job tvPostJob;
+
     @Scheduled(cron = "${cron.rakutenSearch}")
     public void run1(){
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
@@ -108,6 +112,18 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(tvJob, jobParameters);
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "${cron.tvPost}")
+    public void run7(){
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run7", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(tvPostJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
         }

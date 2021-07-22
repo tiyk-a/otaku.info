@@ -14,6 +14,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 楽天アフェリエイトへ商品情報を取りに行くコントローラー
+ *
+ */
 @AllArgsConstructor
 @Controller
 public class RakutenController {

@@ -2,11 +2,15 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.TvDto;
 import otaku.info.entity.Program;
 import otaku.info.searvice.MemberService;
@@ -15,8 +19,17 @@ import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * pyTwi2からリクエストを受けて何かしらの処理をするコントローラー
+ *
+ * パスはダイレクトに@xxMappingのが生きています。@RestController("/python")が効いていない。
+ */
 @RestController("/python")
 @AllArgsConstructor
 public class PythonController {
@@ -35,6 +48,42 @@ public class PythonController {
 
     @Autowired
     private DateUtils dateUtils;
+
+    @Autowired
+    RestTemplate restTemplate;
+
+    /**
+     * Pythonにツイートするようにデータを送る
+     *
+     * @param teamId
+     * @param text
+     * @return
+     * @throws JSONException
+     */
+//    public String post(Map<String, String> headers, String json) {
+    public String post(Integer teamId, String text) throws JSONException {
+        System.out.println("これをTweetします " + text);
+
+        String url = "https://pytwi2.herokuapp.com/twi";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        Map<String, Object> map = new HashMap<>();
+        map.put("title", text);
+        map.put("teamId", teamId);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            System.out.println("Request Successful: " + text);
+        } else {
+            System.out.println("Request Failed: " + text);
+        }
+        return "done";
+    }
 
     @PostMapping("/postTvProgram")
     public void postTvProgram(@RequestBody TvDto tvDto) {

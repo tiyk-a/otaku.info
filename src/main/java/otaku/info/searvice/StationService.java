@@ -16,4 +16,8 @@ public class StationService {
     public Long findStationId(String stationName) {
         return stationRepository.findStationId(stationName);
     }
+
+    public String getStationName(Long stationId) {
+        return stationRepository.getStationName(stationId);
+    }
 }

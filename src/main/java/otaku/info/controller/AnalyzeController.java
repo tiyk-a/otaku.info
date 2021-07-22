@@ -11,6 +11,10 @@ import otaku.info.utils.StringUtilsMine;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * 必要なデータを探し出すの。
+ *
+ */
 @Controller
 @AllArgsConstructor
 public class AnalyzeController {

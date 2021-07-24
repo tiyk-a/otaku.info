@@ -35,6 +35,15 @@ public class TeamService {
         return teamRepository.getAllId();
     }
 
+    /**
+     * TwitterのIDがあるグループのIDを取得する
+     *
+     * @return
+     */
+    public List<Long> getIdByTw() {
+        return teamRepository.getIdByTw();
+    }
+
     public String getTeamName(Long teamId) {
         return teamRepository.findTeamNameById(teamId);
     }

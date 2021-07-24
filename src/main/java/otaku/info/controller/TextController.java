@@ -46,7 +46,7 @@ public class TextController {
 
     public String futureItemReminder(TwiDto twiDto) {
         int diff = dateUtils.dateDiff(new Date(), twiDto.getPublication_date());
-        return "予約はお済みですか？%0A%0A【発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        return "【発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
     }
 
     public String countdown(Item item) {

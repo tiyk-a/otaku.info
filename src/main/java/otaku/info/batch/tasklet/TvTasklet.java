@@ -16,7 +16,7 @@ import java.net.URL;
 @StepScope
 public class TvTasklet implements Tasklet {
 
-    static final String TV_URL = "https://pytwi2.herokuapp.com/tv";
+    static final String TV_URL = "https://pytwi2.herokuapp.com/search";
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {

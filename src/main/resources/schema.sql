@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `team`
     kana varchar(255),
     mnemonic varchar(255),
     anniversary date,
+    tw_id varchar(15),
     created_at timestamp default current_timestamp,
     updated_at timestamp default current_timestamp on update current_timestamp,
     primary key (`team_id`)

@@ -35,6 +35,9 @@ public class Team {
     private String anniversary;
 
     @Column(nullable = true)
+    private String tw_id;
+
+    @Column(nullable = true)
     private Timestamp created_at;
 
     @Column(nullable = true)

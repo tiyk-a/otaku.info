@@ -54,13 +54,13 @@ public class TvController  {
 
     /**
      * 全てのグループでTV出演情報がない時の処理
-     * （「各グループ名＋出演情報ありません」の投稿）
+     * （Twitterのあるグループのみ「グループ名＋出演情報ありません」の投稿）
      *
      * @param forToday
      * @param date
      */
     public void allNoTvPost(boolean forToday, Date date) throws JSONException {
-        List<Long> teamList = teamService.getAllId();
+        List<Long> teamList = teamService.getIdByTw();
         for (Long teamId : teamList) {
             pythonController.post(teamId.intValue(), textController.tvPostNoAlert(teamId, forToday, date));
         }

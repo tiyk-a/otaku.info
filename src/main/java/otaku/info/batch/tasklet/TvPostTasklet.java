@@ -47,7 +47,7 @@ public class TvPostTasklet implements Tasklet {
             programList = tvController.getTvList(calTmrw.getTime());
         }
 
-        // 取得結果が0件だったら
+        // 取得結果が0件だったらTwitterのあるグループのみ「出演情報はない」ポストをする。
         if (programList.size() == 0) {
             if (forToday) {
                 tvController.allNoTvPost(forToday, calToday.getTime());

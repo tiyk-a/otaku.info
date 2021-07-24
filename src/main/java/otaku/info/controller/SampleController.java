@@ -113,6 +113,44 @@ public class SampleController {
     }
 
     /**
+     * Itemに不適切な商品が入ってしまっていたらItemId指定でDelItemへ移動します
+     * （Itemから商品を削除し同じ内容をDelItemに追加）
+     * パラメータの指定：00-001-22（数字をハイフンで区切ることで複数商品を1リクエストで処理）
+     *
+     * @return String
+     */
+    @GetMapping("/moveToDelItem/{itemIdListStr}")
+    public String moveToDelItem(@PathVariable String itemIdListStr) {
+        List<Long> itemIdList = new ArrayList<>();
+        List.of(itemIdListStr.split("-")).forEach(e -> itemIdList.add(Long.valueOf(e)));
+
+        if (itemIdList.size() == 0) return "No Id provided";
+
+        List<Long> notFoundIdList = new ArrayList<>();
+        int successCount = 0;
+        String result = "";
+        for (Long itemId : itemIdList) {
+            Item item = itemService.findByItemId(itemId).orElse(new Item());
+            if (item.getItem_id() == null) {
+                notFoundIdList.add(itemId);
+            } else {
+                successCount ++;
+                DelItem delItem = delItemService.saveItem(item.convertToDelItem());
+                itemService.deleteByItemId(item.getItem_id());
+                result = result + "【" + successCount + "】DelItemId:" + delItem.getDel_item_id() + "Title: " + delItem.getTitle() + "-------------------";
+            }
+
+            if (notFoundIdList.size() > 0) {
+                result = result + "Not found item";
+                for (Long id : notFoundIdList) {
+                    result = result + " item_id=" + id;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
      * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド
      *
      * @param teamId

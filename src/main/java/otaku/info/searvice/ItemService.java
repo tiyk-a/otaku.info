@@ -75,4 +75,8 @@ public class ItemService {
     public List<Item> findReleasedItemList() {
         return itemRepository.findReleasedItemList();
     }
+
+    public void deleteByItemId(Long itemId) {
+        itemRepository.deleteById(itemId);
+    }
 }

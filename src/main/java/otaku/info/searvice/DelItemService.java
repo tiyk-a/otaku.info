@@ -33,7 +33,7 @@ public class DelItemService {
             delItemRepository.saveAll(delItemList);
     }
 
-    public void saveItem(DelItem delItem) {
-        delItemRepository.save(delItem);
+    public DelItem saveItem(DelItem delItem) {
+        return delItemRepository.save(delItem);
     }
 }

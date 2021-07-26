@@ -41,17 +41,17 @@ public class TextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        return "新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
     }
 
     public String futureItemReminder(TwiDto twiDto) {
         int diff = dateUtils.dateDiff(new Date(), twiDto.getPublication_date());
-        return "【発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
     }
 
     public String countdown(Item item) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date());
-        String str1 = "発売まであと" + diff + "日！%0A%0A" + item.getTitle() + "%0A%0A";
+        String str1 = "【PR】発売まであと" + diff + "日！%0A%0A" + item.getTitle() + "%0A%0A";
         String str2 = item.getUrl();
         String result;
         int length = str1.length() + str2.length() + "%0A%0A".length();
@@ -64,7 +64,7 @@ public class TextController {
     }
 
     public String releasedItemAnnounce(Item item) {
-        String str1 = "本日発売！%0A%0A" + item.getTitle() + "%0A%0A";
+        String str1 = "【PR】本日発売！%0A%0A" + item.getTitle() + "%0A%0A";
         String str2 = item.getUrl();
         String result;
         int length = str1.length() + str2.length() + "%0A%0A".length();
@@ -77,9 +77,9 @@ public class TextController {
     }
 
     public String twitterPerson(TwiDto twiDto, String memberName) {
-        String result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
-        if (result.length() + memberName.length() < 139) {
-            result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
+        String result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        if (result.length() + memberName.length() < 135) {
+            result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
         }
         return result;
     }

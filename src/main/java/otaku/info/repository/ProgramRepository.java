@@ -2,7 +2,6 @@ package otaku.info.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import otaku.info.entity.DelItem;
 import otaku.info.entity.Program;
 
 import java.util.Date;

@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.MemberSearchDto;
 import otaku.info.dto.TwiDto;
-import otaku.info.entity.DelItem;
 import otaku.info.entity.Item;
-import otaku.info.searvice.DelItemService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 
@@ -46,9 +44,6 @@ public class SampleController {
 
     @Autowired
     private ItemService itemService;
-
-    @Autowired
-    private DelItemService delItemService;
 
     @Autowired
     private TeamService teamService;
@@ -83,18 +78,11 @@ public class SampleController {
         tmp.setItem_code("adcfvgbhnaa");
         tmp.setTeam_id(1);
         itemService.saveItem(tmp);
-        DelItem tmpDel = new DelItem();
-        tmpDel.setSite_id(1);
-        tmpDel.setItem_code("asxcvbnmaa");
-        tmpDel.setTeam_id(1);
-        tmpDel.setItem_caption("aaaaaa");
-        delItemService.saveItem(tmpDel);
 
         List<String> list = controller.affiliSearchWord(artistId);
         List<String> itemCodeList = rakutenController.search(list);
 
         itemCodeList = itemService.findNewItemList(itemCodeList);
-        itemCodeList = delItemService.findNewItemList(itemCodeList);
 
         List<Item> newItemList = new ArrayList<>();
         if (itemCodeList.size() > 0) {
@@ -110,8 +98,7 @@ public class SampleController {
     }
 
     /**
-     * Itemに不適切な商品が入ってしまっていたらItemId指定でDelItemへ移動します
-     * （Itemから商品を削除し同じ内容をDelItemに追加）
+     * Itemに不適切な商品が入ってしまっていたらItemId指定でdel_flgをonにします。
      * パラメータの指定：00-001-22（数字をハイフンで区切ることで複数商品を1リクエストで処理）
      *
      * @return String
@@ -132,9 +119,9 @@ public class SampleController {
                 notFoundIdList.add(itemId);
             } else {
                 successCount ++;
-                DelItem delItem = delItemService.saveItem(item.convertToDelItem());
-                itemService.deleteByItemId(item.getItem_id());
-                result = result + "【" + successCount + "】DelItemId:" + delItem.getDel_item_id() + "Title: " + delItem.getTitle() + "-------------------";
+                item.setDel_flg(true);
+                itemService.saveItem(item);
+                result = result + "【" + successCount + "】itemId:" + item.getItem_id() + "Title: " + item.getTitle() + "-------------------";
             }
 
             if (notFoundIdList.size() > 0) {
@@ -160,7 +147,6 @@ public class SampleController {
         List<String> itemCodeList = rakutenController.search(list);
 
         itemCodeList = itemService.findNewItemList(itemCodeList);
-        itemCodeList = delItemService.findNewItemList(itemCodeList);
 
         List<Item> newItemList = new ArrayList<>();
         if (itemCodeList.size() > 0) {
@@ -207,10 +193,11 @@ public class SampleController {
         // 保存する商品リストから不要な商品リストを削除する
         newItemList.removeAll(removeList);
 
-        // 不要商品リストに入った商品は不要商品テーブルに格納する
+        // 不要商品リストに入った商品を商品テーブルに格納する
         if (removeList.size() > 0) {
             System.out.println("違う商品を保存します");
-            delItemService.saveAll(removeList);
+            removeList.forEach(e -> e.setDel_flg(true));
+            itemService.saveAll(removeList);
         }
 
         List<Item> savedItemList = new ArrayList<>();
@@ -248,7 +235,6 @@ public class SampleController {
         List<String> itemCodeList = rakutenController.search(list);
 
         itemCodeList = itemService.findNewItemList(itemCodeList);
-        itemCodeList = delItemService.findNewItemList(itemCodeList);
 
         List<Item> newItemList = new ArrayList<>();
         if (itemCodeList.size() > 0) {
@@ -299,7 +285,8 @@ public class SampleController {
         // 不要商品リストに入った商品は不要商品テーブルに格納する
         if (removeList.size() > 0) {
             System.out.println("違う商品を保存します");
-            delItemService.saveAll(removeList);
+            removeList.forEach(e -> e.setDel_flg(true));
+            itemService.saveAll(removeList);
         }
 
         List<Item> savedItemList = new ArrayList<>();

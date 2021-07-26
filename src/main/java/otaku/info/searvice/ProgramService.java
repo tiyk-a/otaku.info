@@ -8,6 +8,7 @@ import otaku.info.repository.ProgramRepository;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -37,4 +38,8 @@ public class ProgramService  {
     public List<Program> findByFctChk(int i) {
         return programRepository.findByFctChk(i);
     }
+
+    public Optional<Program> findbyProgramId(Long programId) {
+        return programRepository.findById(programId);
+    };
 }

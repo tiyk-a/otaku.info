@@ -8,7 +8,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
-import otaku.info.controller.SampleController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;

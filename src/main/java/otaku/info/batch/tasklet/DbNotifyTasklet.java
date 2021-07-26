@@ -9,10 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.LineController;
 import otaku.info.dto.DbNotifDto;
-import otaku.info.entity.DelItem;
 import otaku.info.entity.Item;
 import otaku.info.entity.Program;
-import otaku.info.searvice.DelItemService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.ProgramService;
 
@@ -32,9 +30,6 @@ public class DbNotifyTasklet implements Tasklet {
     ItemService itemService;
 
     @Autowired
-    DelItemService delItemService;
-
-    @Autowired
     ProgramService programService;
 
     @Autowired
@@ -48,11 +43,6 @@ public class DbNotifyTasklet implements Tasklet {
         if (itemService.waitingFctChk()) {
             List<Item> itemList = itemService.findByFctChk(0);
             itemList.forEach(e -> dbNotifDtoList.add(new DbNotifDto(e.toString(), e.getPublication_date(), null)));
-        }
-
-        if (delItemService.waitingFctChk()) {
-            List<DelItem> delItemList = delItemService.findByFctChk(0);
-            delItemList.forEach(e -> dbNotifDtoList.add(new DbNotifDto(e.toString(), e.getPublication_date(), null)));
         }
 
         if (programService.waitingFctChk()) {

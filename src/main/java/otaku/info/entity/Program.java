@@ -42,6 +42,12 @@ public class Program {
     @Column(nullable = true)
     private String member_id;
 
+    @Column(nullable = false)
+    private boolean fct_chk;
+
+    @Column(nullable = false)
+    private boolean del_flg;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

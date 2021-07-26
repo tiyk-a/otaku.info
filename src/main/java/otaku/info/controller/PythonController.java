@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.dto.DbNotifDto;
 import otaku.info.dto.TvDto;
 import otaku.info.entity.Program;
 import otaku.info.searvice.MemberService;
@@ -20,10 +21,8 @@ import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * pyTwi2からリクエストを受けて何かしらの処理をするコントローラー
@@ -33,6 +32,9 @@ import java.util.Map;
 @RestController("/python")
 @AllArgsConstructor
 public class PythonController {
+
+    @Autowired
+    LineController lineController;
 
     @Autowired
     private ProgramService programService;
@@ -77,11 +79,14 @@ public class PythonController {
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
+        List<DbNotifDto> dbNotifDtoList = new ArrayList<>();
+        dbNotifDtoList.add(new DbNotifDto(text + " ■teamId=" + teamId, null, LocalDateTime.now()));
         if (response.getStatusCode() == HttpStatus.CREATED) {
             System.out.println("Request Successful: " + text);
         } else {
             System.out.println("Request Failed: " + text);
         }
+        lineController.postAll(dbNotifDtoList);
         return "done";
     }
 

@@ -1,6 +1,5 @@
 package otaku.info.controller;
 
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,8 +10,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.http.*;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;

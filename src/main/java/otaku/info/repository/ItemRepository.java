@@ -31,4 +31,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE publication_date = CURRENT_DATE")
     List<Item> findReleasedItemList();
+
+    @Query("SELECT count(*) FROM Item WHERE fct_chk = 0")
+    Long waitingFctChk();
+
+    @Query("SELECT t FROM Item t WHERE fct_chk = ?1")
+    List<Item> findByFctChk(int i);
 }

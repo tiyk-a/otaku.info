@@ -79,4 +79,13 @@ public class ItemService {
     public void deleteByItemId(Long itemId) {
         itemRepository.deleteById(itemId);
     }
+
+    public boolean waitingFctChk() {
+        Long result = itemRepository.waitingFctChk();
+        return result!=0;
+    }
+
+    public List<Item> findByFctChk(int i) {
+        return itemRepository.findByFctChk(i);
+    }
 }

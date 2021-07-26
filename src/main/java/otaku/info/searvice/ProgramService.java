@@ -29,4 +29,12 @@ public class ProgramService  {
         return programRepository.findByOnAirDate(date);
     }
 
+    public boolean waitingFctChk() {
+        Long result = programRepository.waitingFctChk();
+        return result!=0;
+    }
+
+    public List<Program> findByFctChk(int i) {
+        return programRepository.findByFctChk(i);
+    }
 }

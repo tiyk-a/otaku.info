@@ -25,6 +25,7 @@ class BatchConfig {
     private final PublishAnnounceTasklet publishAnnounceTasklet;
     private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
     private final TvPostTasklet tvPostTasklet;
+    private final DbNotifyTasklet dbNotifyTasklet;
 
     private final TvTasklet tvTasklet;
 
@@ -132,5 +133,23 @@ class BatchConfig {
     Job tvPostJob() {
         return this.jobBuilderFactory.get("tvPostJob").incrementer(new RunIdIncrementer())
                 .start(tvPostStep()).build();
+    }
+
+    /**
+     * 取得済みTV番組の情報をグループごとに投稿します。
+     *
+     * @return
+     */
+    @Bean
+    Step dbNotifyStep() {
+        return stepBuilderFactory.get("dbNotifyStep") //Step名を指定
+                .tasklet(dbNotifyTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job dbNotifyJob() {
+        return this.jobBuilderFactory.get("dbNotifyJob").incrementer(new RunIdIncrementer())
+                .start(dbNotifyStep()).build();
     }
 }

@@ -36,4 +36,13 @@ public class DelItemService {
     public DelItem saveItem(DelItem delItem) {
         return delItemRepository.save(delItem);
     }
+
+    public boolean waitingFctChk() {
+        Long result = delItemRepository.waitingFctChk();
+        return result!=0;
+    }
+
+    public List<DelItem> findByFctChk(int i) {
+        return delItemRepository.findByFctChk(i);
+    }
 }

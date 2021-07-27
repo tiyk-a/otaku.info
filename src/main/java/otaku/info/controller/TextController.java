@@ -11,6 +11,7 @@ import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public class TextController {
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy'年'MM'月'dd'日'");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("MM'/'dd");
     private SimpleDateFormat sdf3 = new SimpleDateFormat("hh:mm");
-
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
     /**
      * Twitterポスト用のメッセージを作成します。
      *
@@ -163,10 +164,12 @@ public class TextController {
             num = num.replaceAll("^.*-", "");
             Long teamId = Long.valueOf(num);
             String result = "";
+            // Format LocalDateTime
+            String formattedDateTime = program.getOn_air_date().format(formatter);
             if (keyMemberMap.containsKey(teamId)) {
-                result = "このあと" + program.getOn_air_date() + "~" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
+                result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
             } else {
-                result = "このあと" + program.getOn_air_date() + "~" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
+                result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
             }
             resultMap.put(entry.getKey(), result);
         }

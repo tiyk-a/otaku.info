@@ -36,9 +36,11 @@ public class Program {
     @Column(nullable = true)
     private LocalDateTime on_air_date;
 
+    /** ","区切り、複数可 */
     @Column(nullable = true)
     private String team_id;
 
+    /** ","区切り、複数可 */
     @Column(nullable = true)
     private String member_id;
 

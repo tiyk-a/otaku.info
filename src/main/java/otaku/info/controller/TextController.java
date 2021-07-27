@@ -2,17 +2,17 @@ package otaku.info.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
-import otaku.info.entity.Item;
-import otaku.info.entity.Program;
+import otaku.info.entity.*;
+import otaku.info.searvice.MemberService;
 import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 投稿用のテキストを色々と生成します。
@@ -26,6 +26,9 @@ public class TextController {
 
     @Autowired
     private TeamService teamService;
+
+    @Autowired
+    private MemberService memberService;
 
     @Autowired
     private StationService stationService;
@@ -114,5 +117,59 @@ public class TextController {
             info = info + sdf3.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
         }
         return result + info;
+    }
+
+    /**
+     *
+     * @param program
+     * @return Map<ProgramId-TeamId, text>
+     */
+    public Map<String, String> tvAlert(Program program) {
+        String stationName = stationService.getStationName(program.getStation_id());
+        List<Long> teamIdList = List.of(program.getTeam_id().split(","))
+                .stream().map(Integer::parseInt).collect(Collectors.toList())
+                .stream().map(Integer::longValue).collect(Collectors.toList());
+
+        Map<String, String> resultMap = new HashMap<>();
+        if (teamIdList.size() > 0) {
+            // Mapのkeyを作り格納
+            teamIdList.forEach(e -> resultMap.put(program.getProgram_id() + "-" + e, null));
+        }
+
+        // Member情報がある場合は情報を集める
+        List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
+        if (program.getMember_id() != null) {
+            // Member情報格納
+            List.of(program.getMember_id().split(","))
+                    .stream().map(Integer::parseInt).collect(Collectors.toList())
+                    .stream().map(Integer::longValue).collect(Collectors.toList())
+                    .forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
+        }
+
+        Map<Long, String> keyMemberMap = new HashMap<>();
+        if (teamIdMemberNameDtoList.size() > 0) {
+            for (TeamIdMemberNameDto dto : teamIdMemberNameDtoList) {
+                if (keyMemberMap.containsKey(dto.getTeam_id())) {
+                    String v = keyMemberMap.get(dto.getTeam_id());
+                    keyMemberMap.put(dto.getTeam_id(), v + "・" + dto.getMember_name());
+                } else {
+                    keyMemberMap.put(dto.getTeam_id(), dto.getMember_name());
+                }
+            }
+        }
+
+        for (Map.Entry<String, String> entry : resultMap.entrySet()) {
+            String num = entry.getKey();
+            num = num.replaceAll("^.*-", "");
+            Long teamId = Long.valueOf(num);
+            String result = "";
+            if (keyMemberMap.containsKey(teamId)) {
+                result = "このあと" + program.getOn_air_date() + "~" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
+            } else {
+                result = "このあと" + program.getOn_air_date() + "~" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
+            }
+            resultMap.put(entry.getKey(), result);
+        }
+        return resultMap;
     }
 }

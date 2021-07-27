@@ -86,6 +86,7 @@ public class PythonController {
         } else {
             System.out.println("Request Failed: " + text);
         }
+        // LINEに投稿完了通知を送る
         lineController.postAll(dbNotifDtoList);
         return "done";
     }

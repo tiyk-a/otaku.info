@@ -26,6 +26,7 @@ class BatchConfig {
     private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
     private final TvPostTasklet tvPostTasklet;
     private final DbNotifyTasklet dbNotifyTasklet;
+    private final TvAlertTasklet tvAlertTasklet;
 
     private final TvTasklet tvTasklet;
 
@@ -151,5 +152,23 @@ class BatchConfig {
     Job dbNotifyJob() {
         return this.jobBuilderFactory.get("dbNotifyJob").incrementer(new RunIdIncrementer())
                 .start(dbNotifyStep()).build();
+    }
+
+    /**
+     * 今から指定時間内に始まるTV番組を通知します。
+     *
+     * @return
+     */
+    @Bean
+    Step tvAlertStep() {
+        return stepBuilderFactory.get("tvAlertStep") //Step名を指定
+                .tasklet(tvAlertTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job tvAlertJob() {
+        return this.jobBuilderFactory.get("tvAlertJob").incrementer(new RunIdIncrementer())
+                .start(tvAlertStep()).build();
     }
 }

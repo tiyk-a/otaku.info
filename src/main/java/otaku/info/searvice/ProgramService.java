@@ -6,6 +6,8 @@ import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +30,10 @@ public class ProgramService  {
 
     public List<Program> findByOnAirDate(Date date) {
         return programRepository.findByOnAirDate(date);
+    }
+
+    public List<Program> findByOnAirDateTime(LocalDateTime ldt, int hour) {
+        return programRepository.findByOnAirDate(ldt, ldt.plusHours(hour));
     }
 
     public boolean waitingFctChk() {

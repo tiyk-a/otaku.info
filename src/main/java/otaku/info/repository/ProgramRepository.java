@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Program;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +15,9 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query("SELECT p FROM program p WHERE DATE(on_air_date) = ?1")
     List<Program> findByOnAirDate(Date date);
+
+    @Query("SELECT p FROM program p WHERE on_air_date >= ?1 and on_air_date < ?2")
+    List<Program> findByOnAirDate(LocalDateTime ldtFrom, LocalDateTime ldtTo);
 
     @Query("SELECT count(*) FROM program WHERE fct_chk = 0")
     Long waitingFctChk();

@@ -211,7 +211,7 @@ public class SampleController {
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(item.getTitle());
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
                     String result = textController.twitter(twiDto);
                     pythonController.post(item.getTeam_id(), result);
                 } else {
@@ -300,7 +300,7 @@ public class SampleController {
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(item.getTitle());
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
                     String result = textController.twitterPerson(twiDto, dto.getMember_name());
                     pythonController.post(item.getTeam_id(), result);
                 } else {

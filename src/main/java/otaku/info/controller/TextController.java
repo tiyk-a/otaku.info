@@ -7,6 +7,7 @@ import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.searvice.MemberService;
 import otaku.info.searvice.StationService;
+import otaku.info.searvice.TagService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
@@ -34,6 +35,9 @@ public class TextController {
     @Autowired
     private StationService stationService;
 
+    @Autowired
+    private TagService tagService;
+
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy'年'MM'月'dd'日'");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("MM'/'dd");
     private SimpleDateFormat sdf3 = new SimpleDateFormat("hh:mm");
@@ -45,12 +49,14 @@ public class TextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String futureItemReminder(TwiDto twiDto) {
         int diff = dateUtils.dateDiff(new Date(), twiDto.getPublication_date());
-        return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String countdown(Item item) {
@@ -64,7 +70,8 @@ public class TextController {
         } else {
             result = str1 + str2;
         }
-        return result;
+        String tags = tagService.getTagByTeam((long) item.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return result + "%0A%0A" + tags;
     }
 
     public String releasedItemAnnounce(Item item) {
@@ -77,7 +84,8 @@ public class TextController {
         } else {
             result = str1 + str2;
         }
-        return result;
+        String tags = tagService.getTagByTeam((long) item.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return result + "%0A%0A" + tags;
     }
 
     public String twitterPerson(TwiDto twiDto, String memberName) {
@@ -85,7 +93,8 @@ public class TextController {
         if (result.length() + memberName.length() < 135) {
             result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
         }
-        return result;
+        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return result + "%0A%0A" + tags;
     }
 
     /**
@@ -98,7 +107,8 @@ public class TextController {
      */
     public String tvPostNoAlert(Long teamId, boolean forToday, Date date) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
-        return dateStr + "の" + teamService.getTeamName(teamId) + "のTV出演情報はありません。";
+        String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        return dateStr + "の" + teamService.getTeamName(teamId) + "のTV出演情報はありません。" + "%0A%0A" + tags;
     }
 
     /**
@@ -121,6 +131,7 @@ public class TextController {
     }
 
     /**
+     * 直近のTV番組のアラート文章を作ります。
      *
      * @param program
      * @return Map<ProgramId-TeamId, text>
@@ -171,7 +182,8 @@ public class TextController {
             } else {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
             }
-            resultMap.put(entry.getKey(), result);
+            String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+            resultMap.put(entry.getKey(), result + "%0A%0A" + tags);
         }
         return resultMap;
     }

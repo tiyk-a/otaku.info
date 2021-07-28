@@ -34,7 +34,7 @@ public class FutureItemReminderTasklet implements Tasklet {
         // 1年以内に発売される商品リストを取得
         List<Item> itemList = itemService.findFutureItemByDate(365);
         for (Item item : itemList) {
-            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null);
+            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
             pythonController.post(item.getTeam_id(), textController.futureItemReminder(twiDto));
             try{
                 Thread.sleep(1000);

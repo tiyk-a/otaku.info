@@ -22,4 +22,6 @@ public class TwiDto {
     public Date publication_date;
 
     public Date reserve_due;
+
+    public Long team_id;
 }

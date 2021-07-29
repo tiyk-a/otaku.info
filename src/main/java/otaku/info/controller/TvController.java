@@ -1,14 +1,24 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Program;
+import otaku.info.entity.Station;
+import otaku.info.searvice.MemberService;
 import otaku.info.searvice.ProgramService;
+import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 @AllArgsConstructor
@@ -25,6 +35,19 @@ public class TvController  {
 
     @Autowired
     private PythonController pythonController;
+
+    @Autowired
+    private MemberService memberService;
+
+    @Autowired
+    private StationService stationService;
+
+    final Pattern datePattern = Pattern.compile("^[0-9][0-9]?/[0-9][0-9]? \\((Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\) [0-9][0-9]?:[0-9][0-9]?");
+
+//    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d (EEE) H:m");
+
+    final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
+            .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
 
     public List<Program> getTvList(Date date) {
         return programService.findByOnAirDate(date);
@@ -63,6 +86,67 @@ public class TvController  {
         List<Long> teamList = teamService.getIdByTw();
         for (Long teamId : teamList) {
             pythonController.post(teamId.intValue(), textController.tvPostNoAlert(teamId, forToday, date));
+        }
+    }
+
+    /**
+     * tvkingdomから取得したTV情報を分解して保存します。
+     *
+     * @param detailTitleMap
+     */
+    public void tvKingdomSave(Map<String, String> detailTitleMap, String teamName) {
+        for (Map.Entry<String, String> e : detailTitleMap.entrySet()) {
+
+            // 新しいProjectオブジェクトを作ります。
+            Program program = new Program();
+            program.setTitle(e.getValue());
+            program.setFct_chk(false);
+
+            Matcher m = datePattern.matcher(e.getKey());
+            program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
+
+            List<Long> teamIdList = teamService.findTeamIdListByText(e.getValue());
+            if (teamIdList.size() == 0) {
+                teamIdList.addAll(teamService.findTeamIdListByText(e.getValue()));
+            }
+            teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
+            String teamIdStr = StringUtils.join(teamIdList, ',');
+            program.setTeam_id(teamIdStr);
+
+            List<Long> memberIdList = memberService.findMemberIdByText(e.getValue());
+            memberIdList.addAll(memberService.findMemberIdByText(e.getKey()));
+            String memberIdStr = StringUtils.join(memberIdList, ',');
+            program.setMember_id(memberIdStr);
+
+            String station = e.getKey().replace("^.*([0-9]*分) ", "");
+            String station2 = station.replace("(Ch.*", "");
+            Long stationId = stationService.findStationId(station2);
+            if (stationId != null) {
+                program.setStation_id(stationId);
+            } else {
+                Station s = new Station();
+                s.setStation_name(station2);
+                s.setKeyword(station2.substring(0, 9));
+                Station savedStation = stationService.save(s);
+                program.setStation_id(savedStation.getStation_id());
+            }
+            program.setDescription(e.getKey());
+
+            // Programの内容を精査します。
+            // 既存データに重複がないか比較する
+            boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
+            if (isExisting) {
+                // すでに登録があったら内容を比較し、違いがあれば更新
+                Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
+                boolean isTotallySame = existingP.getMember_id().equals(program.getMember_id()) && existingP.getTeam_id().equals(program.getTeam_id()) &&
+                        existingP.getDescription().equals(program.getDescription());
+                if (!isTotallySame) {
+                    programService.overwrite(existingP.getProgram_id(), program);
+                }
+            } else {
+                // 既存登録がなければ新規登録します。
+                programService.save(program);
+            }
         }
     }
 }

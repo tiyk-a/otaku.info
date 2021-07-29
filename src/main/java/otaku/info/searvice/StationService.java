@@ -2,6 +2,7 @@ package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import otaku.info.entity.Station;
 import otaku.info.repository.StationRepository;
 
 import javax.transaction.Transactional;
@@ -19,5 +20,9 @@ public class StationService {
 
     public String getStationName(Long stationId) {
         return stationRepository.getStationName(stationId);
+    }
+
+    public Station save(Station station) {
+        return stationRepository.save(station);
     }
 }

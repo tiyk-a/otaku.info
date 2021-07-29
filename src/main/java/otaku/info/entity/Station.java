@@ -24,10 +24,10 @@ public class Station {
     @Column(nullable = false)
     public String keyword;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     public Timestamp created_at;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     public Timestamp updated_at;
 
 }

@@ -24,4 +24,10 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query("SELECT t FROM program t WHERE fct_chk = ?1")
     List<Program> findByFctChk(int i);
+
+    @Query("SELECT count(*) FROM program WHERE title = ?1 and station_id = ?2 and on_air_date = ?3")
+    Long hasProgram(String title, Long stationId, LocalDateTime onAirDate);
+
+    @Query("SELECT t FROM program t WHERE title = ?1 and station_id = ?2 and on_air_date = ?3")
+    Program findByIdentity(String title, Long stationId, LocalDateTime onAirDate);
 }

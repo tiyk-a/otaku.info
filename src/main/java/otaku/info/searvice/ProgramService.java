@@ -1,6 +1,7 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
@@ -48,4 +49,20 @@ public class ProgramService  {
     public Optional<Program> findbyProgramId(Long programId) {
         return programRepository.findById(programId);
     };
+
+    public boolean hasProgram(String title, Long stationId, LocalDateTime onAirDate) {
+        Long result = programRepository.hasProgram(title, stationId, onAirDate);
+        return result!=0;
+    }
+
+    public Program findByIdentity(String title, Long stationId, LocalDateTime onAirDate) {
+        return programRepository.findByIdentity(title, stationId, onAirDate);
+    }
+
+    public Program overwrite(Long programId, Program program) {
+        Program overridden = new Program();
+        BeanUtils.copyProperties(program, overridden);
+        overridden.setProgram_id(programId);
+        return programRepository.save(overridden);
+    }
 }

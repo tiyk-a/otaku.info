@@ -10,7 +10,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.TvController;
-import otaku.info.entity.Team;
 import otaku.info.searvice.TeamService;
 
 @Component
@@ -37,9 +35,7 @@ public class TvTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- TV検索 START ---");
 
-        List<Team> teamList = teamService.findAllTeam();
-        List<String> teamNameList = new ArrayList<>();
-        teamList.forEach(t -> teamNameList.add(t.getTeam_name()));
+        List<String> teamNameList = teamService.findAllTeamName();
 
         for (String artist : teamNameList) {
             boolean nextFlg = true;
@@ -53,9 +49,10 @@ public class TvTasklet implements Tasklet {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
                 param = jsopConnect(urlWithParam, artist);
 
-                if (param == null) {
+                if (param.equals("")) {
                     nextFlg = false;
                 }
+                urlWithParam = TV_URL + param;
             }
             try{
                 Thread.sleep(1000);

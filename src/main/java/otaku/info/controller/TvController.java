@@ -103,7 +103,9 @@ public class TvController  {
             program.setFct_chk(false);
 
             Matcher m = datePattern.matcher(e.getKey());
-            program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
+            if (m.find()) {
+                program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
+            }
 
             List<Long> teamIdList = teamService.findTeamIdListByText(e.getValue());
             if (teamIdList.size() == 0) {
@@ -118,15 +120,19 @@ public class TvController  {
             String memberIdStr = StringUtils.join(memberIdList, ',');
             program.setMember_id(memberIdStr);
 
-            String station = e.getKey().replace("^.*([0-9]*分) ", "");
-            String station2 = station.replace("(Ch.*", "");
-            Long stationId = stationService.findStationId(station2);
+            String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
+            String station2 = station.replaceAll("\\(Ch.*", "");
+            Long stationId = stationService.findStationId(station2).orElse(null);
             if (stationId != null) {
                 program.setStation_id(stationId);
             } else {
                 Station s = new Station();
                 s.setStation_name(station2);
-                s.setKeyword(station2.substring(0, 9));
+                if (station2.length() > 8) {
+                    s.setKeyword(station2.substring(0, 9));
+                } else {
+                    s.setKeyword(station2);
+                }
                 Station savedStation = stationService.save(s);
                 program.setStation_id(savedStation.getStation_id());
             }
@@ -135,6 +141,7 @@ public class TvController  {
             // Programの内容を精査します。
             // 既存データに重複がないか比較する
             boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
+            System.out.println(program.toString());
             if (isExisting) {
                 // すでに登録があったら内容を比較し、違いがあれば更新
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());

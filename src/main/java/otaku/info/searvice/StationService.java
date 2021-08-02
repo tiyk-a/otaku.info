@@ -6,6 +6,7 @@ import otaku.info.entity.Station;
 import otaku.info.repository.StationRepository;
 
 import javax.transaction.Transactional;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -14,7 +15,8 @@ public class StationService {
 
     private final StationRepository stationRepository;
 
-    public Long findStationId(String stationName) {
+    public Optional<Long> findStationId(String stationName) {
+        System.out.println("KOKOKOKOKOKO " + stationName);
         return stationRepository.findStationId(stationName);
     }
 

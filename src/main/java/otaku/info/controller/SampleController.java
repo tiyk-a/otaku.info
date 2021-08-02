@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.MemberSearchDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
@@ -50,6 +51,9 @@ public class SampleController {
 
     @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    Scheduler scheduler;
 
     /**
      * URLでアクセスできるtmpのメソッドです。
@@ -95,6 +99,41 @@ public class SampleController {
         List<Item> itemList = itemService.findAll();
         System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
         return itemList.toString();
+    }
+
+    @GetMapping("/batch/{id}")
+    public String batch(@PathVariable String id) {
+        int i = Integer.parseInt(id);
+        switch (i) {
+            case 1:
+                scheduler.run1();
+                break;
+            case 2:
+                scheduler.run2();
+                break;
+            case 3:
+                scheduler.run3();
+                break;
+            case 4:
+                scheduler.run4();
+                break;
+            case 5:
+                scheduler.run5();
+                break;
+            case 6:
+                scheduler.run6();
+                break;
+            case 7:
+                scheduler.run7();
+                break;
+            case 8:
+                scheduler.run8();
+                break;
+            case 9:
+                scheduler.run9();
+                break;
+        }
+            return "Done";
     }
 
     /**

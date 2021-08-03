@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -28,11 +27,9 @@ public class ItemCountdownTasklet implements Tasklet {
     @Autowired
     ItemService itemService;
 
-    Logger logger3 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch3");
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger3.info("--- 新商品カウントダウン START ---");
+        System.out.println("--- 新商品カウントダウン START ---");
         // 3日以内に発売する商品リストを取得
         List<Item> itemList = itemService.findFutureItemByDate(3);
         for (Item item : itemList) {
@@ -44,7 +41,7 @@ public class ItemCountdownTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger3.info("--- 新商品カウントダウン END ---");
+        System.out.println("--- 新商品カウントダウン END ---");
         return RepeatStatus.FINISHED;
     }
 }

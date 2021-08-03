@@ -2,7 +2,6 @@ package otaku.info.batch.tasklet;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import otaku.info.controller.TvController;
 import otaku.info.searvice.TeamService;
 
@@ -33,11 +31,9 @@ public class TvTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
-    Logger logger6 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch6");
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger6.info("--- TV検索 START ---");
+        System.out.println("--- TV検索 START ---");
 
         List<String> teamNameList = teamService.findAllTeamName();
 
@@ -48,7 +44,7 @@ public class TvTasklet implements Tasklet {
 
             urlWithParam += param;
 
-            logger6.info(artist + "の番組を検索します");
+            System.out.println(artist + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
                 param = jsopConnect(urlWithParam, artist);
@@ -64,7 +60,7 @@ public class TvTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger6.info("--- TV検索 END ---");
+        System.out.println("--- TV検索 END ---");
         return RepeatStatus.FINISHED;
     }
 
@@ -93,10 +89,5 @@ public class TvTasklet implements Tasklet {
         Element nextBtn = document.select("div.listIndexNum").first();
         // 次ページのパラメタを返却
         return nextBtn.select("a.linkArrowE").attr("href");
-    }
-
-    @ExceptionHandler(Throwable.class)
-    public void exceptionHandler(Throwable t) {
-        logger6.info(t.toString());
     }
 }

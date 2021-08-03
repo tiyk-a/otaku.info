@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -28,11 +27,9 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     ItemService itemService;
 
-    Logger logger4 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch4");
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger4.info("--- 商品発売日アナウンス START ---");
+        System.out.println("--- 商品発売日アナウンス START ---");
         List<Item> itemList = itemService.findReleasedItemList();
         for (Item item : itemList) {
             String text = textController.releasedItemAnnounce(item);
@@ -43,7 +40,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger4.info("--- 商品発売日アナウンス END ---");
+        System.out.println("--- 商品発売日アナウンス END ---");
         return RepeatStatus.FINISHED;
     }
 }

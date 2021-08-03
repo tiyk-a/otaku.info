@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -30,9 +31,11 @@ public class TvAlertTasklet implements Tasklet {
     @Autowired
     ProgramService programService;
 
+    Logger logger9 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch9");
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- TVアラート START ---");
+        logger9.info("--- TVアラート START ---");
         List<Program> programList = programService.findByOnAirDateTime(LocalDateTime.now(), 1);
         if (programList.size() > 0) {
             // Postする番組の投稿文を作る Map<ProgramId-TeamId, text>
@@ -47,7 +50,7 @@ public class TvAlertTasklet implements Tasklet {
                 }
             }
         }
-        System.out.println("--- TVアラート END ---");
+        logger9.info("--- TVアラート END ---");
         return RepeatStatus.FINISHED;
     }
 

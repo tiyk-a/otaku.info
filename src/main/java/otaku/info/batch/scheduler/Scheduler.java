@@ -1,6 +1,8 @@
 package otaku.info.batch.scheduler;
 
 import java.util.*;
+
+import org.slf4j.Logger;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
 import java.util.HashMap;
 
 @Component
@@ -51,6 +55,8 @@ public class Scheduler {
     @Autowired
     @Qualifier("tvAlertJob")
     private Job tvAlertJob;
+
+    Logger logger1 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch1");
 
     @Scheduled(cron = "${cron.rakutenSearch}")
     public void run1(){
@@ -159,5 +165,10 @@ public class Scheduler {
         }catch (Exception ex){
             System.out.println(ex.getMessage());
         }
+    }
+
+    @ExceptionHandler(Throwable.class)
+    public void exceptionHandler(Throwable t) {
+        logger1.info(t.toString());
     }
 }

@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -7,6 +8,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import otaku.info.controller.LineController;
 import otaku.info.dto.DbNotifDto;
 import otaku.info.entity.Item;
@@ -35,9 +37,11 @@ public class DbNotifyTasklet implements Tasklet {
     @Autowired
     LineController lineController;
 
+    Logger logger8 = org.slf4j.LoggerFactory.getLogger("otaku.info.batch8");
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- DB Insert Notify START ---");
+        logger8.info("--- DB Insert Notify START ---");
         List<DbNotifDto> dbNotifDtoList = new ArrayList<>();
 
         if (itemService.waitingFctChk()) {
@@ -53,8 +57,12 @@ public class DbNotifyTasklet implements Tasklet {
         if (dbNotifDtoList.size() > 0) {
             lineController.postAll(dbNotifDtoList);
         }
-        System.out.println("--- DB Insert Notify END ---");
+        logger8.info("--- DB Insert Notify END ---");
         return RepeatStatus.FINISHED;
     }
 
+    @ExceptionHandler(Throwable.class)
+    public void exceptionHandler(Throwable t) {
+        logger8.info(t.toString());
+    }
 }

@@ -1,25 +1,231 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- デフォルト設定読み込み -->
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+        <pattern>%date{yyyy-MM-dd HH:mm:ss} [%thread] %level %logger{0} - %msg \(%file:%line\)%n</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <level>INFO</level>
+    </filter>
+</appender>
 
-    <!--　保存先の設定　value保存先 -->
-    <springProperty name="logFileName" source="setting.log.absolutePath"/>
+    <!-- ファイルA出力用設定 --> ・・・②
+    <appender name="FILE_A" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 出力先ファイルパス -->
+        <file>logs/alog.log</file>
 
-    <!--　アプリケーションログのファイル書き出し設定を定義 name任意 class絶対クラス名 -->
-    <appender name="API_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logFileName}/api-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
+        <!-- ログのローテーション設定 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <!-- 世代管理されるファイルの命名パターン -->
+            <fileNamePattern>logs/alog.log.%i</fileNamePattern>    <!-- %iはインデックス。minIndexからMaxIndexまでの連番 -->
+            <minIndex>1</minIndex>
+            <maxIndex>7</maxIndex>      <!-- 最大7ファイルまで世代管理 -->
         </rollingPolicy>
+
+        <!-- ローテーションのトリガ。10MBに達した時点でローテーション。 -->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%msg%n</pattern>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!--　ログの出力 -->
-    <logger name="hasechi.api.filter.AccessLogFilter" level="INFO" additivity="false">
-        <appender-ref ref="API_LOG"/>
+    <!-- batch1出力用設定 -->
+    <appender name="BATCH_1" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch1.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch1.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch2出力用設定 -->
+    <appender name="BATCH_2" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch2.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch2.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch1出力用設定 -->
+    <appender name="BATCH_3" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch3.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch3.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch4出力用設定 -->
+    <appender name="BATCH_4" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch4.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch4.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch5出力用設定 -->
+    <appender name="BATCH_5" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch5.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch5.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch6出力用設定 -->
+    <appender name="BATCH_6" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch6.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch6.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch7出力用設定 -->
+    <appender name="BATCH_7" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch7.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch7.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch8出力用設定 -->
+    <appender name="BATCH_8" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch8.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch8.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- batch9出力用設定 -->
+    <appender name="BATCH_9" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/batch9.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/batch9.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <!-- %d{yyyy-MM-dd}の設定によって、自動でローテーションがトリガされる。日まで指定すると、毎日ローテーション。 -->
+
+            <!-- 最大３０日間保存 -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 設定 -->
+    <logger name="otaku.info.batch1" level="INFO">
+        <appender-ref ref="BATCH_1" />
     </logger>
+
+    <logger name="otaku.info.batch2" level="INFO">
+        <appender-ref ref="BATCH_2" />
+    </logger>
+
+    <logger name="otaku.info.batch3" level="INFO">
+        <appender-ref ref="BATCH_3" />
+    </logger>
+
+    <logger name="otaku.info.batch4" level="INFO">
+        <appender-ref ref="BATCH_4" />
+    </logger>
+
+    <logger name="otaku.info.batch5" level="INFO">
+        <appender-ref ref="BATCH_5" />
+    </logger>
+
+    <logger name="otaku.info.batch6" level="INFO">
+        <appender-ref ref="BATCH_6" />
+    </logger>
+
+    <logger name="otaku.info.batch7" level="INFO">
+        <appender-ref ref="BATCH_7" />
+    </logger>
+
+    <logger name="otaku.info.batch8" level="INFO">
+        <appender-ref ref="BATCH_8" />
+    </logger>
+
+    <logger name="otaku.info.batch9" level="INFO">
+        <appender-ref ref="BATCH_9" />
+    </logger>
+
+    <!-- rootロガー。ログは原則ファイルAと標準出力に出力する -->  ・・・⑤
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE_A" />
+    </root>
 </configuration>

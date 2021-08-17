@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -24,22 +25,24 @@ public class RakutenSearchMemberTasklet implements Tasklet {
     @Autowired
     MemberService memberService;
 
+    Logger logger = org.slf4j.LoggerFactory.getLogger(RakutenSearchMemberTasklet.class);
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 楽天新商品検索（個人） START ---");
+        logger.info("--- 楽天新商品検索（個人） START ---");
         List<MemberSearchDto> dtoList = new ArrayList<>();
         memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
         for (MemberSearchDto dto : dtoList) {
-            System.out.println("***** SEARCH: " + dto.getMember_name() + "*****");
+            logger.info("***** SEARCH: " + dto.getMember_name() + "*****");
             sampleController.searchMember(dto);
-            System.out.println("***** END: " + dto.getMember_name() + "*****");
+            logger.info("***** END: " + dto.getMember_name() + "*****");
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 楽天新商品検索（個人） END ---");
+        logger.info("--- 楽天新商品検索（個人） END ---");
         return RepeatStatus.FINISHED;
     }
 }

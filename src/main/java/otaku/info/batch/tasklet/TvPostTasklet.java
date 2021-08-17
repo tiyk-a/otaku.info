@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -27,9 +28,11 @@ public class TvPostTasklet implements Tasklet {
     @Autowired
     PythonController pythonController;
 
+    Logger logger = org.slf4j.LoggerFactory.getLogger(TvPostTasklet.class);
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- TV番組投稿処理 START ---");
+        logger.info("--- TV番組投稿処理 START ---");
         Calendar calToday = Calendar.getInstance();
         Calendar calTmrw = Calendar.getInstance();
         calTmrw.add(Calendar.DATE, 1);
@@ -54,8 +57,8 @@ public class TvPostTasklet implements Tasklet {
             } else {
                 tvController.allNoTvPost(forToday, calTmrw.getTime());
             }
-            System.out.println("--- TV番組投稿処理: 0件 ---");
-            System.out.println("--- TV番組投稿処理 END ---");
+            logger.info("--- TV番組投稿処理: 0件 ---");
+            logger.info("--- TV番組投稿処理 END ---");
             return RepeatStatus.FINISHED;
         }
 
@@ -90,8 +93,8 @@ public class TvPostTasklet implements Tasklet {
             pythonController.post(ele.getKey().intValue(), text);
         }
 
-        System.out.println("--- TV番組投稿グループ数: " + postCount + " ---");
-        System.out.println("--- TV番組投稿処理 END ---");
+        logger.info("--- TV番組投稿グループ数: " + postCount + " ---");
+        logger.info("--- TV番組投稿処理 END ---");
         return RepeatStatus.FINISHED;
     }
 

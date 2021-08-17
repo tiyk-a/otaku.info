@@ -14,12 +14,12 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%msg%n</pattern>
+            <pattern>%d{yyyy/MM/dd HH:mm:ss} %-5level [%thread] - %msg%n</pattern>
         </encoder>
     </appender>
 
     <!--　ログの出力 -->
-    <logger name="hasechi.api.filter.AccessLogFilter" level="INFO" additivity="false">
+    <logger name="otaku.info" level="INFO" additivity="false">
         <appender-ref ref="API_LOG"/>
     </logger>
 </configuration>

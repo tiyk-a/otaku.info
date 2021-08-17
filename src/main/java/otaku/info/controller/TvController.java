@@ -3,6 +3,7 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Program;
@@ -48,6 +49,8 @@ public class TvController  {
 
     final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
             .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
+
+    final Logger logger = org.slf4j.LoggerFactory.getLogger(TvController.class);
 
     public List<Program> getTvList(Date date) {
         return programService.findByOnAirDate(date);
@@ -141,7 +144,7 @@ public class TvController  {
             // Programの内容を精査します。
             // 既存データに重複がないか比較する
             boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-            System.out.println(program.toString());
+            logger.info(program.toString());
             if (isExisting) {
                 // すでに登録があったら内容を比較し、違いがあれば更新
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());

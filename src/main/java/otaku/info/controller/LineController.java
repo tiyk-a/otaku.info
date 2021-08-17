@@ -3,6 +3,7 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.batch.tasklet.TvTasklet;
 import otaku.info.dto.DbNotifDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.Program;
@@ -44,12 +46,14 @@ public class LineController {
 
     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
+    final Logger logger = org.slf4j.LoggerFactory.getLogger(LineController.class);
+
     public String postAll(List<DbNotifDto> dbNotifDtoList) throws JSONException {
         String url = "https://line-chiharu-ml.herokuapp.com/dbNotify";
 
         for (DbNotifDto dto: dbNotifDtoList) {
             String outline = dto.getData().substring(0,30);
-            System.out.println("これをpostします： " + outline);
+            logger.info("これをpostします： " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -60,9 +64,9 @@ public class LineController {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                System.out.println("Request Successful: " + outline);
+                logger.info("Request Successful: " + outline);
             } else {
-                System.out.println("Request Failed: " + outline);
+                logger.info("Request Failed: " + outline);
             }
         }
         return "done";

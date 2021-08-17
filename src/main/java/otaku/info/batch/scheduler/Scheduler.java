@@ -1,6 +1,8 @@
 package otaku.info.batch.scheduler;
 
 import java.util.*;
+
+import org.slf4j.Logger;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
+import otaku.info.batch.tasklet.ItemCountdownTasklet;
+
 import java.util.HashMap;
 
 @Component
@@ -52,6 +56,8 @@ public class Scheduler {
     @Qualifier("tvAlertJob")
     private Job tvAlertJob;
 
+    Logger logger = org.slf4j.LoggerFactory.getLogger(Scheduler.class);
+
     @Scheduled(cron = "${cron.rakutenSearch}")
     public void run1(){
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
@@ -60,7 +66,7 @@ public class Scheduler {
         try {
             jobLauncher.run(rakutenSearchJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
 
     }
@@ -73,7 +79,7 @@ public class Scheduler {
         try {
             jobLauncher.run(futureItemReminderJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -85,7 +91,7 @@ public class Scheduler {
         try {
             jobLauncher.run(itemCountdownJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -97,7 +103,7 @@ public class Scheduler {
         try {
             jobLauncher.run(publishAnnouncementJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -109,7 +115,7 @@ public class Scheduler {
         try {
             jobLauncher.run(rakutenSearchMemberJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -121,7 +127,7 @@ public class Scheduler {
         try {
             jobLauncher.run(tvJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -133,7 +139,7 @@ public class Scheduler {
         try {
             jobLauncher.run(tvPostJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -145,7 +151,7 @@ public class Scheduler {
         try {
             jobLauncher.run(dbNotifyJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 
@@ -157,7 +163,7 @@ public class Scheduler {
         try {
             jobLauncher.run(tvAlertJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.error(ex.getMessage());
         }
     }
 }

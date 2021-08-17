@@ -8,10 +8,12 @@ import java.util.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
@@ -55,6 +57,8 @@ public class SampleController {
     @Autowired
     Scheduler scheduler;
 
+    final Logger logger = org.slf4j.LoggerFactory.getLogger(SampleController.class);
+
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -93,11 +97,11 @@ public class SampleController {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
 
-        System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
+        logger.info("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(newItemList);
-        System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+        logger.info(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
         List<Item> itemList = itemService.findAll();
-        System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+        logger.info(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
         return itemList.toString();
     }
 
@@ -234,28 +238,28 @@ public class SampleController {
 
         // 不要商品リストに入った商品を商品テーブルに格納する
         if (removeList.size() > 0) {
-            System.out.println("違う商品を保存します");
+            logger.info("違う商品を保存します");
             removeList.forEach(e -> e.setDel_flg(true));
             itemService.saveAll(removeList);
         }
 
         List<Item> savedItemList = new ArrayList<>();
         if (newItemList.size() > 0) {
-            System.out.println("商品を保存します");
-            newItemList.forEach(e -> System.out.println(e.getTitle()));
+            logger.info("商品を保存します");
+            newItemList.forEach(e -> logger.info(e.getTitle()));
             savedItemList = rakutenController.saveItems(newItemList);
         }
         if (savedItemList.size() > 0) {
-            System.out.println("保存したItemをTweetします");
+            logger.info("保存したItemをTweetします");
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    System.out.println(item.getTitle());
+                    logger.info(item.getTitle());
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
                     String result = textController.twitter(twiDto);
                     pythonController.post(item.getTeam_id(), result);
                 } else {
-                    System.out.println("未来商品ではないのでTweetしません");
-                    System.out.println(item.getTitle());
+                    logger.info("未来商品ではないのでTweetしません");
+                    logger.info(item.getTitle());
                 }
             }
         }
@@ -323,28 +327,28 @@ public class SampleController {
 
         // 不要商品リストに入った商品は不要商品テーブルに格納する
         if (removeList.size() > 0) {
-            System.out.println("違う商品を保存します");
+            logger.info("違う商品を保存します");
             removeList.forEach(e -> e.setDel_flg(true));
             itemService.saveAll(removeList);
         }
 
         List<Item> savedItemList = new ArrayList<>();
         if (newItemList.size() > 0) {
-            System.out.println("商品を保存します");
-            newItemList.forEach(e -> System.out.println(e.getTitle()));
+            logger.info("商品を保存します");
+            newItemList.forEach(e -> logger.info(e.getTitle()));
             savedItemList = rakutenController.saveItems(newItemList);
         }
         if (savedItemList.size() > 0) {
-            System.out.println("保存したItemをTweetします");
+            logger.info("保存したItemをTweetします");
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    System.out.println(item.getTitle());
+                    logger.info(item.getTitle());
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
                     String result = textController.twitterPerson(twiDto, dto.getMember_name());
                     pythonController.post(item.getTeam_id(), result);
                 } else {
-                    System.out.println("未来商品ではないのでTweetしません");
-                    System.out.println(item.getTitle());
+                    logger.info("未来商品ではないのでTweetしません");
+                    logger.info(item.getTitle());
                 }
             }
         }

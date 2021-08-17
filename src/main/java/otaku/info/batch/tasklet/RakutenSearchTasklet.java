@@ -1,6 +1,8 @@
 package otaku.info.batch.tasklet;
 
 import java.util.Map;
+
+import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -25,23 +27,25 @@ public class RakutenSearchTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
+    Logger logger = org.slf4j.LoggerFactory.getLogger(RakutenSearchTasklet.class);
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 楽天新商品検索 START ---");
+        logger.info("--- 楽天新商品検索 START ---");
         List<Team> teamList = teamService.findAllTeam();
         Map<Long, String> artistMap = new HashMap<Long, String>();
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
-            System.out.println("***** START: " + artist.getValue() + "*****");
+            logger.info("***** START: " + artist.getValue() + "*****");
             sampleController.sample2(artist.getKey(), artist.getValue());
-            System.out.println("***** END: " + artist + "*****");
+            logger.info("***** END: " + artist + "*****");
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 楽天新商品検索 END ---");
+        logger.info("--- 楽天新商品検索 END ---");
         return RepeatStatus.FINISHED;
     }
 }

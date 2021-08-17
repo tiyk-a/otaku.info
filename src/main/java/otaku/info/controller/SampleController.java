@@ -27,7 +27,8 @@ import otaku.info.searvice.TeamService;
  * 楽天での商品検索指示〜Twitterポスト指示まで。
  *
  */
-@RestController("/")
+@RestController
+@RequestMapping("/")
 public class SampleController {
 
     @Autowired

@@ -85,7 +85,8 @@ public class ItemService {
         return result!=0;
     }
 
-    public List<Item> findByFctChk(int i) {
-        return itemRepository.findByFctChk(i);
+    public List<Item> findByFctChk(boolean isFctChked) {
+        return itemRepository.findByFctChk(isFctChked);
+    }
     }
 }

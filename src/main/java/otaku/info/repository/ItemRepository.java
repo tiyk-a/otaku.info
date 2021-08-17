@@ -36,5 +36,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     Long waitingFctChk();
 
     @Query("SELECT t FROM Item t WHERE fct_chk = ?1")
-    List<Item> findByFctChk(int i);
+    List<Item> findByFctChk(boolean isFctChked);
 }

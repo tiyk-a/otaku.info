@@ -66,8 +66,9 @@ public class TvController  {
         for (Program p : programList) {
             // マップからグループIDの要素のvalueに情報を追加して
             List<Long> teamIdList = new ArrayList<>();
-            List.of(p.getTeam_id().split(",")).forEach(e -> teamIdList.add(Long.valueOf(Integer.valueOf(e))));
-
+            if (p.getTeam_id() != null && !p.getTeam_id().equals("")) {
+                List.of(p.getTeam_id().split(",")).forEach(e -> teamIdList.add((long) Integer.parseInt(e)));
+            }
             for (Long teamId : teamIdList) {
                 List<Program> list = tvListMapByGroup.get(teamId);
                 list.add(p);

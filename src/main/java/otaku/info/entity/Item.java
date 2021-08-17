@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -50,6 +50,7 @@ public class Item {
     @Column(nullable = true)
     private String item_caption;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(nullable = true)
     private Date publication_date;
 

@@ -1,5 +1,7 @@
 package otaku.info.searvice;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Team;
@@ -49,5 +51,15 @@ public class TeamService {
 
     public String getTeamName(Long teamId) {
         return teamRepository.findTeamNameById(teamId);
+    }
+
+    public Map<Long, String> getAllIdNameMap() {
+        List<String> list = teamRepository.getAllIdNameMap();
+        Map<Long, String> resultMap = new HashMap<>();
+        for (String s: list) {
+            String[] elem = s.split("_");
+            resultMap.put(Long.parseLong(elem[0]),elem[1]);
+        }
+        return resultMap;
     }
 }

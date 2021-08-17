@@ -29,4 +29,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     @Query("SELECT team_name FROM Team")
     List<String> findAllTeamName();
+
+    @Query("SELECT CONCAT(team_id, '_' ,team_name) FROM Team")
+    List<String> getAllIdNameMap();
 }

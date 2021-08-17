@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100&display=swap" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script type="text/javascript" th:src="@{/js/manage.js}"></script>
+</head>
+<body>
+<div class="flex-profile">
+    <div th:if="${items != null}">
+        <div class="items">
+            <div>発売日 | title | Detail Button <button id="update_btn">Update</button></div>
+            <div th:each="items:${items}" th:object="${items}" class="item_box row_unselect" th:data-id="*{item_id}">
+                <div class="item_publication_date row_unselect"><form><input type="date" th:name="'publication_date_' + *{item_id}" th:value="*{#calendars.format(publication_date,'yyyy-MM-dd')}" th:data-id="*{item_id}" /></form></div>
+                <div class="item_title row_unselect"><p th:text="*{title}"></p></div>
+                <div class="item_modal_hook"> Detail</div>
+                <div class="item_modal hidden">
+                    <a th:href="*{url}">
+                        <p th:text="*{title}"></p>
+                    </a>
+                    <p th:text="*{item_caption}"></p>
+                    <p th:text="*{created_at}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

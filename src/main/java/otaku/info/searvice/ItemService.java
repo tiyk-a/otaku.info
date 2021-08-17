@@ -1,5 +1,6 @@
 package otaku.info.searvice;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
@@ -7,6 +8,8 @@ import otaku.info.repository.ItemRepository;
 import otaku.info.utils.DateUtils;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,5 +91,42 @@ public class ItemService {
     public List<Item> findByFctChk(boolean isFctChked) {
         return itemRepository.findByFctChk(isFctChked);
     }
+
+    public boolean deleteByItemIdList(List<Integer> idList) {
+        List<Long> longIdList = new ArrayList<>();
+        idList.forEach(e -> longIdList.add(Long.valueOf(e)));
+        int result = itemRepository.deleteByItemIdList(longIdList);
+        return longIdList.size() == result;
+    }
+
+    public List<Long> getItemIdListByDlt_flg(List<Integer> idList, boolean del_flg) {
+        List<Long> longIdList = new ArrayList<>();
+        idList.forEach(e -> longIdList.add(Long.valueOf(e)));
+        return itemRepository.getNotDeletedItemIdList(longIdList, del_flg);
+    }
+
+    public boolean updateAllPublicationDate(Map<Long, Date> map) {
+        boolean successFlg = true;
+        for (Map.Entry<Long, Date> m : map.entrySet()) {
+            int result = itemRepository.updateAllPublicationDate(m.getKey(), m.getValue());
+            if (result == 0) {
+                successFlg = false;
+            }
+        }
+        return successFlg;
+    }
+
+    public List<Long> getItemIdListNotUpdated(Map<Long, Date> map) {
+        List<Long> leftItemIdList = new ArrayList<>();
+        for (Map.Entry<Long, Date> m : map.entrySet()) {
+            if (itemRepository.getItemIdListNotUpdated(m.getKey(), m.getValue()) != 0) {
+                leftItemIdList.add(m.getKey());
+            }
+        }
+        return leftItemIdList;
+    }
+
+    public List<Item> findItemsBetween(Date from, Date to) {
+        return itemRepository.findItemsBetween(from, to);
     }
 }

@@ -1,0 +1,53 @@
+table, td, th {
+    border-collapse: collapse;
+    border:1px solid #333;
+}
+
+.hidden {
+    display: none;
+}
+.row_unselect {
+    background-color: white;
+}
+
+.row_unselect:target {
+background-color: red;
+}
+
+.update_date {
+    background-color: lightpink;
+}
+.row_selected {
+    background-color: lightpink;
+    text-decoration: line-through;
+}
+/* .item_title {
+    position: absolute;
+} */
+.item_box {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    padding: 1rem;
+}
+
+.item_modal {
+    height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    position: fixed;
+    z-index: 200;
+    background-color: lightblue;
+    opacity: 90%;
+    padding: 5rem;
+}
+
+
+.past_date {
+    background-color: lightgray;
+}
+
+.mark {
+    background-color: coral;
+}

@@ -16,8 +16,8 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     @Query("SELECT p FROM program p WHERE DATE(on_air_date) = ?1")
     List<Program> findByOnAirDate(Date date);
 
-    @Query("SELECT p FROM program p WHERE on_air_date >= ?1 and on_air_date < ?2")
-    List<Program> findByOnAirDate(LocalDateTime ldtFrom, LocalDateTime ldtTo);
+    @Query("SELECT p FROM program p WHERE on_air_date >= ?1 and on_air_date < ?2 and team_id is not null")
+    List<Program> findByOnAirDateTeamId(LocalDateTime ldtFrom, LocalDateTime ldtTo);
 
     @Query("SELECT count(*) FROM program WHERE fct_chk = 0")
     Long waitingFctChk();

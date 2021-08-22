@@ -36,7 +36,8 @@ public class TvAlertTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         logger.info("--- TVアラート START ---");
-        List<Program> programList = programService.findByOnAirDateTime(LocalDateTime.now(), 1);
+        // これから1時間以内に放送開始し、チームIDも埋まっているレコードを取得する。
+        List<Program> programList = programService.findByOnAirDateTimeTeamId(LocalDateTime.now(), 1);
         if (programList.size() > 0) {
             // Postする番組の投稿文を作る Map<ProgramId-TeamId, text>
             Map<String, String> postMap = new HashMap<>();

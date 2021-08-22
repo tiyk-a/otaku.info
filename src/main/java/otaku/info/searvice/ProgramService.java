@@ -33,8 +33,8 @@ public class ProgramService  {
         return programRepository.findByOnAirDate(date);
     }
 
-    public List<Program> findByOnAirDateTime(LocalDateTime ldt, int hour) {
-        return programRepository.findByOnAirDate(ldt, ldt.plusHours(hour));
+    public List<Program> findByOnAirDateTimeTeamId(LocalDateTime ldt, int hour) {
+        return programRepository.findByOnAirDateTeamId(ldt, ldt.plusHours(hour));
     }
 
     public boolean waitingFctChk() {

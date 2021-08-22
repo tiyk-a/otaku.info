@@ -22,6 +22,7 @@ import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
+import otaku.info.utils.StringUtilsMine;
 
 /**
  * 楽天での商品検索指示〜Twitterポスト指示まで。
@@ -225,10 +226,14 @@ public class SampleController {
                 }
 
                 item.setTeam_id(Math.toIntExact(teamId));
-                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
+                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルとdescriptionに含まれていないものを別リストに入れる
                 String mnemonic = teamService.getMnemonic(artist);
-                if (!containsTeamName(artist, item.getTitle()) && !containsTeamName(artist, item.getItem_caption())
-                && (mnemonic != null && !containsTeamName(mnemonic, item.getTitle())) && (mnemonic != null && !containsTeamName(mnemonic, item.getItem_caption()))) {
+                if (!StringUtilsMine.arg2ContainsArg1(artist, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(artist, item.getItem_caption())
+                && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle())) && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption()))) {
+                    removeList.add(item);
+                }
+                // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
+                if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) && !removeList.contains(item)) {
                     removeList.add(item);
                 }
             }
@@ -316,8 +321,8 @@ public class SampleController {
                 item.setArtist_id(Math.toIntExact(dto.getMember_id()));
                 // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
                 String mnemonic = teamService.getMnemonic(dto.getMember_name());
-                if (!containsTeamName(dto.getMember_name(), item.getTitle()) && !containsTeamName(dto.getMember_name(), item.getItem_caption())
-                        && (mnemonic != null && !containsTeamName(mnemonic, item.getTitle())) && (mnemonic != null && !containsTeamName(mnemonic, item.getItem_caption()))) {
+                if (!StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getItem_caption())
+                        && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle())) && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption()))) {
                     removeList.add(item);
                 }
             }
@@ -356,25 +361,25 @@ public class SampleController {
         return "Ok";
     }
 
-    /**
-     * アーティスト名がテキストの中に含まれているかどうかをチェックする
-     *
-     * @param teamName
-     * @param text
-     * @return
-     */
-    public boolean containsTeamName(String teamName, String text) {
-        if (text.contains(teamName)) {
-            return true;
-        }
-
-        // アーティスト名にスペースがあったら切り取って検索もする
-        if (text.contains(" ")) {
-            if (text.replaceAll(" ", "").contains(teamName)) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    /**
+//     * 引数1が引数2の中に含まれているかどうかをチェックする
+//     *
+//     * @param arg1
+//     * @param arg2
+//     * @return
+//     */
+//    public boolean arg2ContainsArg1(String arg1, String arg2) {
+//        if (arg2.contains(arg1)) {
+//            return true;
+//        }
+//
+//        // arg1にスペースがあったら切り取って検索もする
+//        if (arg1.contains(" ")) {
+//            if (arg2.contains(arg1.replaceAll(" ", ""))) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 }
 

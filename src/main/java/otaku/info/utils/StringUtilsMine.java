@@ -71,4 +71,25 @@ public class StringUtilsMine {
         }
         return dateList;
     }
+
+    /**
+     * 引数1が引数2の中に含まれているかどうかをチェックする
+     *
+     * @param arg1
+     * @param arg2
+     * @return
+     */
+    public static boolean arg2ContainsArg1(String arg1, String arg2) {
+        if (arg2.contains(arg1)) {
+            return true;
+        }
+
+        // arg1にスペースがあったら切り取って検索もする
+        if (arg1.contains(" ")) {
+            if (arg2.contains(arg1.replaceAll(" ", ""))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

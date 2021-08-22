@@ -111,11 +111,17 @@ public class TvController  {
                 program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
             }
 
+            // 取得テキスト（TV情報・タイトル）からチーム名を抽出する
             List<Long> teamIdList = teamService.findTeamIdListByText(e.getValue());
             if (teamIdList.size() == 0) {
-                teamIdList.addAll(teamService.findTeamIdListByText(e.getValue()));
+                // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細）からとる
+                teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
             }
-            teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
+            // 取得テキスト（TV情報・タイトルと詳細）からチーム名取れなかったら引数からとる
+            if (teamIdList.size() == 0) {
+                teamIdList.addAll(teamService.findTeamIdListByText(teamName));
+            }
+//            teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
             String teamIdStr = StringUtils.join(teamIdList, ',');
             program.setTeam_id(teamIdStr);
 
@@ -143,15 +149,27 @@ public class TvController  {
             program.setDescription(e.getKey());
 
             // Programの内容を精査します。
+            // アダルトサイトのデータが引っかかっていた場合、この先の処理は行わず削除してreturn
+            if (program.getStation_id() == 16) {
+                break;
+            }
+
+            // 空レコードを登録しないようにします。
+            if (program.getTitle().equals("") && program.getDescription().equals("") && program.getOn_air_date() == null) {
+                break;
+            }
+
             // 既存データに重複がないか比較する
             boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
             logger.info(program.toString());
+
+            // 登録or更新処理
             if (isExisting) {
                 // すでに登録があったら内容を比較し、違いがあれば更新
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
                 boolean isTotallySame = existingP.getMember_id().equals(program.getMember_id()) && existingP.getTeam_id().equals(program.getTeam_id()) &&
                         existingP.getDescription().equals(program.getDescription());
-                if (!isTotallySame) {
+                if (!isTotallySame || (existingP.getTeam_id().equals("")) && !program.getTeam_id().equals("")) {
                     programService.overwrite(existingP.getProgram_id(), program);
                 }
             } else {

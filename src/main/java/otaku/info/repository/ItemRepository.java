@@ -7,6 +7,7 @@ import otaku.info.entity.Item;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -55,4 +56,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE publication_date >= ?1 and publication_date <= ?2 ORDER BY publication_date")
     List<Item> findItemsBetween(Date from, Date to);
+
+    @Query("SELECT t FROM Item t WHERE item_code = ?1")
+    Optional<Item> findByItemCode(String itemCode);
 }

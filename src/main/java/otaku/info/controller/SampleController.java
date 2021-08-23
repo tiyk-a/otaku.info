@@ -86,7 +86,7 @@ public class SampleController {
         Item tmp = new Item();
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
-        tmp.setTeam_id(1);
+        tmp.setTeam_id("1");
         itemService.saveItem(tmp);
 
         List<String> list = controller.affiliSearchWord(artistId);
@@ -116,9 +116,6 @@ public class SampleController {
                 break;
             case 2:
                 scheduler.run2();
-                break;
-            case 3:
-                scheduler.run3();
                 break;
             case 4:
                 scheduler.run4();
@@ -225,7 +222,16 @@ public class SampleController {
                     }
                 }
 
-                item.setTeam_id(Math.toIntExact(teamId));
+                Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
+
+                // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。
+                if (savedItem != null) {
+                    String savedTeamId = item.getTeam_id();
+                    item.setTeam_id(savedTeamId.concat("," + teamId));
+                } else {
+                    item.setTeam_id(teamId.toString());
+                }
+
                 // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルとdescriptionに含まれていないものを別リストに入れる
                 String mnemonic = teamService.getMnemonic(artist);
                 if (!StringUtilsMine.arg2ContainsArg1(artist, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(artist, item.getItem_caption())
@@ -260,9 +266,15 @@ public class SampleController {
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     logger.info(item.getTitle());
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
+                    String[] teamIdArr = item.getTeam_id().split(",");
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
                     String result = textController.twitter(twiDto);
-                    pythonController.post(item.getTeam_id(), result);
+                    if (item.getTeam_id() != null) {
+                        pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
+                    } else {
+                        logger.info("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
+                        break;
+                    }
                 } else {
                     logger.info("未来商品ではないのでTweetしません");
                     logger.info(item.getTitle());
@@ -317,12 +329,29 @@ public class SampleController {
                     }
                 }
 
-                item.setTeam_id(Math.toIntExact(dto.getTeam_id()));
-                item.setArtist_id(Math.toIntExact(dto.getMember_id()));
-                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルに含まれていないものを別リストに入れる
+                Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
+
+                // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。
+                if (savedItem != null) {
+                    String savedTeamId = item.getTeam_id();
+                    item.setTeam_id(savedTeamId.concat("," + dto.getTeam_id()));
+
+                    String savedMemberId = item.getMember_id();
+                    item.setMember_id(savedMemberId.concat("," + dto.getMember_name()));
+                } else {
+                    item.setTeam_id(dto.getTeam_name());
+                    item.setMember_id(dto.getMember_name());
+                }
+
+                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトル・キャプションに含まれていないものを別リストに入れる
                 String mnemonic = teamService.getMnemonic(dto.getMember_name());
                 if (!StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getItem_caption())
                         && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle())) && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption()))) {
+                    removeList.add(item);
+                }
+
+                // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
+                if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) && !removeList.contains(item)) {
                     removeList.add(item);
                 }
             }
@@ -349,9 +378,10 @@ public class SampleController {
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     logger.info(item.getTitle());
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
+                    String[] teamIdArr = item.getTeam_id().split(",");
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
                     String result = textController.twitterPerson(twiDto, dto.getMember_name());
-                    pythonController.post(item.getTeam_id(), result);
+                    pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
                 } else {
                     logger.info("未来商品ではないのでTweetしません");
                     logger.info(item.getTitle());
@@ -360,26 +390,5 @@ public class SampleController {
         }
         return "Ok";
     }
-
-//    /**
-//     * 引数1が引数2の中に含まれているかどうかをチェックする
-//     *
-//     * @param arg1
-//     * @param arg2
-//     * @return
-//     */
-//    public boolean arg2ContainsArg1(String arg1, String arg2) {
-//        if (arg2.contains(arg1)) {
-//            return true;
-//        }
-//
-//        // arg1にスペースがあったら切り取って検索もする
-//        if (arg1.contains(" ")) {
-//            if (arg2.contains(arg1.replaceAll(" ", ""))) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 }
 

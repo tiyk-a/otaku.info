@@ -13,7 +13,9 @@ import otaku.info.controller.TextController;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.searvice.TeamService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -29,6 +31,9 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Autowired
     ItemService itemService;
 
+    @Autowired
+    TeamService teamService;
+
     Logger logger = org.slf4j.LoggerFactory.getLogger(FutureItemReminderTasklet.class);
 
     @Override
@@ -37,8 +42,33 @@ public class FutureItemReminderTasklet implements Tasklet {
         // 1年以内に発売される商品リストを取得
         List<Item> itemList = itemService.findFutureItemByDate(365);
         for (Item item : itemList) {
-            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, (long) item.getTeam_id());
-            pythonController.post(item.getTeam_id(), textController.futureItemReminder(twiDto));
+            // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
+            String[] teamIdArr = item.getTeam_id().split(",");
+            if (teamIdArr.length > 1) {
+                // 固有Twitterのないチームの投稿用オブジェクト
+                List<Long> noTwitterTeamIdList = new ArrayList<>();
+
+                for (String idStr : teamIdArr) {
+                    long teamId = Long.parseLong(idStr);
+                    String twId = teamService.getTwitterId(teamId);
+                    if (twId == null) {
+                        noTwitterTeamIdList.add(teamId);
+                    } else {
+                        TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
+                        pythonController.post(Math.toIntExact(teamId), textController.futureItemReminder(twiDto));
+                    }
+                }
+
+                if (noTwitterTeamIdList.size() > 0) {
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, null);
+                    pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), textController.futureItemReminder(twiDto, noTwitterTeamIdList));
+                }
+            } else {
+                // チームが１つしかなかったらそのまま投稿
+                long teamId = Long.parseLong(teamIdArr[teamIdArr.length - 1]);
+                TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
+                pythonController.post(Math.toIntExact(teamId), textController.futureItemReminder(twiDto));
+            }
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){

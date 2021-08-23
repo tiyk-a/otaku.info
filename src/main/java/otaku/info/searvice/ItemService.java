@@ -129,4 +129,8 @@ public class ItemService {
     public List<Item> findItemsBetween(Date from, Date to) {
         return itemRepository.findItemsBetween(from, to);
     }
+
+    public Optional<Item> findByItemCode(String itemCode) {
+        return itemRepository.findByItemCode(itemCode);
+    }
 }

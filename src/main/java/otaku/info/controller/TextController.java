@@ -59,19 +59,13 @@ public class TextController {
         return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
-    public String countdown(Item item) {
-        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date());
-        String str1 = "【PR】発売まであと" + diff + "日！%0A%0A" + item.getTitle() + "%0A%0A";
-        String str2 = item.getUrl();
-        String result;
-        int length = str1.length() + str2.length() + "%0A%0A".length();
-        if (length < 140) {
-            result = str1 + item.getItem_caption().substring(0, 140 - length) + "%0A%0A" + str2;
-        } else {
-            result = str1 + str2;
+    public String futureItemReminder(TwiDto twiDto, List<Long> teamIdList) {
+        int diff = dateUtils.dateDiff(new Date(), twiDto.getPublication_date());
+        String tags = "";
+        for (Long teamId : teamIdList) {
+            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
         }
-        String tags = tagService.getTagByTeam((long) item.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
-        return result + "%0A%0A" + tags;
+        return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String releasedItemAnnounce(Item item) {
@@ -84,7 +78,26 @@ public class TextController {
         } else {
             result = str1 + str2;
         }
-        String tags = tagService.getTagByTeam((long) item.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        String tags = tagService.getTagByTeam(Long.parseLong(item.getTeam_id())).stream().collect(Collectors.joining(" #","#",""));
+        return result + "%0A%0A" + tags;
+    }
+
+    public String releasedItemAnnounce(Item item, List<Long> teamIdList) {
+        String str1 = "【PR】本日発売！%0A%0A" + item.getTitle() + "%0A%0A";
+        String str2 = item.getUrl();
+        String result;
+        int length = str1.length() + str2.length() + "%0A%0A".length();
+        if (length < 140) {
+            result = str1 + item.getItem_caption().substring(0, 140 - length) + "%0A%0A" + str2;
+        } else {
+            result = str1 + str2;
+        }
+
+        String tags = "";
+        for (Long teamId : teamIdList) {
+            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        }
+
         return result + "%0A%0A" + tags;
     }
 

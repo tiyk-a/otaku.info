@@ -62,4 +62,8 @@ public class TeamService {
         }
         return resultMap;
     }
+
+    public String getTwitterId(Long teamId) {
+        return teamRepository.getTwitterId(teamId);
+    }
 }

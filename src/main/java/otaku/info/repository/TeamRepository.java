@@ -32,4 +32,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     @Query("SELECT CONCAT(team_id, '_' ,team_name) FROM Team")
     List<String> getAllIdNameMap();
+
+    @Query("SELECT tw_id FROM Team WHERE team_id = ?1")
+    String getTwitterId(Long teamId);
 }

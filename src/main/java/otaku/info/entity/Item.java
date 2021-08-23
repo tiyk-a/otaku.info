@@ -39,10 +39,10 @@ public class Item {
     private int price;
 
     @Column(nullable = false)
-    private int team_id;
+    private String team_id;
 
     @Column(nullable = true)
-    private int artist_id;
+    private String member_id;
 
     @Column(nullable = true)
     private String title;

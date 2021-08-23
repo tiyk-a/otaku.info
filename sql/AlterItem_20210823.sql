@@ -1,0 +1,1 @@
+ALTER TABLE item MODIFY COLUMN team_id varchar(50), CHANGE COLUMN artist_id member_id varchar(50);

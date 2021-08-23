@@ -3,6 +3,10 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,6 +17,7 @@ import otaku.info.searvice.ProgramService;
 import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -98,12 +103,13 @@ public class TvController  {
      *
      * @param detailTitleMap
      */
-    public void tvKingdomSave(Map<String, String> detailTitleMap, String teamName) {
-        for (Map.Entry<String, String> e : detailTitleMap.entrySet()) {
+    public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName) throws IOException {
+        for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
+            String[] valueArr = e.getValue();
 
             // 新しいProjectオブジェクトを作ります。
             Program program = new Program();
-            program.setTitle(e.getValue());
+            program.setTitle(valueArr[0]);
             program.setFct_chk(false);
 
             Matcher m = datePattern.matcher(e.getKey());
@@ -112,23 +118,59 @@ public class TvController  {
             }
 
             // 取得テキスト（TV情報・タイトル）からチーム名を抽出する
-            List<Long> teamIdList = teamService.findTeamIdListByText(e.getValue());
+            List<Long> teamIdList = teamService.findTeamIdListByText(valueArr[0]);
+
+            // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細）からとる
             if (teamIdList.size() == 0) {
-                // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細）からとる
                 teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
             }
-            // 取得テキスト（TV情報・タイトルと詳細）からチーム名取れなかったら引数からとる
+
+            // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細画面）からとる
+            if (teamIdList.size() == 0) {
+                String[] detail = getDetails(valueArr[1]);
+
+                // 番組概要からチーム名を取得
+                teamIdList.addAll(teamService.findTeamIdListByText(detail[0]));
+
+                // 番組概要からチーム名を取得
+                if (teamIdList.size() == 0) {
+                    teamIdList.addAll(teamService.findTeamIdListByText(detail[1]));
+                }
+            }
+
+            // 取得テキスト（TV情報・タイトルと詳細と詳細情報画面）からチーム名取れなかったら引数からとる
             if (teamIdList.size() == 0) {
                 teamIdList.addAll(teamService.findTeamIdListByText(teamName));
             }
-//            teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
+
             String teamIdStr = StringUtils.join(teamIdList, ',');
             program.setTeam_id(teamIdStr);
 
-            List<Long> memberIdList = memberService.findMemberIdByText(e.getValue());
-            memberIdList.addAll(memberService.findMemberIdByText(e.getKey()));
-            String memberIdStr = StringUtils.join(memberIdList, ',');
-            program.setMember_id(memberIdStr);
+            // 取得テキスト（TV情報・タイトル）からメンバー名を抽出する
+            List<Long> memberIdList = memberService.findMemberIdByText(valueArr[0]);
+
+            // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細）からとる
+            if (memberIdList.size() == 0) {
+                memberIdList.addAll(memberService.findMemberIdByText(e.getKey()));
+            }
+
+            // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細画面）からとる
+            if (memberIdList.size() == 0) {
+                String[] detail = getDetails(valueArr[1]);
+
+                // 番組概要からメンバー名を取得
+                memberIdList.addAll(memberService.findMemberIdByText(detail[0]));
+
+                // 番組概要からメンバー名を取得
+                if (memberIdList.size() == 0) {
+                    memberIdList.addAll(memberService.findMemberIdByText(detail[1]));
+                }
+            }
+
+            if (memberIdList.size() > 0) {
+                String memberIdStr = StringUtils.join(memberIdList, ',');
+                program.setMember_id(memberIdStr);
+            }
 
             String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
             String station2 = station.replaceAll("\\(Ch.*", "");
@@ -177,5 +219,29 @@ public class TvController  {
                 programService.save(program);
             }
         }
+    }
+
+    /**
+     * 詳細画面の内容を取得する
+     *
+     * @param url
+     * @return
+     * @throws IOException
+     */
+    private String[] getDetails(String url) throws IOException {
+        Document document = Jsoup.connect(url).get();
+        // 必要な要素を取り出す
+        Elements elements = document.select("div.contBlock.subUtileSetting");
+        String[] resultArr = new String[2];
+
+        for (Element e : elements) {
+            if (e.getElementsByTag("h3").text().equals("番組概要")) {
+                resultArr[0] = e.getElementsByTag("p").first().getElementsByClass("basicTxt").text();
+            }
+            if (e.getElementsByTag("h3").text().equals("番組詳細")) {
+                resultArr[1] = e.getElementsByTag("p").first().getElementsByClass("basicTxt").text();
+            }
+        }
+        return resultArr;
     }
 }

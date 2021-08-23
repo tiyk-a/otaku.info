@@ -21,7 +21,6 @@ class BatchConfig {
 
     private final RakutenSearchTasklet rakutenSearchTasklet;
     private final FutureItemReminderTasklet futureItemReminderTasklet;
-    private final ItemCountdownTasklet itemCountdownTasklet;
     private final PublishAnnounceTasklet publishAnnounceTasklet;
     private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
     private final TvPostTasklet tvPostTasklet;
@@ -54,19 +53,6 @@ class BatchConfig {
     Job futureItemReminderJob() {
         return this.jobBuilderFactory.get("futureItemReminderJob").incrementer(new RunIdIncrementer())
             .start(futureItemReminderStep()).build();
-    }
-
-    @Bean
-    Step itemCountdownStep() {
-        return stepBuilderFactory.get("futureItemReminderStep") //Step名を指定
-                .tasklet(itemCountdownTasklet) //実行するTaskletを指定
-                .build();
-    }
-
-    @Bean
-    Job itemCountdownJob() {
-        return this.jobBuilderFactory.get("itemCountdownJob").incrementer(new RunIdIncrementer())
-                .start(itemCountdownStep()).build();
     }
 
     @Bean

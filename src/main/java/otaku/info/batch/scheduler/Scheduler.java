@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
-import otaku.info.batch.tasklet.ItemCountdownTasklet;
 
 import java.util.HashMap;
 
@@ -27,10 +26,6 @@ public class Scheduler {
     @Autowired
     @Qualifier("futureItemReminderJob")
     private Job futureItemReminderJob;
-
-    @Autowired
-    @Qualifier("itemCountdownJob")
-    private Job itemCountdownJob;
 
     @Autowired
     @Qualifier("publishAnnouncementJob")
@@ -78,18 +73,6 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(futureItemReminderJob, jobParameters);
-        }catch (Exception ex){
-            logger.error(ex.getMessage());
-        }
-    }
-
-    @Scheduled(cron = "${cron.itemCountdown}")
-    public void run3(){
-        Map<String, JobParameter> confMap = new HashMap<>();
-        confMap.put("run3", new JobParameter(System.currentTimeMillis()));
-        JobParameters jobParameters = new JobParameters(confMap);
-        try {
-            jobLauncher.run(itemCountdownJob, jobParameters);
         }catch (Exception ex){
             logger.error(ex.getMessage());
         }

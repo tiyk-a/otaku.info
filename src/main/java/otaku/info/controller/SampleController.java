@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
-import otaku.info.dto.MemberSearchDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.searvice.MemberService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.StringUtilsMine;
 
@@ -52,6 +52,9 @@ public class SampleController {
 
     @Autowired
     private TeamService teamService;
+
+    @Autowired
+    private MemberService memberService;
 
     @Autowired
     RestTemplate restTemplate;
@@ -184,7 +187,8 @@ public class SampleController {
      * @return
      * @throws JSONException
      */
-    public String sample2(Long teamId, String artist) throws JSONException, ParseException {
+    public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException {
+        boolean isTeam = memberId == 0;
         List<String> list = controller.affiliSearchWord(artist);
         List<String> itemCodeList = rakutenController.search(list);
 
@@ -227,19 +231,34 @@ public class SampleController {
                 // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。
                 if (savedItem != null) {
                     String savedTeamId = item.getTeam_id();
-                    item.setTeam_id(savedTeamId.concat("," + teamId));
+                    if (savedTeamId == null || savedTeamId.equals("")) {
+                        item.setTeam_id(teamId.toString());
+                    } else {
+                        item.setTeam_id(savedTeamId.concat("," + teamId));
+                    }
+
+                    // 個人検索の場合、member_idを設定する。
+                    if (!isTeam) {
+                        String savedMemberId = item.getMember_id();
+                        if (savedMemberId == null || savedMemberId.equals("")) {
+                            item.setMember_id(memberId.toString());
+                        } else {
+                            item.setMember_id(savedMemberId.concat("," + memberId));
+                        }
+                    }
                 } else {
+                    // 既存商品がなかったら新規登録
                     item.setTeam_id(teamId.toString());
+
+                    // 個人検索の場合、member_idを設定する。
+                    if (!isTeam) {
+                        item.setMember_id(memberId.toString());
+                    }
                 }
 
-                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルとdescriptionに含まれていないものを別リストに入れる
-                String mnemonic = teamService.getMnemonic(artist);
-                if (!StringUtilsMine.arg2ContainsArg1(artist, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(artist, item.getItem_caption())
-                && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle())) && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption()))) {
-                    removeList.add(item);
-                }
-                // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
-                if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) && !removeList.contains(item)) {
+                // チームで削除チェック（チーム）合致orメンバーで削除チェック（メンバー）合致なら削除リストに追加
+                if ((isTeam && addToRemoveList(item, artist, true)) || (!isTeam && addToRemoveList(item, artist, false))) {
+                    // 削除対象であれば削除リストに入れる。
                     removeList.add(item);
                 }
             }
@@ -255,12 +274,15 @@ public class SampleController {
             itemService.saveAll(removeList);
         }
 
+        // 正常商品を登録する
         List<Item> savedItemList = new ArrayList<>();
         if (newItemList.size() > 0) {
             logger.info("商品を保存します");
             newItemList.forEach(e -> logger.info(e.getTitle()));
             savedItemList = rakutenController.saveItems(newItemList);
         }
+
+        // 保存した商品がある場合、Tweetする
         if (savedItemList.size() > 0) {
             logger.info("保存したItemをTweetします");
             for (Item item: savedItemList) {
@@ -285,110 +307,39 @@ public class SampleController {
     }
 
     /**
-     * バッチで動かしてる定時楽天検索（個人）→Pythonにツイート命令を出すまでのメソッド
+     * 商品が登録不要なものかどうかチェックする
      *
-     * @param
+     * @param item
+     * @param name
+     * @param isTeam チーム:メンバー
      * @return
-     * @throws JSONException
      */
-    public String searchMember(MemberSearchDto dto) throws JSONException, ParseException {
-        List<String> list = controller.affiliSearchWord(dto.getMember_name());
-        List<String> itemCodeList = rakutenController.search(list);
+    private boolean addToRemoveList(Item item, String name, boolean isTeam) {
 
-        itemCodeList = itemService.findNewItemList(itemCodeList);
-
-        List<Item> newItemList = new ArrayList<>();
-        if (itemCodeList.size() > 0) {
-            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
+        // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルとdescriptionに含まれていないものを別リストに入れる
+        String mnemonic;
+        if (isTeam) {
+            mnemonic = teamService.getMnemonic(name);
+        } else {
+            mnemonic = memberService.getMnemonic(name);
         }
-
-        // 検索の誤引っ掛かりした商品をストアするリスト
-        List<Item> removeList = new ArrayList<>();
-
-        if (newItemList.size() > 0) {
-            for (Item item : newItemList) {
-                // 年月日のデータを集める
-                Map<String, List<Date>> resultMap = analyzeController.extractPublishDate(item.getItem_caption());
-                if (resultMap.get("publishDateList").size() == 0) {
-                    Map<String, List<Date>> resultMap2 = analyzeController.extractPublishDate(item.getTitle());
-                    if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
-                        resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
-                    }
-                    if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
-                        resultMap.put("publishDateList", resultMap2.get("publishDateList"));
-                    }
-                    if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
-                        resultMap.put("dateList", resultMap2.get("dateList"));
-                    }
+        if (!StringUtilsMine.arg2ContainsArg1(name, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(name, item.getItem_caption())) {
+            if (mnemonic != null) {
+                if (!StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption())) {
+                    return true;
                 }
-
-                if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0 ) {
-                    item.setPublication_date(resultMap.get("publishDateList").get(0));
-                    if (item.getPublication_date() == null) {
-                        item.setPublication_date(resultMap.get("dateList").get(0));
-                    }
-                }
-
-                Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
-
-                // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。
-                if (savedItem != null) {
-                    String savedTeamId = item.getTeam_id();
-                    item.setTeam_id(savedTeamId.concat("," + dto.getTeam_id()));
-
-                    String savedMemberId = item.getMember_id();
-                    item.setMember_id(savedMemberId.concat("," + dto.getMember_name()));
-                } else {
-                    item.setTeam_id(dto.getTeam_name());
-                    item.setMember_id(dto.getMember_name());
-                }
-
-                // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトル・キャプションに含まれていないものを別リストに入れる
-                String mnemonic = teamService.getMnemonic(dto.getMember_name());
-                if (!StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(dto.getMember_name(), item.getItem_caption())
-                        && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle())) && (mnemonic != null && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption()))) {
-                    removeList.add(item);
-                }
-
-                // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
-                if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) && !removeList.contains(item)) {
-                    removeList.add(item);
-                }
+            } else {
+                return true;
             }
         }
 
-        // 保存する商品リストから不要な商品リストを削除する
-        newItemList.removeAll(removeList);
-
-        // 不要商品リストに入った商品は不要商品テーブルに格納する
-        if (removeList.size() > 0) {
-            logger.info("違う商品を保存します");
-            removeList.forEach(e -> e.setDel_flg(true));
-            itemService.saveAll(removeList);
+        // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
+        if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle())) {
+            return true;
         }
 
-        List<Item> savedItemList = new ArrayList<>();
-        if (newItemList.size() > 0) {
-            logger.info("商品を保存します");
-            newItemList.forEach(e -> logger.info(e.getTitle()));
-            savedItemList = rakutenController.saveItems(newItemList);
-        }
-        if (savedItemList.size() > 0) {
-            logger.info("保存したItemをTweetします");
-            for (Item item: savedItemList) {
-                if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    logger.info(item.getTitle());
-                    String[] teamIdArr = item.getTeam_id().split(",");
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
-                    String result = textController.twitterPerson(twiDto, dto.getMember_name());
-                    pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
-                } else {
-                    logger.info("未来商品ではないのでTweetしません");
-                    logger.info(item.getTitle());
-                }
-            }
-        }
-        return "Ok";
+        // どれも引っ掛からなかったらfalse
+        return false;
     }
 }
 

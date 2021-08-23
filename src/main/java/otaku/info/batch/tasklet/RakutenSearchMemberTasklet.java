@@ -34,7 +34,7 @@ public class RakutenSearchMemberTasklet implements Tasklet {
         memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
         for (MemberSearchDto dto : dtoList) {
             logger.info("***** SEARCH: " + dto.getMember_name() + "*****");
-            sampleController.searchMember(dto);
+            sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id());
             logger.info("***** END: " + dto.getMember_name() + "*****");
             try{
                 Thread.sleep(1000);

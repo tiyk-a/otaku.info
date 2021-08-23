@@ -32,4 +32,7 @@ public class MemberService {
         return dto;
     }
 
+    public String getMnemonic(String memberName) {
+        return memberRepository.getMnemonic(memberName);
+    }
 }

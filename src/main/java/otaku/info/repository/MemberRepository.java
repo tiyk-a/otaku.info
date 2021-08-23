@@ -10,4 +10,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT a.member_id FROM Member a WHERE ?1 LIKE CONCAT('%', a.member_name, '%')")
     List<Long> findMemberIdByText(String text);
+
+    @Query("SELECT mnemonic FROM Member WHERE member_name = ?1")
+    String getMnemonic(String member);
 }

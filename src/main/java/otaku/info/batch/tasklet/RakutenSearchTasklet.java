@@ -37,7 +37,7 @@ public class RakutenSearchTasklet implements Tasklet {
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
             logger.info("***** START: " + artist.getValue() + "*****");
-            sampleController.sample2(artist.getKey(), artist.getValue());
+            sampleController.searchItem(artist.getKey(), artist.getValue(), 0L);
             logger.info("***** END: " + artist + "*****");
             try{
                 Thread.sleep(1000);

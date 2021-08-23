@@ -12,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import otaku.info.entity.Item;
 import org.springframework.stereotype.Controller;
-import otaku.info.entity.Team;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;

@@ -234,7 +234,9 @@ public class SampleController {
                     if (savedTeamId == null || savedTeamId.equals("")) {
                         item.setTeam_id(teamId.toString());
                     } else {
-                        item.setTeam_id(savedTeamId.concat("," + teamId));
+                        if (!savedTeamId.contains(teamId.toString())) {
+                            item.setTeam_id(savedTeamId.concat("," + teamId));
+                        }
                     }
 
                     // 個人検索の場合、member_idを設定する。
@@ -243,7 +245,9 @@ public class SampleController {
                         if (savedMemberId == null || savedMemberId.equals("")) {
                             item.setMember_id(memberId.toString());
                         } else {
-                            item.setMember_id(savedMemberId.concat("," + memberId));
+                            if (!savedMemberId.contains(memberId.toString())) {
+                                item.setMember_id(savedMemberId.concat("," + memberId));
+                            }
                         }
                     }
                 } else {
@@ -333,8 +337,8 @@ public class SampleController {
             }
         }
 
-        // 非公式商品(「ジャニーズ研究会」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
-        if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle())) {
+        // 非公式商品(「ジャニーズ研究会」「J-GENERATION」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
+        if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) || StringUtilsMine.arg2ContainsArg1("J-GENERATION", item.getTitle())) {
             return true;
         }
 

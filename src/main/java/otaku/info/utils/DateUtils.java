@@ -22,7 +22,7 @@ public class DateUtils {
         return Math.toIntExact(time.convert(diff, TimeUnit.MILLISECONDS));
     }
 
-    public Date daysAfterToday(int days) {
+    static public Date daysAfterToday(int days) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.DATE, days);

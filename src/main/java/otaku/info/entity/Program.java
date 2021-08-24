@@ -25,9 +25,6 @@ public class Program {
     private Long station_id;
 
     @Column(nullable = true)
-    private String program_code;
-
-    @Column(nullable = true)
     private String title;
 
     @Column(nullable = true)

@@ -11,8 +11,6 @@ public class TvDto {
 
     public String station;
 
-    public String program_code;
-
     public String title;
 
     public String description;

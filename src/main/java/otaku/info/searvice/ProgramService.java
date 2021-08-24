@@ -2,14 +2,12 @@ package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +21,6 @@ public class ProgramService  {
 
     public Program save(Program program) {
         return programRepository.save(program);
-    }
-
-    public boolean hasProgramCode(String code) {
-        Long result = programRepository.hasProgramCode(code);
-        return result!=0;
     }
 
     public List<Program> findByOnAirDate(Date date) {

@@ -1,0 +1,1 @@
+ALTER TABLE item DROP artist_id;

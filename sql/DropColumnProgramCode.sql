@@ -1,0 +1,1 @@
+ALTER TABLE program DROP program_code;

@@ -1,0 +1,1 @@
+update item set member_id = artist_id where artist_id is not null and artist_id != 0 and member_id is null

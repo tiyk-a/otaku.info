@@ -9,7 +9,6 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.LineController;
-import otaku.info.dto.DbNotifDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
@@ -41,20 +40,24 @@ public class DbNotifyTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         logger.info("--- DB Insert Notify START ---");
-        List<DbNotifDto> dbNotifDtoList = new ArrayList<>();
+        List<String> lineList = new ArrayList<>();
 
         if (itemService.waitingFctChk()) {
             List<Item> itemList = itemService.findByFctChk(false);
-            itemList.forEach(e -> dbNotifDtoList.add(new DbNotifDto(e.toString(), e.getPublication_date(), null)));
+            if (itemList.size() > 0) {
+                lineList.add("【fct_chk待ち商品】" + itemList.size() + "件あります");
+            }
         }
 
         if (programService.waitingFctChk()) {
             List<Program> programList = programService.findByFctChk(0);
-            programList.forEach(e -> dbNotifDtoList.add(new DbNotifDto(e.toString(), null, e.getOn_air_date())));
+            if (programList.size() > 0) {
+                lineList.add("【fct_chk待ちTV】" + programList.size() + "件あります");
+            }
         }
 
-        if (dbNotifDtoList.size() > 0) {
-            lineController.postAll(dbNotifDtoList);
+        if (lineList.size() > 0) {
+            lineController.postAll(lineList);
         }
         logger.info("--- DB Insert Notify END ---");
         return RepeatStatus.FINISHED;

@@ -8,7 +8,6 @@ import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.dto.DbNotifDto;
 import otaku.info.searvice.MemberService;
 import otaku.info.searvice.ProgramService;
 import otaku.info.searvice.StationService;
@@ -16,7 +15,6 @@ import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -76,15 +74,15 @@ public class PythonController {
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
         ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
-        List<DbNotifDto> dbNotifDtoList = new ArrayList<>();
-        dbNotifDtoList.add(new DbNotifDto(text + " ■teamId=" + teamId, null, LocalDateTime.now()));
+        List<String> lineList = new ArrayList<>();
+        lineList.add(text + " ■teamId=" + teamId);
         if (response.getStatusCode() == HttpStatus.CREATED) {
             logger.info("Request Successful: " + text);
         } else {
             logger.info("Request Failed: " + text);
         }
         // LINEに投稿完了通知を送る
-        lineController.postAll(dbNotifDtoList);
+        lineController.postAll(lineList);
         return "done";
     }
 }

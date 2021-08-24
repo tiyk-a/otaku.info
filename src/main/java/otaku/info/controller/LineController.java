@@ -11,7 +11,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.dto.DbNotifDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
@@ -47,17 +46,24 @@ public class LineController {
 
     final Logger logger = org.slf4j.LoggerFactory.getLogger(LineController.class);
 
-    public String postAll(List<DbNotifDto> dbNotifDtoList) throws JSONException {
+    /**
+     * LINEにポストします。
+     *
+     * @param messageList
+     * @return
+     * @throws JSONException
+     */
+    public String postAll(List<String> messageList) throws JSONException {
         String url = "https://line-chiharu-ml.herokuapp.com/dbNotify";
 
-        for (DbNotifDto dto: dbNotifDtoList) {
-            String outline = dto.getData().substring(0,30);
+        for (String msg: messageList) {
+            String outline = msg.substring(0,30);
             logger.info("これをpostします： " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             Map<String, Object> map = new HashMap<>();
-            map.put("text", dto.getData());
+            map.put("text", msg);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);

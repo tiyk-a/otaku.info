@@ -203,7 +203,6 @@ public class TvController  {
 
             // 既存データに重複がないか比較する
             boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-            logger.info(program.toString());
 
             // 登録or更新処理
             if (isExisting) {
@@ -213,10 +212,12 @@ public class TvController  {
                         existingP.getDescription().equals(program.getDescription());
                 if (!isTotallySame || (existingP.getTeam_id().equals("")) && !program.getTeam_id().equals("")) {
                     programService.overwrite(existingP.getProgram_id(), program);
+                    logger.info("TV番組を更新：" + program.toString());
                 }
             } else {
                 // 既存登録がなければ新規登録します。
                 programService.save(program);
+                logger.info("TV番組を登録：" + program.toString());
             }
         }
     }

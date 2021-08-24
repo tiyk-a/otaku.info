@@ -1,6 +1,7 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Program;
@@ -59,10 +60,35 @@ public class ProgramService  {
         return programRepository.findByIdentity(title, stationId, onAirDate);
     }
 
+    /**
+     * チームIDとメンバーIDのみをoverrideします。
+     *
+     * @param programId
+     * @param program
+     * @return
+     */
     public Program overwrite(Long programId, Program program) {
-        Program overridden = new Program();
-        BeanUtils.copyProperties(program, overridden);
-        overridden.setProgram_id(programId);
+        // 更新するレコード
+        Program overridden = findbyProgramId(programId).orElse(new Program());
+
+        // チームIDを更新
+        if (StringUtils.isBlank(overridden.getTeam_id())) {
+            overridden.setTeam_id(program.getTeam_id());
+        } else {
+            if (!overridden.getTeam_id().contains(program.getTeam_id())) {
+                overridden.setTeam_id(overridden.getTeam_id().concat("," + program.getTeam_id()));
+            }
+        }
+
+        // メンバーIDを更新
+        if (StringUtils.isBlank(overridden.getMember_id())) {
+            overridden.setMember_id(program.getMember_id());
+        } else {
+            if (!overridden.getMember_id().contains(program.getMember_id())) {
+                overridden.setMember_id(overridden.getMember_id().concat("," + program.getMember_id()));
+            }
+        }
+
         return programRepository.save(overridden);
     }
 }

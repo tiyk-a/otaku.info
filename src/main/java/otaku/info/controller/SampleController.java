@@ -294,7 +294,13 @@ public class SampleController {
                     logger.info(item.getTitle());
                     String[] teamIdArr = item.getTeam_id().split(",");
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
-                    String result = textController.twitter(twiDto);
+                    String result;
+                    String memberIdStr = item.getMember_id();
+                    if (memberIdStr != null && !memberIdStr.equals("")) {
+                        result = textController.twitterPerson(twiDto, item.getMember_id());
+                    } else {
+                        result = textController.twitter(twiDto);
+                    }
                     if (item.getTeam_id() != null) {
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
                     } else {

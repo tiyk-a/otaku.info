@@ -48,23 +48,28 @@ public class FutureItemReminderTasklet implements Tasklet {
             if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(10)) > 0) {
                 // 100で割り切れる日数の時
                 if (item.getPublication_date().compareTo(new Date()) % 100 == 0) {
-                    post(item);
+                    post(item, false);
                 } else if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(100)) < 0) {
                     // 残り100日以下で10日刻み
                     if (item.getPublication_date().compareTo(new Date()) % 10 == 0) {
-                        post(item);
+                        post(item, false);
                     }
                 }
             } else {
-                // 10日以下だったら毎日ポストする
-                post(item);
+                // 10日以下だったら毎日ポストする(今日発売日?今日メッセージ:未来メッセージ)
+                if (item.getPublication_date().compareTo(new Date()) == 0) {
+                    post(item, true);
+                } else {
+                    post(item, false);
+                }
+
             }
         }
         logger.info("--- 未発売商品リマインダー END ---");
         return RepeatStatus.FINISHED;
     }
 
-    private void post(Item item) throws Exception {
+    private void post(Item item, boolean isToday) throws Exception {
         // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
         String[] teamIdArr = item.getTeam_id().split(",");
         if (teamIdArr.length > 1) {
@@ -78,19 +83,22 @@ public class FutureItemReminderTasklet implements Tasklet {
                     noTwitterTeamIdList.add(teamId);
                 } else {
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-                    pythonController.post(Math.toIntExact(teamId), textController.futureItemReminder(twiDto));
+                    String text = isToday ? textController.todayItemReminder(twiDto) : textController.futureItemReminder(twiDto);
+                    pythonController.post(Math.toIntExact(teamId), text);
                 }
             }
 
             if (noTwitterTeamIdList.size() > 0) {
                 TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, null);
-                pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), textController.futureItemReminder(twiDto, noTwitterTeamIdList));
+                String text = isToday ? textController.todayItemReminder(twiDto, noTwitterTeamIdList) : textController.futureItemReminder(twiDto, noTwitterTeamIdList);
+                pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
             }
         } else {
             // チームが１つしかなかったらそのまま投稿
             long teamId = Long.parseLong(teamIdArr[teamIdArr.length - 1]);
             TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-            pythonController.post(Math.toIntExact(teamId), textController.futureItemReminder(twiDto));
+            String text = isToday ? textController.todayItemReminder(twiDto) : textController.futureItemReminder(twiDto);
+            pythonController.post(Math.toIntExact(teamId), text);
         }
         try {
             Thread.sleep(1000);

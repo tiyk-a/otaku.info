@@ -38,9 +38,9 @@ public class TextController {
     @Autowired
     private TagService tagService;
 
-    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy'年'MM'月'dd'日'");
-    private SimpleDateFormat sdf2 = new SimpleDateFormat("MM'/'dd");
-    private SimpleDateFormat sdf3 = new SimpleDateFormat("hh:mm");
+    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年M月d日");
+    private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
+    private SimpleDateFormat sdf3 = new SimpleDateFormat("h:m");
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
     /**
      * Twitterポスト用のメッセージを作成します。

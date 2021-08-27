@@ -208,9 +208,12 @@ public class TvController  {
             if (isExisting) {
                 // すでに登録があったら内容を比較し、違いがあれば更新
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-                boolean isTotallySame = existingP.getMember_id().equals(program.getMember_id()) && existingP.getTeam_id().equals(program.getTeam_id()) &&
-                        existingP.getDescription().equals(program.getDescription());
+                boolean isTotallySame = isTotallySame(existingP, program);
+
+                // 完全に同じデータの場合、登録・更新どちらも行わない。
+                // 更新
                 if (!isTotallySame || (existingP.getTeam_id().equals("")) && !program.getTeam_id().equals("")) {
+
                     programService.overwrite(existingP.getProgram_id(), program);
                     logger.info("TV番組を更新：" + program.toString());
                 }
@@ -244,5 +247,48 @@ public class TvController  {
             }
         }
         return resultArr;
+    }
+
+    /**
+     * 2つの番組が完全に同じか確認する。
+     * Title, Station_id, On_air_dateで比較元番組を取得しているため、この3項目はこのメソッド内でチェックしない。
+     *
+     * @param existingP
+     * @param program
+     * @return
+     */
+    private boolean isTotallySame(Program existingP, Program program) {
+
+        // member_id
+        if (existingP.getMember_id() == null) {
+            if (program.getMember_id() != null) {
+                return false;
+            }
+        } else {
+            if (!existingP.getMember_id().equals(program.getMember_id())) {
+                return false;
+            }
+        }
+
+        // team_id
+        if (existingP.getTeam_id() == null) {
+            if (program.getTeam_id() != null) {
+                return false;
+            }
+        } else {
+            if (!existingP.getTeam_id().equals(program.getTeam_id())) {
+                return false;
+            }
+        }
+
+        // description
+        if (existingP.getDescription() == null) {
+            return program.getDescription() == null;
+        } else {
+            if (!existingP.getDescription().equals(program.getDescription())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

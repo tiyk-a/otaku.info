@@ -82,6 +82,8 @@ public class ProgramService  {
             }
         }
 
+        // データを更新しているのでfct_chkカラムは未確認(false)にする。
+        overridden.setFct_chk(false);
         return programRepository.save(overridden);
     }
 }

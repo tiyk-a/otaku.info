@@ -169,12 +169,13 @@ public class TextController {
                 .stream().map(Integer::longValue).collect(Collectors.toList());
 
         Map<String, String> resultMap = new HashMap<>();
+        // 返却するMapにKey(ProgramId)のみ詰め込みます。
         if (teamIdList.size() > 0) {
             // Mapのkeyを作り格納
             teamIdList.forEach(e -> resultMap.put(program.getProgram_id() + "-" + e, null));
         }
 
-        // Member情報がある場合は情報を集める
+        // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
         List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
         if (program.getMember_id() != null) {
             // Member情報格納
@@ -184,6 +185,7 @@ public class TextController {
                     .forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
         }
 
+        // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>
         Map<Long, String> keyMemberMap = new HashMap<>();
         if (teamIdMemberNameDtoList.size() > 0) {
             for (TeamIdMemberNameDto dto : teamIdMemberNameDtoList) {
@@ -196,19 +198,24 @@ public class TextController {
             }
         }
 
+        // 返却リストにはKey(ProgramId)しか入っていないので、valueを入れます。
         for (Map.Entry<String, String> entry : resultMap.entrySet()) {
             String num = entry.getKey();
             num = num.replaceAll("^.*-", "");
             Long teamId = Long.valueOf(num);
             String result = "";
+            String tags = "";
             // Format LocalDateTime
             String formattedDateTime = program.getOn_air_date().format(formatter);
+
+            // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
             if (keyMemberMap.containsKey(teamId)) {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
+                tags = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・"))).stream().collect(Collectors.joining(" #","#",""));
             } else {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
+                tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
             }
-            String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
             resultMap.put(entry.getKey(), result + "%0A%0A" + tags);
         }
         return resultMap;

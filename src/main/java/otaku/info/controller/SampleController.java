@@ -297,7 +297,15 @@ public class SampleController {
                     String result;
                     String memberIdStr = item.getMember_id();
                     if (memberIdStr != null && !memberIdStr.equals("")) {
-                        result = textController.twitterPerson(twiDto, item.getMember_id());
+                        List<Long> memberIdList = new ArrayList<>();
+                        List.of(memberIdStr.split(",")).forEach(e -> memberIdList.add((long) Integer.parseInt(e)));
+                        if (memberIdList.size() == 1) {
+                            String memberName = memberService.getMemberName(memberIdList.get(0));
+                            result = textController.twitterPerson(twiDto, memberName);
+                        } else {
+                            List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+                            result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
+                        }
                     } else {
                         result = textController.twitter(twiDto);
                     }

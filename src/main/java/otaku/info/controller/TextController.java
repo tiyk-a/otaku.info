@@ -164,9 +164,18 @@ public class TextController {
      */
     public Map<String, String> tvAlert(Program program) {
         String stationName = stationService.getStationName(program.getStation_id());
-        List<Long> teamIdList = List.of(program.getTeam_id().split(","))
-                .stream().map(Integer::parseInt).collect(Collectors.toList())
-                .stream().map(Integer::longValue).collect(Collectors.toList());
+        List<Long> teamIdList = new ArrayList<>();
+
+        // TeamIdが空でなければリストに追加します。
+        if (program.getTeam_id() != null && !program.getTeam_id().equals("")) {
+            if (program.getTeam_id().contains(",")) {
+                teamIdList = List.of(program.getTeam_id().split(","))
+                        .stream().map(Integer::parseInt).collect(Collectors.toList())
+                        .stream().map(Integer::longValue).collect(Collectors.toList());
+            } else {
+                teamIdList.add((long)Integer.parseInt(program.getTeam_id()));
+            }
+        }
 
         Map<String, String> resultMap = new HashMap<>();
         // 返却するMapにKey(ProgramId)のみ詰め込みます。
@@ -177,12 +186,16 @@ public class TextController {
 
         // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
         List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
-        if (program.getMember_id() != null) {
+        if (program.getMember_id() != null && !program.getMember_id().equals("")) {
             // Member情報格納
-            List.of(program.getMember_id().split(","))
-                    .stream().map(Integer::parseInt).collect(Collectors.toList())
-                    .stream().map(Integer::longValue).collect(Collectors.toList())
-                    .forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
+            if (program.getMember_id().contains(".")) {
+                List.of(program.getMember_id().split(","))
+                        .stream().map(Integer::parseInt).collect(Collectors.toList())
+                        .stream().map(Integer::longValue).collect(Collectors.toList())
+                        .forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
+            } else {
+                teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName((long) Integer.parseInt(program.getMember_id())));
+            }
         }
 
         // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>

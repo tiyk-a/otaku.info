@@ -1,5 +1,6 @@
 package otaku.info.searvice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -32,8 +33,21 @@ public class TeamService {
         return teamRepository.getMnemonic(teamName);
     }
 
+    /**
+     * 引数のStringに含まれるTeam名をリストにして返却します。
+     *
+     * @param text
+     * @return
+     */
     public List<Long> findTeamIdListByText(String text) {
-        return teamRepository.findTeamIdListByText(text);
+        List<String> teamNameList = teamRepository.findAllTeamName();
+        List<Long> resultList = new ArrayList<>();
+        for (String teamName : teamNameList) {
+            if (text.contains(teamName) || text.contains(teamName.replace(" ", ""))) {
+                resultList.add(teamRepository.findTeamIdByTeamName(teamName));
+            }
+        }
+        return resultList;
     }
 
     public List<Long> getAllId() {

@@ -10,4 +10,7 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
 
     @Query("SELECT tag FROM tag t WHERE team_id = ?1")
     List<String> findbyTeamId(Long teamId);
+
+    @Query("SELECT tag FROM tag WHERE tag in ?1")
+    List<String> findByMemberNameList(List<String> memberNameList);
 }

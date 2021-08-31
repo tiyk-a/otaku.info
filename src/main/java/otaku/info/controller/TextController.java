@@ -58,8 +58,17 @@ public class TextController {
         return "【本日発売】%0A%0A" + twiDto.getTitle() + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
+    /**
+     * 未来発売商品のリマインドのための文章を作ります
+     * batch/2
+     * 
+     * @param twiDto
+     * @return
+     */
     public String futureItemReminder(TwiDto twiDto) {
-        int diff = dateUtils.dateDiff(new Date(), twiDto.getPublication_date());
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        int diff = dateUtils.dateDiff(today.getTime(), twiDto.getPublication_date()) + 1;
         String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
         return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }

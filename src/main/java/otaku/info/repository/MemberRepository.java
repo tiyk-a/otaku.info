@@ -1,7 +1,6 @@
 package otaku.info.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Member;
 
@@ -27,13 +26,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("select a.member_id from Member as a where 1 < ( select count(*) from Member as b where a.member_name = b.member_name and a.member_id <= b.member_id ) and a.member_name = ?1")
     Long getFstMemberId(String memberName);
 
-    @Query("SELECT COUNT(*) FROM Member GROUP BY member_name")
-    List<Integer> countDupl();
-
     @Query("select member_id from Member as a where 1 < (select count(*) from Member as b where a.member_name = b.member_name and a.member_id >= b.member_id)")
     List<Long> getDupl();
-
-    @Modifying
-    @Query("DELETE FROM Member WHERE member_id in ?1")
-    void deleteAll(List<Long> memberList);
 }

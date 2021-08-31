@@ -22,9 +22,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT item_code FROM Item WHERE title IS NULL or item_caption = ''")
     List<String> tmpMethod();
 
-    @Query("SELECT item_id FROM Item WHERE ITEM_CODE = ?1")
-    Long findItemIdByItemCode(String code);
-
     @Query("SELECT item_code FROM Item WHERE item_code IN ?1")
     List<String> findItemCodeList(List<String> itemCodelist);
 
@@ -59,7 +56,4 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
-
-    @Query("SELECT t FROM Item t WHERE member_id LIKE ?1")
-    List<Item> getDuplMemberItemList(String memberId);
 }

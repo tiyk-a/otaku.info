@@ -64,25 +64,7 @@ public class MemberService {
         return memberRepository.getMemberNameList(memberIdList);
     }
 
-    public String getFstMemberId(String memberName) {
-        return memberRepository.getFstMemberId(memberName).toString();
-    }
-
-    public boolean countDupl() {
-        List<Integer> intList = memberRepository.countDupl();
-        for (Integer i : intList) {
-            if (i > 1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public List<Long> getDupl() {
         return memberRepository.getDupl();
-    }
-
-    public void deleteAll(List<Long> memberList) {
-        memberRepository.deleteAll(memberList);
     }
 }

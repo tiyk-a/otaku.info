@@ -30,13 +30,6 @@ public class ItemService {
         return itemRepository.tmpMethod();
     }
 
-    public Long findItemId(String code) {
-        return itemRepository.findItemIdByItemCode(code);
-    }
-
-    public void updateItem(Item item) {
-        itemRepository.saveAndFlush(item);
-    }
     public Item saveItem(Item item) {
         if (!hasData(item.getItem_code())) {
             return itemRepository.saveAndFlush(item);
@@ -77,10 +70,6 @@ public class ItemService {
 
     public List<Item> findReleasedItemList() {
         return itemRepository.findReleasedItemList();
-    }
-
-    public void deleteByItemId(Long itemId) {
-        itemRepository.deleteById(itemId);
     }
 
     public boolean waitingFctChk() {
@@ -132,21 +121,5 @@ public class ItemService {
 
     public Optional<Item> findByItemCode(String itemCode) {
         return itemRepository.findByItemCode(itemCode);
-    }
-
-    public List<Item> getDuplMemberItemList(List<Long> memberIdList) {
-        List<Item> returnList = new ArrayList<>();
-        for (Long id : memberIdList) {
-            for (Item item : itemRepository.getDuplMemberItemList(id.toString())) {
-                if (!returnList.contains(item)) {
-                    returnList.add(item);
-                }
-            }
-        }
-        return returnList;
-    }
-
-    public void updateAll(List<Item> itemList) {
-        itemRepository.saveAll(itemList);
     }
 }

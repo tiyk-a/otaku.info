@@ -59,4 +59,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
+
+    @Query("SELECT t FROM Item t WHERE member_id LIKE ?1")
+    List<Item> getDuplMemberItemList(String memberId);
 }

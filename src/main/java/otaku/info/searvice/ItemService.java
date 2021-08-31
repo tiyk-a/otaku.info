@@ -133,4 +133,20 @@ public class ItemService {
     public Optional<Item> findByItemCode(String itemCode) {
         return itemRepository.findByItemCode(itemCode);
     }
+
+    public List<Item> getDuplMemberItemList(List<Long> memberIdList) {
+        List<Item> returnList = new ArrayList<>();
+        for (Long id : memberIdList) {
+            for (Item item : itemRepository.getDuplMemberItemList(id.toString())) {
+                if (!returnList.contains(item)) {
+                    returnList.add(item);
+                }
+            }
+        }
+        return returnList;
+    }
+
+    public void updateAll(List<Item> itemList) {
+        itemRepository.saveAll(itemList);
+    }
 }

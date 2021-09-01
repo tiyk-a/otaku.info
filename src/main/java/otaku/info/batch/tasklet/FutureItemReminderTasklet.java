@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -37,11 +36,9 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
-    Logger logger = org.slf4j.LoggerFactory.getLogger(FutureItemReminderTasklet.class);
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.info("--- 未発売商品リマインダー START ---");
+        System.out.println("--- 未発売商品リマインダー START ---");
         // 1年以内に発売される商品リストを取得
         List<Item> itemList = itemService.findFutureItemByDate(365);
         Calendar todayCal = Calendar.getInstance();
@@ -70,7 +67,7 @@ public class FutureItemReminderTasklet implements Tasklet {
 
             }
         }
-        logger.info("--- 未発売商品リマインダー END ---");
+        System.out.println("--- 未発売商品リマインダー END ---");
         return RepeatStatus.FINISHED;
     }
 

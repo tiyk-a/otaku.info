@@ -8,7 +8,6 @@ import java.util.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,8 +61,6 @@ public class SampleController {
     @Autowired
     Scheduler scheduler;
 
-    final Logger logger = org.slf4j.LoggerFactory.getLogger(SampleController.class);
-
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -102,11 +99,11 @@ public class SampleController {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
 
-        logger.info("１２：楽天APIから受信したItemのリストをDB保存します");
+        System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = rakutenController.saveItems(newItemList);
-        logger.info(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+        System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
         List<Item> itemList = itemService.findAll();
-        logger.info(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+        System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
         return itemList.toString();
     }
 
@@ -273,7 +270,7 @@ public class SampleController {
 
         // 不要商品リストに入った商品を商品テーブルに格納する
         if (removeList.size() > 0) {
-            logger.info("違う商品を保存します");
+            System.out.println("違う商品を保存します");
             removeList.forEach(e -> e.setDel_flg(true));
             itemService.saveAll(removeList);
         }
@@ -281,17 +278,17 @@ public class SampleController {
         // 正常商品を登録する
         List<Item> savedItemList = new ArrayList<>();
         if (newItemList.size() > 0) {
-            logger.info("商品を保存します");
-            newItemList.forEach(e -> logger.info(e.getTitle()));
+            System.out.println("商品を保存します");
+            newItemList.forEach(e -> System.out.println(e.getTitle()));
             savedItemList = rakutenController.saveItems(newItemList);
         }
 
         // 保存した商品がある場合、Tweetする
         if (savedItemList.size() > 0) {
-            logger.info("保存したItemをTweetします");
+            System.out.println("保存したItemをTweetします");
             for (Item item: savedItemList) {
                 if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    logger.info(item.getTitle());
+                    System.out.println(item.getTitle());
                     String[] teamIdArr = item.getTeam_id().split(",");
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
                     String result;
@@ -312,12 +309,12 @@ public class SampleController {
                     if (item.getTeam_id() != null) {
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
                     } else {
-                        logger.info("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
+                        System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
                         break;
                     }
                 } else {
-                    logger.info("未来商品ではないのでTweetしません");
-                    logger.info(item.getTitle());
+                    System.out.println("未来商品ではないのでTweetしません");
+                    System.out.println(item.getTitle());
                 }
             }
         }

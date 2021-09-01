@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -35,11 +34,9 @@ public class DbNotifyTasklet implements Tasklet {
     @Autowired
     LineController lineController;
 
-    Logger logger = org.slf4j.LoggerFactory.getLogger(DbNotifyTasklet.class);
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.info("--- DB Insert Notify START ---");
+        System.out.println("--- DB Insert Notify START ---");
         List<String> lineList = new ArrayList<>();
 
         if (itemService.waitingFctChk()) {
@@ -59,7 +56,7 @@ public class DbNotifyTasklet implements Tasklet {
         if (lineList.size() > 0) {
             lineController.postAll(lineList);
         }
-        logger.info("--- DB Insert Notify END ---");
+        System.out.println("--- DB Insert Notify END ---");
         return RepeatStatus.FINISHED;
     }
 

@@ -2,7 +2,6 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.codehaus.jettison.json.JSONException;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -47,8 +46,6 @@ public class PythonController {
     @Autowired
     RestTemplate restTemplate;
 
-    final Logger logger = org.slf4j.LoggerFactory.getLogger(PythonController.class);
-
     /**
      * Pythonにツイートするようにデータを送る
      *
@@ -59,7 +56,7 @@ public class PythonController {
      */
 //    public String post(Map<String, String> headers, String json) {
     public String post(Integer teamId, String text) throws JSONException {
-        logger.info("これをTweetします " + text);
+        System.out.println("これをTweetします " + text);
 
         String url = "https://pytwi2.herokuapp.com/twi";
 
@@ -77,9 +74,9 @@ public class PythonController {
         List<String> lineList = new ArrayList<>();
         lineList.add(text + " ■teamId=" + teamId);
         if (response.getStatusCode() == HttpStatus.CREATED) {
-            logger.info("Request Successful: " + text);
+            System.out.println("Request Successful: " + text);
         } else {
-            logger.info("Request Failed: " + text);
+            System.out.println("Request Failed: " + text);
         }
         // LINEに投稿完了通知を送る
         lineController.postAll(lineList);

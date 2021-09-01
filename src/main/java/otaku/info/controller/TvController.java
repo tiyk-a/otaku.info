@@ -7,7 +7,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Program;
@@ -54,8 +53,6 @@ public class TvController  {
 
     final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
             .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
-
-    final Logger logger = org.slf4j.LoggerFactory.getLogger(TvController.class);
 
     public List<Program> getTvList(Date date) {
         return programService.findByOnAirDate(date);
@@ -215,12 +212,12 @@ public class TvController  {
                 if (!isTotallySame || (existingP.getTeam_id().equals("")) && !program.getTeam_id().equals("")) {
 
                     programService.overwrite(existingP.getProgram_id(), program);
-                    logger.info("TV番組を更新：" + program.toString());
+                    System.out.println("TV番組を更新：" + program.toString());
                 }
             } else {
                 // 既存登録がなければ新規登録します。
                 programService.save(program);
-                logger.info("TV番組を登録：" + program.toString());
+                System.out.println("TV番組を登録：" + program.toString());
             }
         }
     }

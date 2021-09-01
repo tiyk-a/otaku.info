@@ -3,7 +3,6 @@ package otaku.info.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
@@ -26,8 +25,6 @@ public class RakutenController {
     static final String RAKUTEN_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?";
 
     private final ItemService itemService;
-
-    static final Logger logger = org.slf4j.LoggerFactory.getLogger(RakutenController.class);
 
     public static List<Item> search1(List<String> searchList) {
         List<Item> resultList = new ArrayList<>();
@@ -55,7 +52,7 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    logger.info("④受信Json中身：" + line);
+                    System.out.println("④受信Json中身：" + line);
                     sb.append(line);
                 }
 //                stream.close();
@@ -77,7 +74,7 @@ public class RakutenController {
                             item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
                             resultList.add(item);
                         } catch (Exception e) {
-                            logger.info(e.getMessage());
+                            System.out.println(e.getMessage());
                         }
                     }
                     try{
@@ -104,14 +101,14 @@ public class RakutenController {
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : searchList) {
-                logger.info("検索ワード：" + key);
+                System.out.println("検索ワード：" + key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
                 String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCode&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                logger.info("パラメタ：" + parameter);
+                System.out.println("パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -167,14 +164,14 @@ public class RakutenController {
         try {
             URL url = new URL(RAKUTEN_URL);
             for (String key : itemCodeList) {
-                logger.info("検索ワード：" + key);
+                System.out.println("検索ワード：" + key);
                 //1. パラメーターを送って
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.connect();
                 PrintWriter out = new PrintWriter(conn.getOutputStream());
                 String parameter = "format=json&itemCode=" + key + "&availability=1&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                logger.info("パラメタ：" + parameter);
+                System.out.println("パラメタ：" + parameter);
                 out.write(parameter);
                 out.flush();
                 out.close();
@@ -188,7 +185,7 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    logger.info("受信Json：" + line);
+                    System.out.println("受信Json：" + line);
                     sb.append(line);
                 }
 //                stream.close();
@@ -229,8 +226,8 @@ public class RakutenController {
      * @return
      */
     public List<Item> saveItems(List<Item> itemList) {
-        logger.info("Itemの保存を始めます。リストは以下");
-        itemList.forEach(e -> logger.info(e.getTitle()));
+        System.out.println("Itemの保存を始めます。リストは以下");
+        itemList.forEach(e -> System.out.println(e.getTitle()));
         List<Item> savedList = itemService.saveAll(itemList);
         return savedList;
     }

@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -34,11 +33,9 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
-    Logger logger = org.slf4j.LoggerFactory.getLogger(PublishAnnounceTasklet.class);
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.info("--- 商品発売日アナウンス START ---");
+        System.out.println("--- 商品発売日アナウンス START ---");
         List<Item> itemList = itemService.findReleasedItemList();
         for (Item item : itemList) {
             // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
@@ -75,7 +72,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger.info("--- 商品発売日アナウンス END ---");
+        System.out.println("--- 商品発売日アナウンス END ---");
         return RepeatStatus.FINISHED;
     }
 }

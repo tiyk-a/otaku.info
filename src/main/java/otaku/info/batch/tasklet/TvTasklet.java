@@ -2,7 +2,6 @@ package otaku.info.batch.tasklet;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -32,11 +31,9 @@ public class TvTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
-    Logger logger = org.slf4j.LoggerFactory.getLogger(TvTasklet.class);
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.info("--- TV検索 START ---");
+        System.out.println("--- TV検索 START ---");
 
         List<String> teamNameList = teamService.findAllTeamName();
 
@@ -47,7 +44,7 @@ public class TvTasklet implements Tasklet {
 
             urlWithParam += param;
 
-            logger.info(artist + "の番組を検索します");
+            System.out.println(artist + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
                 param = jsopConnect(urlWithParam, artist);
@@ -63,7 +60,7 @@ public class TvTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger.info("--- TV検索 END ---");
+        System.out.println("--- TV検索 END ---");
         return RepeatStatus.FINISHED;
     }
 

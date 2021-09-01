@@ -3,7 +3,6 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -44,8 +43,6 @@ public class LineController {
 
     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
-    final Logger logger = org.slf4j.LoggerFactory.getLogger(LineController.class);
-
     /**
      * LINEにポストします。
      *
@@ -58,7 +55,7 @@ public class LineController {
 
         for (String msg: messageList) {
             String outline = msg.substring(0,30);
-            logger.info("これをpostします： " + outline);
+            System.out.println("これをpostします： " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -69,9 +66,9 @@ public class LineController {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                logger.info("Request Successful: " + outline);
+                System.out.println("Request Successful: " + outline);
             } else {
-                logger.info("Request Failed: " + outline);
+                System.out.println("Request Failed: " + outline);
             }
         }
         return "done";

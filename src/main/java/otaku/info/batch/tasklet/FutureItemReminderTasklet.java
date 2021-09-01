@@ -13,11 +13,9 @@ import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
-import otaku.info.utils.DateUtils;
+import otaku.info.utils.ItemUtils;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -36,42 +34,23 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
+    @Autowired
+    ItemUtils itemUtils;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 未発売商品リマインダー START ---");
         // 1年以内に発売される商品リストを取得
-        List<Item> itemList = itemService.findFutureItemByDate(365);
-        Calendar todayCal = Calendar.getInstance();
-        todayCal.set(Calendar.HOUR_OF_DAY, 0);
-        Date today = todayCal.getTime();
+        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(365));
 
-        for (Item item : itemList) {
-            // 10日以上先の商品はキリのいい日のみポストする
-            if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(10)) > 0) {
-                // 100で割り切れる日数の時
-                if (item.getPublication_date().compareTo(today) % 100 == 0) {
-                    post(item, false);
-                } else if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(100)) < 0) {
-                    // 残り100日以下で10日刻み
-                    if (item.getPublication_date().compareTo(today) % 10 == 0) {
-                        post(item, false);
-                    }
-                }
-            } else {
-                // 10日以下だったら毎日ポストする(今日発売日?今日メッセージ:未来メッセージ)
-                if (item.getPublication_date().compareTo(today) == 0) {
-                    post(item, true);
-                } else {
-                    post(item, false);
-                }
-
-            }
+        for (Item e : itemList) {
+            post(e);
         }
         System.out.println("--- 未発売商品リマインダー END ---");
         return RepeatStatus.FINISHED;
     }
 
-    private void post(Item item, boolean isToday) throws Exception {
+    private void post(Item item) throws Exception {
         // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
         String[] teamIdArr = item.getTeam_id().split(",");
         if (teamIdArr.length > 1) {
@@ -86,7 +65,7 @@ public class FutureItemReminderTasklet implements Tasklet {
                     noTwitterTeamIdList.add(teamId);
                 } else {
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-                    String text = isToday ? textController.todayItemReminder(twiDto) : textController.futureItemReminder(twiDto);
+                    String text = textController.futureItemReminder(twiDto);
                     pythonController.post(Math.toIntExact(teamId), text);
                 }
             }
@@ -94,14 +73,14 @@ public class FutureItemReminderTasklet implements Tasklet {
             // 固有Twitterなしチームがある場合
             if (noTwitterTeamIdList.size() > 0) {
                 TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, null);
-                String text = isToday ? textController.todayItemReminder(twiDto, noTwitterTeamIdList) : textController.futureItemReminder(twiDto, noTwitterTeamIdList);
+                String text = textController.futureItemReminder(twiDto, noTwitterTeamIdList);
                 pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
             }
         } else {
             // チームが１つしかなかったらそのまま投稿
             long teamId = Long.parseLong(teamIdArr[teamIdArr.length - 1]);
             TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-            String text = isToday ? textController.todayItemReminder(twiDto) : textController.futureItemReminder(twiDto);
+            String text = textController.futureItemReminder(twiDto);
             pythonController.post(Math.toIntExact(teamId), text);
         }
         try {

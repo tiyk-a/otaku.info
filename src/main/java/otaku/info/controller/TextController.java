@@ -53,11 +53,6 @@ public class TextController {
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
-    public String todayItemReminder(TwiDto twiDto) {
-        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
-        return "【本日発売】%0A%0A" + twiDto.getTitle() + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
-    }
-
     /**
      * 未来発売商品のリマインドのための文章を作ります
      * batch/2
@@ -71,14 +66,6 @@ public class TextController {
         int diff = dateUtils.dateDiff(today.getTime(), twiDto.getPublication_date()) + 1;
         String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
         return "【PR 発売まで" + diff + "日】%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
-    }
-
-    public String todayItemReminder(TwiDto twiDto, List<Long> teamIdList) {
-        String tags = "";
-        for (Long teamId : teamIdList) {
-            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        }
-        return "【本日発売】%0A%0A" + twiDto.getTitle() + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String futureItemReminder(TwiDto twiDto, List<Long> teamIdList) {

@@ -6,9 +6,11 @@ import lombok.AllArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import java.io.*;
@@ -24,6 +26,9 @@ import java.util.List;
 @AllArgsConstructor
 @Controller
 public class RakutenController {
+
+    @Autowired
+    ItemUtils itemUtils;
 
     static final String RAKUTEN_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?";
 
@@ -146,7 +151,7 @@ public class RakutenController {
                 }catch(InterruptedException e){
                     e.printStackTrace();
                 }
-                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -237,7 +242,7 @@ public class RakutenController {
 
     public boolean updateUrl() {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
-        List<Item> itemList = itemService.findFutureItemByDate(100);
+        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(100));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();

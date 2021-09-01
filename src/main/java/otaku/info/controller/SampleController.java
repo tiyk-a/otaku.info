@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import java.net.HttpURLConnection;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -8,6 +9,8 @@ import java.util.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,10 +72,19 @@ public class SampleController {
      * @throws ChangeSetPersister.NotFoundException
      */
     @GetMapping("/tmpMethod")
-    public String tempMethod() throws ParseException {
-        String str = "関西版[本/雑誌] 2021年7月2日号 【表紙";
-        Map<String, List<Date>> map = analyzeController.extractPublishDate(str);
-        return map.toString();
+    public String tempMethod() {
+        String str = "https://hb.afl.rakuten.co.jp/hgc/g00qsq09.1sojvdbd.g00qsq09.1sojwe0c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fakism-shop%2F4910181521019%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fakism-shop%2Fi%2F10021275%2F";
+        //0. 外部APIに接続して
+        HttpURLConnection conn = null;
+        try {
+            // URLにアクセスして要素を取ってくる
+            Document document = Jsoup.connect(str).get();
+            boolean test = document.getElementsByTag("title").text().contains("エラー");
+            System.out.println("KOKO");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "OK";
     }
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
@@ -134,6 +146,8 @@ public class SampleController {
                 break;
             case 9:
                 scheduler.run9();
+            case 10:
+                scheduler.run10();
                 break;
         }
             return "Done";

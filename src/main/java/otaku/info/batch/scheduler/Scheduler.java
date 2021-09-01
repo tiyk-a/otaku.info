@@ -50,6 +50,10 @@ public class Scheduler {
     @Qualifier("tvAlertJob")
     private Job tvAlertJob;
 
+    @Autowired
+    @Qualifier("updateUrlJob")
+    private Job updateUrlJob;
+
     @Scheduled(cron = "${cron.rakutenSearch}")
     public void run1(){
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
@@ -142,6 +146,18 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(tvAlertJob, jobParameters);
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "${cron.updateUrl}")
+    public void run10(){
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run10", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(updateUrlJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
         }

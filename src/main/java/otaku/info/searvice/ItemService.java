@@ -122,4 +122,8 @@ public class ItemService {
     public Optional<Item> findByItemCode(String itemCode) {
         return itemRepository.findByItemCode(itemCode);
     }
+
+    public void updateAll(List<Item> itemList) {
+        itemRepository.saveAll(itemList);
+    }
 }

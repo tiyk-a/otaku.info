@@ -17,6 +17,7 @@ import otaku.info.searvice.TeamService;
 import otaku.info.utils.DateUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -43,21 +44,25 @@ public class FutureItemReminderTasklet implements Tasklet {
         logger.info("--- 未発売商品リマインダー START ---");
         // 1年以内に発売される商品リストを取得
         List<Item> itemList = itemService.findFutureItemByDate(365);
+        Calendar todayCal = Calendar.getInstance();
+        todayCal.set(Calendar.HOUR_OF_DAY, 0);
+        Date today = todayCal.getTime();
+
         for (Item item : itemList) {
             // 10日以上先の商品はキリのいい日のみポストする
             if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(10)) > 0) {
                 // 100で割り切れる日数の時
-                if (item.getPublication_date().compareTo(new Date()) % 100 == 0) {
+                if (item.getPublication_date().compareTo(today) % 100 == 0) {
                     post(item, false);
                 } else if (item.getPublication_date().compareTo(DateUtils.daysAfterToday(100)) < 0) {
                     // 残り100日以下で10日刻み
-                    if (item.getPublication_date().compareTo(new Date()) % 10 == 0) {
+                    if (item.getPublication_date().compareTo(today) % 10 == 0) {
                         post(item, false);
                     }
                 }
             } else {
                 // 10日以下だったら毎日ポストする(今日発売日?今日メッセージ:未来メッセージ)
-                if (item.getPublication_date().compareTo(new Date()) == 0) {
+                if (item.getPublication_date().compareTo(today) == 0) {
                     post(item, true);
                 } else {
                     post(item, false);
@@ -76,6 +81,7 @@ public class FutureItemReminderTasklet implements Tasklet {
             // 固有Twitterのないチームの投稿用オブジェクト
             List<Long> noTwitterTeamIdList = new ArrayList<>();
 
+            // 固有Twitterのあるなしで分ける
             for (String idStr : teamIdArr) {
                 long teamId = Long.parseLong(idStr);
                 String twId = teamService.getTwitterId(teamId);
@@ -88,6 +94,7 @@ public class FutureItemReminderTasklet implements Tasklet {
                 }
             }
 
+            // 固有Twitterなしチームがある場合
             if (noTwitterTeamIdList.size() > 0) {
                 TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, null);
                 String text = isToday ? textController.todayItemReminder(twiDto, noTwitterTeamIdList) : textController.futureItemReminder(twiDto, noTwitterTeamIdList);

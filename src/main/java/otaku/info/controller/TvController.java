@@ -52,7 +52,7 @@ public class TvController  {
 //    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d (EEE) H:m");
 
     final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
-            .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
+            .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.JAPAN);
 
     public List<Program> getTvList(Date date) {
         return programService.findByOnAirDate(date);

@@ -59,5 +59,4 @@ public class DbNotifyTasklet implements Tasklet {
         System.out.println("--- DB Insert Notify END ---");
         return RepeatStatus.FINISHED;
     }
-
 }

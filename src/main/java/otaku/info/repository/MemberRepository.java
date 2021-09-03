@@ -28,4 +28,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("select member_id from Member as a where 1 < (select count(*) from Member as b where a.member_name = b.member_name and a.member_id >= b.member_id)")
     List<Long> getDupl();
+
+    @Query("SELECT member_name FROM Member WHERE member_id in ?1")
+    List<String> findMemberNameByIdList(List<Long> memberIdList);
 }

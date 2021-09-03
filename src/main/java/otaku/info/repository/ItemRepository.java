@@ -54,6 +54,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT t FROM Item t WHERE publication_date >= ?1 and publication_date <= ?2 ORDER BY publication_date")
     List<Item> findItemsBetween(Date from, Date to);
 
+    @Query("SELECT t FROM Item t WHERE publication_date >= ?1 and publication_date <= ?2 and del_flg = ?3 ORDER BY publication_date")
+    List<Item> findItemsBetweenDelFlg(Date from, Date to, boolean delFlg);
+
     @Query("SELECT t FROM Item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
 }

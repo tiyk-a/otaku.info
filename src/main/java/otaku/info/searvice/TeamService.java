@@ -80,4 +80,8 @@ public class TeamService {
     public String getTwitterId(Long teamId) {
         return teamRepository.getTwitterId(teamId);
     }
+
+    public List<String> findTeamNameByIdList(List<Long> teamIdList) {
+        return teamRepository.findAllByIdList(teamIdList);
+    }
 }

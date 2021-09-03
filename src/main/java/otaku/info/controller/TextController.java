@@ -2,13 +2,11 @@ package otaku.info.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
-import otaku.info.searvice.MemberService;
-import otaku.info.searvice.StationService;
-import otaku.info.searvice.TagService;
-import otaku.info.searvice.TeamService;
+import otaku.info.searvice.*;
 import otaku.info.utils.DateUtils;
 
 import java.text.SimpleDateFormat;
@@ -27,6 +25,9 @@ public class TextController {
     private DateUtils dateUtils;
 
     @Autowired
+    private ItemService itemService;
+
+    @Autowired
     private TeamService teamService;
 
     @Autowired
@@ -42,6 +43,7 @@ public class TextController {
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
     private SimpleDateFormat sdf3 = new SimpleDateFormat("h:m");
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
     /**
      * Twitterポスト用のメッセージを作成します。
      *
@@ -228,5 +230,110 @@ public class TextController {
             resultMap.put(entry.getKey(), result + "%0A%0A" + tags);
         }
         return resultMap;
+    }
+
+    /**
+     * WordPressブログのリリース情報固定ページ表示用のテキストを作成
+     *
+     * @param todaysItems
+     * @param futureItems
+     * @return
+     */
+    public String blogUpdateReleaseItems(List<Item> todaysItems, List<Item> futureItems) {
+        String result = "";
+
+        List<String> todaysElems = blogReleaseItemsText(todaysItems);
+        List<String> futureElems = blogReleaseItemsText(futureItems);
+
+        // 本日発売の商品
+        if (todaysElems.size() > 0) {
+            result = String.join("\n\n", String.join("\n\n", todaysElems));
+        } else {
+            result = "<h2>今日発売の商品はありません。</h2>";
+        }
+
+        // 明日以降発売の商品
+        String result2 = "";
+        if (futureElems.size() > 0) {
+            result2 = String.join("\n\n", result, String.join("\n\n", futureElems));
+        } else {
+            result2 = String.join("\n\n", result, "<h2>明日以降1週間内発売の商品はありません。</h2>");
+        }
+
+        // テキストは返却
+        return result2;
+    }
+
+    /**
+     * 1要素のみのMapを返却
+     * Key: 投稿したいテキスト
+     * Value: fct_chkがもう一度必要そうなItemリスト
+     *
+     * @param itemList
+     * @return
+     */
+    private List<String> blogReleaseItemsText(List<Item> itemList) {
+        List<String> resultList = new ArrayList<>();
+
+        for (Item item : itemList) {
+            String date = dateUtils.getDay(item.getPublication_date());
+            String publicationDate = sdf2.format(item.getPublication_date()) + "(" + date + ")";
+
+            // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
+            if (!StringUtils.hasText(item.getTeam_id())) {
+                continue;
+            }
+
+            List<String> teamNameList = findTeamName(item.getTeam_id());
+            String teamNameUnited = String.join(" ", teamNameList);
+
+            // h2で表示したい商品のタイトルを生成
+            String h2 = "";
+            // メンバー名もある場合はこちら
+            if (StringUtils.hasText(item.getMember_id())) {
+                List<String> memberNameList = findMemberName(item.getMember_id());
+                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList));
+            } else {
+                // メンバー名ない場合はこちら
+                h2 = String.join("", publicationDate, teamNameUnited);
+            }
+
+            // htmlタグ付与
+            h2 = "<h2>" + h2 + "</h2>";
+
+            // h3を生成
+            String h3 = "<h3>" + item.getTitle() + "</h3>";
+
+            String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
+
+            String p = "<p>" + item.getItem_caption() + "</p>";
+
+            // 続くp要素を生成
+            String text = String.join("\n", h2, h3, aHref, p);
+
+            // 返却リストに追加する
+            resultList.add(text);
+        }
+        return resultList;
+    }
+
+    private List<String> findTeamName(String teamIdListStr) {
+        if (teamIdListStr == null || teamIdListStr.equals("")) {
+            return null;
+        }
+        List<Long> teamIdList = List.of(teamIdListStr.split(","))
+                .stream().map(Integer::parseInt).collect(Collectors.toList())
+                .stream().map(Integer::longValue).collect(Collectors.toList());
+        return teamService.findTeamNameByIdList(teamIdList);
+    }
+
+    private List<String> findMemberName(String memberIdListStr) {
+        if (memberIdListStr == null || memberIdListStr.equals("")) {
+            return null;
+        }
+        List<Long> memberIdList = List.of(memberIdListStr.split(","))
+                .stream().map(Integer::parseInt).collect(Collectors.toList())
+                .stream().map(Integer::longValue).collect(Collectors.toList());
+        return memberService.findMemberNameByIdList(memberIdList);
     }
 }

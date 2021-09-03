@@ -67,4 +67,8 @@ public class MemberService {
     public List<Long> getDupl() {
         return memberRepository.getDupl();
     }
+
+    public List<String> findMemberNameByIdList(List<Long> memberIdList) {
+        return memberRepository.findMemberNameByIdList(memberIdList);
+    }
 }

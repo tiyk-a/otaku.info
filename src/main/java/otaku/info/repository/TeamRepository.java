@@ -35,4 +35,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     @Query("SELECT team_id FROM Team WHERE team_name = ?1")
     Long findTeamIdByTeamName(String teamName);
+
+    @Query("SELECT team_name FROM Team WHERE team_id in ?1")
+    List<String> findAllByIdList(List<Long> teamIdList);
 }

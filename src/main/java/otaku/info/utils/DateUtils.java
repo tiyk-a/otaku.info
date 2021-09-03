@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class DateUtils {
 
+    private String dayOfWeek[] = {"", "日", "月", "火", "水", "木", "金", "土"};
+
     // https://www.delftstack.com/ja/howto/java/java-subtract-dates/
     public int dateDiff(Date firstDate, Date secondDate) {
 
@@ -83,5 +85,12 @@ public class DateUtils {
             latest = latest.before(dateList.get(i)) ? latest : dateList.get(i);
         }
         return latest;
+    }
+
+    public String getDay(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int index = c.get(Calendar.DAY_OF_WEEK);
+        return dayOfWeek[index];
     }
 }

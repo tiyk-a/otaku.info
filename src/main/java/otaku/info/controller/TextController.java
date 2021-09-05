@@ -303,13 +303,13 @@ public class TextController {
             // h3を生成
             String h3 = "<h3>" + item.getTitle() + "</h3>";
 
-            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + ">" + item.getImage1().replaceAll("\\?.*$", "") + "</a>" : "";
+            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
             String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
 
-            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + ">" + item.getImage2().replaceAll("\\?.*$", "") + "</a>" : "";
+            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
-            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + ">" + item.getImage3().replaceAll("\\?.*$", "") + "</a>" : "";
+            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
             String p = "<p>" + item.getItem_caption() + "</p>";
 
@@ -338,8 +338,15 @@ public class TextController {
     public WpDto blogItemText(Item item) {
         WpDto wpDto = new WpDto();
 
-        String date = dateUtils.getDay(item.getPublication_date());
-        String publicationDate = sdf2.format(item.getPublication_date()) + "(" + date + ")";
+        String publicationDate;
+        if (item.getPublication_date() != null) {
+            String date = dateUtils.getDay(item.getPublication_date());
+            publicationDate = sdf2.format(item.getPublication_date()) + "(" + date + ")";
+        } else {
+            item.setFct_chk(false);
+            itemService.saveItem(item);
+            return null;
+        }
 
         // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
         if (!StringUtils.hasText(item.getTeam_id())) {
@@ -365,13 +372,13 @@ public class TextController {
         // h3を生成
         String h3 = "<h3>" + item.getTitle() + "</h3>";
 
-        String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + ">" + item.getImage1().replaceAll("\\?.*$", "") + "</a>" : "";
+        String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
         String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
 
-        String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + ">" + item.getImage2().replaceAll("\\?.*$", "") + "</a>" : "";
+        String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
-        String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + ">" + item.getImage3().replaceAll("\\?.*$", "") + "</a>" : "";
+        String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
 
         String p = "<p>" + item.getItem_caption() + "</p>";
 

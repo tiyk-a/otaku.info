@@ -62,4 +62,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE del_flg = ?1 and image1 is null and publication_date > '2021-09-01' and publication_date < '2021-09-10'")
     List<Item> findByDelFlg(boolean delFlg);
+
+    @Query("select t from Item t where del_flg = false and team_id is not null and wpId is null and publication_date is not null order by publication_date, item_id")
+    List<Item> tmpMethod1();
 }

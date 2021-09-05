@@ -134,4 +134,8 @@ public class ItemService {
     public List<Item> findByDelFlg(boolean delFlg) {
         return itemRepository.findByDelFlg(delFlg);
     }
+
+    public List<Item> tmpMethod1() {
+        return itemRepository.tmpMethod1();
+    }
 }

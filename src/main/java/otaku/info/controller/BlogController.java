@@ -136,21 +136,21 @@ public class BlogController {
 
         if (wpDto != null) {
             // テキストコントローラーで文章をa href付きのものに変更
-            WpDto tmpDtp = textController.blogItemText(item);
-            wpDto.setTitle(tmpDtp.getTitle());
-            wpDto.setContent(tmpDtp.getContent());
-            wpDto.setPath("posts");
-            wpDto.setCategories(new Integer[]{5});
-
-            // リクエスト送信
-            String res = request(response, wpDto);
-
-            // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
-            if (org.springframework.util.StringUtils.hasText(res)) {
-                JSONObject jsonObject = new JSONObject(res);
-                if (jsonObject.get("id") != null) {
-                    item.setWpId(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
-                    itemService.saveItem(item);
+            WpDto tmpDto = textController.blogItemText(item);
+            if (tmpDto != null) {
+                wpDto.setTitle(tmpDto.getTitle());
+                wpDto.setContent(tmpDto.getContent());
+                wpDto.setPath("posts");
+                wpDto.setCategories(new Integer[]{5});
+                // リクエスト送信
+                String res = request(response, wpDto);
+                // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
+                if (org.springframework.util.StringUtils.hasText(res)) {
+                    JSONObject jsonObject = new JSONObject(res);
+                    if (jsonObject.get("id") != null) {
+                        item.setWpId(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
+                        itemService.saveItem(item);
+                    }
                 }
             }
         }
@@ -160,15 +160,7 @@ public class BlogController {
      * Tmpブログ新商品投稿メソッド
      */
     public void tmpItemPost() {
-        Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
-        Calendar c = Calendar.getInstance();
-        c.setTime(today);
-        c.add(Calendar.HOUR, -240);
-        Date from = c.getTime();
-
-        c.add(Calendar.HOUR, 240 + 240);
-        Date to = c.getTime();
-        List<Item> itemList = itemService.findItemsBetweenDelFlg(from, to, false);
+        List<Item> itemList = itemService.tmpMethod1();
         for (Item item : itemList) {
             postNewItem(item);
         }

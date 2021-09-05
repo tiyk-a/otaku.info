@@ -40,8 +40,8 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 未発売商品リマインダー START ---");
-        // 1年以内に発売される商品リストを取得
-        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(365));
+        // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
+        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(10));
 
         for (Item e : itemList) {
             post(e);

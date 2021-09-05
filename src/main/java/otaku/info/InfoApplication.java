@@ -8,6 +8,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextListener;
 
 @EnableBatchProcessing
 @SpringBootApplication
@@ -23,5 +24,10 @@ public class InfoApplication {
 	public RestTemplate restTemplate() {
 		RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
 		return restTemplateBuilder.build();
+	}
+
+	@Bean
+	public RequestContextListener requestContextListener() {
+		return new RequestContextListener();
 	}
 }

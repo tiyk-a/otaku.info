@@ -143,4 +143,22 @@ public class BlogController {
         }
     }
 
+    /**
+     * Tmpブログ新商品投稿メソッド
+     */
+    public void tmpItemPost() {
+        Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
+        Calendar c = Calendar.getInstance();
+        c.setTime(today);
+        c.add(Calendar.HOUR, -240);
+        Date from = c.getTime();
+
+        c.add(Calendar.HOUR, 240 + 240);
+        Date to = c.getTime();
+        List<Item> itemList = itemService.findItemsBetweenDelFlg(from, to, false);
+        for (Item item : itemList) {
+            postNewItem(item);
+        }
+    }
+
 }

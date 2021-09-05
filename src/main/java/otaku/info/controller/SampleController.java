@@ -50,6 +50,9 @@ public class SampleController {
     private PythonController pythonController;
 
     @Autowired
+    private BlogController blogController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -151,6 +154,8 @@ public class SampleController {
                 break;
             case 11:
                 scheduler.run11();
+            case 12:
+                blogController.tmpItemPost();
                 break;
         }
             return "Done";
@@ -325,6 +330,7 @@ public class SampleController {
                     }
                     if (item.getTeam_id() != null) {
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
+                        blogController.postNewItem(item);
                     } else {
                         System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
                         break;

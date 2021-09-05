@@ -154,6 +154,7 @@ public class SampleController {
                 break;
             case 11:
                 scheduler.run11();
+                break;
             case 12:
                 blogController.tmpItemPost();
                 break;

@@ -80,6 +80,18 @@ public class RakutenController {
                             item.setItem_code(key);
                             item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
                             item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
+                            JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                            if (imageNode.size() > 0) {
+                                item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+
+                                if (imageNode.size() > 1) {
+                                    item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                                }
+
+                                if (imageNode.size() > 2) {
+                                    item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                                }
+                            }
                             resultList.add(item);
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
@@ -213,6 +225,18 @@ public class RakutenController {
                     item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
                     item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
                     item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                    if (imageNode.size() > 0) {
+                        item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+
+                        if (imageNode.size() > 1) {
+                            item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        }
+
+                        if (imageNode.size() > 2) {
+                            item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        }
+                    }
                     resultList.add(item);
                 }
                 try{

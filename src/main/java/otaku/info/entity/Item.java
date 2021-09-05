@@ -59,6 +59,15 @@ public class Item {
     @Column(nullable = true)
     private Date publication_date;
 
+    @Column(nullable = true)
+    private String image1;
+
+    @Column(nullable = true)
+    private String image2;
+
+    @Column(nullable = true)
+    private String image3;
+
     @Column(nullable = false)
     private boolean fct_chk;
 

@@ -59,4 +59,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT t FROM Item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
+
+    @Query("SELECT t FROM Item t WHERE del_flg = ?1 and image1 is null")
+    List<Item> findByDelFlg(boolean delFlg);
 }

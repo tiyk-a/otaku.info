@@ -158,6 +158,9 @@ public class SampleController {
             case 12:
                 blogController.tmpItemPost();
                 break;
+            case 13:
+                rakutenController.addImage();
+                break;
         }
             return "Done";
     }

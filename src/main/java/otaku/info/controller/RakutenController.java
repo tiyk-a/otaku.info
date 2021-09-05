@@ -358,4 +358,72 @@ public class RakutenController {
         }
         return false;
     }
+
+    /**
+     * Imageを既存商品に追加するtmpメソッド
+     *
+     */
+    public void addImage() {
+        List<Item> itemList = itemService.findByDelFlg(false);
+
+        for (Item item : itemList) {
+            //0. 外部APIに接続して
+            HttpURLConnection conn = null;
+            try {
+                URL url = new URL(RAKUTEN_URL);
+                //1. パラメーターを送って
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
+                conn.connect();
+                PrintWriter out = new PrintWriter(conn.getOutputStream());
+                String parameter = "format=json&itemCode=" + item.getItem_code() + "&availability=1&elements=mediumImageUrls&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
+                out.write(parameter);
+                out.flush();
+                out.close();
+
+                //2. Jsonを取得して
+                InputStream stream = conn.getInputStream();
+                //文字列のバッファを構築
+                StringBuffer sb = new StringBuffer();
+                String line = "";
+                //文字型入力ストリームを作成
+                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+                //読めなくなるまでwhile文で回す
+                while((line = br.readLine()) != null) {
+                    System.out.println("受信Json：" + line);
+                    sb.append(line);
+                }
+                String script = sb.toString();
+
+                //3. 解析して中身をとりだします。
+                //ObjectMapperオブジェクトの宣言
+                ObjectMapper mapper = new ObjectMapper();
+
+                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
+                JsonNode node = mapper.readTree(script).get("Items");
+                for (int i=0; i<node.size();i++) {
+                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                    if (imageNode.size() > 0) {
+                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
+
+                        if (imageNode.size() > 1) {
+                            item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
+                        }
+
+                        if (imageNode.size() > 2) {
+                            item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
+                        }
+                    }
+                }
+                itemService.saveItem(item);
+                try{
+                    Thread.sleep(10000);
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

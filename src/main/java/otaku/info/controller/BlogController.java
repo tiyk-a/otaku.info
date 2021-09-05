@@ -5,14 +5,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.WpDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -142,6 +146,15 @@ public class BlogController {
                 wpDto.setContent(tmpDto.getContent());
                 wpDto.setPath("posts");
                 wpDto.setCategories(new Integer[]{5});
+
+                if (org.springframework.util.StringUtils.hasText(item.getImage1())) {
+                    String featuredMedia = requestMedia(response, item.getImage1());
+                    JSONObject tmpJsonObject = new JSONObject(featuredMedia);
+                    if (tmpJsonObject.get("id") != null) {
+                        wpDto.setFeatured_media(Integer.parseInt(tmpJsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
+                    }
+                }
+
                 // リクエスト送信
                 String res = request(response, wpDto);
                 // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
@@ -156,6 +169,46 @@ public class BlogController {
         }
     }
 
+    public String requestMedia(HttpServletResponse response, String imageUrl) {
+        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/media";
+
+        response.setHeader("Cache-Control", "no-cache");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-disposition", "attachment; filename=tmp1.jpg");
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new FileSystemResource(imageUrl));
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        String auth = new String(
+                Base64.getEncoder().encode(
+                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+                )
+        );
+        headers.add("Authorization","Basic " +  auth);
+        JSONObject personJsonObject = new JSONObject();
+
+//        if (!StringUtils.isEmpty(wpDto.getTitle())) {
+//            personJsonObject.put("title",wpDto.getTitle());
+//        }
+
+//        personJsonObject.put("author",1);
+//        personJsonObject.put("categories",wpDto.getCategories());
+//        personJsonObject.put("tags",wpDto.getTags());
+//
+//        if (!StringUtils.isEmpty(wpDto.getContent())) {
+//            personJsonObject.put("content",wpDto.getContent());
+//        }
+//
+//        if (!StringUtils.isEmpty(wpDto.getExcerpt())) {
+//            personJsonObject.put("excerpt",wpDto.getExcerpt());
+//        }
+//
+//        personJsonObject.put("status","publish");
+//
+//        HttpEntity<String> request = new HttpEntity<>(personJsonObject.toString(), headers);
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
+        return responseEntity.getBody();
+    }
     /**
      * Tmpブログ新商品投稿メソッド
      */

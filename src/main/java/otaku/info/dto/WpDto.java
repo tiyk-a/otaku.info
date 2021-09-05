@@ -15,6 +15,8 @@ public class WpDto {
 
     public String excerpt;
 
+    public Integer[] categories;
+
     public Integer[] tags;
 
     /** 投稿するブログパス */

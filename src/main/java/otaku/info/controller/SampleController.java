@@ -153,12 +153,15 @@ public class SampleController {
                 scheduler.run10();
                 break;
             case 11:
+                // 固定ページ「新商品情報」を更新する
                 scheduler.run11();
                 break;
             case 12:
+                // 商品の情報を投稿する
                 blogController.tmpItemPost();
                 break;
             case 13:
+                // 画像がnullの商品に画像を追加する
                 rakutenController.addImage();
                 break;
         }

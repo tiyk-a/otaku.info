@@ -108,6 +108,7 @@ public class BlogController {
         }
 
         personJsonObject.put("author",1);
+        personJsonObject.put("categories",wpDto.getCategories());
         personJsonObject.put("tags",wpDto.getTags());
 
         if (!StringUtils.isEmpty(wpDto.getContent())) {
@@ -139,7 +140,19 @@ public class BlogController {
             wpDto.setTitle(tmpDtp.getTitle());
             wpDto.setContent(tmpDtp.getContent());
             wpDto.setPath("posts");
-            request(response, wpDto);
+            wpDto.setCategories(new Integer[]{5});
+
+            // リクエスト送信
+            String res = request(response, wpDto);
+
+            // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
+            if (org.springframework.util.StringUtils.hasText(res)) {
+                JSONObject jsonObject = new JSONObject(res);
+                if (jsonObject.get("id") != null) {
+                    item.setWpId(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
+                    itemService.saveItem(item);
+                }
+            }
         }
     }
 

@@ -68,6 +68,9 @@ public class Item {
     @Column(nullable = true)
     private String image3;
 
+    @Column(nullable = true)
+    private Integer wpId;
+
     @Column(nullable = false)
     private boolean fct_chk;
 

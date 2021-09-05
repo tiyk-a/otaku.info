@@ -303,12 +303,23 @@ public class TextController {
             // h3を生成
             String h3 = "<h3>" + item.getTitle() + "</h3>";
 
+            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + ">" + item.getImage1().replaceAll("\\?.*$", "") + "</a>" : "";
+
             String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
+
+            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + ">" + item.getImage2().replaceAll("\\?.*$", "") + "</a>" : "";
+
+            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + ">" + item.getImage3().replaceAll("\\?.*$", "") + "</a>" : "";
 
             String p = "<p>" + item.getItem_caption() + "</p>";
 
-            // 続くp要素を生成
-            String text = String.join("\n", h2, h3, aHref, p);
+            // 商品単体ページのリンク
+            String itemUrl = "";
+            if (item.getWpId() != null) {
+                itemUrl = "<a href=https://otakuinfo.fun/item/" + item.getWpId() + ">商品紹介ページはこちら</a>";
+            }
+
+            String text = String.join("\n", h2, h3, image1, aHref, image2, image3, p, itemUrl);
 
             // 返却リストに追加する
             resultList.add(text);
@@ -354,12 +365,18 @@ public class TextController {
         // h3を生成
         String h3 = "<h3>" + item.getTitle() + "</h3>";
 
+        String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + ">" + item.getImage1().replaceAll("\\?.*$", "") + "</a>" : "";
+
         String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
+
+        String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + ">" + item.getImage2().replaceAll("\\?.*$", "") + "</a>" : "";
+
+        String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + ">" + item.getImage3().replaceAll("\\?.*$", "") + "</a>" : "";
 
         String p = "<p>" + item.getItem_caption() + "</p>";
 
         // 続くp要素を生成
-        String text = String.join("\n", h3, aHref, p);
+        String text = String.join("\n", h3, image1, image2, image3, aHref, p);
         wpDto.setContent(text);
         return wpDto;
     }

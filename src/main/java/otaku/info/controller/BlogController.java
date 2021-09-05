@@ -33,6 +33,8 @@ public class BlogController {
 
     HttpServletResponse response;
 
+    final String URL = "https://otakuinfo.fun/wp-json/wp/v2/";
+
     /**
      * 近日販売商品のブログページを更新します。
      * ・本日販売
@@ -78,6 +80,7 @@ public class BlogController {
         String blogText = textController.blogUpdateReleaseItems(releaseItemList, futureReleaseItemList);
 
         WpDto wpDto = new WpDto();
+        wpDto.setPath("pages/33");
         wpDto.setContent(blogText);
 
         // リクエスト送信
@@ -86,7 +89,8 @@ public class BlogController {
     }
 
     private String request(HttpServletResponse response, WpDto wpDto) {
-        final String URL = "https://otakuinfo.fun/wp-json/wp/v2/pages/33";
+        String finalUrl = URL + wpDto.getPath();
+
         response.setHeader("Cache-Control", "no-cache");
         HttpHeaders headers = new HttpHeaders();
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
@@ -104,6 +108,7 @@ public class BlogController {
         }
 
         personJsonObject.put("author",1);
+        personJsonObject.put("tags",wpDto.getTags());
 
         if (!StringUtils.isEmpty(wpDto.getContent())) {
             personJsonObject.put("content",wpDto.getContent());
@@ -116,7 +121,26 @@ public class BlogController {
         personJsonObject.put("status","publish");
 
         HttpEntity<String> request = new HttpEntity<>(personJsonObject.toString(), headers);
-        ResponseEntity<String> responseEntity = restTemplate.exchange(URL, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.POST, request, String.class);
         return responseEntity.getBody();
     }
+
+    /**
+     * 楽天検索で見つけた新商品についての記事を投稿する。
+     *
+     * @param item
+     */
+    public void postNewItem(Item item) {
+        WpDto wpDto = item.convertToWpDto();
+
+        if (wpDto != null) {
+            // テキストコントローラーで文章をa href付きのものに変更
+            WpDto tmpDtp = textController.blogItemText(item);
+            wpDto.setTitle(tmpDtp.getTitle());
+            wpDto.setContent(tmpDtp.getContent());
+            wpDto.setPath("posts");
+            request(response, wpDto);
+        }
+    }
+
 }

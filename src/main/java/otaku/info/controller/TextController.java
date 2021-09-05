@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
+import otaku.info.dto.WpDto;
 import otaku.info.entity.*;
 import otaku.info.searvice.*;
 import otaku.info.utils.DateUtils;
@@ -265,9 +266,7 @@ public class TextController {
     }
 
     /**
-     * 1要素のみのMapを返却
-     * Key: 投稿したいテキスト
-     * Value: fct_chkがもう一度必要そうなItemリスト
+     * 商品ブログ投稿文章
      *
      * @param itemList
      * @return
@@ -290,7 +289,7 @@ public class TextController {
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
             // メンバー名もある場合はこちら
-            if (StringUtils.hasText(item.getMember_id())) {
+            if (StringUtils.hasText(item.getMember_id()) && !item.getMember_id().equals("0")) {
                 List<String> memberNameList = findMemberName(item.getMember_id());
                 h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList));
             } else {
@@ -315,6 +314,54 @@ public class TextController {
             resultList.add(text);
         }
         return resultList;
+    }
+
+    /**
+     * 商品ブログ投稿文章
+     * Key: タイトル
+     * Value: テキスト
+     *
+     * @param item
+     * @return
+     */
+    public WpDto blogItemText(Item item) {
+        WpDto wpDto = new WpDto();
+
+        String date = dateUtils.getDay(item.getPublication_date());
+        String publicationDate = sdf2.format(item.getPublication_date()) + "(" + date + ")";
+
+        // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
+        if (!StringUtils.hasText(item.getTeam_id())) {
+            return null;
+        }
+
+        List<String> teamNameList = findTeamName(item.getTeam_id());
+        String teamNameUnited = "【" + String.join(" ", teamNameList) + "】";
+
+        // h2で表示したい商品のタイトルを生成
+        String h2 = "";
+        // メンバー名もある場合はこちら
+        if (StringUtils.hasText(item.getMember_id()) && !item.getMember_id().equals("0")) {
+            List<String> memberNameList = findMemberName(item.getMember_id());
+            h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), item.getTitle());
+        } else {
+            // メンバー名ない場合はこちら
+            h2 = String.join(" ", publicationDate, teamNameUnited, item.getTitle());
+        }
+
+        wpDto.setTitle(h2);
+
+        // h3を生成
+        String h3 = "<h3>" + item.getTitle() + "</h3>";
+
+        String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
+
+        String p = "<p>" + item.getItem_caption() + "</p>";
+
+        // 続くp要素を生成
+        String text = String.join("\n", h3, aHref, p);
+        wpDto.setContent(text);
+        return wpDto;
     }
 
     private List<String> findTeamName(String teamIdListStr) {

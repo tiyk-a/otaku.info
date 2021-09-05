@@ -19,8 +19,6 @@ public class WpDto {
 
     public Integer[] tags;
 
-    public Integer featured_media;
-
     /** 投稿するブログパス */
     public String path;
 }

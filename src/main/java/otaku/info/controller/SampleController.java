@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
+import otaku.info.batch.tasklet.BlogMediaTasklet;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
@@ -158,11 +159,15 @@ public class SampleController {
                 break;
             case 12:
                 // 商品の情報を投稿する
-                blogController.tmpItemPost();
+                scheduler.run12();
                 break;
             case 13:
                 // 画像がnullの商品に画像を追加する
                 rakutenController.addImage();
+                break;
+            case 14:
+                // 商品の情報を投稿する
+                blogController.tmpItemPost();
                 break;
         }
             return "Done";
@@ -336,7 +341,9 @@ public class SampleController {
                         result = textController.twitter(twiDto);
                     }
                     if (item.getTeam_id() != null) {
+                        // 投稿
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
+                        // ブログも投稿
                         blogController.postNewItem(item);
                     } else {
                         System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());

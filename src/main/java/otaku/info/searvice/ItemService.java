@@ -138,4 +138,8 @@ public class ItemService {
     public List<Item> tmpMethod1() {
         return itemRepository.tmpMethod1();
     }
+
+    public List<Item> findWpIdNotNullUpdatedAt(Date from) {
+        return itemRepository.findWpIdNotNullUpdatedAt(from);
+    }
 }

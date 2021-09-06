@@ -58,6 +58,10 @@ public class Scheduler {
     @Qualifier("blogUpdateJob")
     private Job blogUpdateJob;
 
+    @Autowired
+    @Qualifier("blogMediaJob")
+    private Job blogMediaJob;
+
     @Scheduled(cron = "${cron.rakutenSearch}")
     public void run1(){
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
@@ -167,6 +171,7 @@ public class Scheduler {
         }
     }
 
+    // 固定ページの更新
     @Scheduled(cron = "${cron.blogUpdate}")
     public void run11(){
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -174,6 +179,18 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(blogUpdateJob, jobParameters);
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "${cron.blogMedia}")
+    public void run12(){
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run12", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(blogMediaJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
         }

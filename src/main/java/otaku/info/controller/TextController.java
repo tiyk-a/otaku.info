@@ -315,8 +315,8 @@ public class TextController {
 
             // 商品単体ページのリンク
             String itemUrl = "";
-            if (item.getWpId() != null) {
-                itemUrl = "<a href=https://otakuinfo.fun/item/" + item.getWpId() + ">商品紹介ページはこちら</a>";
+            if (item.getWp_id() != null) {
+                itemUrl = "<a href=https://otakuinfo.fun/item/" + item.getWp_id() + ">商品紹介ページはこちら</a>";
             }
 
             String text = String.join("\n", h2, h3, image1, aHref, image2, image3, p, itemUrl);

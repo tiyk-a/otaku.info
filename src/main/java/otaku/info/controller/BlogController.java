@@ -5,8 +5,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.WpDto;
@@ -14,7 +17,13 @@ import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
@@ -142,18 +151,84 @@ public class BlogController {
                 wpDto.setContent(tmpDto.getContent());
                 wpDto.setPath("posts");
                 wpDto.setCategories(new Integer[]{5});
+
                 // リクエスト送信
                 String res = request(response, wpDto);
                 // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
                 if (org.springframework.util.StringUtils.hasText(res)) {
                     JSONObject jsonObject = new JSONObject(res);
                     if (jsonObject.get("id") != null) {
-                        item.setWpId(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
+                        item.setWp_id(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
                         itemService.saveItem(item);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 画像をWordPressにポストします。
+     *
+     * @param response
+     * @param imageUrl
+     * @return 画像ID
+     */
+    public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) throws IOException {
+        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/media";
+
+        response.setHeader("Cache-Control", "no-cache");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-disposition", "attachment; filename=tmp1.jpg");
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        imageUrl = imageUrl.replaceAll("\\?.*$", "");
+
+        String imagePath = "";
+        try(InputStream in = new URL(imageUrl).openStream()){
+            imagePath = "/Users/chiara/Desktop/info/src/main/resources/images/item/" + itemId + ".jpg";
+            Files.copy(in, Paths.get(imagePath));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        body.add("file", new FileSystemResource(imagePath));
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        String auth = new String(
+                Base64.getEncoder().encode(
+                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+                )
+        );
+        headers.add("Authorization","Basic " +  auth);
+        JSONObject personJsonObject = new JSONObject();
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
+        String text = responseEntity.getBody();
+        JSONObject jsonObject = new JSONObject(text);
+        if (jsonObject.get("id") != null) {
+            return Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
+        }
+        return 0;
+    }
+
+    /**
+     * WpIdからポストの内容を取得します。
+     *
+     * @param wpId
+     * @return
+     */
+    public String requestPostData(String wpId) {
+        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/posts/" + wpId;
+
+        HttpHeaders headers = new HttpHeaders();
+        String auth = new String(
+                Base64.getEncoder().encode(
+                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+                )
+        );
+        headers.add("Authorization","Basic " +  auth);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+        return responseEntity.getBody();
     }
 
     /**
@@ -166,4 +241,78 @@ public class BlogController {
         }
     }
 
+    /**
+     * 商品リストからアイキャッチメディアの登録がない商品だけを引き抜いてリストにし返却します。
+     *
+     * @param itemList
+     * @return Item:
+     */
+    public List<Item> selectBlogData(List<Item> itemList) {
+        List<Item> resultList = new ArrayList<>();
+        for (Item item : itemList) {
+            String result = requestPostData(item.getWp_id().toString());
+            Integer featuredMedia = extractMedia(result);
+            if (featuredMedia == 0) {
+                resultList.add(item);
+            }
+        }
+        return resultList;
+    }
+
+    /**
+     * アイキャッチメディアがある場合、画像IDを返却します。
+     * ない場合、0
+     *
+     * @param text
+     * @return
+     */
+    private Integer extractMedia(String text) {
+        JSONObject jsonObject = new JSONObject(text);
+        if (jsonObject.get("featured_media") != null) {
+            return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
+        }
+        return 0;
+    }
+
+    /**
+     * 商品画像1をWordpressに登録します。
+     *
+     * @param itemList
+     */
+    public void loadMedia(List<Item> itemList) throws IOException {
+        for (Item item : itemList) {
+            Integer imageId = requestMedia(response, item.getItem_id(), item.getImage1());
+            if (imageId == null || imageId == 0) {
+                continue;
+            }
+
+            setMedia(item.getWp_id(), imageId);
+        }
+    }
+
+    /**
+     * 投稿にアイキャッチメディアを設定し、更新します。
+     *
+     * @param wpId
+     * @param imageId
+     */
+    private void setMedia(Integer wpId, Integer imageId) {
+        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/posts/item/" + wpId;
+
+        response.setHeader("Cache-Control", "no-cache");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String auth = new String(
+                Base64.getEncoder().encode(
+                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+                )
+        );
+        headers.add("Authorization","Basic " +  auth);
+        JSONObject personJsonObject = new JSONObject();
+        personJsonObject.put("featured_media", imageId);
+
+        HttpEntity<String> request = new HttpEntity<>(personJsonObject.toString(), headers);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.POST, request, String.class);
+    }
 }

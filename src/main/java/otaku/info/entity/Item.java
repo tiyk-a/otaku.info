@@ -69,7 +69,7 @@ public class Item {
     private String image3;
 
     @Column(nullable = true)
-    private Integer wpId;
+    private Integer wp_id;
 
     @Column(nullable = false)
     private boolean fct_chk;

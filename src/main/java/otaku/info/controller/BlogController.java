@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.WpDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Setting;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -39,6 +40,9 @@ public class BlogController {
 
     @Autowired
     ItemService itemService;
+
+    @Autowired
+    Setting setting;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -187,7 +191,7 @@ public class BlogController {
 
         String imagePath = "";
         try(InputStream in = new URL(imageUrl).openStream()){
-            imagePath = "/Users/chiara/Desktop/info/src/main/resources/images/item/" + itemId + ".jpg";
+            imagePath = setting.getImageitem() + itemId + ".jpg";
             Files.copy(in, Paths.get(imagePath));
         } catch (Exception e) {
             e.printStackTrace();

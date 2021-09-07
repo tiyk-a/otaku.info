@@ -65,6 +65,9 @@ public class SampleController {
     @Autowired
     Scheduler scheduler;
 
+    @Autowired
+    private Setting setting;
+
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -74,18 +77,8 @@ public class SampleController {
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() {
-        String str = "https://hb.afl.rakuten.co.jp/hgc/g00qsq09.1sojvdbd.g00qsq09.1sojwe0c/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fakism-shop%2F4910181521019%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fakism-shop%2Fi%2F10021275%2F";
-        //0. 外部APIに接続して
-        HttpURLConnection conn = null;
-        try {
-            // URLにアクセスして要素を取ってくる
-            Document document = Jsoup.connect(str).get();
-            boolean test = document.getElementsByTag("title").text().contains("エラー");
-            System.out.println("KOKO");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "OK";
+        System.out.println(setting.getBlogUpdate());
+        return setting.getBlogUpdate();
     }
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド

@@ -1,6 +1,7 @@
 package otaku.info.searvice;
 
-import java.util.Map;
+import java.util.*;
+
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
@@ -8,10 +9,6 @@ import otaku.info.repository.ItemRepository;
 import otaku.info.utils.DateUtils;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 商品テーブルのサービス
@@ -141,5 +138,30 @@ public class ItemService {
 
     public List<Item> findWpIdNotNullUpdatedAt(Date from) {
         return itemRepository.findWpIdNotNullUpdatedAt(from);
+    }
+
+    public List<Item> findNotDeleted() {
+        return itemRepository.findNotDeleted();
+    }
+
+    /**
+     * 引数の商品と同じ発売日＆teamIdが合致する商品リストを返却する
+     *
+     * @param item
+     * @return
+     */
+    public List<Item> findSimilarItemList(Item item) {
+        List<String> teamIdList = new ArrayList<>();
+        List<Item> resultList = new ArrayList<>();
+
+        // 商品のteamIdを抽出
+        Arrays.stream(item.getTeam_id().split(",")).forEach(e -> teamIdList.add(e));
+
+        // それぞれのteamIdでマスタ商品の登録がある商品を探す
+        for (String teamId : teamIdList) {
+            // teamIdと発売日とマスタ登録ありで検索し、リストに入っていなかったら追加する
+            itemRepository.findSimilarItemList(teamId, item.getPublication_date()).stream().filter(e -> !resultList.contains(e)).forEach(e -> resultList.add(e));
+        }
+        return resultList;
     }
 }

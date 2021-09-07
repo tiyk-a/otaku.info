@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Item;
 
-import javax.persistence.NamedNativeQuery;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -70,4 +69,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where wp_id is not null and updated_at >= ?1 and image1 is not null")
 //    @Query("select t from Item t where item_id in (1251,1202)")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
+
+    @Query("select t from Item t where del_flg = 0")
+//    @Query("select t from Item t where item_id in (947,988)")
+    List<Item> findNotDeleted();
+
+    @Query("select t from Item t where team_id like ?1 and publication_date = ?2 and item_m_id is not null")
+    List<Item> findSimilarItemList(String teamId, Date publicationDate);
 }

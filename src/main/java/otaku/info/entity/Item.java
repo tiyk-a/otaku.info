@@ -77,6 +77,9 @@ public class Item {
     @Column(nullable = false)
     private boolean del_flg;
 
+    @Column(nullable = true)
+    private Long item_m_id;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

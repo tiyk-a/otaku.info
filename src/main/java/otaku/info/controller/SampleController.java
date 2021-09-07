@@ -22,6 +22,7 @@ import otaku.info.searvice.ItemService;
 import otaku.info.searvice.MemberService;
 import otaku.info.searvice.TeamService;
 import otaku.info.setting.Setting;
+import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
 /**
@@ -68,6 +69,9 @@ public class SampleController {
     @Autowired
     private Setting setting;
 
+    @Autowired
+    private ItemUtils itemUtils;
+
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -75,10 +79,14 @@ public class SampleController {
      * @return
      * @throws ChangeSetPersister.NotFoundException
      */
-    @GetMapping("/tmpMethod")
-    public String tempMethod() {
-        System.out.println(setting.getBlogUpdate());
-        return setting.getBlogUpdate();
+    @GetMapping("/tmpMethod/{id}/{id2}")
+    public String tempMethod(@PathVariable String id, @PathVariable String id2) {
+        Integer i1 = textController.getSimilarScoreByJaroWinklerDistance(id, id2);
+        Integer i2 = textController.getSimilarScoreByLevenshteinDistance(id, id2);
+        System.out.println(String.join(", ", i1.toString(), i2.toString()));
+        System.out.println(id);
+        System.out.println(id2);
+        return "done";
     }
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
@@ -185,6 +193,11 @@ public class SampleController {
                 blogController.tmpItemPost();
                 System.out.println("---Tmpブログ新商品投稿メソッドEND---");
                 break;
+            case 15:
+                System.out.println("---商品マスタ登録START---");
+                List<Item> itemList = itemService.findNotDeleted();
+                itemUtils.groupItem(itemList);
+                System.out.println("---商品マスタ登録END---");
         }
             return "Done";
     }

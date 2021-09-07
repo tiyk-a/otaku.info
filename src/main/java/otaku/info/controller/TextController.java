@@ -1,5 +1,7 @@
 package otaku.info.controller;
 
+import org.apache.lucene.search.spell.JaroWinklerDistance;
+import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -298,7 +300,7 @@ public class TextController {
             }
 
             // htmlタグ付与
-            h2 = "<h2>" + h2 + "</h2>";
+            h2 = "<h2 id=id_" + item.getItem_id() + ">" + h2 + "</h2>";
 
             // h3を生成
             String h3 = "<h3>" + item.getTitle() + "</h3>";
@@ -406,5 +408,33 @@ public class TextController {
                 .stream().map(Integer::parseInt).collect(Collectors.toList())
                 .stream().map(Integer::longValue).collect(Collectors.toList());
         return memberService.findMemberNameByIdList(memberIdList);
+    }
+
+    /**
+     * レーベンシュタイン距離で文字列の類似度を判定
+     * @param s1
+     * @param s2
+     * https://qiita.com/hakozaki/items/856230d3f8e29d3302d6
+     * @return
+     */
+    public int getSimilarScoreByLevenshteinDistance(String s1, String s2){
+
+        // 入力チェックは割愛
+        LevensteinDistance dis =  new LevensteinDistance();
+        return (int) (dis.getDistance(s1, s2) * 100);
+    }
+
+    /**
+     * ジャロ・ウィンクラー距離で文字列の類似度を判定
+     * @param s1
+     * @param s2
+     * https://qiita.com/hakozaki/items/856230d3f8e29d3302d6
+     * @return
+     */
+    public int getSimilarScoreByJaroWinklerDistance(String s1, String s2){
+
+        // 入力チェックは割愛
+        JaroWinklerDistance dis =  new JaroWinklerDistance();
+        return (int) (dis.getDistance(s1, s2) * 100);
     }
 }

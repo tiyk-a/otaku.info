@@ -174,7 +174,7 @@ public class BlogController {
      * @return 画像ID
      */
     public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) throws IOException {
-        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/media";
+        String finalUrl = URL + "media";
 
         response.setHeader("Cache-Control", "no-cache");
         HttpHeaders headers = new HttpHeaders();
@@ -194,9 +194,9 @@ public class BlogController {
         body.add("file", new FileSystemResource(imagePath));
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         String auth = new String(
-                Base64.getEncoder().encode(
-                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-                )
+            Base64.getEncoder().encode(
+                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+            )
         );
         headers.add("Authorization","Basic " +  auth);
         JSONObject personJsonObject = new JSONObject();
@@ -217,13 +217,13 @@ public class BlogController {
      * @return
      */
     public String requestPostData(String wpId) {
-        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/posts/" + wpId;
+        String finalUrl = URL + "posts/" + wpId;
 
         HttpHeaders headers = new HttpHeaders();
         String auth = new String(
-                Base64.getEncoder().encode(
-                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-                )
+            Base64.getEncoder().encode(
+                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+            )
         );
         headers.add("Authorization","Basic " +  auth);
 
@@ -297,17 +297,18 @@ public class BlogController {
      * @param imageId
      */
     private void setMedia(Integer wpId, Integer imageId) {
-        String finalUrl = "https://otakuinfo.fun/wp-json/wp/v2/posts/item/" + wpId;
+        String finalUrl = URL + "item/" + wpId;
 
         response.setHeader("Cache-Control", "no-cache");
         HttpHeaders headers = new HttpHeaders();
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.setContentType(MediaType.APPLICATION_JSON);
         String auth = new String(
-                Base64.getEncoder().encode(
-                        "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-                )
+            Base64.getEncoder().encode(
+                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+            )
         );
+
         headers.add("Authorization","Basic " +  auth);
         JSONObject personJsonObject = new JSONObject();
         personJsonObject.put("featured_media", imageId);

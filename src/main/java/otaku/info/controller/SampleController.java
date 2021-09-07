@@ -1,6 +1,5 @@
 package otaku.info.controller;
 
-import java.net.HttpURLConnection;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -9,8 +8,6 @@ import java.util.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
-import otaku.info.batch.tasklet.BlogMediaTasklet;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.MemberService;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Setting;
 import otaku.info.utils.StringUtilsMine;
 
 /**
@@ -128,46 +125,72 @@ public class SampleController {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
+                System.out.println("---run1楽天新商品検索 START---");
                 scheduler.run1();
+                System.out.println("---run1楽天新商品検索 END---");
                 break;
             case 2:
+                System.out.println("---run2未発売商品リマインダー START---");
                 scheduler.run2();
+                System.out.println("---run2未発売商品リマインダー END---");
                 break;
             case 4:
+                System.out.println("---run4商品発売日アナウンス START---");
                 scheduler.run4();
+                System.out.println("---run4商品発売日アナウンス END---");
                 break;
             case 5:
+                System.out.println("---run5楽天新商品検索（個人） START---");
                 scheduler.run5();
+                System.out.println("---run5楽天新商品検索（個人） END---");
                 break;
             case 6:
+                System.out.println("---run6TV検索 START---");
                 scheduler.run6();
+                System.out.println("---run6TV検索 END---");
                 break;
             case 7:
+                System.out.println("---run7TV番組投稿処理 START---");
                 scheduler.run7();
+                System.out.println("---run7TV番組投稿処理 END---");
                 break;
             case 8:
+                System.out.println("---run8DB Insert Notify START---");
                 scheduler.run8();
+                System.out.println("---run8DB Insert Notify END---");
                 break;
             case 9:
+                System.out.println("---run9TVアラート START---");
                 scheduler.run9();
+                System.out.println("---run9TVアラート END---");
             case 10:
+                System.out.println("---run10DB商品アフェリリンク更新 START---");
                 scheduler.run10();
+                System.out.println("---run10DB商品アフェリリンク更新 END---");
                 break;
             case 11:
                 // 固定ページ「新商品情報」を更新する
+                System.out.println("---run11Blog Update START---");
                 scheduler.run11();
+                System.out.println("---run11Blog Update END---");
                 break;
             case 12:
                 // 商品の情報を投稿する
+                System.out.println("---run12Blog画像設定 START---");
                 scheduler.run12();
+                System.out.println("---run12Blog画像設定 END---");
                 break;
             case 13:
                 // 画像がnullの商品に画像を追加する
+                System.out.println("---Imageを既存商品に追加するtmpメソッドSTART---");
                 rakutenController.addImage();
+                System.out.println("---Imageを既存商品に追加するtmpメソッドEND---");
                 break;
             case 14:
                 // 商品の情報を投稿する
+                System.out.println("---Tmpブログ新商品投稿メソッドSTART---");
                 blogController.tmpItemPost();
+                System.out.println("---Tmpブログ新商品投稿メソッドEND---");
                 break;
         }
             return "Done";

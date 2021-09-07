@@ -47,6 +47,8 @@ public class TvController  {
     @Autowired
     private StationService stationService;
 
+    private static org.springframework.util.StringUtils StringUtilsSpring;
+
     final Pattern datePattern = Pattern.compile("^[0-9][0-9]?/[0-9][0-9]? \\((Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\) [0-9][0-9]?:[0-9][0-9]?");
 
 //    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d (EEE) H:m");
@@ -123,14 +125,14 @@ public class TvController  {
             }
 
             // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細画面）からとる
-            if (teamIdList.size() == 0) {
+            if (teamIdList.size() == 0 && StringUtilsSpring.hasText(valueArr[1])) {
                 String[] detail = getDetails(valueArr[1]);
 
                 // 番組概要からチーム名を取得
                 teamIdList.addAll(teamService.findTeamIdListByText(detail[0]));
 
                 // 番組概要からチーム名を取得
-                if (teamIdList.size() == 0) {
+                if (teamIdList.size() == 0 && StringUtilsSpring.hasText(detail[1])) {
                     teamIdList.addAll(teamService.findTeamIdListByText(detail[1]));
                 }
             }
@@ -152,14 +154,14 @@ public class TvController  {
             }
 
             // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細画面）からとる
-            if (memberIdList.size() == 0) {
+            if (memberIdList.size() == 0 && StringUtilsSpring.hasText(valueArr[1])) {
                 String[] detail = getDetails(valueArr[1]);
 
                 // 番組概要からメンバー名を取得
                 memberIdList.addAll(memberService.findMemberIdByText(detail[0]));
 
                 // 番組概要からメンバー名を取得
-                if (memberIdList.size() == 0) {
+                if (memberIdList.size() == 0 && StringUtilsSpring.hasText(detail[1])) {
                     memberIdList.addAll(memberService.findMemberIdByText(detail[1]));
                 }
             }

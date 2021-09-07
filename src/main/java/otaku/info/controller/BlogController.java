@@ -40,6 +40,8 @@ public class BlogController {
     @Autowired
     ItemService itemService;
 
+    private static org.springframework.util.StringUtils StringUtilsSpring;
+
     HttpServletResponse response;
 
     final String URL = "https://otakuinfo.fun/wp-json/wp/v2/";
@@ -155,7 +157,7 @@ public class BlogController {
                 // リクエスト送信
                 String res = request(response, wpDto);
                 // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
-                if (org.springframework.util.StringUtils.hasText(res)) {
+                if (StringUtilsSpring.hasText(res)) {
                     JSONObject jsonObject = new JSONObject(res);
                     if (jsonObject.get("id") != null) {
                         item.setWp_id(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));

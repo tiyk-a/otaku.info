@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 import otaku.info.utils.ItemUtils;
@@ -33,6 +34,8 @@ public class RakutenController {
     static final String RAKUTEN_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?";
 
     private final ItemService itemService;
+
+    private static org.springframework.util.StringUtils StringUtilsSpring;
 
     public static List<Item> search1(List<String> searchList) {
         List<Item> resultList = new ArrayList<>();
@@ -63,8 +66,16 @@ public class RakutenController {
                     System.out.println("④受信Json中身：" + line);
                     sb.append(line);
                 }
+
+                if (!StringUtils.hasText(sb)) {
+                    continue;
+                }
+
 //                stream.close();
-                String script = sb.toString();
+                String script = "";
+                if (StringUtils.hasText(sb)) {
+                    script = sb.toString();
+                }
 
                 //3. 解析して中身をとりだします。
                 //ObjectMapperオブジェクトの宣言
@@ -227,14 +238,18 @@ public class RakutenController {
                     item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
                     JsonNode imageNode = node.get(i).get("mediumImageUrls");
                     if (imageNode.size() > 0) {
-                        item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        if (imageNode.get(0).get("imageUrl") == null) {
+                            item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
+                        } else {
+                            item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
 
-                        if (imageNode.size() > 1) {
-                            item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                        }
+                            if (imageNode.size() > 1) {
+                                item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            }
 
-                        if (imageNode.size() > 2) {
-                            item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            if (imageNode.size() > 2) {
+                                item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            }
                         }
                     }
                     resultList.add(item);
@@ -308,6 +323,11 @@ public class RakutenController {
                     System.out.println("④受信Json中身：" + line);
                     sb.append(line);
                 }
+
+                if (!StringUtils.hasText(sb)) {
+                    continue;
+                }
+
     //          stream.close();
                 String script = sb.toString();
 
@@ -319,6 +339,11 @@ public class RakutenController {
                 JsonNode node = mapper.readTree(script);
                 if (node != null) {
                     node = node.get("Items");
+
+                    if (node == null) {
+                        continue;
+                    }
+
                     for (int i=0; i<node.size();i++) {
                         try {
                             Item item = itemService.findByItemCode(key).orElse(new Item());
@@ -390,8 +415,10 @@ public class RakutenController {
                 BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
                 //読めなくなるまでwhile文で回す
                 while((line = br.readLine()) != null) {
-                    System.out.println("受信Json：" + line);
                     sb.append(line);
+                }
+                if (!StringUtilsSpring.hasText(line)) {
+                  continue;
                 }
                 String script = sb.toString();
 
@@ -401,21 +428,23 @@ public class RakutenController {
 
                 //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
                 JsonNode node = mapper.readTree(script).get("Items");
-                for (int i=0; i<node.size();i++) {
-                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                    if (imageNode.size() > 0) {
-                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
+                if (!node.isNull()) {
+                    for (int i=0; i<node.size();i++) {
+                        JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                        if (imageNode.size() > 0) {
+                            item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
 
-                        if (imageNode.size() > 1) {
-                            item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
-                        }
+                            if (imageNode.size() > 1) {
+                                item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
+                            }
 
-                        if (imageNode.size() > 2) {
-                            item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
+                            if (imageNode.size() > 2) {
+                                item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
+                            }
                         }
                     }
+                    itemService.saveItem(item);
                 }
-                itemService.saveItem(item);
                 try{
                     Thread.sleep(10000);
                 }catch(InterruptedException e){

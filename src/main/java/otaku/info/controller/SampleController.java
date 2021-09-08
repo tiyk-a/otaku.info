@@ -190,14 +190,10 @@ public class SampleController {
             case 14:
                 // 商品の情報を投稿する
                 System.out.println("---Tmpブログ新商品投稿メソッドSTART---");
-                blogController.tmpItemPost();
+                List<Item> itemList = itemService.findNotDeleted();
+                blogController.tmpItemPost(itemList);
                 System.out.println("---Tmpブログ新商品投稿メソッドEND---");
                 break;
-            case 15:
-                System.out.println("---商品マスタ登録START---");
-                List<Item> itemList = itemService.findNotDeleted();
-                itemUtils.groupItem(itemList);
-                System.out.println("---商品マスタ登録END---");
         }
             return "Done";
     }
@@ -373,7 +369,9 @@ public class SampleController {
                         // 投稿
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
                         // ブログも投稿
-                        blogController.postNewItem(item);
+                        Long itemMasterId = blogController.postOrUpdate(item);
+                        item.setItem_m_id(itemMasterId);
+                        itemService.saveItem(item);
                     } else {
                         System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
                         break;

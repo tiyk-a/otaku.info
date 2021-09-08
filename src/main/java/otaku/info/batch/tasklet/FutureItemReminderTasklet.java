@@ -9,14 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
-import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.ItemUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @StepScope
@@ -43,17 +46,24 @@ public class FutureItemReminderTasklet implements Tasklet {
         // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
         List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(10));
 
-        for (Item e : itemList) {
-            post(e);
+        // 商品マスタ：その商品リストのマップ
+        Map<ItemMaster, List<Item>> itemMap = itemUtils.groupItem(itemList);
+
+        for (Map.Entry<ItemMaster, List<Item>> e : itemMap.entrySet()) {
+            post(e.getKey(), e.getValue());
         }
         System.out.println("--- 未発売商品リマインダー END ---");
         return RepeatStatus.FINISHED;
     }
 
-    private void post(Item item) throws Exception {
+    private void post(ItemMaster itemMaster, List<Item> itemList) throws Exception {
         // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
-        String[] teamIdArr = item.getTeam_id().split(",");
-        if (teamIdArr.length > 1) {
+        List<String> teamIdArr = new ArrayList<>();
+        itemList.forEach(e -> teamIdArr.addAll(Arrays.asList(e.getTeam_id().split(","))));
+        itemList.stream().distinct().collect(Collectors.toList());
+        Item item = itemList.get(0);
+
+        if (teamIdArr.size() > 1) {
             // 固有Twitterのないチームの投稿用オブジェクト
             List<Long> noTwitterTeamIdList = new ArrayList<>();
 
@@ -62,25 +72,24 @@ public class FutureItemReminderTasklet implements Tasklet {
                 long teamId = Long.parseLong(idStr);
                 String twId = teamService.getTwitterId(teamId);
                 if (twId == null) {
+                    // 固有アカウントがない場合
                     noTwitterTeamIdList.add(teamId);
                 } else {
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-                    String text = textController.futureItemReminder(twiDto);
+                    // 固有アカウントがある場合
+                    String text = textController.futureItemReminder(itemMaster, itemList.get(0), idStr);
                     pythonController.post(Math.toIntExact(teamId), text);
                 }
             }
 
-            // 固有Twitterなしチームがある場合
+            // 固有Twitterなしチームがある場合はここでまとめて投稿する
             if (noTwitterTeamIdList.size() > 0) {
-                TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, null);
-                String text = textController.futureItemReminder(twiDto, noTwitterTeamIdList);
+                String text = textController.futureItemReminder(itemMaster, itemList.get(0), noTwitterTeamIdList);
                 pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
             }
         } else {
             // チームが１つしかなかったらそのまま投稿
-            long teamId = Long.parseLong(teamIdArr[teamIdArr.length - 1]);
-            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-            String text = textController.futureItemReminder(twiDto);
+            long teamId = Long.parseLong(teamIdArr.get(0));
+            String text = textController.futureItemReminder(itemMaster, itemList.get(0), Long.parseLong(teamIdArr.get(0)));
             pythonController.post(Math.toIntExact(teamId), text);
         }
         try {

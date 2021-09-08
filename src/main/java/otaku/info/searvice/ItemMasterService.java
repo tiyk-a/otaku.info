@@ -9,6 +9,7 @@ import otaku.info.repository.ItemMasterRepository;
 
 import javax.transaction.Transactional;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -39,5 +40,9 @@ public class ItemMasterService {
 
     public ItemMaster save(ItemMaster itemMaster) {
         return itemMasterRepository.save(itemMaster);
+    }
+
+    public List<ItemMaster> findReleasedItemList() {
+        return itemMasterRepository.findReleasedItemList();
     }
 }

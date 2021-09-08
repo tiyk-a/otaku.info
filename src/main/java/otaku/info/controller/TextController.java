@@ -118,37 +118,18 @@ public class TextController {
         return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
-    public String releasedItemAnnounce(Item item) {
-        String str1 = "【PR】本日発売！%0A%0A" + item.getTitle() + "%0A%0A";
-        String str2 = item.getUrl();
-        String result;
-        int length = str1.length() + str2.length() + "%0A%0A".length();
-        if (length < 140) {
-            result = str1 + item.getItem_caption().substring(0, 140 - length) + "%0A%0A" + str2;
-        } else {
-            result = str1 + str2;
-        }
-        String tags = tagService.getTagByTeam(Long.parseLong(item.getTeam_id())).stream().collect(Collectors.joining(" #","#",""));
-        return result + "%0A%0A" + tags;
-    }
-
-    public String releasedItemAnnounce(Item item, List<Long> teamIdList) {
-        String str1 = "【PR】本日発売！%0A%0A" + item.getTitle() + "%0A%0A";
-        String str2 = item.getUrl();
-        String result;
-        int length = str1.length() + str2.length() + "%0A%0A".length();
-        if (length < 140) {
-            result = str1 + item.getItem_caption().substring(0, 140 - length) + "%0A%0A" + str2;
-        } else {
-            result = str1 + str2;
-        }
-
-        String tags = "";
-        for (Long teamId : teamIdList) {
-            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        }
-
-        return result + "%0A%0A" + tags;
+    /**
+     * 本日発売の商品のアナウンス文章を作る
+     *
+     * @param item
+     * @return
+     */
+    public String releasedItemAnnounce(ItemMaster itemMaster, Item item) {
+        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A"
+                + setting.getBlogWebUrl() + "item/" + itemMaster.getWp_id() + "%0A" + "楽天リンクはこちら↓%0A"
+                + item.getUrl();
+        String tags = tagService.getTagByTeam(Long.parseLong(itemMaster.getTeam_id())).stream().collect(Collectors.joining(" #","#",""));
+        return str1 + "%0A" + tags;
     }
 
     public String twitterPerson(TwiDto twiDto, String memberName) {

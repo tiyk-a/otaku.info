@@ -9,8 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
-import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 
@@ -33,14 +34,18 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
+    @Autowired
+    ItemMasterService itemMasterService;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 商品発売日アナウンス START ---");
-        List<Item> itemList = itemService.findReleasedItemList();
-        for (Item item : itemList) {
-            // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
-            String[] teamIdArr = item.getTeam_id().split(",");
-            if (teamIdArr.length > 1) {
+        List<ItemMaster> itemMasterList = itemMasterService.findReleasedItemList();
+
+        for (ItemMaster itemMaster : itemMasterList) {
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            String[] teamIdArr = itemMaster.getTeam_id().split(",");
+            if (teamIdArr.length > 0) {
                 // 固有Twitterのないチームの投稿用オブジェクト
                 List<Long> noTwitterTeamIdList = new ArrayList<>();
 
@@ -50,20 +55,15 @@ public class PublishAnnounceTasklet implements Tasklet {
                     if (twId == null) {
                         noTwitterTeamIdList.add(teamId);
                     } else {
-                        String text = textController.releasedItemAnnounce(item);
+                        String text = textController.releasedItemAnnounce(itemMaster, itemList.get(0));
                         pythonController.post(Math.toIntExact(teamId), text);
                     }
                 }
 
                 if (noTwitterTeamIdList.size() > 0) {
-                    String text = textController.releasedItemAnnounce(item, noTwitterTeamIdList);
+                    String text = textController.releasedItemAnnounce(itemMaster, itemList.get(0));
                     pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
                 }
-            } else {
-                // チームが１つしかなかったらそのまま投稿
-                long teamId = Long.parseLong(teamIdArr[teamIdArr.length - 1]);
-                TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, teamId);
-                pythonController.post(Math.toIntExact(teamId), textController.futureItemReminder(twiDto));
             }
 
             try{

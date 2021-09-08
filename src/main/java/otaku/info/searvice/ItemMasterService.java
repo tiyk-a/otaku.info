@@ -26,9 +26,7 @@ public class ItemMasterService {
     }
 
     public Map<ItemMaster, Item> addByItem(Item item) {
-        ItemMaster itemMaster = new ItemMaster();
-        itemMaster.setDel_flg(false);
-        itemMaster.setFct_chk(false);
+        ItemMaster itemMaster = item.convertToItemMaster();
         ItemMaster savedItemMaster = itemMasterRepository.save(itemMaster);
         item.setItem_m_id(savedItemMaster.getItem_m_id());
         Item savedItem = itemService.saveItem(item);
@@ -37,5 +35,9 @@ public class ItemMasterService {
 
     public ItemMaster findById(Long itemMasterId) {
         return itemMasterRepository.findById(itemMasterId).orElse(new ItemMaster());
+    }
+
+    public ItemMaster save(ItemMaster itemMaster) {
+        return itemMasterRepository.save(itemMaster);
     }
 }

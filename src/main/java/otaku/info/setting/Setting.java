@@ -13,12 +13,7 @@ public class Setting {
 
     private String test;
     private String imageitem;
+    private String blogApiUrl;
+    private String blogWebUrl;
 
-    public String getBlogUpdate() {
-        return test;
-    }
-
-    public String getImageitem() {
-        return imageitem;
-    }
 }

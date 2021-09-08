@@ -132,9 +132,9 @@ public class ItemService {
         return itemRepository.findByDelFlg(delFlg);
     }
 
-    public List<Item> tmpMethod1() {
-        return itemRepository.tmpMethod1();
-    }
+//    public List<Item> tmpMethod1() {
+//        return itemRepository.tmpMethod1();
+//    }
 
     public List<Item> findWpIdNotNullUpdatedAt(Date from) {
         return itemRepository.findWpIdNotNullUpdatedAt(from);
@@ -164,4 +164,9 @@ public class ItemService {
         }
         return resultList;
     }
+
+    public List<Item> findByMasterId(Long itemMasterId) {
+        return itemRepository.findByMasterId(itemMasterId);
+    }
 }
+

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.beans.BeanUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
 import otaku.info.dto.WpDto;
@@ -118,5 +119,22 @@ public class Item {
 
         wpDto.setTags(teamArr);
         return wpDto;
+    }
+
+    /**
+     * マスター商品に変換します
+     *
+     * @return
+     */
+    public ItemMaster convertToItemMaster() {
+        ItemMaster itemMaster = new ItemMaster();
+        BeanUtils.copyProperties(this, itemMaster);
+        itemMaster.setTitle(itemMaster.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", ""));
+        itemMaster.setFct_chk(false);
+        itemMaster.setDel_flg(false);
+        itemMaster.setItem_m_id(null);
+        itemMaster.setUrl(null);
+        itemMaster.setWp_id(null);
+        return itemMaster;
     }
 }

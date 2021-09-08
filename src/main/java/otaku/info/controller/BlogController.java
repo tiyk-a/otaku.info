@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.WpDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
+import otaku.info.utils.ItemUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -42,6 +45,12 @@ public class BlogController {
     ItemService itemService;
 
     @Autowired
+    ItemMasterService itemMasterService;
+
+    @Autowired
+    ItemUtils itemUtils;
+
+    @Autowired
     Setting setting;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
@@ -51,7 +60,7 @@ public class BlogController {
     final String URL = "https://otakuinfo.fun/wp-json/wp/v2/";
 
     /**
-     * 近日販売商品のブログページを更新します。
+     * 近日販売商品のブログページ(固定)を更新します。
      * ・本日販売
      * ・明日以降1週間の商品
      * 上記商品で画面を書き換える。
@@ -103,6 +112,13 @@ public class BlogController {
         return "ok";
     }
 
+    /**
+     * リクエストを送る
+     *
+     * @param response
+     * @param wpDto
+     * @return
+     */
     private String request(HttpServletResponse response, WpDto wpDto) {
         String finalUrl = URL + wpDto.getPath();
 
@@ -142,34 +158,102 @@ public class BlogController {
     }
 
     /**
-     * 楽天検索で見つけた新商品についての記事を投稿する。
+     * 引数のマスター商品を全て投稿する
+     * blogIdを返却する
      *
-     * @param item
+     * @param itemMaster
+     * @param itemList
      */
-    public void postNewItem(Item item) {
-        WpDto wpDto = item.convertToWpDto();
+    public Long postMasterItem(ItemMaster itemMaster, List<Item> itemList) {
 
+        if (itemMaster.getWp_id() != null) {
+            updateMasterItem(itemMaster, itemList);
+        }
+        // itemMasterをベースに作成していく
+        WpDto wpDto = itemMaster.convertToWpDto();
+
+        Integer blogId = 0;
         if (wpDto != null) {
-            // テキストコントローラーで文章をa href付きのものに変更
-            WpDto tmpDto = textController.blogItemText(item);
-            if (tmpDto != null) {
-                wpDto.setTitle(tmpDto.getTitle());
-                wpDto.setContent(tmpDto.getContent());
-                wpDto.setPath("posts");
-                wpDto.setCategories(new Integer[]{5});
+            // 各商品のデータを追加していく(ページのコンテンツを編集)
+            wpDto.setContent(textController.createBlogContent(itemList, wpDto.getContent()));
 
-                // リクエスト送信
-                String res = request(response, wpDto);
-                // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
-                if (StringUtilsSpring.hasText(res)) {
-                    JSONObject jsonObject = new JSONObject(res);
-                    if (jsonObject.get("id") != null) {
-                        item.setWp_id(Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", "")));
-                        itemService.saveItem(item);
-                    }
+            // リクエスト送信
+            String res = request(response, wpDto);
+            // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
+            if (StringUtilsSpring.hasText(res)) {
+                JSONObject jsonObject = new JSONObject(res);
+                if (jsonObject.get("id") != null) {
+                    blogId = Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
+                    itemMaster.setWp_id(blogId);
+                    itemMasterService.save(itemMaster);
                 }
             }
+
+            try{
+                Thread.sleep(1000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
         }
+        return (long) blogId;
+    }
+
+    /**
+     * マスター商品を更新する。
+     *
+     * @param itemMaster
+     * @param itemList
+     */
+    public Long updateMasterItem(ItemMaster itemMaster, List<Item> itemList) {
+        String content = textController.createBlogContent(itemList, itemMaster.getItem_caption());
+        WpDto wpDto = new WpDto();
+        wpDto.setContent(content);
+        String res = request(response, wpDto);
+        JSONObject jo = new JSONObject(res);
+        if (jo.get("id") != null) {
+            return Long.parseLong(jo.get("id").toString().replaceAll("^\"|\"$", ""));
+        }
+        return 0L;
+    }
+
+    /**
+     * 楽天検索で見つけた新商品のマスター商品IDを繋げ、ブログのマスタ商品投稿を更新する。
+     *
+     * @param item
+     * itemMasterIdを返す
+     */
+    public Long postOrUpdate(Item item) {
+        // 既存の商品マスターがあるか確認する
+        Long itemMasterId = itemUtils.judgeNewMaster(item);
+        ItemMaster itemMaster = null;
+
+        // 既存の商品マスターがなければ新規登録
+        if (itemMasterId.equals(0L)) {
+            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+            for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
+                itemMaster = e.getKey();
+                itemMasterId = itemMaster.getItem_m_id();
+            }
+        } else {
+            // 既存の商品マスターがあれば商品を更新
+            item.setItem_m_id(itemMasterId);
+            itemService.saveItem(item);
+            itemMaster = itemMasterService.findById(itemMasterId);
+            itemMaster.absolveItem(item);
+            itemMasterService.save(itemMaster);
+        }
+
+        // ブログを投稿する
+        Long blogId = 0L;
+        List<Item> itemList = itemService.findByMasterId(itemMasterId);
+        if (itemMaster.getWp_id() == null) {
+            // 新規投稿する
+            blogId = postMasterItem(itemMaster, itemList);
+        } else {
+            // 既存投稿を更新する(完全洗い替え)
+            blogId = updateMasterItem(itemMaster, itemList);
+        }
+        return blogId;
     }
 
     /**
@@ -205,7 +289,6 @@ public class BlogController {
             )
         );
         headers.add("Authorization","Basic " +  auth);
-        JSONObject personJsonObject = new JSONObject();
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
         String text = responseEntity.getBody();
@@ -238,12 +321,16 @@ public class BlogController {
     }
 
     /**
-     * Tmpブログ新商品投稿メソッド
+     * Tmpブログ新商品投稿メソッド(商品マスターごとに投稿するように修正)
+     *
      */
-    public void tmpItemPost() {
-        List<Item> itemList = itemService.tmpMethod1();
-        for (Item item : itemList) {
-            postNewItem(item);
+    public void tmpItemPost(List<Item> itemList) {
+        Map<ItemMaster, List<Item>> map = itemUtils.groupItem(itemList);
+        // 対象はwp_idがnullのマスター商品
+        Map<ItemMaster, List<Item>> targetMap = map.entrySet().stream().filter(e -> e.getKey().getWp_id() == null || e.getKey().getWp_id().equals(0)).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        // targetMapのマスタ商品をブログに投稿していく
+        for (Map.Entry<ItemMaster, List<Item>> e : targetMap.entrySet()) {
+            postMasterItem(e.getKey(), e.getValue());
         }
     }
 

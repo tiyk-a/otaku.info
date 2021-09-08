@@ -69,11 +69,6 @@ public class ItemService {
         return itemRepository.findReleasedItemList();
     }
 
-    public boolean waitingFctChk() {
-        Long result = itemRepository.waitingFctChk();
-        return result!=0;
-    }
-
     public List<Item> findByFctChk(boolean isFctChked) {
         return itemRepository.findByFctChk(isFctChked);
     }

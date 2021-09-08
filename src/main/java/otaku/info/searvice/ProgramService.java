@@ -31,11 +31,6 @@ public class ProgramService  {
         return programRepository.findByOnAirDateTeamId(ldt, ldt.plusHours(hour));
     }
 
-    public boolean waitingFctChk() {
-        Long result = programRepository.waitingFctChk();
-        return result!=0;
-    }
-
     public List<Program> findByFctChk(int i) {
         return programRepository.findByFctChk(i);
     }

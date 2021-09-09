@@ -155,11 +155,6 @@ public class SampleController {
                 scheduler.run7();
                 System.out.println("---run7TV番組投稿処理 END---");
                 break;
-            case 8:
-                System.out.println("---run8DB Insert Notify START---");
-                scheduler.run8();
-                System.out.println("---run8DB Insert Notify END---");
-                break;
             case 9:
                 System.out.println("---run9TVアラート START---");
                 scheduler.run9();

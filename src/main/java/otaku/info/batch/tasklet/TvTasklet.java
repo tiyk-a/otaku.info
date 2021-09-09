@@ -18,18 +18,20 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.TvController;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Setting;
 
 @Component
 @StepScope
 public class TvTasklet implements Tasklet {
-
-    static final String TV_URL = "https://www.tvkingdom.jp/schedulesBySearch.action";
 
     @Autowired
     TvController tvController;
 
     @Autowired
     TeamService teamService;
+
+    @Autowired
+    Setting setting;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -39,7 +41,7 @@ public class TvTasklet implements Tasklet {
 
         for (String artist : teamNameList) {
             boolean nextFlg = true;
-            String urlWithParam = TV_URL;
+            String urlWithParam = setting.getTvKingdom();
             String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
 
             urlWithParam += param;
@@ -52,7 +54,7 @@ public class TvTasklet implements Tasklet {
                 if (param.equals("")) {
                     nextFlg = false;
                 }
-                urlWithParam = TV_URL + param;
+                urlWithParam = setting.getTvKingdom() + param;
             }
             try{
                 Thread.sleep(1000);

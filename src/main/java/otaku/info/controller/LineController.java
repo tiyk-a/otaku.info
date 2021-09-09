@@ -14,6 +14,7 @@ import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.ProgramService;
+import otaku.info.setting.Setting;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -39,6 +40,9 @@ public class LineController {
     @Autowired
     ProgramService programService;
 
+    @Autowired
+    Setting setting;
+
     final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 
     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
@@ -50,8 +54,7 @@ public class LineController {
      * @return
      * @throws JSONException
      */
-    public String postAll(List<String> messageList) throws JSONException {
-        String url = "https://line-chiharu-ml.herokuapp.com/dbNotify";
+    public String postAll(List<String> messageList) {
 
         for (String msg: messageList) {
             String outline = msg.substring(0,30);
@@ -63,7 +66,7 @@ public class LineController {
             map.put("text", msg);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println("Request Successful: " + outline);

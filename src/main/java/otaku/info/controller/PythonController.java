@@ -11,6 +11,7 @@ import otaku.info.searvice.MemberService;
 import otaku.info.searvice.ProgramService;
 import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -44,6 +45,9 @@ public class PythonController {
     private DateUtils dateUtils;
 
     @Autowired
+    private Setting setting;
+
+    @Autowired
     RestTemplate restTemplate;
 
     /**
@@ -58,7 +62,6 @@ public class PythonController {
     public String post(Integer teamId, String text) throws JSONException {
         System.out.println("これをTweetします " + text);
 
-        String url = "https://pytwi2.herokuapp.com/twi";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -69,7 +72,7 @@ public class PythonController {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
 
         List<String> lineList = new ArrayList<>();
         lineList.add(text + " ■teamId=" + teamId);

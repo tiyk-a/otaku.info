@@ -56,8 +56,6 @@ public class BlogController {
 
     HttpServletResponse response;
 
-    final String URL = "https://otakuinfo.fun/wp-json/wp/v2/";
-
     /**
      * 近日販売商品のブログページ(固定)を更新します。
      * ・本日販売
@@ -107,7 +105,7 @@ public class BlogController {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("content", blogText);
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String finalUrl = URL + "pages/33";
+        String finalUrl = setting.getBlogApiUrl() + "pages/33";
         request(response, finalUrl, request, HttpMethod.POST);
         return "ok";
     }
@@ -123,7 +121,7 @@ public class BlogController {
         headers.setContentType(MediaType.APPLICATION_JSON);
         String auth = new String(
             Base64.getEncoder().encode(
-                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
+                    setting.getBlogPw().getBytes()
             )
         );
         headers.add("Authorization","Basic " +  auth);
@@ -173,7 +171,7 @@ public class BlogController {
             jsonObject.put("content", textController.createBlogContent(itemList, itemMaster.getItem_caption()));
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
-            String url = URL + "posts";
+            String url = setting.getBlogApiUrl() + "posts";
             String res = request(response, url, request, HttpMethod.POST);
             // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
             if (StringUtilsSpring.hasText(res)) {
@@ -205,7 +203,7 @@ public class BlogController {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("content", content);
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String url = URL + "posts/" + itemMaster.getWp_id();
+        String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
         String res = request(response, url, request, HttpMethod.POST);
         JSONObject jo = new JSONObject(res);
         if (jo.get("id") != null) {
@@ -262,10 +260,10 @@ public class BlogController {
      * @return 画像ID
      */
     public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) throws IOException {
-        String finalUrl = URL + "media";
+        String finalUrl = setting.getBlogApiUrl() + "media";
 
         response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         headers.add("content-disposition", "attachment; filename=tmp1.jpg");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -273,7 +271,7 @@ public class BlogController {
 
         String imagePath = "";
         try(InputStream in = new URL(imageUrl).openStream()){
-            imagePath = setting.getImageitem() + itemId + ".jpg";
+            imagePath = setting.getImageItem() + itemId + ".jpg";
             Files.copy(in, Paths.get(imagePath));
         } catch (Exception e) {
             e.printStackTrace();
@@ -281,12 +279,6 @@ public class BlogController {
 
         body.add("file", new FileSystemResource(imagePath));
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-        String auth = new String(
-            Base64.getEncoder().encode(
-                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-            )
-        );
-        headers.add("Authorization","Basic " +  auth);
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
         String text = responseEntity.getBody();
@@ -304,7 +296,7 @@ public class BlogController {
      * @return
      */
     public String requestPostData(String wpId) {
-        String finalUrl = URL + "posts/" + wpId;
+        String finalUrl = setting.getBlogApiUrl() + "posts/" + wpId;
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         return request(response, finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
     }
@@ -379,7 +371,7 @@ public class BlogController {
      * @param imageId
      */
     private void setMedia(Integer wpId, Integer imageId) {
-        String url = URL + "item/" + wpId;
+        String url = setting.getBlogApiUrl() + "item/" + wpId;
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();

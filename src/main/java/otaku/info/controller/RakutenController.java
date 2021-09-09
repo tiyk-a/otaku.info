@@ -261,7 +261,7 @@ public class RakutenController {
                 }
             }
         }
-        itemService.updateAll(updateList);
+        itemService.saveAll(updateList);
         return true;
     }
 

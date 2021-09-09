@@ -119,10 +119,6 @@ public class ItemService {
         return itemRepository.findByItemCode(itemCode);
     }
 
-    public void updateAll(List<Item> itemList) {
-        itemRepository.saveAll(itemList);
-    }
-
     public List<Item> findByDelFlg(boolean delFlg) {
         return itemRepository.findByDelFlg(delFlg);
     }

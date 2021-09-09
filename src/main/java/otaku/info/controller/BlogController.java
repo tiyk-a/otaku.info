@@ -71,34 +71,23 @@ public class BlogController {
         c.add(Calendar.HOUR, 24);
         Date to = c.getTime();
 
-        // 今日発売商品
-        List<Item> releaseItemList = itemService.findItemsBetweenDelFlg(today, to, false);
-
-        // チームIDが空の場合は再チェックリストに追加
-        List<Item> reCheckItemList = releaseItemList.stream().filter(e -> StringUtils.isEmpty(e.getTeam_id())).collect(Collectors.toList());
-        // そして投稿する商品リストから削除
-        releaseItemList.removeAll(reCheckItemList);
+        // 今日発売マスター商品(teamIdがNullのマスターは削除)
+        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
+        // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
+        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null).collect(Collectors.toList())));
 
         // 明日~1週間以内の発売商品
         c.setTime(today);
         c.add(Calendar.DATE, 7);
 
         Date sevenDaysLater = c.getTime();
-        List<Item> futureReleaseItemList = itemService.findItemsBetweenDelFlg(today, sevenDaysLater, false);
-
-        // チームIDが空の場合、tmpリストに追加
-        List<Item> tmpList = futureReleaseItemList.stream().filter(e -> StringUtils.isEmpty(e.getTeam_id())).collect(Collectors.toList());
-        // そして投稿する商品リストから削除
-        futureReleaseItemList.removeAll(tmpList);
-        // そして際チェックリストに追加
-        reCheckItemList.addAll(tmpList);
-
-        // 商品の収集はここで完了。再チェックが必要な商品は再チェックするようにdel_flgをfalseに戻して更新する
-        reCheckItemList.forEach(e -> e.setFct_chk(false));
-        itemService.saveAll(reCheckItemList);
+        // 今日発売マスター商品(teamIdがNullのマスターは削除)
+        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(today, sevenDaysLater, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
+        // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
+        Map<ItemMaster, List<Item>> futureItemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null).collect(Collectors.toList())));
 
         // テキストを生成
-        String blogText = textController.blogUpdateReleaseItems(releaseItemList, futureReleaseItemList);
+        String blogText = textController.blogUpdateReleaseItems(itemMasterMap, futureItemMasterMap);
 
         // リクエスト送信
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());

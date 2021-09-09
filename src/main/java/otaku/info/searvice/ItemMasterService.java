@@ -9,6 +9,7 @@ import otaku.info.repository.ItemMasterRepository;
 
 import javax.transaction.Transactional;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -44,5 +45,13 @@ public class ItemMasterService {
 
     public List<ItemMaster> findReleasedItemList() {
         return itemMasterRepository.findReleasedItemList();
+    }
+
+    public List<ItemMaster> findItemsBetweenDelFlg(Date from, Date to, boolean delFlg) {
+        return itemMasterRepository.findItemsBetweenDelFlg(from, to, delFlg);
+    }
+
+    public List<ItemMaster> saveAll(List<ItemMaster> itemMasterList) {
+        return itemMasterRepository.saveAll(itemMasterList);
     }
 }

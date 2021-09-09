@@ -254,15 +254,16 @@ public class TextController {
     /**
      * WordPressブログのリリース情報固定ページ表示用のテキストを作成
      *
-     * @param todaysItems
-     * @param futureItems
+     * @param todayMap
+     * @param futureMap
      * @return
      */
-    public String blogUpdateReleaseItems(List<Item> todaysItems, List<Item> futureItems) {
+    public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
         String result = "";
 
-        List<String> todaysElems = blogReleaseItemsText(todaysItems);
-        List<String> futureElems = blogReleaseItemsText(futureItems);
+        // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
+        List<String> todaysElems = blogReleaseItemsText(todayMap);
+        List<String> futureElems = blogReleaseItemsText(futureMap);
 
         // 本日発売の商品
         if (todaysElems.size() > 0) {
@@ -286,63 +287,79 @@ public class TextController {
     /**
      * 商品ブログ投稿文章
      *
-     * @param itemList
+     * @param itemMasterListMap
      * @return
      */
-    private List<String> blogReleaseItemsText(List<Item> itemList) {
+    private List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
         List<String> resultList = new ArrayList<>();
 
-        for (Item item : itemList) {
-            String date = dateUtils.getDay(item.getPublication_date());
-            String publicationDate = sdf2.format(item.getPublication_date()) + "(" + date + ")";
+        // マスター商品ごとにテキストを作り返却リストに入れる。
+        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet()) {
+            ItemMaster itemMaster = entry.getKey();
+            List<Item> itemList = entry.getValue();
+
+            String date = dateUtils.getDay(itemMaster.getPublication_date());
+            String publicationDate = sdf2.format(itemMaster.getPublication_date()) + "(" + date + ")";
 
             // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (!StringUtils.hasText(item.getTeam_id())) {
+            if (!StringUtils.hasText(itemMaster.getTeam_id())) {
                 continue;
             }
 
-            List<String> teamNameList = findTeamName(item.getTeam_id());
+            List<String> teamNameList = findTeamName(itemMaster.getTeam_id());
             String teamNameUnited = String.join(" ", teamNameList);
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
             // メンバー名もある場合はこちら
-            if (StringUtils.hasText(item.getMember_id()) && !item.getMember_id().equals("0")) {
-                List<String> memberNameList = findMemberName(item.getMember_id());
-                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList));
+            if (StringUtils.hasText(itemMaster.getMember_id()) && !itemMaster.getMember_id().equals("0")) {
+                List<String> memberNameList = findMemberName(itemMaster.getMember_id());
+                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
             } else {
                 // メンバー名ない場合はこちら
-                h2 = String.join("", publicationDate, teamNameUnited);
+                h2 = String.join("", publicationDate, teamNameUnited, itemMaster.getTitle());
             }
 
             // htmlタグ付与
-            h2 = "<h2 id=id_" + item.getItem_id() + ">" + h2 + "</h2>";
+            h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
 
-            // h3を生成
-            String h3 = "<h3>" + item.getTitle() + "</h3>";
+            String image = StringUtils.hasText(itemMaster.getImage1()) ? "<img src=" + itemMaster.getImage1().replaceAll("\\?.*$", "") + " alt='' />" : "";
 
-            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
 
-            String aHref = "<a href=" + item.getUrl() + ">" + item.getTitle() +"</a>";
+            Integer estPrice = getPrice(itemList);
+            String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
 
-            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            String rakutenLink = "<h6>楽天から購入</h6><p>";
 
-            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            for (Item item : itemList) {
 
-            String p = "<p>" + item.getItem_caption() + "</p>";
+                String h3 = "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><p>" + item.getTitle() + "</p></a><br><p>" + item.getPrice() + "円</p>";
 
-            // 商品単体ページのリンク
-            String itemUrl = "";
-            if (item.getWp_id() != null) {
-                itemUrl = "<a href=" + setting.getBlogWebUrl() +"item/" + item.getWp_id() + ">商品紹介ページはこちら</a>";
+                // 商品テキストをまとめ、楽天テキストの末尾に加える
+                rakutenLink = rakutenLink + "\n" + h3;
             }
 
-            String text = String.join("\n", h2, h3, image1, aHref, image2, image3, p, itemUrl);
-
+            String text = String.join("\n", h2, image, description, price, rakutenLink);
             // 返却リストに追加する
             resultList.add(text);
         }
         return resultList;
+    }
+
+    /**
+     * 商品の金額（多分これが正しい）を返す
+     *
+     * @param itemList
+     * @return
+     */
+    private Integer getPrice(List<Item> itemList) {
+        List<Integer> priceList = itemList.stream().map(e -> e.getPrice()).distinct().collect(Collectors.toList());
+        if (priceList.size() == 1) {
+            return priceList.get(0);
+        } else {
+            return priceList.stream().max(Integer::compare).orElse(0);
+        }
     }
 
     private List<String> findTeamName(String teamIdListStr) {
@@ -404,9 +421,9 @@ public class TextController {
         String result = content;
         for (Item item : itemList) {
             String title = "<h3>" + item.getTitle() + "</h3>";
-            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
-            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
-            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + "><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
+            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
             String p = "<p>" + item.getItem_caption() + "</p>";
 
             // 続くp要素を生成

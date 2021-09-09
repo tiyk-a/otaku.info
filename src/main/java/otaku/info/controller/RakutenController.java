@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
@@ -31,92 +32,99 @@ public class RakutenController {
     @Autowired
     ItemUtils itemUtils;
 
-    static final String RAKUTEN_URL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706?";
+    @Autowired
+    Setting setting;
 
     private final ItemService itemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
-    public static List<Item> search1(List<String> searchList) {
-        List<Item> resultList = new ArrayList<>();
-
+    /**
+     * 楽天APIにリクエストを投げる
+     *
+     * @param param
+     * @return
+     */
+    public JsonNode request(String param) {
+        JsonNode jsonNode = null;
         //0. 外部APIに接続して
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(RAKUTEN_URL);
-            for (String key : searchList) {
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.connect();
-                PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&formatVersion=2&carrier=0&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                out.write(parameter);
-                out.flush();
-                out.close();
+            URL url = new URL(setting.getRakutenApiUrl());
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.connect();
+            PrintWriter out = new PrintWriter(conn.getOutputStream());
+            out.write(param);
+            out.flush();
+            out.close();
 
-                //2. Jsonを取得して
-                InputStream stream = conn.getInputStream();
-                //文字列のバッファを構築
-                StringBuffer sb = new StringBuffer();
-                String line = "";
-                //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                //読めなくなるまでwhile文で回す
-                while((line = br.readLine()) != null) {
-                    System.out.println("④受信Json中身：" + line);
-                    sb.append(line);
-                }
+            //2. Jsonを取得して
+            InputStream stream = conn.getInputStream();
+            //文字列のバッファを構築
+            StringBuffer sb = new StringBuffer();
+            String line = "";
+            //文字型入力ストリームを作成
+            BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+            //読めなくなるまでwhile文で回す
+            while((line = br.readLine()) != null) {
+                System.out.println("④受信Json中身：" + line);
+                sb.append(line);
+            }
 
-                if (!StringUtils.hasText(sb)) {
-                    continue;
-                }
+            stream.close();
+            String script = "";
+            if (StringUtils.hasText(sb)) {
+                script = sb.toString();
+            }
 
-//                stream.close();
-                String script = "";
-                if (StringUtils.hasText(sb)) {
-                    script = sb.toString();
-                }
+            //3. 解析して中身をとりだします。
+            //ObjectMapperオブジェクトの宣言
+            ObjectMapper mapper = new ObjectMapper();
 
-                //3. 解析して中身をとりだします。
-                //ObjectMapperオブジェクトの宣言
-                ObjectMapper mapper = new ObjectMapper();
+            //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
+            jsonNode = mapper.readTree(script);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return jsonNode;
+    }
 
-                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script);
-                if (node != null) {
-                    node = node.get("Items");
-                    for (int i=0; i<node.size();i++) {
-                        try {
-                            Item item = new Item();
-                            item.setItem_code(key);
-                            item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
-                            item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                            JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                            if (imageNode.size() > 0) {
-                                item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+    public List<Item> search1(List<String> searchList) {
+        List<Item> resultList = new ArrayList<>();
 
-                                if (imageNode.size() > 1) {
-                                    item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                                }
-
-                                if (imageNode.size() > 2) {
-                                    item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                                }
+        for (String key : searchList) {
+            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
+            JsonNode node = request(parameter);
+            if (node != null) {
+                node = node.get("Items");
+                for (int i=0; i<node.size();i++) {
+                    try {
+                        Item item = new Item();
+                        item.setItem_code(key);
+                        item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
+                        item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
+                        JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                        if (imageNode.size() > 0) {
+                            item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            if (imageNode.size() > 1) {
+                                item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
                             }
-                            resultList.add(item);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
+                            if (imageNode.size() > 2) {
+                                item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            }
                         }
-                    }
-                    try{
-                        Thread.sleep(1000);
-                    }catch(InterruptedException e){
-                        e.printStackTrace();
+                        resultList.add(item);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            try{
+                Thread.sleep(1000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
         }
         return resultList;
     }
@@ -124,59 +132,24 @@ public class RakutenController {
      * 楽天商品をキーワード検索します。
      * itemCodeだけを取得してきます。
      */
-    public static List<String> search(List<String> searchList) {
+    public List<String> search(List<String> searchList) {
         List<String> resultList = new ArrayList<>();
 
-        //0. 外部APIに接続して
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(RAKUTEN_URL);
-            for (String key : searchList) {
-                System.out.println("検索ワード：" + key);
-                //1. パラメーターを送って
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.connect();
-                PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&keyword=" + key + "&availability=1&elements=itemCode&hits=5&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                System.out.println("パラメタ：" + parameter);
-                out.write(parameter);
-                out.flush();
-                out.close();
-
-                //2. Jsonを取得して
-                InputStream stream = conn.getInputStream();
-                //文字列のバッファを構築
-                StringBuffer sb = new StringBuffer();
-                String line = "";
-                //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                //読めなくなるまでwhile文で回す
-                while((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-//                stream.close();
-                String script = sb.toString();
-
-                //3. 解析して中身をとりだします。
-                //ObjectMapperオブジェクトの宣言
-                ObjectMapper mapper = new ObjectMapper();
-
-                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                if (mapper.readTree(script).get("Items") != null) {
-                    JsonNode node = mapper.readTree(script).get("Items");
-                    for (int i=0; i<node.size();i++) {
-                        resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
-                    }
-                }
-                try{
-                    Thread.sleep(1000);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
+        for (String key : searchList) {
+            String parameter = setting.getRakutenApiDefParam() + "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
+            JsonNode node = request(parameter);
+            //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
+            if (node.get("Items") != null) {
+                node = node.get("Items");
+                for (int i=0; i<node.size();i++) {
+                    resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            try{
+                Thread.sleep(1000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
         }
         return resultList;
     }
@@ -190,78 +163,40 @@ public class RakutenController {
     public List<Item> getDetailsByItemCodeList(List<String> itemCodeList) {
         List<Item> resultList = new ArrayList<>();
 
-        //0. 外部APIに接続して
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(RAKUTEN_URL);
-            for (String key : itemCodeList) {
-                System.out.println("検索ワード：" + key);
-                //1. パラメーターを送って
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.connect();
-                PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&itemCode=" + key + "&availability=1&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                System.out.println("パラメタ：" + parameter);
-                out.write(parameter);
-                out.flush();
-                out.close();
-
-                //2. Jsonを取得して
-                InputStream stream = conn.getInputStream();
-                //文字列のバッファを構築
-                StringBuffer sb = new StringBuffer();
-                String line = "";
-                //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                //読めなくなるまでwhile文で回す
-                while((line = br.readLine()) != null) {
-                    System.out.println("受信Json：" + line);
-                    sb.append(line);
-                }
-//                stream.close();
-                String script = sb.toString();
-
-                //3. 解析して中身をとりだします。
-                //ObjectMapperオブジェクトの宣言
-                ObjectMapper mapper = new ObjectMapper();
-
-                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script).get("Items");
-                for (int i=0; i<node.size();i++) {
-                    Item item = new Item();
-                    item.setItem_code(key);
-                    item.setSite_id(1);
-                    item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
-                    item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                    item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
-                    item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
-                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                    if (imageNode.size() > 0) {
-                        if (imageNode.get(0).get("imageUrl") == null) {
-                            item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
-                        } else {
-                            item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-
-                            if (imageNode.size() > 1) {
-                                item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                            }
-
-                            if (imageNode.size() > 2) {
-                                item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                            }
+        for (String key : itemCodeList) {
+            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
+            JsonNode node = request(parameter);
+            //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
+            node = node.get("Items");
+            for (int i=0; i<node.size();i++) {
+                Item item = new Item();
+                item.setItem_code(key);
+                item.setSite_id(1);
+                item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
+                item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
+                item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
+                item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                if (imageNode.size() > 0) {
+                    if (imageNode.get(0).get("imageUrl") == null) {
+                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
+                    } else {
+                        item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        if (imageNode.size() > 1) {
+                            item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        }
+                        if (imageNode.size() > 2) {
+                            item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
                         }
                     }
-                    resultList.add(item);
                 }
-                try{
-                    Thread.sleep(1000);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
+                resultList.add(item);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            try{
+                Thread.sleep(1000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
         }
         return resultList;
     }
@@ -297,74 +232,34 @@ public class RakutenController {
 
         List<Item> updateList = new ArrayList<>();
 
-        //0. 外部APIに接続して
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(RAKUTEN_URL);
-            for (String key : searchList) {
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.connect();
-                PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&itemCode=" + key + "&elements=affiliateUrl&formatVersion=2&carrier=0&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                out.write(parameter);
-                out.flush();
-                out.close();
+        for (String key : searchList) {
+            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
+            JsonNode node = request(parameter);
+            if (node != null) {
+                node = node.get("Items");
 
-                //2. Jsonを取得して
-                InputStream stream = conn.getInputStream();
-                //文字列のバッファを構築
-                StringBuffer sb = new StringBuffer();
-                String line = "";
-                //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                //読めなくなるまでwhile文で回す
-                while((line = br.readLine()) != null) {
-                    System.out.println("④受信Json中身：" + line);
-                    sb.append(line);
-                }
-
-                if (!StringUtils.hasText(sb)) {
+                if (node == null) {
                     continue;
                 }
 
-    //          stream.close();
-                String script = sb.toString();
-
-                //3. 解析して中身をとりだします。
-                //ObjectMapperオブジェクトの宣言
-                ObjectMapper mapper = new ObjectMapper();
-
-                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script);
-                if (node != null) {
-                    node = node.get("Items");
-
-                    if (node == null) {
-                        continue;
-                    }
-
-                    for (int i=0; i<node.size();i++) {
-                        try {
-                            Item item = itemService.findByItemCode(key).orElse(new Item());
-                            if (item.getItem_code() == null) {
-                                continue;
-                            }
-                            item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
-                            updateList.add(item);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
+                for (int i=0; i<node.size();i++) {
+                    try {
+                        Item item = itemService.findByItemCode(key).orElse(new Item());
+                        if (item.getItem_code() == null) {
+                            continue;
                         }
-                    }
-                    try{
-                        Thread.sleep(1000);
-                    }catch(InterruptedException e) {
-                        e.printStackTrace();
+                        item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                        updateList.add(item);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
                     }
                 }
+                try{
+                    Thread.sleep(1000);
+                }catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         itemService.updateAll(updateList);
         return true;
@@ -392,65 +287,29 @@ public class RakutenController {
         List<Item> itemList = itemService.findByDelFlg(false);
 
         for (Item item : itemList) {
-            //0. 外部APIに接続して
-            HttpURLConnection conn = null;
-            try {
-                URL url = new URL(RAKUTEN_URL);
-                //1. パラメーターを送って
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.connect();
-                PrintWriter out = new PrintWriter(conn.getOutputStream());
-                String parameter = "format=json&itemCode=" + item.getItem_code() + "&availability=1&elements=mediumImageUrls&formatVersion=2&carrier=0&NGKeyword=%E4%B8%AD%E5%8F%A4%20USED&affiliateId=209dd04b.157fa2f2.209dd04c.c65acd6f&applicationId=1074359606109126276";
-                out.write(parameter);
-                out.flush();
-                out.close();
+            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
+            JsonNode node = request(parameter);
+            node = node.get("Items");
+            if (!node.isNull()) {
+                for (int i=0; i<node.size();i++) {
+                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
+                    if (imageNode.size() > 0) {
+                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
 
-                //2. Jsonを取得して
-                InputStream stream = conn.getInputStream();
-                //文字列のバッファを構築
-                StringBuffer sb = new StringBuffer();
-                String line = "";
-                //文字型入力ストリームを作成
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                //読めなくなるまでwhile文で回す
-                while((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                if (!StringUtilsSpring.hasText(line)) {
-                  continue;
-                }
-                String script = sb.toString();
+                        if (imageNode.size() > 1) {
+                            item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
+                        }
 
-                //3. 解析して中身をとりだします。
-                //ObjectMapperオブジェクトの宣言
-                ObjectMapper mapper = new ObjectMapper();
-
-                //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-                JsonNode node = mapper.readTree(script).get("Items");
-                if (!node.isNull()) {
-                    for (int i=0; i<node.size();i++) {
-                        JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                        if (imageNode.size() > 0) {
-                            item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
-
-                            if (imageNode.size() > 1) {
-                                item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
-                            }
-
-                            if (imageNode.size() > 2) {
-                                item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
-                            }
+                        if (imageNode.size() > 2) {
+                            item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
                         }
                     }
-                    itemService.saveItem(item);
                 }
-                try{
-                    Thread.sleep(10000);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
+                itemService.saveItem(item);
+            }
+            try{
+                Thread.sleep(10000);
+            }catch(InterruptedException e){
                 e.printStackTrace();
             }
         }

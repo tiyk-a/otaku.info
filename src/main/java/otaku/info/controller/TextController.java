@@ -290,7 +290,7 @@ public class TextController {
      * @param itemMasterListMap
      * @return
      */
-    private List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
+    public List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
         List<String> resultList = new ArrayList<>();
 
         // マスター商品ごとにテキストを作り返却リストに入れる。
@@ -408,33 +408,5 @@ public class TextController {
         // 入力チェックは割愛
         JaroWinklerDistance dis =  new JaroWinklerDistance();
         return (int) (dis.getDistance(s1, s2) * 100);
-    }
-
-    /**
-     * 商品マスターのブログ投稿のため、各商品のリンクなどを含むページコンテンツを編集、Stringを返却します
-     *
-     * @param itemList
-     * @return
-     */
-    public String createBlogContent(List<Item> itemList, String content) {
-        // 商品マスターのコンテンツをベースとする。
-        String result = content;
-        for (Item item : itemList) {
-            String title = "<h3>" + item.getTitle() + "</h3>";
-            String image1 = StringUtils.hasText(item.getImage1()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage1().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
-            String image2 = StringUtils.hasText(item.getImage2()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage2().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
-            String image3 = StringUtils.hasText(item.getImage3()) ? "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><img src=" + item.getImage3().replaceAll("\\?.*$", "") + " alt='' /></a>" : "";
-            String p = "<p>" + item.getItem_caption() + "</p>";
-
-            // 続くp要素を生成
-            String text = String.join("\n", title, image1, image2, image3, p);
-
-            if (StringUtils.hasText(result)) {
-                result = result + "\n" + text;
-            } else {
-                result = text;
-            }
-        }
-        return result;
     }
 }

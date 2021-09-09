@@ -157,7 +157,7 @@ public class BlogController {
             jsonObject.put("tags",itemMaster.getTags());
             jsonObject.put("excerpt", itemList.get(0).getItem_caption());
             jsonObject.put("status","publish");
-            jsonObject.put("content", textController.createBlogContent(itemList, itemMaster.getItem_caption()));
+            jsonObject.put("content", textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0));
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
             String url = setting.getBlogApiUrl() + "posts";
@@ -187,7 +187,7 @@ public class BlogController {
      * @param itemList
      */
     public Long updateMasterItem(ItemMaster itemMaster, List<Item> itemList) {
-        String content = textController.createBlogContent(itemList, itemMaster.getItem_caption());
+        String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0);
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("content", content);

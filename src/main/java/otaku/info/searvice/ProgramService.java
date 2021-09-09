@@ -32,7 +32,7 @@ public class ProgramService  {
     }
 
     public List<Program> findByFctChk(int i) {
-        return programRepository.findByFctChk(i);
+        return programRepository.findByFctChk(i == 1);
     }
 
     public Optional<Program> findbyProgramId(Long programId) {

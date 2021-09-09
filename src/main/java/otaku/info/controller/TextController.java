@@ -260,6 +260,8 @@ public class TextController {
      */
     public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
         String result = "";
+        todayMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getTitle()));
+        futureMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getTitle()));
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
         List<String> todaysElems = blogReleaseItemsText(todayMap);
@@ -323,7 +325,7 @@ public class TextController {
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
 
-            String image = StringUtils.hasText(itemMaster.getImage1()) ? "<img src=" + itemMaster.getImage1().replaceAll("\\?.*$", "") + " alt='' />" : "";
+            String image = StringUtils.hasText(itemMaster.getImage1()) ? "<img src=" + itemMaster.getImage1().replaceAll("\\?.*$", "") + " alt='' />" : "<img src='" + setting.getBlogNoImage() +"' />";
 
             String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
 

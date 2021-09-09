@@ -12,7 +12,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.dto.WpDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.ItemMasterService;
@@ -103,27 +102,23 @@ public class BlogController {
         // テキストを生成
         String blogText = textController.blogUpdateReleaseItems(releaseItemList, futureReleaseItemList);
 
-        WpDto wpDto = new WpDto();
-        wpDto.setPath("pages/33");
-        wpDto.setContent(blogText);
-
         // リクエスト送信
-        request(response, wpDto);
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("content", blogText);
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String finalUrl = URL + "pages/33";
+        request(response, finalUrl, request, HttpMethod.POST);
         return "ok";
     }
 
     /**
-     * リクエストを送る
+     * 認証などどのリクエストでも必要なヘッダーをセットする。
      *
-     * @param response
-     * @param wpDto
+     * @param headers
      * @return
      */
-    private String request(HttpServletResponse response, WpDto wpDto) {
-        String finalUrl = URL + wpDto.getPath();
-
-        response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = new HttpHeaders();
+    private HttpHeaders generalHeaderSet(HttpHeaders headers) {
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.setContentType(MediaType.APPLICATION_JSON);
         String auth = new String(
@@ -132,28 +127,22 @@ public class BlogController {
             )
         );
         headers.add("Authorization","Basic " +  auth);
-        JSONObject personJsonObject = new JSONObject();
+        return headers;
+    }
 
-        if (!StringUtils.isEmpty(wpDto.getTitle())) {
-            personJsonObject.put("title",wpDto.getTitle());
-        }
+    /**
+     * リクエストを送る
+     *
+     * @param response
+     * @param url
+     * @param request
+     * @return
+     */
+    private String request(HttpServletResponse response, String url, HttpEntity<String> request, HttpMethod method) {
 
-        personJsonObject.put("author",1);
-        personJsonObject.put("categories",wpDto.getCategories());
-        personJsonObject.put("tags",wpDto.getTags());
+        response.setHeader("Cache-Control", "no-cache");
 
-        if (!StringUtils.isEmpty(wpDto.getContent())) {
-            personJsonObject.put("content",wpDto.getContent());
-        }
-
-        if (!StringUtils.isEmpty(wpDto.getExcerpt())) {
-            personJsonObject.put("excerpt",wpDto.getExcerpt());
-        }
-
-        personJsonObject.put("status","publish");
-
-        HttpEntity<String> request = new HttpEntity<>(personJsonObject.toString(), headers);
-        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
         return responseEntity.getBody();
     }
 
@@ -169,26 +158,32 @@ public class BlogController {
         if (itemMaster.getWp_id() != null) {
             updateMasterItem(itemMaster, itemList);
         }
-        // itemMasterをベースに作成していく
-        WpDto wpDto = itemMaster.convertToWpDto();
 
         Integer blogId = 0;
-        if (wpDto != null) {
-            // 各商品のデータを追加していく(ページのコンテンツを編集)
-            wpDto.setContent(textController.createBlogContent(itemList, wpDto.getContent()));
-
+        if (itemMaster != null) {
             // リクエスト送信
-            String res = request(response, wpDto);
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("title",itemMaster.getTitle());
+            jsonObject.put("author",1);
+            jsonObject.put("categories",new Integer[]{5});
+            jsonObject.put("tags",itemMaster.getTags());
+            jsonObject.put("excerpt", itemList.get(0).getItem_caption());
+            jsonObject.put("status","publish");
+            jsonObject.put("content", textController.createBlogContent(itemList, itemMaster.getItem_caption()));
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+            String url = URL + "posts";
+            String res = request(response, url, request, HttpMethod.POST);
             // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
             if (StringUtilsSpring.hasText(res)) {
-                JSONObject jsonObject = new JSONObject(res);
-                if (jsonObject.get("id") != null) {
-                    blogId = Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
+                JSONObject jo = new JSONObject(res);
+                if (jo.get("id") != null) {
+                    blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
                     itemMaster.setWp_id(blogId);
                     itemMasterService.save(itemMaster);
                 }
             }
-
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){
@@ -206,9 +201,12 @@ public class BlogController {
      */
     public Long updateMasterItem(ItemMaster itemMaster, List<Item> itemList) {
         String content = textController.createBlogContent(itemList, itemMaster.getItem_caption());
-        WpDto wpDto = new WpDto();
-        wpDto.setContent(content);
-        String res = request(response, wpDto);
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("content", content);
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String url = URL + "posts/" + itemMaster.getWp_id();
+        String res = request(response, url, request, HttpMethod.POST);
         JSONObject jo = new JSONObject(res);
         if (jo.get("id") != null) {
             return Long.parseLong(jo.get("id").toString().replaceAll("^\"|\"$", ""));
@@ -307,17 +305,8 @@ public class BlogController {
      */
     public String requestPostData(String wpId) {
         String finalUrl = URL + "posts/" + wpId;
-
-        HttpHeaders headers = new HttpHeaders();
-        String auth = new String(
-            Base64.getEncoder().encode(
-                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-            )
-        );
-        headers.add("Authorization","Basic " +  auth);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.GET, new HttpEntity<>(headers), String.class);
-        return responseEntity.getBody();
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        return request(response, finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
     }
 
     /**
@@ -390,23 +379,13 @@ public class BlogController {
      * @param imageId
      */
     private void setMedia(Integer wpId, Integer imageId) {
-        String finalUrl = URL + "item/" + wpId;
+        String url = URL + "item/" + wpId;
 
-        response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String auth = new String(
-            Base64.getEncoder().encode(
-                "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV".getBytes()
-            )
-        );
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("featured_media", imageId);
 
-        headers.add("Authorization","Basic " +  auth);
-        JSONObject personJsonObject = new JSONObject();
-        personJsonObject.put("featured_media", imageId);
-
-        HttpEntity<String> request = new HttpEntity<>(personJsonObject.toString(), headers);
-        ResponseEntity<String> responseEntity = restTemplate.exchange(finalUrl, HttpMethod.POST, request, String.class);
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        request(response, url, request, HttpMethod.GET);
     }
 }

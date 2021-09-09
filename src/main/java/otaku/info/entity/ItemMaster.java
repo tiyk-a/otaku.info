@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
-import otaku.info.dto.WpDto;
 import otaku.info.enums.WpTagEnum;
 
 import javax.persistence.*;
@@ -84,36 +83,6 @@ public class ItemMaster {
     }
 
     /**
-     * WpDtoに変換します。
-     *
-     * @return
-     */
-    public WpDto convertToWpDto() {
-        WpDto wpDto = new WpDto();
-        wpDto.setTitle(this.getTitle());
-        // itemのカテゴリ5を登録
-        wpDto.setCategories(new Integer[]{5});
-        wpDto.setContent(this.getItem_caption());
-        wpDto.setPath("posts");
-        wpDto.setExcerpt(this.getTitle());
-
-        // タグを作成（チーム名のみ）
-        List<Integer> tmpList = new ArrayList<>();
-        Integer[] teamArr = new Integer[0];
-
-        if (StringUtils.hasText(this.getTeam_id())) {
-            List.of(this.getTeam_id().split(",")).forEach(e -> tmpList.add(WpTagEnum.getByDbTeamId(e)));
-        }
-
-        if (tmpList.size() > 0) {
-            teamArr = tmpList.toArray(new Integer[tmpList.size()]);
-        }
-
-        wpDto.setTags(teamArr);
-        return wpDto;
-    }
-
-    /**
      * 引数の商品の要素がマスターになかったら追加する
      *
      * @param item
@@ -175,4 +144,20 @@ public class ItemMaster {
         }
         return this;
     }
+
+    public Integer[] getTags() {
+        // タグを作成（チーム名のみ）
+        List<Integer> tmpList = new ArrayList<>();
+        Integer[] teamArr = new Integer[0];
+
+        if (StringUtils.hasText(this.getTeam_id())) {
+            List.of(this.getTeam_id().split(",")).forEach(e -> tmpList.add(WpTagEnum.getByDbTeamId(e)));
+        }
+
+        if (tmpList.size() > 0) {
+            teamArr = tmpList.toArray(new Integer[tmpList.size()]);
+        }
+        return teamArr;
+    }
+
 }

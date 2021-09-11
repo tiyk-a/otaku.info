@@ -3,6 +3,7 @@ package otaku.info.controller;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -18,8 +19,10 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.MemberService;
+import otaku.info.searvice.ProgramService;
 import otaku.info.searvice.TeamService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
@@ -61,6 +64,9 @@ public class SampleController {
     private MemberService memberService;
 
     @Autowired
+    private ProgramService programService;
+
+    @Autowired
     RestTemplate restTemplate;
 
     @Autowired
@@ -72,6 +78,7 @@ public class SampleController {
     @Autowired
     private ItemUtils itemUtils;
 
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -79,13 +86,19 @@ public class SampleController {
      * @return
      * @throws ChangeSetPersister.NotFoundException
      */
-    @GetMapping("/tmpMethod/{id}/{id2}")
-    public String tempMethod(@PathVariable String id, @PathVariable String id2) {
-        Integer i1 = textController.getSimilarScoreByJaroWinklerDistance(id, id2);
-        Integer i2 = textController.getSimilarScoreByLevenshteinDistance(id, id2);
-        System.out.println(String.join(", ", i1.toString(), i2.toString()));
-        System.out.println(id);
-        System.out.println(id2);
+    @GetMapping("/tmpMethod")
+    public String tempMethod() {
+        List<Program> programList = programService.findAll();
+        for (Program p : programList) {
+            try {
+                if (p.getOn_air_date() != null) {
+                    System.out.println(p.getProgram_id() + " : " + dateTimeFormatter.format(p.getOn_air_date()));
+                }
+            } catch (Exception e) {
+                System.out.println("ProgramId: " + p.getProgram_id());
+                e.printStackTrace();
+            }
+        }
         return "done";
     }
     /**

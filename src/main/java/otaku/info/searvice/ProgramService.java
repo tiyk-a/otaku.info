@@ -81,4 +81,8 @@ public class ProgramService  {
         overridden.setFct_chk(false);
         return programRepository.save(overridden);
     }
+
+    public List<Program> findAll() {
+        return programRepository.findAll();
+    }
 }

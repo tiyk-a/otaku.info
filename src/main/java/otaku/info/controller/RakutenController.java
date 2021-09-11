@@ -1,23 +1,21 @@
 package otaku.info.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,49 +43,21 @@ public class RakutenController {
      * @param param
      * @return
      */
-    public JsonNode request(String param) {
-        JsonNode jsonNode = null;
-        //0. 外部APIに接続して
-        HttpURLConnection conn = null;
+    public JSONObject request(String param) {
+        JSONObject jsonObject = null;
+
         try {
-            URL url = new URL(setting.getRakutenApiUrl());
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.connect();
-            PrintWriter out = new PrintWriter(conn.getOutputStream());
-            out.write(param);
-            out.flush();
-            out.close();
+            RestTemplate restTemplate = new RestTemplate();
+            String res = restTemplate.getForObject(setting.getRakutenApiUrl() + param, String.class);
 
-            //2. Jsonを取得して
-            InputStream stream = conn.getInputStream();
-            //文字列のバッファを構築
-            StringBuffer sb = new StringBuffer();
-            String line = "";
-            //文字型入力ストリームを作成
-            BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-            //読めなくなるまでwhile文で回す
-            while((line = br.readLine()) != null) {
-                System.out.println("④受信Json中身：" + line);
-                sb.append(line);
+            if (StringUtilsSpring.hasText(res)) {
+                jsonObject = new JSONObject(res);
             }
-
-            stream.close();
-            String script = "";
-            if (StringUtils.hasText(sb)) {
-                script = sb.toString();
-            }
-
-            //3. 解析して中身をとりだします。
-            //ObjectMapperオブジェクトの宣言
-            ObjectMapper mapper = new ObjectMapper();
-
-            //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            jsonNode = mapper.readTree(script);
+            sleep();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return jsonNode;
+        return jsonObject;
     }
 
     public List<Item> search1(List<String> searchList) {
@@ -95,23 +65,23 @@ public class RakutenController {
 
         for (String key : searchList) {
             String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
-            JsonNode node = request(parameter);
+            JSONObject node = request(parameter);
             if (node != null) {
-                node = node.get("Items");
-                for (int i=0; i<node.size();i++) {
+                JSONArray items = node.getJSONArray("Items");
+                for (int i=0; i<items.length();i++) {
                     try {
                         Item item = new Item();
                         item.setItem_code(key);
-                        item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
-                        item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                        JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                        if (imageNode.size() > 0) {
-                            item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                            if (imageNode.size() > 1) {
-                                item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                        item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
+                        item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
+                        JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
+                        if (imageArray.length() > 0) {
+                            item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));
+                            if (imageArray.length() > 1) {
+                                item.setImage2(imageArray.getJSONObject(1).getString("imageUrl").replaceAll("^\"|\"$", ""));
                             }
-                            if (imageNode.size() > 2) {
-                                item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
+                            if (imageArray.length() > 2) {
+                                item.setImage3(imageArray.getJSONObject(2).getString("imageUrl").replaceAll("^\"|\"$", ""));
                             }
                         }
                         resultList.add(item);
@@ -119,11 +89,6 @@ public class RakutenController {
                         System.out.println(e.getMessage());
                     }
                 }
-            }
-            try{
-                Thread.sleep(1000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
             }
         }
         return resultList;
@@ -137,18 +102,13 @@ public class RakutenController {
 
         for (String key : searchList) {
             String parameter = setting.getRakutenApiDefParam() + "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
-            JsonNode node = request(parameter);
+            JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            if (node.get("Items") != null) {
-                node = node.get("Items");
-                for (int i=0; i<node.size();i++) {
-                    resultList.add(node.get(i).get("itemCode").toString().replaceAll("^\"|\"$", ""));
+            if (jsonObject.has("Items")) {
+                JSONArray itemArray = jsonObject.getJSONArray("Items");
+                for (int i = 0; i < itemArray.length(); i++) {
+                    resultList.add(itemArray.getJSONObject(i).getString("itemCode").replaceAll("^\"|\"$", ""));
                 }
-            }
-            try{
-                Thread.sleep(1000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
             }
         }
         return resultList;
@@ -165,37 +125,22 @@ public class RakutenController {
 
         for (String key : itemCodeList) {
             String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
-            JsonNode node = request(parameter);
+            JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            node = node.get("Items");
-            for (int i=0; i<node.size();i++) {
-                Item item = new Item();
-                item.setItem_code(key);
-                item.setSite_id(1);
-                item.setPrice(Integer.parseInt(node.get(i).get("itemPrice").toString()));
-                item.setTitle(node.get(i).get("itemName").toString().replaceAll("^\"|\"$", ""));
-                item.setItem_caption(StringUtilsMine.compressString(node.get(i).get("itemCaption").toString().replaceAll("^\"|\"$", ""), 200));
-                item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
-                JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                if (imageNode.size() > 0) {
-                    if (imageNode.get(0).get("imageUrl") == null) {
-                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
-                    } else {
-                        item.setImage1(imageNode.get(0).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                        if (imageNode.size() > 1) {
-                            item.setImage2(imageNode.get(1).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                        }
-                        if (imageNode.size() > 2) {
-                            item.setImage3(imageNode.get(2).get("imageUrl").toString().replaceAll("^\"|\"$", ""));
-                        }
-                    }
+            if (jsonObject.has("Items")) {
+                JSONArray jsonArray = jsonObject.getJSONArray("Items");
+                for (int i=0; i<jsonArray.length();i++) {
+                    Item item = new Item();
+                    item.setItem_code(key);
+                    item.setSite_id(1);
+                    item.setPrice(Integer.parseInt(jsonArray.getJSONObject(i).getString("itemPrice")));
+                    item.setTitle(jsonArray.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
+                    item.setItem_caption(StringUtilsMine.compressString(jsonArray.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
+                    item.setUrl(jsonArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
+                    JSONArray imageArray = jsonArray.getJSONObject(i).getJSONArray("mediumImageUrls");
+                    setImages(item, imageArray);
+                    resultList.add(item);
                 }
-                resultList.add(item);
-            }
-            try{
-                Thread.sleep(1000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
             }
         }
         return resultList;
@@ -234,31 +179,28 @@ public class RakutenController {
 
         for (String key : searchList) {
             String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
-            JsonNode node = request(parameter);
-            if (node != null) {
-                node = node.get("Items");
+            JSONObject jsonObject = request(parameter);
+            try {
+                JSONArray itemArray = jsonObject.getJSONArray("Items");
 
-                if (node == null) {
+                if (itemArray == null) {
                     continue;
                 }
 
-                for (int i=0; i<node.size();i++) {
+                for (int i=0; i<itemArray.length();i++) {
                     try {
                         Item item = itemService.findByItemCode(key).orElse(new Item());
                         if (item.getItem_code() == null) {
                             continue;
                         }
-                        item.setUrl(node.get(i).get("affiliateUrl").toString().replaceAll("^\"|\"$", ""));
+                        item.setUrl(itemArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
                         updateList.add(item);
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
                 }
-                try{
-                    Thread.sleep(1000);
-                }catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
         itemService.saveAll(updateList);
@@ -288,30 +230,47 @@ public class RakutenController {
 
         for (Item item : itemList) {
             String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
-            JsonNode node = request(parameter);
-            node = node.get("Items");
-            if (!node.isNull()) {
-                for (int i=0; i<node.size();i++) {
-                    JsonNode imageNode = node.get(i).get("mediumImageUrls");
-                    if (imageNode.size() > 0) {
-                        item.setImage1(imageNode.get(0).toString().replaceAll("^\"|\"$", ""));
-
-                        if (imageNode.size() > 1) {
-                            item.setImage2(imageNode.get(1).toString().replaceAll("^\"|\"$", ""));
-                        }
-
-                        if (imageNode.size() > 2) {
-                            item.setImage3(imageNode.get(2).toString().replaceAll("^\"|\"$", ""));
-                        }
+            JSONObject jsonObject = request(parameter);
+            if (jsonObject.has("Items")) {
+                JSONArray itemArray = jsonObject.getJSONArray("Items");
+                if (itemArray.get(0) != null) {
+                    for (int i=0; i<itemArray.length();i++) {
+                        JSONArray imageArray = itemArray.getJSONObject(i).getJSONArray("mediumImageUrls");
+                        Item updatedItem = setImages(item, imageArray);
+                        itemService.saveItem(updatedItem);
                     }
                 }
-                itemService.saveItem(item);
             }
-            try{
-                Thread.sleep(10000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
+        }
+    }
+
+    /**
+     * ItemとmediumImageUrlsのリストを引数にとる
+     *
+     * @param item
+     * @param imageArray
+     * @return
+     */
+    private Item setImages(Item item, JSONArray imageArray) {
+            if (imageArray.length() > 0) {
+                item.setImage1(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
+
+                if (imageArray.length() > 1) {
+                    item.setImage2(imageArray.get(1).toString().replaceAll("^\"|\"$", ""));
+                }
+
+                if (imageArray.length() > 2) {
+                    item.setImage3(imageArray.get(2).toString().replaceAll("^\"|\"$", ""));
+                }
             }
+        return item;
+    }
+
+    private void sleep() {
+        try{
+            Thread.sleep(10000);
+        }catch(InterruptedException e){
+            e.printStackTrace();
         }
     }
 }

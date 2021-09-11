@@ -19,11 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
-import otaku.info.entity.Program;
-import otaku.info.searvice.ItemService;
-import otaku.info.searvice.MemberService;
-import otaku.info.searvice.ProgramService;
-import otaku.info.searvice.TeamService;
+import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
@@ -67,6 +63,9 @@ public class SampleController {
     private ProgramService programService;
 
     @Autowired
+    private BlogTagService blogTagService;
+
+    @Autowired
     RestTemplate restTemplate;
 
     @Autowired
@@ -88,17 +87,17 @@ public class SampleController {
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() {
-        List<Program> programList = programService.findAll();
-        for (Program p : programList) {
-            try {
-                if (p.getOn_air_date() != null) {
-                    System.out.println(p.getProgram_id() + " : " + dateTimeFormatter.format(p.getOn_air_date()));
-                }
-            } catch (Exception e) {
-                System.out.println("ProgramId: " + p.getProgram_id());
-                e.printStackTrace();
-            }
-        }
+        // wpタグをinfo DBテーブルに入れる
+        blogController.getBlogTagNotSavedOnInfoDb();
+
+        // 不要な商品のブログページは削除したい。多すぎるから→下書きにする
+        blogController.deleteItemPosts();
+        
+        // 不要なもの：nullが表示されているページをひとまずコンソールに出力する
+        blogController.listPostsContainsNull();
+        // TODO:更新したいところ：exceptは空にしたい
+        // TODO:ブログIDを日付順で並び替えたい、タグに発売日の年月をつけたほうがいいのでは？
+
         return "done";
     }
     /**

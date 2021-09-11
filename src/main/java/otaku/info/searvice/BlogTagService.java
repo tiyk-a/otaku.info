@@ -25,9 +25,9 @@ public class BlogTagService {
         blogTagRepository.saveAll(blogTagList);
     }
 
-    public List<BlogTag> getBlogTagNotSavedOnInfoDb() {
-        return blogTagRepository.getBlogTagNotSavedOnInfoDb();
-    }
+//    public List<BlogTag> getBlogTagNotSavedOnInfoDb() {
+//        return blogTagRepository.getBlogTagNotSavedOnInfoDb();
+//    }
 
     public void saveIfNotSaved(List<BlogTag> blogTagList) {
         for (BlogTag blogTag : blogTagList) {

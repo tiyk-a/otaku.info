@@ -19,10 +19,13 @@ public class BlogUpdateTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- Blog Update START ---");
+        System.out.println("①固定商品ページ");
         // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。
         blogController.addNextMonthTag();
         // 近日発売新商品情報を更新
         blogController.updateReleaseItems();
+        System.out.println("②固定TV出演情報ページ");
+        blogController.updateTvPage();
         System.out.println("--- Blog Update END ---");
         return RepeatStatus.FINISHED;
     }

@@ -5,7 +5,10 @@ import org.springframework.stereotype.Component;
 import otaku.info.searvice.BlogTagService;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -126,5 +129,18 @@ public class DateUtils {
 
     public String getYYYYMM(Date date) {
         return sdf1.format(date);
+    }
+
+    /**
+     * LocalDateTimeをDateに変換します
+     *
+     * @param localDateTime
+     * @return
+     */
+    public static Date localDateTimeToDate(LocalDateTime localDateTime) {
+        ZoneId zone = ZoneId.systemDefault();
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, zone);
+        Instant instant = zonedDateTime.toInstant();
+        return Date.from(instant);
     }
 }

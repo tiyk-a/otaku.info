@@ -16,9 +16,11 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.entity.Program;
 import otaku.info.searvice.BlogTagService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
+import otaku.info.searvice.ProgramService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 
@@ -45,6 +47,9 @@ public class BlogController {
 
     @Autowired
     ItemService itemService;
+
+    @Autowired
+    ProgramService programService;
 
     @Autowired
     ItemMasterService itemMasterService;
@@ -596,5 +601,27 @@ public class BlogController {
             String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
             request(response, url, request, HttpMethod.POST);
         }
+    }
+
+    /**
+     * TV番組の固定ページを更新
+     */
+    public void updateTvPage() {
+        String text = textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(1)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(2)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(3)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(4)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(5)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(7)));
+
+        // ページを更新する
+        String url = setting.getBlogApiUrl() + "pages/1707";
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("content", text);
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        request(response, url, request, HttpMethod.POST);
     }
 }

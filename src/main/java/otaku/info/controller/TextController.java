@@ -50,8 +50,8 @@ public class TextController {
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年M月d日");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+    private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("h:m");
+    private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
     /**
      * Twitterポスト用のメッセージを作成します。
@@ -168,7 +168,7 @@ public class TextController {
 
         String info = null;
         for (Program p : ele.getValue()) {
-            info = info + dateTimeFormatter.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
+            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
         }
         return result + info;
     }
@@ -236,7 +236,7 @@ public class TextController {
             String result = "";
             String tags = "";
             // Format LocalDateTime
-            String formattedDateTime = program.getOn_air_date().format(formatter);
+            String formattedDateTime = program.getOn_air_date().format(dtf2);
 
             // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
             if (keyMemberMap.containsKey(teamId)) {
@@ -414,5 +414,36 @@ public class TextController {
 
     public String createTitle(Date publicationDate, String title) {
         return  "(" + sdf2.format(publicationDate) + ")" + title;
+    }
+
+    /**
+     * TV番組固定ページのテキストを作成。
+     * 1日分のみ作成
+     *
+     * @param programList
+     * @return
+     */
+    public String tvPageText(List<Program> programList) {
+        String result = "";
+        programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
+        List<Date> dateList = new ArrayList<>();
+        for (Program program : programList) {
+            String tmp = "";
+            Date date = dateUtils.localDateTimeToDate(program.getOn_air_date());
+            if (!dateList.contains(date)) {
+                dateList.add(date);
+                // h2 日付を追加
+                tmp = "<h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+            }
+
+            List<Long> teamIdList = List.of(program.getTeam_id().split(","))
+                    .stream().map(Integer::parseInt).collect(Collectors.toList())
+                    .stream().map(Integer::longValue).collect(Collectors.toList());
+            List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
+            String teamName = teamNameList.stream().collect(Collectors.joining("/"));
+            tmp = tmp + "<h6>" + dtf1.format(program.getOn_air_date()) + "　" + teamName + "：" + program.getTitle() + "</h6>";
+            String.join("\n", result, tmp);
+        }
+        return result;
     }
 }

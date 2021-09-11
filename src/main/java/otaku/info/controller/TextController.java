@@ -411,4 +411,8 @@ public class TextController {
         JaroWinklerDistance dis =  new JaroWinklerDistance();
         return (int) (dis.getDistance(s1, s2) * 100);
     }
+
+    public String createTitle(Date publicationDate, String title) {
+        return  "(" + sdf2.format(publicationDate) + ")" + title;
+    }
 }

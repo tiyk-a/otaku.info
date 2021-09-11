@@ -54,4 +54,8 @@ public class ItemMasterService {
     public List<ItemMaster> saveAll(List<ItemMaster> itemMasterList) {
         return itemMasterRepository.saveAll(itemMasterList);
     }
+
+    public List<ItemMaster> findWpIdNotNull() {
+        return itemMasterRepository.findWpIdNotNull();
+    }
 }

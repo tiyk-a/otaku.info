@@ -19,6 +19,8 @@ public class BlogUpdateTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- Blog Update START ---");
+        // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。
+        blogController.addNextMonthTag();
         // 近日発売新商品情報を更新
         blogController.updateReleaseItems();
         System.out.println("--- Blog Update END ---");

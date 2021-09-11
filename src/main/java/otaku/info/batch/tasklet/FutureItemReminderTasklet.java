@@ -7,7 +7,6 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import otaku.info.controller.BlogController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
@@ -33,9 +32,6 @@ public class FutureItemReminderTasklet implements Tasklet {
     TextController textController;
 
     @Autowired
-    BlogController blogController;
-
-    @Autowired
     ItemService itemService;
 
     @Autowired
@@ -57,10 +53,10 @@ public class FutureItemReminderTasklet implements Tasklet {
             post(e.getKey(), e.getValue());
         }
         System.out.println("--- 未発売商品リマインダー END ---");
-        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
-        List<Item> tmpList = itemService.findNotDeleted();
-        blogController.tmpItemPost(tmpList);
-        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
+//        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
+//        List<Item> tmpList = itemService.findNotDeleted();
+//        blogController.tmpItemPost(tmpList);
+//        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
         return RepeatStatus.FINISHED;
     }
 
@@ -69,7 +65,6 @@ public class FutureItemReminderTasklet implements Tasklet {
         List<String> teamIdArr = new ArrayList<>();
         itemList.forEach(e -> teamIdArr.addAll(Arrays.asList(e.getTeam_id().split(","))));
         itemList.stream().distinct().collect(Collectors.toList());
-        Item item = itemList.get(0);
 
         if (teamIdArr.size() > 1) {
             // 固有Twitterのないチームの投稿用オブジェクト

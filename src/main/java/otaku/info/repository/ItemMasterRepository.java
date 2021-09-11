@@ -16,4 +16,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("SELECT t FROM item_master t WHERE publication_date >= ?1 and publication_date <= ?2 and del_flg = ?3 ORDER BY publication_date")
     List<ItemMaster> findItemsBetweenDelFlg(Date from, Date to, boolean delFlg);
+
+    @Query("select t from item_master t where wp_id is not null")
+    List<ItemMaster> findWpIdNotNull();
 }

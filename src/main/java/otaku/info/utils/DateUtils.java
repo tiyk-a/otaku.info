@@ -1,7 +1,10 @@
 package otaku.info.utils;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.searvice.BlogTagService;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -13,6 +16,11 @@ import java.util.concurrent.TimeUnit;
 public class DateUtils {
 
     private String dayOfWeek[] = {"", "日", "月", "火", "水", "木", "金", "土"};
+
+    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyMM");
+
+    @Autowired
+    BlogTagService blogTagService;
 
     // https://www.delftstack.com/ja/howto/java/java-subtract-dates/
     public int dateDiff(Date firstDate, Date secondDate) {
@@ -92,5 +100,31 @@ public class DateUtils {
         c.setTime(date);
         int index = c.get(Calendar.DAY_OF_WEEK);
         return dayOfWeek[index];
+    }
+
+    public int getBlogYYYYMMTag(Date date) {
+        String yyyyMM = sdf1.format(date);
+        return blogTagService.findBlogTagIdByTagName(yyyyMM);
+    }
+
+    /**
+     * 今日の日付（日にちだけ）を返します
+     *
+     * @return
+     */
+    public int getDate() {
+        Calendar calendar = Calendar.getInstance();
+        return calendar.get(Calendar.DATE);
+    }
+
+    public String getNextYYYYMM() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.get(Calendar.MONTH);
+        Date date = calendar.getTime();
+        return sdf1.format(date);
+    }
+
+    public String getYYYYMM(Date date) {
+        return sdf1.format(date);
     }
 }

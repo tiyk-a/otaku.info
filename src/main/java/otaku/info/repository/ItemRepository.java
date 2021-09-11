@@ -63,7 +63,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where wp_id is not null and updated_at >= ?1 and image1 is not null")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
 
-    @Query("select t from Item t where del_flg = 0 and publication_date is not null")
+    @Query("select t from Item t where del_flg = 0 and publication_date is not null and item_m_id is null")
     List<Item> findNotDeleted();
 
     @Query("select t from Item t where team_id like ?1 and publication_date = ?2 and item_m_id is not null")
@@ -71,4 +71,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("select t from Item t where item_m_id = ?1")
     List<Item> findByMasterId(Long itemMasterId);
+
+    @Query("select wp_id from Item where wp_id is not null")
+    List<Long> collectWpId();
 }

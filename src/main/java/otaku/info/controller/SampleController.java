@@ -87,16 +87,13 @@ public class SampleController {
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() {
-        // wpタグをinfo DBテーブルに入れる
-        blogController.getBlogTagNotSavedOnInfoDb();
-
-        // 不要な商品のブログページは削除したい。多すぎるから→下書きにする
-        blogController.deleteItemPosts();
-        
-        // 不要なもの：nullが表示されているページをひとまずコンソールに出力する
-        blogController.listPostsContainsNull();
-        // TODO:更新したいところ：exceptは空にしたい
-        // TODO:ブログIDを日付順で並び替えたい、タグに発売日の年月をつけたほうがいいのでは？
+        // exceptは空にしたい
+//        blogController.eliminateExcerpt();
+        // titleを変える
+//        blogController.updateTitle();
+        // TODO:ブログIDを日付順で並び替えたい
+        // TODO:タグに発売日の年月をつけたほうがいいのでは？
+        blogController.addTag();
 
         return "done";
     }

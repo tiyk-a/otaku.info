@@ -2,6 +2,7 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.time.DateUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -9,10 +10,13 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.BlogTagService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
@@ -46,7 +50,13 @@ public class BlogController {
     ItemMasterService itemMasterService;
 
     @Autowired
+    BlogTagService blogTagService;
+
+    @Autowired
     ItemUtils itemUtils;
+
+    @Autowired
+    otaku.info.utils.DateUtils dateUtils;
 
     @Autowired
     Setting setting;
@@ -129,6 +139,11 @@ public class BlogController {
         response.setHeader("Cache-Control", "no-cache");
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
+        try{
+            Thread.sleep(5000);
+        }catch(InterruptedException e){
+            e.printStackTrace();
+        }
         return responseEntity.getBody();
     }
 
@@ -145,36 +160,38 @@ public class BlogController {
             updateMasterItem(itemMaster, itemList);
         }
 
-        Integer blogId = 0;
-        if (itemMaster != null) {
-            // リクエスト送信
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("title",itemMaster.getTitle());
-            jsonObject.put("author",1);
-            jsonObject.put("categories",new Integer[]{5});
-            jsonObject.put("tags",itemMaster.getTags());
-            jsonObject.put("excerpt", itemList.get(0).getItem_caption());
-            jsonObject.put("status","publish");
-            jsonObject.put("content", textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0));
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        int blogId = 0;
+        // リクエスト送信
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        String title = textController.createTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+        jsonObject.put("title", title);
+        jsonObject.put("author", 1);
+        jsonObject.put("categories", new Integer[]{5});
 
-            String url = setting.getBlogApiUrl() + "posts";
-            String res = request(response, url, request, HttpMethod.POST);
-            // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
-            if (StringUtilsSpring.hasText(res)) {
-                JSONObject jo = new JSONObject(res);
-                if (jo.get("id") != null) {
-                    blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
-                    itemMaster.setWp_id(blogId);
-                    itemMasterService.save(itemMaster);
-                }
+        Integer[] tags = new Integer[itemMaster.getTags().length + 1];
+        System.arraycopy(itemMaster.getTags(), 0, tags, 0, itemMaster.getTags().length);
+        tags[itemMaster.getTags().length] = dateUtils.getBlogYYYYMMTag(itemMaster.getPublication_date());
+        jsonObject.put("tags", tags);
+        jsonObject.put("status", "publish");
+        jsonObject.put("content", textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0));
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+        String url = setting.getBlogApiUrl() + "posts";
+        String res = request(response, url, request, HttpMethod.POST);
+        // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
+        if (StringUtils.hasText(res)) {
+            JSONObject jo = new JSONObject(res);
+            if (jo.get("id") != null) {
+                blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
+                itemMaster.setWp_id(blogId);
+                itemMasterService.save(itemMaster);
             }
-            try{
-                Thread.sleep(1000);
-            }catch(InterruptedException e){
-                e.printStackTrace();
-            }
+        }
+        try{
+            Thread.sleep(1000);
+        }catch(InterruptedException e){
+            e.printStackTrace();
         }
         return (long) blogId;
     }
@@ -367,5 +384,217 @@ public class BlogController {
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         request(response, url, request, HttpMethod.GET);
+    }
+
+    /**
+     * 翌月のyyyyMMタグを追加する。
+     *
+     */
+    public void addNextMonthTag() {
+        // どの月でも存在する27・28日の場合、チェックに通す
+        if (dateUtils.getDate() == 27 || dateUtils.getDate() == 28) {
+            // info DBのblogTagテーブルに翌月のyyyyMMタグが存在するか？
+            boolean existsBlogTag = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM()) != null;
+            if (!existsBlogTag) {
+                String url = setting.getBlogApiUrl() + "tags/";
+
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("name", dateUtils.getNextYYYYMM());
+
+                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+                request(response, url, request, HttpMethod.POST);
+            }
+        }
+    }
+
+    public void getBlogTagNotSavedOnInfoDb() {
+        // WPにあるタグを取得する
+        String url = setting.getBlogApiUrl() + "tags/";
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String res = request(response, url, request, HttpMethod.GET);
+        List<BlogTag> blogTagList = new ArrayList<>();
+
+        try {
+            JSONArray ja = new JSONArray(res);
+            for (int i=0;i<ja.length();i++) {
+                Integer wpId = ja.getJSONObject(i).getInt("id");
+                String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
+                String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
+
+                if (blogTagService.findBlogTagIdByTagName(tagName) == 0) {
+                    BlogTag blogTag = new BlogTag();
+                    blogTag.setWp_tag_id((long)wpId);
+                    blogTag.setTag_name(tagName);
+                    blogTag.setLink(link);
+                    blogTagList.add(blogTag);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // infoDBに保存されていないタグは保存する
+        blogTagService.saveIfNotSaved(blogTagList);
+    }
+
+    /**
+     * 商品（マスタじゃない）ページは下書きにする
+     *
+     */
+    public void deleteItemPosts() {
+
+        List<Long> wpIdList = itemService.collectWpId().stream().distinct().collect(Collectors.toList());
+
+        for (Long wpId : wpIdList) {
+            // WPにあるタグを取得する
+            String url = setting.getBlogApiUrl() + "posts/" + wpId;
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("status","draft");
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+            request(response, url, request, HttpMethod.POST);
+        }
+    }
+
+    // Nullが入ってるWPIDをコンソールに出力する
+    public void listPostsContainsNull() {
+        int n = 1;
+        boolean flg = true;
+        while (flg) {
+            System.out.println(n);
+            String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
+
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+            String res = request(response, url, request, HttpMethod.GET);
+
+            try {
+                JSONArray ja = new JSONArray(res);
+                for (int i=0;i<ja.length();i++) {
+                    Integer wpId = ja.getJSONObject(i).getInt("id");
+                    Integer media = ja.getJSONObject(i).getInt("featured_media");
+//                    String title = ja.getJSONObject(i).getJSONObject("featured_media").getString("rendered").replaceAll("^\"|\"$", "");
+//                    String content = ja.getJSONObject(i).getJSONObject("content").getString("rendered").replaceAll("^\"|\"$", "");
+//                    if (title.contains("Null") || content.contains("Null")) {
+//                        System.out.println(wpId);
+//                        System.out.println(title);
+//                        System.out.println(content);
+//                    }
+                    if (media > 0) {
+                        System.out.println(wpId + ":" + media);
+                    }
+                }
+            } catch (Exception e) {
+                flg = false;
+                e.printStackTrace();
+            }
+            ++n;
+        }
+    }
+
+    /**
+     * Excerptを空にする
+     *
+     */
+    public void eliminateExcerpt() {
+        int n = 1;
+        String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String res = request(response, url, request, HttpMethod.GET);
+
+        try {
+            JSONArray ja = new JSONArray(res);
+            for (int i=0;i<ja.length();i++) {
+                Integer wpId = ja.getJSONObject(i).getInt("id");
+//                Integer media = ja.getJSONObject(i).getInt("featured_media");
+                String excerpt = ja.getJSONObject(i).getJSONObject("excerpt").getString("rendered").replaceAll("^\"|\"$", "");
+//                    String content = ja.getJSONObject(i).getJSONObject("content").getString("rendered").replaceAll("^\"|\"$", "");
+//                    if (title.contains("Null") || content.contains("Null")) {
+//                        System.out.println(wpId);
+//                        System.out.println(title);
+//                        System.out.println(content);
+//                    }
+                if (excerpt != null) {
+                    url = setting.getBlogApiUrl() + "posts/" + wpId;
+
+                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
+                    JSONObject jsonObject1 = new JSONObject();
+                    jsonObject1.put("excerpt", "");
+                    HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
+                    request(response, url, request1, HttpMethod.POST);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        ++n;
+    }
+
+    public void updateTitle() {
+        List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
+
+        for (ItemMaster itemMaster : itemMasterList) {
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            String title = textController.createTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+            jsonObject.put("title", title);
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
+            request(response, url, request, HttpMethod.POST);
+        }
+    }
+
+    public void addTag() {
+        getBlogTagNotSavedOnInfoDb();
+        List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
+
+        for (ItemMaster itemMaster : itemMasterList) {
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+
+            Integer[] tags = new Integer[itemMaster.getTags().length + 1];
+            System.arraycopy(itemMaster.getTags(), 0, tags, 0, itemMaster.getTags().length);
+
+            int yyyyMMId = dateUtils.getBlogYYYYMMTag(itemMaster.getPublication_date());
+
+            // もし年月タグがまだ存在しなかったら先に登録する
+            if (yyyyMMId == 0) {
+                String url = setting.getBlogApiUrl() + "tags/";
+
+                HttpHeaders h = generalHeaderSet(new HttpHeaders());
+                JSONObject jo = new JSONObject();
+                jo.put("name", dateUtils.getYYYYMM(itemMaster.getPublication_date()));
+
+                HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
+                String res = request(response, url, request, HttpMethod.POST);
+
+                JSONObject jsonObject1 = new JSONObject(res);
+                if (jsonObject1.get("id") != null) {
+                    yyyyMMId = jsonObject1.getInt("id");
+                    String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
+                    BlogTag blogTag = new BlogTag();
+                    blogTag.setTag_name(dateUtils.getYYYYMM(itemMaster.getPublication_date()));
+                    blogTag.setWp_tag_id((long) yyyyMMId);
+                    blogTag.setLink(link);
+                    blogTagService.save(blogTag);
+                }
+            }
+            tags[itemMaster.getTags().length] = yyyyMMId;
+            jsonObject.put("tags", tags);
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+            // 商品ページ投稿更新
+            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
+            request(response, url, request, HttpMethod.POST);
+        }
     }
 }

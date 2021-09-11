@@ -155,5 +155,9 @@ public class ItemService {
     public List<Item> findByMasterId(Long itemMasterId) {
         return itemRepository.findByMasterId(itemMasterId);
     }
+
+    public List<Long> collectWpId() {
+        return itemRepository.collectWpId();
+    }
 }
 

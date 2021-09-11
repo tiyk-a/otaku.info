@@ -50,7 +50,7 @@ public class TextController {
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年M月d日");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
-    private SimpleDateFormat sdf3 = new SimpleDateFormat("h:m");
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
     /**
@@ -168,7 +168,7 @@ public class TextController {
 
         String info = null;
         for (Program p : ele.getValue()) {
-            info = info + sdf3.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
+            info = info + dateTimeFormatter.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
         }
         return result + info;
     }

@@ -12,7 +12,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -94,12 +93,12 @@ public class SampleController {
     @GetMapping("/tmpMethod")
     public String tempMethod() {
         // exceptは空にしたい
-//        blogController.eliminateExcerpt();
+        blogController.eliminateExcerpt();
         // titleを変える
 //        blogController.updateTitle();
-        // TODO:ブログIDを日付順で並び替えたい
-        // TODO:タグに発売日の年月をつけたほうがいいのでは？
-        blogController.addTag();
+
+        // タグに発売日の年月をつける
+//        blogController.addTag();
 
         return "done";
     }
@@ -199,7 +198,7 @@ public class SampleController {
                 // itemMasterのimageがないけどitemのimageがある場合、追加してあげる
                 // image1がnullのマスターリスト
                 List<ItemMaster> itemMasterList = itemMasterService.findImageNull();
-                System.out.println("image1がnullじゃないitemMaster:" + itemMasterList.size());
+                System.out.println("image1がnullのitemMaster:" + itemMasterList.size());
                 for (ItemMaster itemMaster : itemMasterList) {
                     // ひもづく商品（image1があるもの）を取得する
                     List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id()).stream().filter(e -> e.getImage1() != null).collect(Collectors.toList());
@@ -211,7 +210,7 @@ public class SampleController {
                 System.out.println("更新完了");
                 // itemMasterの更新が終わった後、imageがあるけどwpBlogのimageがない場合、追加してあげる
                 List<ItemMaster> newList = itemMasterService.findWpIdNotNullImage1Exists();
-                System.out.println("image1がnullじゃないitemMaster:" + itemMasterList.size());
+                System.out.println("image1がnullじゃないitemMaster:" + newList.size());
                 blogController.loadMedia(newList);
 
                 System.out.println("---Imageを既存商品(Item+ItemMaster)に追加するtmpメソッドEND---");

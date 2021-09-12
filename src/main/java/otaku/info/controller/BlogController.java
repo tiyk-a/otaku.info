@@ -24,7 +24,6 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -510,13 +509,6 @@ public class BlogController {
                 for (int i=0;i<ja.length();i++) {
                     Integer wpId = ja.getJSONObject(i).getInt("id");
                     Integer media = ja.getJSONObject(i).getInt("featured_media");
-//                    String title = ja.getJSONObject(i).getJSONObject("featured_media").getString("rendered").replaceAll("^\"|\"$", "");
-//                    String content = ja.getJSONObject(i).getJSONObject("content").getString("rendered").replaceAll("^\"|\"$", "");
-//                    if (title.contains("Null") || content.contains("Null")) {
-//                        System.out.println(wpId);
-//                        System.out.println(title);
-//                        System.out.println(content);
-//                    }
                     if (media > 0) {
                         System.out.println(wpId + ":" + media);
                     }
@@ -561,7 +553,8 @@ public class BlogController {
                     JSONObject jsonObject1 = new JSONObject();
                     jsonObject1.put("excerpt", "");
                     HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                    request(response, url, request1, HttpMethod.POST);
+                    String r = request(response, url, request1, HttpMethod.POST);
+                    System.out.println(r);
                 }
             }
         } catch (Exception e) {

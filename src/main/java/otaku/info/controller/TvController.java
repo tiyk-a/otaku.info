@@ -51,8 +51,6 @@ public class TvController  {
 
     final Pattern datePattern = Pattern.compile("^[0-9][0-9]?/[0-9][0-9]? \\((Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\) [0-9][0-9]?:[0-9][0-9]?");
 
-//    final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d (EEE) H:m");
-
     final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
             .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
 
@@ -81,20 +79,6 @@ public class TvController  {
         }
 
         return tvListMapByGroup;
-    }
-
-    /**
-     * 全てのグループでTV出演情報がない時の処理
-     * （Twitterのあるグループのみ「グループ名＋出演情報ありません」の投稿）
-     *
-     * @param forToday
-     * @param date
-     */
-    public void allNoTvPost(boolean forToday, Date date) throws JSONException {
-        List<Long> teamList = teamService.getIdByTw();
-        for (Long teamId : teamList) {
-            pythonController.post(teamId.intValue(), textController.tvPostNoAlert(teamId, forToday, date));
-        }
     }
 
     /**

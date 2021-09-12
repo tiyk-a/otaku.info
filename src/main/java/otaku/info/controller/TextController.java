@@ -141,20 +141,6 @@ public class TextController {
     }
 
     /**
-     * TV出演情報がないグループのTwitter投稿文
-     *
-     * @param teamId Teamテーブルのteam_id
-     * @param forToday 今日の情報(TRUE)、明日の情報(FALSE)
-     * @param date 情報の日付
-     * @return
-     */
-    public String tvPostNoAlert(Long teamId, boolean forToday, Date date) {
-        String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
-        String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        return dateStr + "の" + teamService.getTeamName(teamId) + "のTV出演情報はありません。" + "%0A%0A" + tags;
-    }
-
-    /**
      * TV出演情報があるグループのTwitter投稿文
      *
      * @param ele Mapから抜き取ったEntry(key=TeamId,value=List<Program>)

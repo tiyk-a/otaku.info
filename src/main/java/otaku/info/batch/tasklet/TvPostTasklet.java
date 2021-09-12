@@ -47,47 +47,28 @@ public class TvPostTasklet implements Tasklet {
             programList = tvController.getTvList(calTmrw.getTime());
         }
 
-        // 取得結果が0件だったらTwitterのあるグループのみ「出演情報はない」ポストをする。
-        if (programList.size() == 0) {
-            if (forToday) {
-                tvController.allNoTvPost(forToday, calToday.getTime());
-            } else {
-                tvController.allNoTvPost(forToday, calTmrw.getTime());
-            }
-            System.out.println("--- TV番組投稿処理: 0件 ---");
-            System.out.println("--- TV番組投稿処理 END ---");
-            return RepeatStatus.FINISHED;
-        }
-
         // 全てのグループIDが入ったMap<TeamId, List<Program>>
-        Map<Long, List<Program>> tvListMapByGroup = tvController.mapByGroup(programList);
+        if (programList.size() > 0) {
+            Map<Long, List<Program>> tvListMapByGroup = tvController.mapByGroup(programList);
 
-        // Mapの要素１つずつ（=1グループずつ）投稿へ進める
-        for (Map.Entry<Long, List<Program>> ele : tvListMapByGroup.entrySet()) {
-            String text = null;
+            // Mapの要素１つずつ（=1グループずつ）投稿へ進める
+            for (Map.Entry<Long, List<Program>> ele : tvListMapByGroup.entrySet()) {
+                String text = null;
 
-            if (ele.getValue().size() == 0) {
-                // 出演情報のないグループ
+                if (ele.getValue().size() > 0) {
+                    // 出演情報のあるグループ
+                    postCount ++;
 
-                // 文章を作成
-                if (forToday) {
-                    text = textController.tvPostNoAlert(ele.getKey(), forToday, calToday.getTime());
-                } else {
-                    text = textController.tvPostNoAlert(ele.getKey(), forToday, calTmrw.getTime());
+                    // 文章を作成
+                    if (forToday) {
+                        text = textController.tvPost(ele, forToday, calToday.getTime());
+                    } else {
+                        text = textController.tvPost(ele, forToday, calTmrw.getTime());
+                    }
                 }
-            } else {
-                // 出演情報のあるグループ
-                postCount ++;
-
-                // 文章を作成
-                if (forToday) {
-                    text = textController.tvPost(ele, forToday, calToday.getTime());
-                } else {
-                    text = textController.tvPost(ele, forToday, calTmrw.getTime());
-                }
+                // Twitter post指示
+                pythonController.post(ele.getKey().intValue(), text);
             }
-            // Twitter post指示
-            pythonController.post(ele.getKey().intValue(), text);
         }
 
         System.out.println("--- TV番組投稿グループ数: " + postCount + " ---");

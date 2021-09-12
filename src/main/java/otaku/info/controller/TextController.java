@@ -50,7 +50,7 @@ public class TextController {
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年M月d日");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
-    private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("h:m");
+    private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
     private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
     /**
@@ -205,7 +205,7 @@ public class TextController {
         List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
         if (program.getMember_id() != null && !program.getMember_id().equals("")) {
             // Member情報格納
-            if (program.getMember_id().contains(".")) {
+            if (program.getMember_id().contains(",")) {
                 List.of(program.getMember_id().split(","))
                         .stream().map(Integer::parseInt).collect(Collectors.toList())
                         .stream().map(Integer::longValue).collect(Collectors.toList())
@@ -442,7 +442,7 @@ public class TextController {
             List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
             String teamName = teamNameList.stream().collect(Collectors.joining("/"));
             tmp = tmp + "<h6>" + dtf1.format(program.getOn_air_date()) + "　" + teamName + "：" + program.getTitle() + "</h6>";
-            String.join("\n", result, tmp);
+            result = String.join("\n", result, tmp);
         }
         return result;
     }

@@ -129,7 +129,7 @@ public class ItemMaster {
             this.setItem_caption(item.getItem_caption());
         }
 
-        if (!this.getMember_id().equals(item.getMember_id())) {
+        if ((this.getMember_id() == null && item.getMember_id() != null) ||(this.getMember_id() != null && item.getMember_id() != null && !this.getMember_id().equals(item.getMember_id()))) {
             List<String> master = List.of(this.getMember_id().split(","));
             List<String> itemMemberId = List.of(item.getMember_id().split(","));
 

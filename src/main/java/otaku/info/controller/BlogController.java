@@ -381,14 +381,14 @@ public class BlogController {
      * @param imageId
      */
     private void setMedia(Integer wpId, Integer imageId) {
-        String url = setting.getBlogApiUrl() + "item/" + wpId;
+        String url = setting.getBlogApiUrl() + "posts/" + wpId;
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("featured_media", imageId);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        request(response, url, request, HttpMethod.GET);
+        request(response, url, request, HttpMethod.POST);
     }
 
     /**
@@ -607,14 +607,15 @@ public class BlogController {
      * TV番組の固定ページを更新
      */
     public void updateTvPage() {
-        String text = textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(1)))
+        String text = textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(0)))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(1)))
                 + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(2)))
                 + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(3)))
                 + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(4)))
                 + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(5)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(7)));
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)));
 
+        System.out.println(text);
         // ページを更新する
         String url = setting.getBlogApiUrl() + "pages/1707";
 

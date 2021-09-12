@@ -40,7 +40,7 @@ public class AnalyzeController {
         }
 
         // 発売日(publishDate)を探す
-        String publishDateRegexYMD = "発売日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9])";
+        String publishDateRegexYMD = "(([20]?)[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9]).*[発売](日)?)|(発売日?.*20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9]))";
         List<Date> publishDateList = StringUtilsMine.convertStringToDateList(regexExtract(publishDateRegexYMD, text));
 
         if (publishDateList.size() == 0) {

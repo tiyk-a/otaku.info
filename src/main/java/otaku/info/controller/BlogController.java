@@ -16,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.entity.Program;
 import otaku.info.searvice.BlogTagService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
@@ -65,8 +64,6 @@ public class BlogController {
 
     @Autowired
     Setting setting;
-
-    private static org.springframework.util.StringUtils StringUtilsSpring;
 
     HttpServletResponse response;
 
@@ -223,7 +220,7 @@ public class BlogController {
     }
 
     /**
-     * 楽天検索で見つけた新商品のマスター商品IDを繋げ、ブログのマスタ商品投稿を更新する。
+     * 商品のマスター商品IDを見つけてor新規作成して繋げ、ブログのマスタ商品投稿を更新する。
      *
      * @param item
      * itemMasterIdを返す
@@ -269,14 +266,9 @@ public class BlogController {
      * @param imageUrl
      * @return 画像ID
      */
-    public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) throws IOException {
+    public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) {
         String finalUrl = setting.getBlogApiUrl() + "media";
 
-        response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        headers.add("content-disposition", "attachment; filename=tmp1.jpg");
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
 
         String imagePath = "";
@@ -287,11 +279,21 @@ public class BlogController {
             e.printStackTrace();
         }
 
+        response.setHeader("Cache-Control", "no-cache");
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        headers.add("content-disposition", "attachment; filename=" + itemId + ".jpg");
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
         body.add("file", new FileSystemResource(imagePath));
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
+        System.out.println("画像投稿します");
+        System.out.println(imagePath);
+        System.out.println(imageUrl);
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
         String text = responseEntity.getBody();
+        System.out.println("request result: " + text);
         JSONObject jsonObject = new JSONObject(text);
         if (jsonObject.get("id") != null) {
             return Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
@@ -361,16 +363,41 @@ public class BlogController {
     /**
      * 商品画像1をWordpressに登録します。
      *
-     * @param itemList
+     * @param itemMasterList
      */
-    public void loadMedia(List<Item> itemList) throws IOException {
-        for (Item item : itemList) {
-            Integer imageId = requestMedia(response, item.getItem_id(), item.getImage1());
-            if (imageId == null || imageId == 0) {
-                continue;
-            }
+    public void loadMedia(List<ItemMaster> itemMasterList) {
+        for (ItemMaster itemMaster : itemMasterList) {
+            // すでに画像がブログ投稿にセットされてるか確認しないといけないのでリクエストを送信し既存のデータを取得する
+            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
 
-            setMedia(item.getWp_id(), imageId);
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+            String res = request(response, url, request, HttpMethod.GET);
+
+            try {
+                JSONObject jo = new JSONObject(res);
+                Integer wpId = jo.getInt("featured_media");
+                System.out.println("アイキャッチ：" + wpId);
+
+                // featuredMediaが設定されてなかったら画像をポストする
+                if (wpId == 0) {
+                    System.out.println("メディアポスト:" + itemMaster.getImage1());
+                    Integer uploadedImageWpId = requestMedia(response, (long) itemMaster.getWp_id(), itemMaster.getImage1());
+
+                    System.out.println("ポスト完了");
+                    // なんかアップロードに失敗したら次のマスター商品に飛ばす
+                    if (uploadedImageWpId == null || uploadedImageWpId == 0) {
+                        continue;
+                    }
+
+                    // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
+                    setMedia(itemMaster.getWp_id(), uploadedImageWpId);
+                    // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

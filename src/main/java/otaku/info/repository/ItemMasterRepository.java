@@ -3,7 +3,6 @@ package otaku.info.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 
 import java.util.Date;
@@ -19,4 +18,10 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("select t from item_master t where wp_id is not null")
     List<ItemMaster> findWpIdNotNull();
+
+    @Query("select t from item_master t where image1 is null")
+    List<ItemMaster> findImageNull();
+
+    @Query("select t from item_master t where wp_id is not null and image1 is not null")
+    List<ItemMaster> findWpIdNotNullImage1Exists();
 }

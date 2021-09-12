@@ -5,12 +5,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
@@ -64,6 +67,9 @@ public class SampleController {
 
     @Autowired
     private BlogTagService blogTagService;
+
+    @Autowired
+    private ItemMasterService itemMasterService;
 
     @Autowired
     RestTemplate restTemplate;
@@ -187,9 +193,28 @@ public class SampleController {
                 break;
             case 13:
                 // 画像がnullの商品に画像を追加する
-                System.out.println("---Imageを既存商品に追加するtmpメソッドSTART---");
+                System.out.println("---Imageを既存商品(Item+ItemMaster)に追加するtmpメソッドSTART---");
+                // item.imageを追加する
                 rakutenController.addImage();
-                System.out.println("---Imageを既存商品に追加するtmpメソッドEND---");
+                // itemMasterのimageがないけどitemのimageがある場合、追加してあげる
+                // image1がnullのマスターリスト
+                List<ItemMaster> itemMasterList = itemMasterService.findImageNull();
+                System.out.println("image1がnullじゃないitemMaster:" + itemMasterList.size());
+                for (ItemMaster itemMaster : itemMasterList) {
+                    // ひもづく商品（image1があるもの）を取得する
+                    List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id()).stream().filter(e -> e.getImage1() != null).collect(Collectors.toList());
+                    for (Item item : itemList) {
+                        itemMaster.absolveItem(item);
+                    }
+                }
+
+                System.out.println("更新完了");
+                // itemMasterの更新が終わった後、imageがあるけどwpBlogのimageがない場合、追加してあげる
+                List<ItemMaster> newList = itemMasterService.findWpIdNotNullImage1Exists();
+                System.out.println("image1がnullじゃないitemMaster:" + itemMasterList.size());
+                blogController.loadMedia(newList);
+
+                System.out.println("---Imageを既存商品(Item+ItemMaster)に追加するtmpメソッドEND---");
                 break;
             case 14:
                 // 商品の情報を投稿する

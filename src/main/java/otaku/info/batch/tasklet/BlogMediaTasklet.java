@@ -9,8 +9,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
-import otaku.info.entity.Item;
-import otaku.info.searvice.ItemService;
+import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemMasterService;
 import java.util.*;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.List;
 public class BlogMediaTasklet implements Tasklet {
 
     @Autowired
-    ItemService itemService;
+    ItemMasterService itemMasterService;
 
     @Autowired
     BlogController blogController;
@@ -32,20 +32,13 @@ public class BlogMediaTasklet implements Tasklet {
         Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
         Calendar c = Calendar.getInstance();
         c.setTime(today);
-        c.add(Calendar.HOUR, -24);
+        c.add(Calendar.DATE, -100);
 
-        List<Item> itemList = itemService.findWpIdNotNullUpdatedAt(c.getTime());
+        List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNullImage1Exists();
 
-        // 対象商品(wp_idがあり昨日以降に最終更新がされておりimage1が存在する)が存在すれば処理実行
-        if (itemList.size() > 0) {
-            // メディア設定がないものが該当
-            List<Item> noImageList = blogController.selectBlogData(itemList);
-
-            // 該当があればメディア登録&設定に進む
-            if (noImageList.size() > 0) {
-                // 登録と設定
-                blogController.loadMedia(noImageList);
-            }
+        // 対象商品マスタが存在すれば処理実行
+        if (itemMasterList.size() > 0) {
+            blogController.loadMedia(itemMasterList);
         }
         System.out.println("--- Blog画像設定 END ---");
         return RepeatStatus.FINISHED;

@@ -332,17 +332,19 @@ public class TextController {
             Integer estPrice = getPrice(itemList);
             String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
 
+            String pubDate = sdf1.format(itemMaster.getPublication_date());
+            String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
+
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
             for (Item item : itemList) {
-
-                String h3 = "<a href=" + item.getUrl() + " target='_blank' rel='noopener'><p>" + item.getTitle() + "</p></a><br><p>" + item.getPrice() + "円</p>";
+                String h3 = "[" + item.getUrl() + "]";
 
                 // 商品テキストをまとめ、楽天テキストの末尾に加える
                 rakutenLink = rakutenLink + "\n" + h3;
             }
 
-            String text = String.join("\n", h2, image, description, price, rakutenLink);
+            String text = String.join("\n", h2, image, description, price, publicationDateStr, rakutenLink);
             // 返却リストに追加する
             resultList.add(text);
         }

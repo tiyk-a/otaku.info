@@ -522,10 +522,10 @@ public class BlogController {
     }
 
     /**
-     * Excerptを空にする
+     * 公開中のブログポストのcontentを上書きする（楽天リンクをカードにした）
      *
      */
-    public void eliminateExcerpt() {
+    public void updateContent() {
         int n = 1;
         String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
 
@@ -538,23 +538,23 @@ public class BlogController {
             JSONArray ja = new JSONArray(res);
             for (int i=0;i<ja.length();i++) {
                 Integer wpId = ja.getJSONObject(i).getInt("id");
-//                Integer media = ja.getJSONObject(i).getInt("featured_media");
-                String excerpt = ja.getJSONObject(i).getJSONObject("excerpt").getString("rendered").replaceAll("^\"|\"$", "");
-//                    String content = ja.getJSONObject(i).getJSONObject("content").getString("rendered").replaceAll("^\"|\"$", "");
-//                    if (title.contains("Null") || content.contains("Null")) {
-//                        System.out.println(wpId);
-//                        System.out.println(title);
-//                        System.out.println(content);
-//                    }
-                if (excerpt != null) {
-                    url = setting.getBlogApiUrl() + "posts/" + wpId;
+                url = setting.getBlogApiUrl() + "posts/" + wpId;
 
-                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
-                    JSONObject jsonObject1 = new JSONObject();
-                    jsonObject1.put("excerpt", "");
-                    HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                    String r = request(response, url, request1, HttpMethod.POST);
-                    System.out.println(r);
+                HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
+                JSONObject jsonObject1 = new JSONObject();
+                ItemMaster itemMaster = itemMasterService.findByWpId(wpId);
+
+                if (itemMaster != null && itemMaster.getItem_m_id() != null) {
+                    List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+
+                    if (itemList.size() > 0) {
+                        Map<ItemMaster, List<Item>> itemMasterListMap = Collections.singletonMap(itemMaster, itemList);
+                        String text = textController.blogReleaseItemsText(itemMasterListMap).get(0);
+                        jsonObject1.put("content", text);
+                        HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
+                        String r = request(response, url, request1, HttpMethod.POST);
+                        System.out.println(r);
+                    }
                 }
             }
         } catch (Exception e) {

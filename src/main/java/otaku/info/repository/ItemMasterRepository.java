@@ -24,4 +24,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("select t from item_master t where wp_id is not null and image1 is not null")
     List<ItemMaster> findWpIdNotNullImage1Exists();
+
+    @Query("select t from item_master t where wp_id = ?1")
+    ItemMaster findByWpId(Integer wpId);
 }

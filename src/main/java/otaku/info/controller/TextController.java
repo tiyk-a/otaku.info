@@ -156,7 +156,10 @@ public class TextController {
         for (Program p : ele.getValue()) {
             info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
         }
-        return result + info;
+
+        // blogへの誘導
+        String blog = "一覧はこちら%0Ahttps://otakuinfo.fun/pages/1707";
+        return result + info + blog;
     }
 
     /**
@@ -287,7 +290,7 @@ public class TextController {
             List<Item> itemList = entry.getValue();
 
             String date = dateUtils.getDay(itemMaster.getPublication_date());
-            String publicationDate = sdf2.format(itemMaster.getPublication_date()) + "(" + date + ")";
+            String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
 
             // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
             if (!StringUtils.hasText(itemMaster.getTeam_id())) {
@@ -324,10 +327,13 @@ public class TextController {
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
             for (Item item : itemList) {
-                String h3 = "[" + item.getUrl() + "]";
+                // 楽天アフィリエイト、ブログカードうまくはまらないので手で作る
+                StringBuilder linkCard = new StringBuilder("<a href='" + item.getUrl() + "'><div class='linkCardDiv'><img src=");
+                linkCard.append(StringUtils.hasText(item.getImage1()) ? item.getImage1() : setting.getBlogNoImage());
+                linkCard.append(" class='linkCardUrl' /><p class='linkCardTitle'>").append(item.getTitle()).append("</p></div></a>");
 
                 // 商品テキストをまとめ、楽天テキストの末尾に加える
-                rakutenLink = rakutenLink + "\n" + h3;
+                rakutenLink = rakutenLink + "\n" + linkCard.toString();
             }
 
             String text = String.join("\n", h2, image, description, price, publicationDateStr, rakutenLink);
@@ -401,7 +407,7 @@ public class TextController {
     }
 
     public String createTitle(Date publicationDate, String title) {
-        return  "(" + sdf2.format(publicationDate) + ")" + title;
+        return  sdf1.format(publicationDate) + " " + title;
     }
 
     /**

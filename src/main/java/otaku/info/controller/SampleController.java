@@ -93,7 +93,7 @@ public class SampleController {
     @GetMapping("/tmpMethod")
     public String tempMethod() {
         // exceptは空にしたい
-        blogController.eliminateExcerpt();
+        blogController.updateContent();
         // titleを変える
 //        blogController.updateTitle();
 

@@ -41,4 +41,13 @@ public class BlogTagService {
     public BlogTag save(BlogTag blogTag) {
         return blogTagRepository.save(blogTag);
     }
+
+    public BlogTag findByTagName(String tagName) {
+        BlogTag blogTag = blogTagRepository.findByTagName(tagName);
+
+        if (blogTag == null) {
+            blogTag = new BlogTag();
+        }
+        return blogTag;
+    }
 }

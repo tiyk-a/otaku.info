@@ -159,5 +159,17 @@ public class ItemService {
     public List<Long> collectWpId() {
         return itemRepository.collectWpId();
     }
+
+    public void clearAllWpId() {
+        itemRepository.clearAllWpId();
+    }
+
+    public List<Item> gatherItems(Long itemMId) {
+        return itemRepository.gatherItems(itemMId);
+    }
+
+    public String getImageUrlByItemMIdImage1NotNull(Long itemMId) {
+        return itemRepository.getImageUrlByItemMIdImage1NotNull(itemMId);
+    }
 }
 

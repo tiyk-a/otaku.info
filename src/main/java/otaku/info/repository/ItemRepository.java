@@ -74,4 +74,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("select wp_id from Item where wp_id is not null")
     List<Long> collectWpId();
+
+    @Modifying
+    @Query("update Item set wp_id = null where wp_id is not null")
+    void clearAllWpId();
+
+    @Query("select t from Item t where item_m_id = ?1")
+    List<Item> gatherItems(Long itemMId);
+
+    @Query(nativeQuery = true, value = "select image1 from Item where item_m_id = ?1 and image1 is not null limit 1")
+    String getImageUrlByItemMIdImage1NotNull(Long itemMId);
 }

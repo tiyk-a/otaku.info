@@ -2,6 +2,7 @@ package otaku.info.repository;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.ItemMaster;
 
@@ -27,4 +28,11 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("select t from item_master t where wp_id = ?1")
     ItemMaster findByWpId(Integer wpId);
+
+    @Modifying
+    @Query("update item_master set wp_id = null where wp_id is not null")
+    void clearAllWpId();
+
+    @Query("select t from item_master t where YEAR(publication_date) = ?1")
+    List<ItemMaster> findByPublicationYear(Integer year);
 }

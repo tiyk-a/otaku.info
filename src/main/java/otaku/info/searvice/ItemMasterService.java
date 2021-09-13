@@ -70,4 +70,12 @@ public class ItemMasterService {
     public ItemMaster findByWpId(Integer wpId) {
         return itemMasterRepository.findByWpId(wpId);
     }
+
+    public void clearAllWpId() {
+        itemMasterRepository.clearAllWpId();
+    }
+
+    public List<ItemMaster> findByPublicationYear(Integer year) {
+        return itemMasterRepository.findByPublicationYear(year);
+    }
 }

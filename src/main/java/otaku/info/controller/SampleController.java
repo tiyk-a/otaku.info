@@ -93,7 +93,7 @@ public class SampleController {
     @GetMapping("/tmpMethod")
     public String tempMethod() {
         // exceptは空にしたい
-        blogController.updateContent();
+//        blogController.updateContent();
         // titleを変える
 //        blogController.updateTitle();
 
@@ -190,30 +190,16 @@ public class SampleController {
                 scheduler.run12();
                 System.out.println("---run12Blog画像設定 END---");
                 break;
-            case 13:
-                // 画像がnullの商品に画像を追加する
-                System.out.println("---Imageを既存商品(Item+ItemMaster)に追加するtmpメソッドSTART---");
-                // item.imageを追加する
-                rakutenController.addImage();
-                // itemMasterのimageがないけどitemのimageがある場合、追加してあげる
-                // image1がnullのマスターリスト
-                List<ItemMaster> itemMasterList = itemMasterService.findImageNull();
-                System.out.println("image1がnullのitemMaster:" + itemMasterList.size());
-                for (ItemMaster itemMaster : itemMasterList) {
-                    // ひもづく商品（image1があるもの）を取得する
-                    List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id()).stream().filter(e -> e.getImage1() != null).collect(Collectors.toList());
-                    for (Item item : itemList) {
-                        itemMaster.absolveItem(item);
-                    }
-                }
-
-                System.out.println("更新完了");
-                // itemMasterの更新が終わった後、imageがあるけどwpBlogのimageがない場合、追加してあげる
-                List<ItemMaster> newList = itemMasterService.findWpIdNotNullImage1Exists();
-                System.out.println("image1がnullじゃないitemMaster:" + newList.size());
-                blogController.loadMedia(newList);
-
-                System.out.println("---Imageを既存商品(Item+ItemMaster)に追加するtmpメソッドEND---");
+            case 13: // tmpメソッド
+                // DONE: wpブログデータを先にdumpとっておく
+                // itemMasterのwp_idを全部空にする
+//                itemMasterService.clearAllWpId();
+                // itemのwp_idを全部空にする
+//                itemService.clearAllWpId();
+                // wpブログitemを全て削除する
+                // DONE:手で直接消しな
+                // itemMasterの今年以降発売の商品を全て発売日順にwpにポストする。各商品、itemMasterにwp_idを忘れず入れてあげる
+                blogController.postAllItemMaster();
                 break;
             case 14:
                 // 商品の情報を投稿する

@@ -48,7 +48,7 @@ public class TextController {
     @Autowired
     private Setting setting;
 
-    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年M月d日");
+    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
     private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
     private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");

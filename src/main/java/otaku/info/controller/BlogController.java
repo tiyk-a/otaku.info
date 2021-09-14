@@ -13,7 +13,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
-import org.thymeleaf.expression.Maps;
 import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
@@ -24,7 +23,6 @@ import otaku.info.searvice.ProgramService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URL;
@@ -141,13 +139,22 @@ public class BlogController {
 
         response.setHeader("Cache-Control", "no-cache");
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
-        try{
-            Thread.sleep(5000);
-        }catch(InterruptedException e){
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
+
+            if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
+                return "";
+            }
+            try{
+                Thread.sleep(5000);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
+            return responseEntity.getBody();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return responseEntity.getBody();
+        return "";
     }
 
     /**

@@ -191,13 +191,6 @@ public class SampleController {
                 System.out.println("---run12Blog画像設定 END---");
                 break;
             case 13: // tmpメソッド
-                // DONE: wpブログデータを先にdumpとっておく
-                // itemMasterのwp_idを全部空にする
-//                itemMasterService.clearAllWpId();
-                // itemのwp_idを全部空にする
-//                itemService.clearAllWpId();
-                // wpブログitemを全て削除する
-                // DONE:手で直接消しな
                 // itemMasterの今年以降発売の商品を全て発売日順にwpにポストする。各商品、itemMasterにwp_idを忘れず入れてあげる
                 blogController.postAllItemMaster();
                 break;

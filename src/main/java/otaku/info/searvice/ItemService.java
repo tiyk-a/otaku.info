@@ -160,10 +160,6 @@ public class ItemService {
         return itemRepository.collectWpId();
     }
 
-    public void clearAllWpId() {
-        itemRepository.clearAllWpId();
-    }
-
     public List<Item> gatherItems(Long itemMId) {
         return itemRepository.gatherItems(itemMId);
     }

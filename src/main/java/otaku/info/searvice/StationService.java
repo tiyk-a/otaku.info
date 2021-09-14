@@ -16,7 +16,6 @@ public class StationService {
     private final StationRepository stationRepository;
 
     public Optional<Long> findStationId(String stationName) {
-        System.out.println("KOKOKOKOKOKO " + stationName);
         return stationRepository.findStationId(stationName);
     }
 

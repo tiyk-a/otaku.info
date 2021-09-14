@@ -25,10 +25,6 @@ public class BlogTagService {
         blogTagRepository.saveAll(blogTagList);
     }
 
-//    public List<BlogTag> getBlogTagNotSavedOnInfoDb() {
-//        return blogTagRepository.getBlogTagNotSavedOnInfoDb();
-//    }
-
     public void saveIfNotSaved(List<BlogTag> blogTagList) {
         for (BlogTag blogTag : blogTagList) {
             boolean exists = blogTagRepository.exists(blogTag.getTag_name()) > 0;

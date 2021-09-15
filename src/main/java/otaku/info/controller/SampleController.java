@@ -1,14 +1,12 @@
 package otaku.info.controller;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -23,12 +21,13 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
+import otaku.info.utils.DateUtils;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import javax.imageio.ImageIO;
 
 /**
  * 楽天での商品検索指示〜Twitterポスト指示まで。
@@ -89,6 +88,9 @@ public class SampleController {
     @Autowired
     private ItemUtils itemUtils;
 
+    @Autowired
+    private DateUtils dateUtils;
+
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
     /**
      * URLでアクセスできるtmpのメソッドです。
@@ -99,28 +101,21 @@ public class SampleController {
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        Font fonts[] = ge.getAllFonts();
-        for(Font f : fonts){
-                System.out.println(f.getName());
-                BufferedImage bufferedImage = new BufferedImage(1200, 630, BufferedImage.TYPE_INT_RGB);
-                Graphics2D graphics2D = bufferedImage.createGraphics();
-
-                graphics2D.setColor(Color.WHITE);
-                graphics2D.fillRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
-                Font font = new Font(f.getName(), Font.PLAIN, 40);
-                graphics2D.setFont(font);
-                graphics2D.setColor(Color.PINK);
-                graphics2D.drawString(f.getName() + ": 日本語はこう", 200, 200);
-                try {
-                    ImageIO.write(bufferedImage, "png", new File("font_sample/" + f.getName() + ".png"));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        List<ItemMaster> itemMasterList = itemMasterService.findImageNull();
+        int i = 0;
+        for (ItemMaster itemMaster : itemMasterList) {
+            if (i < 2) {
+                List<String> teamNameList = new ArrayList<>();
+                List.of(itemMaster.getTeam_id().split(",")).stream().forEach(e -> teamNameList.add(teamService.getTeamName(Long.parseLong(e))));
+                String teamName = teamNameList.stream().distinct().collect(Collectors.joining(" "));
+                String path = imageController.createImage(itemMaster.getItem_m_id().toString() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
+                System.out.println(path);
+                ++i;
             }
-        imageController.createImage("1.png", "これがテスト日本語テキストです", "とても２行目のテストです");
+        }
         return "done";
     }
+
     /**
      * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
      *

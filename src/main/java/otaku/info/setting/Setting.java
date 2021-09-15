@@ -23,5 +23,6 @@ public class Setting {
     private String rakutenApiDefParam;
     private String blogPw;
     private String blogNoImage;
+    private String generatedImage;
 
 }

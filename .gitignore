@@ -34,3 +34,5 @@ build/
 
 ### CHIARA ###
 /scp_prd/
+/font_sample
+/src/main/resources/images

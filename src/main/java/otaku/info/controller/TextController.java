@@ -319,7 +319,7 @@ public class TextController {
                 h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
             } else {
                 // メンバー名ない場合はこちら
-                h2 = String.join("", publicationDate, teamNameUnited, itemMaster.getTitle());
+                h2 = String.join(" ", publicationDate, teamNameUnited, itemMaster.getTitle());
             }
 
             // htmlタグ付与

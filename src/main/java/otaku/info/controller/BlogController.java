@@ -16,10 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.BlogTagService;
-import otaku.info.searvice.ItemMasterService;
-import otaku.info.searvice.ItemService;
-import otaku.info.searvice.ProgramService;
+import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 
@@ -27,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -44,6 +42,9 @@ public class BlogController {
     TextController textController;
 
     @Autowired
+    ImageController imageController;
+
+    @Autowired
     ItemService itemService;
 
     @Autowired
@@ -54,6 +55,9 @@ public class BlogController {
 
     @Autowired
     BlogTagService blogTagService;
+
+    @Autowired
+    TeamService teamService;
 
     @Autowired
     ItemUtils itemUtils;
@@ -72,7 +76,7 @@ public class BlogController {
      * ・明日以降1週間の商品
      * 上記商品で画面を書き換える。
      */
-    public String updateReleaseItems(){
+    public String updateReleaseItems() {
 
         // 商品を集めるため今日の日付を取得
         Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
@@ -118,12 +122,8 @@ public class BlogController {
     private HttpHeaders generalHeaderSet(HttpHeaders headers) {
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        String auth = new String(
-            Base64.getEncoder().encode(
-                    setting.getBlogPw().getBytes()
-            )
-        );
-        headers.add("Authorization","Basic " +  auth);
+        String auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+        headers.add("Authorization", "Basic " + auth);
         return headers;
     }
 
@@ -145,9 +145,9 @@ public class BlogController {
             if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
                 return "";
             }
-            try{
+            try {
                 Thread.sleep(5000);
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             return responseEntity.getBody();
@@ -206,18 +206,41 @@ public class BlogController {
                     // 画像を登録する
                     boolean hasImage = itemList.stream().anyMatch(e -> e.getImage1() != null);
                     if (itemMaster.getImage1() != null || hasImage) {
+
+                        // TODO:itemMasterがnullの場合、itemの画像を設定してあげる
+
+                        // itemMasterの画像を設定してあげる
                         if (itemMaster.getImage1() != null) {
                             List<ItemMaster> itemMasterList = new ArrayList<>();
                             itemMasterList.add(itemMaster);
-                            loadMedia(itemMasterList);
+                            loadMedia(itemMasterList, false);
                         }
+                    } else {
+                        // 画像のないitemMaster & itemの場合、画像生成してアイキャッチを設定してあげる（発売日\n[チーム名1 チーム名2 チーム名3]）
+                        // 楽天APIから取得してきた商品画像との見分けは、image1,2,3のパスがhttp://rakutenではなくローカルであることで判別可能
+
+                        // チーム名を文字列に
+                        List<String> teamNameList = new ArrayList<>();
+                        List.of(itemMaster.getTeam_id().split(",")).stream().forEach(e -> teamNameList.add(teamService.getTeamName(Long.parseLong(e))));
+                        String teamName = teamNameList.stream().distinct().collect(Collectors.joining(" "));
+                        // 画像生成
+                        String path = imageController.createImage(itemMaster.getItem_m_id().toString() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
+
+                        // itemMasterにパスを設定
+                        itemMaster.setImage1(path);
+                        itemMasterService.save(itemMaster);
+
+                        // 画像投稿&itemMasterに設定
+                        List<ItemMaster> itemMasterList = new ArrayList<>();
+                        itemMasterList.add(itemMaster);
+                        loadMedia(itemMasterList, false);
                     }
                     System.out.println("*** itemMaster saved");
                 }
             }
-            try{
+            try {
                 Thread.sleep(1000);
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -248,7 +271,7 @@ public class BlogController {
     }
 
     /**
-     * マスター商品を更新する。
+     * マスター商品のcontextを更新する。
      *
      * @param itemMaster
      * @param itemList
@@ -269,43 +292,23 @@ public class BlogController {
     }
 
     /**
-     * 商品のマスター商品IDを見つけてor新規作成して繋げ、ブログのマスタ商品投稿を更新する。
+     * ブログのマスタ商品投稿を更新する。
      *
-     * @param item
-     * itemMasterIdを返す
+     * @param itemMasterList itemMasterIdを返す
      */
-    public Long postOrUpdate(Item item) {
-        // 既存の商品マスターがあるか確認する
-        Long itemMasterId = itemUtils.judgeNewMaster(item);
-        ItemMaster itemMaster = null;
+    public void postOrUpdate(List<ItemMaster> itemMasterList) {
 
-        // 既存の商品マスターがなければ新規登録
-        if (itemMasterId.equals(0L)) {
-            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
-            for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
-                itemMaster = e.getKey();
-                itemMasterId = itemMaster.getItem_m_id();
+        for (ItemMaster itemMaster : itemMasterList) {
+            // ブログを投稿する
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            if (itemMaster.getWp_id() == null) {
+                // 新規投稿する
+                postMasterItem(itemMaster, itemList);
+            } else {
+                // 既存投稿を更新する(完全洗い替え)
+                updateMasterItem(itemMaster, itemList);
             }
-        } else {
-            // 既存の商品マスターがあれば商品を更新
-            item.setItem_m_id(itemMasterId);
-            itemService.saveItem(item);
-            itemMaster = itemMasterService.findById(itemMasterId);
-            itemMaster.absolveItem(item);
-            itemMasterService.save(itemMaster);
         }
-
-        // ブログを投稿する
-        Long blogId = 0L;
-        List<Item> itemList = itemService.findByMasterId(itemMasterId);
-        if (itemMaster.getWp_id() == null) {
-            // 新規投稿する
-            blogId = postMasterItem(itemMaster, itemList);
-        } else {
-            // 既存投稿を更新する(完全洗い替え)
-            blogId = updateMasterItem(itemMaster, itemList);
-        }
-        return blogId;
     }
 
     /**
@@ -321,16 +324,22 @@ public class BlogController {
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
 
         String imagePath = "";
-        try(InputStream in = new URL(imageUrl).openStream()){
-            imagePath = setting.getImageItem() + itemId + ".jpg";
-            Files.copy(in, Paths.get(imagePath));
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        // 楽天の画像の場合は取得しに行く
+        if (imageUrl.startsWith("http")) {
+            try (InputStream in = new URL(imageUrl).openStream()) {
+                imagePath = availablePath(imageUrl);
+                Files.copy(in, Paths.get(imagePath));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            imagePath = imageUrl;
         }
 
         response.setHeader("Cache-Control", "no-cache");
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        headers.add("content-disposition", "attachment; filename=" + itemId + ".jpg");
+        headers.add("content-disposition", "attachment; filename=" + itemId + ".png");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
@@ -339,7 +348,7 @@ public class BlogController {
 
         System.out.println("画像投稿します");
         System.out.println(imagePath);
-        System.out.println(imageUrl);
+
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
         String text = responseEntity.getBody();
         System.out.println("request result: " + text);
@@ -348,6 +357,26 @@ public class BlogController {
             return Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
         }
         return 0;
+    }
+
+    /**
+     * 使用できるパスを見つけ、返却します
+     * 楽天の画像で使用することを想定
+     *
+     * @param imagePath
+     * @return
+     */
+    private String availablePath(String imagePath) {
+        String newPath = setting.getImageItem() + imagePath + ".png";
+        Path path = Paths.get(newPath);
+        Integer count = 1;
+
+        while (Files.exists(path)) {
+            newPath = setting.getImageItem() + imagePath + "_" + count.toString() + ".png";
+            path = Paths.get(newPath);
+            ++count;
+        }
+        return newPath;
     }
 
     /**
@@ -412,47 +441,65 @@ public class BlogController {
     /**
      * 商品画像1をWordpressに登録します。
      *
-     * @param itemMasterList
+     * @param itemMasterList 登録対象
+     * @param wpChk WPへアイキャッチメディアの設定が既にあるかチェックを投げるかフラグ
      */
-    public void loadMedia(List<ItemMaster> itemMasterList) {
+    public void loadMedia(List<ItemMaster> itemMasterList, boolean wpChk) {
         for (ItemMaster itemMaster : itemMasterList) {
-            // すでに画像がブログ投稿にセットされてるか確認しないといけないのでリクエストを送信し既存のデータを取得する
-            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
 
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            String res = request(response, url, request, HttpMethod.GET);
+            Integer wpId = 0;
 
-            try {
-                JSONObject jo = new JSONObject(res);
-                Integer wpId = jo.getInt("featured_media");
-                System.out.println("アイキャッチ：" + wpId);
+            // wpChkフラグがtrueだったらWPへアイキャッチの設定があるか確認する
+            if (wpChk) {
+                // すでに画像がブログ投稿にセットされてるか確認しないといけないのでリクエストを送信し既存のデータを取得する
+                String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id() + "?_fields[]=id";
 
-                // featuredMediaが設定されてなかったら画像をポストする
-                if (wpId == 0) {
-                    String imageUrl = itemMaster.getImage1();
-                    if (!StringUtils.hasText(imageUrl)) {
-                        imageUrl = itemService.getImageUrlByItemMIdImage1NotNull(itemMaster.getItem_m_id());
-                    }
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+                JSONObject jsonObject = new JSONObject();
+                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+                String res = request(response, url, request, HttpMethod.GET);
 
-                    if (StringUtils.hasText(imageUrl)) {
-                        System.out.println("メディアポスト:" + itemMaster.getImage1());
-                        Integer uploadedImageWpId = requestMedia(response, (long) itemMaster.getWp_id(), imageUrl);
-
-                        System.out.println("ポスト完了");
-                        // なんかアップロードに失敗したら次のマスター商品に飛ばす
-                        if (uploadedImageWpId == null || uploadedImageWpId == 0) {
-                            continue;
-                        }
-
-                        // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
-                        setMedia(itemMaster.getWp_id(), uploadedImageWpId);
-                        // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
-                    }
+                try {
+                    // アイキャッチメディアのIDを取得する
+                    Integer mediaId = extractMedia(res);
+                    System.out.println("アイキャッチ：" + mediaId);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            }
+
+            // 画像をポストする(WPチェックでメディア設定がなかった場合||WPチェックなしで全て対象の場合)
+            if (!wpChk || wpId == 0) {
+                String imageUrl = itemMaster.getImage1();
+                if (!StringUtils.hasText(imageUrl)) {
+                    imageUrl = itemService.getImageUrlByItemMIdImage1NotNull(itemMaster.getItem_m_id());
+                }
+
+                // itemにも画像がなかったら生成する
+                if (!StringUtils.hasText(imageUrl)) {
+                    List<String> teamNameList = new ArrayList<>();
+                    List.of(itemMaster.getTeam_id().split(",")).stream().forEach(e -> teamNameList.add(teamService.getTeamName(Long.parseLong(e))));
+                    String teamName = teamNameList.stream().distinct().collect(Collectors.joining(" "));
+                    imageUrl = imageController.createImage(itemMaster.getItem_m_id().toString() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
+                    itemMaster.setImage1(imageUrl);
+                    itemMasterService.save(itemMaster);
+                }
+
+                // 画像が用意できたら投稿していく
+                if (StringUtils.hasText(imageUrl)) {
+                    System.out.println("メディアポスト:" + imageUrl);
+                    Integer uploadedImageWpId = requestMedia(response, (long) itemMaster.getWp_id(), imageUrl);
+
+                    System.out.println("ポスト完了");
+                    // なんかアップロードに失敗したら次のマスター商品に飛ばす
+                    if (uploadedImageWpId == null || uploadedImageWpId == 0) {
+                        continue;
+                    }
+
+                    // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
+                    setMedia(itemMaster.getWp_id(), uploadedImageWpId);
+                    // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
+                }
             }
         }
     }
@@ -502,7 +549,7 @@ public class BlogController {
      */
     public void getBlogTagNotSavedOnInfoDb() {
         // WPにあるタグを取得する
-        String url = setting.getBlogApiUrl() + "tags/";
+        String url = setting.getBlogApiUrl() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
@@ -772,5 +819,44 @@ public class BlogController {
         jsonObject.put("content", text);
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         request(response, url, request, HttpMethod.POST);
+    }
+
+    /**
+     * アイキャッチメディアの設定がないWPIDを取得します
+     *
+     * @return
+     */
+    public List<Integer> findNoEyeCatchPosts() {
+        List<Integer> resultList = new ArrayList<>();
+
+        // リクエスト送信
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+        int n = 1;
+        boolean nextFlg = true;
+        String url = setting.getBlogApiUrl() + "posts?featured_media=0&_fields[]=id&per_page=40&page=" + n;
+
+        while (nextFlg) {
+            String res = request(response, url, request, HttpMethod.GET);
+
+            // レスポンスを成形
+            try {
+                JSONArray ja = new JSONArray(res);
+
+                if (ja.length() > 0) {
+                    for (int i=0; i < ja.length(); i++) {
+                        resultList.add(ja.getJSONObject(i).getInt("id"));
+                    }
+                    ++n;
+                }
+            } catch (Exception e) {
+                nextFlg = false;
+                e.printStackTrace();
+            }
+        }
+
+        return resultList;
     }
 }

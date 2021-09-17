@@ -100,4 +100,49 @@ public class Item {
         itemMaster.setWp_id(null);
         return itemMaster;
     }
+
+    /**
+     * Itemに空のImageカラムがあるか確認し、一番初めの空のカラムに引数の画像パスを設定します。
+     * まだ空のカラムが残っている場合はTを、fullで登録できなかった/登録してfullになった場合はFを返します。
+     * また、引数が空の場合はFalseを返すため、item/itemMaster間で使うときはimage1->3の順で使うべし。
+     *
+     * @param imageUrl
+     */
+    public boolean fillBlankImage(String imageUrl) {
+
+        // もし引数が空だったらfalseを返す
+        if (imageUrl == null || imageUrl.equals("")) {
+            return false;
+        }
+
+        // image1が空だったら入れる
+        if (this.getImage1() == null) {
+            this.setImage1(imageUrl);
+            return true;
+        } else if (this.getImage1().equals(imageUrl)) {
+            // image1と引数が同じ値だったら、image2/3に入れてはいけないのでimage2/3が空かどうかでreturn値を決める
+            if (this.getImage2() == null || this.getImage3() == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (this.getImage2() == null) {
+            // image2が空だったら入れる
+            this.setImage2(imageUrl);
+            return true;
+        } else if (this.getImage2().equals(imageUrl)) {
+            // image2と引数が同じ値だったら、image3に入れてはいけないのでimage3が空かどうかでreturn値を決める
+            if (this.getImage3() == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (this.getImage3() == null) {
+            // image3が空だったら入れる
+            this.setImage3(imageUrl);
+            return false;
+        } else {
+            return false;
+        }
+    }
 }

@@ -50,8 +50,19 @@ public class TextController {
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
     private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
+    private SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
     private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
     private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+
+    /**
+     * DateをStringにして返却します
+     *
+     * @param date
+     * @return
+     */
+    public String dateToString(Date date) {
+        return sdf3.format(date);
+    }
 
     /**
      * Twitterポスト用のメッセージを作成します。

@@ -74,4 +74,8 @@ public class ItemMasterService {
     public List<ItemMaster> findByPublicationYear(Integer year) {
         return itemMasterRepository.findByPublicationYear(year);
     }
+
+    public List<ItemMaster> findByWpIdList(List<Integer> wpIdList) {
+        return itemMasterRepository.findByWpIdList(wpIdList);
+    }
 }

@@ -30,4 +30,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("select t from item_master t where YEAR(publication_date) = ?1")
     List<ItemMaster> findByPublicationYear(Integer year);
+
+    @Query("select t from item_master t where wp_id in ?1")
+    List<ItemMaster> findByWpIdList(List<Integer> wpIdList);
 }

@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
@@ -32,6 +34,9 @@ public class RakutenController {
 
     @Autowired
     Setting setting;
+
+    @Autowired
+    ItemMasterService itemMasterService;
 
     private final ItemService itemService;
 
@@ -233,11 +238,26 @@ public class RakutenController {
             JSONObject jsonObject = request(parameter);
             if (jsonObject.has("Items")) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
+
+                // 画像がある場合、設定に進む
                 if (itemArray.get(0) != null) {
                     for (int i=0; i<itemArray.length();i++) {
                         JSONArray imageArray = itemArray.getJSONObject(i).getJSONArray("mediumImageUrls");
                         Item updatedItem = setImages(item, imageArray);
                         itemService.saveItem(updatedItem);
+
+                        // itemMasterにも設定する
+                        ItemMaster itemMaster = itemMasterService.findById(item.getItem_m_id());
+                        boolean hasNext1 = itemMaster.fillBlankImage(item.getImage1());
+                        if (hasNext1) {
+                            boolean hasNext2 = itemMaster.fillBlankImage(item.getImage2());
+                            if (hasNext2) {
+                                itemMaster.fillBlankImage(item.getImage3());
+                            }
+
+                            // itemMasterに画像の設定があった場合はitemMasterも更新する
+                            itemMasterService.save(itemMaster);
+                        }
                     }
                 }
             }
@@ -253,14 +273,12 @@ public class RakutenController {
      */
     private Item setImages(Item item, JSONArray imageArray) {
             if (imageArray.length() > 0) {
-                item.setImage1(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
-
-                if (imageArray.length() > 1) {
-                    item.setImage2(imageArray.get(1).toString().replaceAll("^\"|\"$", ""));
-                }
-
-                if (imageArray.length() > 2) {
-                    item.setImage3(imageArray.get(2).toString().replaceAll("^\"|\"$", ""));
+                boolean hasNext1 = item.fillBlankImage(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
+                if (imageArray.length() > 1 && hasNext1) {
+                    boolean hasNext2 = item.fillBlankImage(imageArray.get(1).toString().replaceAll("^\"|\"$", ""));
+                    if (imageArray.length() > 2 && hasNext2) {
+                        item.fillBlankImage(imageArray.get(2).toString().replaceAll("^\"|\"$", ""));
+                    }
                 }
             }
         return item;

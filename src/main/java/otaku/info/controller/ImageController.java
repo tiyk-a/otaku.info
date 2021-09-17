@@ -38,18 +38,18 @@ public class ImageController {
 
         Font font = null;
         try {
-            font = new Font("YuppyTC-Regular", Font.BOLD, 50);
+            font = new Font("YuppyTC-Regular", Font.BOLD, 100);
         } catch (Exception e) {
-            font = new Font("Arial-Black", Font.BOLD, 60);
+            font = new Font("Arial-Black", Font.BOLD, 100);
         }
 
         graphics2D.setFont(font);
-        graphics2D.setColor(Color.PINK);
+        graphics2D.setColor(Color.RED);
 
         FontMetrics fm1 = graphics2D.getFontMetrics();
         Rectangle rectText1 = fm1.getStringBounds(text1, graphics2D).getBounds();
         int x1 = 1200/2 - rectText1.width/2;
-        int y1 = 630/2 - rectText1.height/2 - fm1.getMaxAscent();
+        int y1 = 630/2 - rectText1.height/2 - fm1.getMaxAscent()/30;
 
         FontMetrics fm2 = graphics2D.getFontMetrics();
         Rectangle rectText2 = fm2.getStringBounds(text2, graphics2D).getBounds();

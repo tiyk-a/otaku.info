@@ -206,13 +206,13 @@ public class SampleController {
                 break;
             case 13: // tmpメソッド
                 // itemMasterの今年以降発売の商品を全て発売日順にwpにポストする。各商品、itemMasterにwp_idを忘れず入れてあげる
-                blogController.postAllItemMaster();
+//                blogController.postAllItemMaster();
                 break;
             case 14:
                 // 商品の情報を投稿する
                 System.out.println("---Tmpブログ新商品投稿メソッドSTART---");
-                List<Item> itemList = itemService.findNotDeleted();
-                blogController.tmpItemPost(itemList);
+//                List<Item> itemList = itemService.findNotDeleted();
+//                blogController.tmpItemPost(itemList);
                 System.out.println("---Tmpブログ新商品投稿メソッドEND---");
                 break;
         }
@@ -363,16 +363,33 @@ public class SampleController {
             savedItemList = rakutenController.saveItems(newItemList);
         }
 
-        // 保存した商品がある場合、Tweetする
-        if (savedItemList.size() > 0) {
-            System.out.println("保存したItemをTweetします");
-            for (Item item: savedItemList) {
-                if (item.getPublication_date() != null && item.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    System.out.println(item.getTitle());
-                    String[] teamIdArr = item.getTeam_id().split(",");
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), item.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
+        // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
+        Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
+
+        // ブログ投稿（新規/更新）を行う
+        blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()));
+
+        // マップから、新しいitemMasterだけ引き出す。5分以内に登録されたitemMasterが対象、とすればいいだろうか
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.add(Calendar.MINUTE, -5);
+        List<ItemMaster> newItemMasterList = new ArrayList<>();
+        itemMasterListMap.entrySet().stream().filter(e -> e.getKey().getCreated_at().after(calendar.getTime())).forEach(e -> newItemMasterList.add(e.getKey()));
+
+        // 保存した商品が新しい商品マスタの場合、Tweetする
+        if (newItemMasterList.size() > 0) {
+            System.out.println("保存したItemMasterをTweetします");
+            for (ItemMaster itemMaster: newItemMasterList) {
+
+                // 楽天リンクなどで必要なためリストの一番目のitemを取得
+                Item item = itemMasterListMap.get(itemMaster).get(0);
+
+                if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                    System.out.println(itemMaster.getTitle());
+                    String[] teamIdArr = itemMaster.getTeam_id().split(",");
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
                     String result;
-                    String memberIdStr = item.getMember_id();
+                    String memberIdStr = itemMaster.getMember_id();
                     if (memberIdStr != null && !memberIdStr.equals("")) {
                         List<Long> memberIdList = new ArrayList<>();
                         List.of(memberIdStr.split(",")).forEach(e -> memberIdList.add((long) Integer.parseInt(e)));
@@ -386,13 +403,9 @@ public class SampleController {
                     } else {
                         result = textController.twitter(twiDto);
                     }
-                    if (item.getTeam_id() != null) {
-                        // 投稿
+                    if (itemMaster.getTeam_id() != null) {
+                        // Twitter投稿
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
-                        // ブログも投稿
-                        Long itemMasterId = blogController.postOrUpdate(item);
-                        item.setItem_m_id(itemMasterId);
-                        itemService.saveItem(item);
                     } else {
                         System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
                         break;

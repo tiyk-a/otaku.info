@@ -100,28 +100,19 @@ public class ItemMaster {
                     }
                 }
             }
-            this.setTeam_id(master.stream().collect(Collectors.joining(",")));
+            this.setTeam_id(String.join(",", master));
         }
 
-        if (this.getImage1() == null && item.getImage1() != null) {
-            this.setImage1(item.getImage1());
-        }
+        // 画像が空だったら追加する
+        if (item.getImage1() != null) {
+            boolean hasNext1 = this.fillBlankImage(item.getImage1());
 
-        if (StringUtils.hasText(this.getImage1()) && this.getImage2() == null && item.getImage1() != null) {
-            if (StringUtils.hasText(item.getImage1()) && !this.getImage1().equals(item.getImage1())) {
-                this.setImage2(item.getImage1());
-            } else if (StringUtils.hasText(item.getImage2()) && !this.getImage1().equals(item.getImage2())) {
-                this.setImage2(item.getImage2());
-            }
-        }
+            if (item.getImage2() != null && hasNext1) {
+                boolean hasNext2 = this.fillBlankImage(item.getImage2());
 
-        if (StringUtils.hasText(this.getImage1()) && StringUtils.hasText(this.getImage2()) && this.getImage3() == null && item.getImage1() != null) {
-            if (!this.getImage1().equals(item.getImage1()) && !this.getImage2().equals(item.getImage1())) {
-                this.setImage3(item.getImage1());
-            } else if (!this.getImage1().equals(item.getImage2()) && !this.getImage2().equals(item.getImage2())) {
-                this.setImage3(item.getImage2());
-            } else if (!this.getImage1().equals(item.getImage3()) && !this.getImage2().equals(item.getImage3())) {
-                this.setImage3(item.getImage3());
+                if (item.getImage3() != null && hasNext2) {
+                    this.fillBlankImage(item.getImage3());
+                }
             }
         }
 
@@ -160,4 +151,48 @@ public class ItemMaster {
         return teamArr;
     }
 
+    /**
+     * 空のImageカラムがあるか確認し、一番初めの空のカラムに引数の画像パスを設定します。
+     * まだ空のカラムが残っている場合はTを、fullで登録できなかった/登録してfullになった場合はFを返します。
+     * また、引数が空の場合はFalseを返すため、item/itemMaster間で使うときはimage1->3の順で使うべし。
+     *
+     * @param imageUrl
+     */
+    public boolean fillBlankImage(String imageUrl) {
+
+        // もし引数が空だったらfalseを返す
+        if (imageUrl == null || imageUrl.equals("")) {
+            return false;
+        }
+
+        // image1が空だったら入れる
+        if (this.getImage1() == null) {
+            this.setImage1(imageUrl);
+            return true;
+        } else if (this.getImage1().equals(imageUrl)) {
+            // image1と引数が同じ値だったら、image2/3に入れてはいけないのでimage2/3が空かどうかでreturn値を決める
+            if (this.getImage2() == null || this.getImage3() == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (this.getImage2() == null) {
+            // image2が空だったら入れる
+            this.setImage2(imageUrl);
+            return true;
+        } else if (this.getImage2().equals(imageUrl)) {
+            // image2と引数が同じ値だったら、image3に入れてはいけないのでimage3が空かどうかでreturn値を決める
+            if (this.getImage3() == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (this.getImage3() == null) {
+            // image3が空だったら入れる
+            this.setImage3(imageUrl);
+            return false;
+        } else {
+            return false;
+        }
+    }
 }

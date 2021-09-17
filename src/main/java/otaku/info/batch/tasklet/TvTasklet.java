@@ -83,8 +83,12 @@ public class TvTasklet implements Tasklet {
         Map<String, String[]> tvMap = new HashMap<>();
         for (Element e : elements) {
             // 異なるチャンネルで同じ番組の放送があるため、「詳細」がkey、「タイトル」はvalue[0](被る可能性がある)。value[1]には詳細画面へのURL
-            String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
-            tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
+            if (e != null && e.getElementsByTag("h2") != null && e.getElementsByTag("a") != null
+                    && e.getElementsByTag("a").first() != null && e.getElementsByTag("a").first().attr("abs:href") != null
+                    && e.getElementsByClass("utileListProperty") != null) {
+                String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
+                tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
+            }
         }
         tvController.tvKingdomSave(tvMap, teamName);
 

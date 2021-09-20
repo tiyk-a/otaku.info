@@ -31,8 +31,8 @@ import java.util.*;
 @AllArgsConstructor
 public class LineController {
 
-    @Autowired
-    RestTemplate restTemplate;
+//    @Autowired
+//    RestTemplate restTemplate;
 
     @Autowired
     ItemService itemService;
@@ -65,6 +65,7 @@ public class LineController {
             Map<String, Object> map = new HashMap<>();
             map.put("text", msg);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+            RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
 

@@ -8,6 +8,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextListener;
+import otaku.info.error.RestTemplateResponseErrorHandler;
 
 @EnableBatchProcessing
 @SpringBootApplication
@@ -21,7 +22,7 @@ public class InfoApplication {
 	@Bean
 	public RestTemplate restTemplate() {
 		RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
-		return restTemplateBuilder.build();
+		return restTemplateBuilder.errorHandler(new RestTemplateResponseErrorHandler()).build();
 	}
 
 	@Bean

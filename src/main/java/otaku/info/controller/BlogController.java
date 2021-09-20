@@ -36,9 +36,6 @@ import java.util.stream.Collectors;
 public class BlogController {
 
     @Autowired
-    RestTemplate restTemplate;
-
-    @Autowired
     TextController textController;
 
     @Autowired
@@ -140,6 +137,7 @@ public class BlogController {
         response.setHeader("Cache-Control", "no-cache");
 
         try {
+            RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
 
             if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
@@ -349,6 +347,7 @@ public class BlogController {
         System.out.println("画像投稿します");
         System.out.println(imagePath);
 
+        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
         String text = responseEntity.getBody();
         System.out.println("request result: " + text);

@@ -77,9 +77,6 @@ public class SampleController {
     private ItemMasterService itemMasterService;
 
     @Autowired
-    RestTemplate restTemplate;
-
-    @Autowired
     Scheduler scheduler;
 
     @Autowired

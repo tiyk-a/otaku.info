@@ -45,7 +45,7 @@ public class RakutenController {
     /**
      * 楽天APIにリクエストを投げる
      *
-     * @param param
+     * @param param Additional params. Will be connected to degault params
      * @return
      */
     public JSONObject request(String param) {
@@ -53,7 +53,9 @@ public class RakutenController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String res = restTemplate.getForObject(setting.getRakutenApiUrl() + param, String.class);
+            String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
+            System.out.println("RAKUTEN SEARCH URL: " + finalUrl);
+            String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtilsSpring.hasText(res)) {
                 jsonObject = new JSONObject(res);
@@ -69,7 +71,7 @@ public class RakutenController {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : searchList) {
-            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
             JSONObject node = request(parameter);
             if (node != null) {
                 JSONArray items = node.getJSONArray("Items");
@@ -106,7 +108,7 @@ public class RakutenController {
         List<String> resultList = new ArrayList<>();
 
         for (String key : searchList) {
-            String parameter = setting.getRakutenApiDefParam() + "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
+            String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("Items")) {
@@ -129,7 +131,7 @@ public class RakutenController {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : itemCodeList) {
-            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("Items")) {
@@ -183,7 +185,7 @@ public class RakutenController {
         List<Item> updateList = new ArrayList<>();
 
         for (String key : searchList) {
-            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             try {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
@@ -234,7 +236,7 @@ public class RakutenController {
         List<Item> itemList = itemService.findByDelFlg(false);
 
         for (Item item : itemList) {
-            String parameter = setting.getRakutenApiDefParam() + "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             if (jsonObject.has("Items")) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");

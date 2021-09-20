@@ -5,6 +5,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.searvice.MemberService;
@@ -47,9 +48,6 @@ public class PythonController {
     @Autowired
     private Setting setting;
 
-    @Autowired
-    RestTemplate restTemplate;
-
     /**
      * Pythonにツイートするようにデータを送る
      *
@@ -60,27 +58,34 @@ public class PythonController {
      */
 //    public String post(Map<String, String> headers, String json) {
     public String post(Integer teamId, String text) throws JSONException {
-        System.out.println("これをTweetします " + text);
 
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        Map<String, Object> map = new HashMap<>();
-        map.put("title", text);
-        map.put("teamId", teamId);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-        ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
-
+        // Twitter投稿が終わった後にLINE通知するテキストを詰めていくリスト
         List<String> lineList = new ArrayList<>();
-        lineList.add(text + " ■teamId=" + teamId);
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            System.out.println("Request Successful: " + text);
-        } else {
-            System.out.println("Request Failed: " + text);
+
+        if (teamId != null && StringUtils.hasText(text)) {
+            System.out.println("これをTweetします: " + text);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            Map<String, Object> map = new HashMap<>();
+            map.put("title", text);
+            map.put("teamId", teamId);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+            ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
+
+            lineList.add(text + " ■teamId=" + teamId);
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                System.out.println("Request Successful: " + text);
+            } else {
+                System.out.println("Request Failed: " + text);
+            }
         }
+
         // LINEに投稿完了通知を送る
         lineController.postAll(lineList);
         return "done";

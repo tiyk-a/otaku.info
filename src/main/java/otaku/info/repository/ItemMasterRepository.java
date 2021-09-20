@@ -33,4 +33,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query("select t from item_master t where wp_id in ?1")
     List<ItemMaster> findByWpIdList(List<Integer> wpIdList);
+
+    @Query("select t from item_master t where wp_id in ?1 and url is null")
+    List<ItemMaster> findByWpIdUrlNullList(List<Integer> wpIdList);
 }

@@ -314,9 +314,9 @@ public class BlogController {
      *
      * @param response
      * @param imageUrl
-     * @return 画像ID
+     * @return /<WP画像ID, WP画像パス/>
      */
-    public Integer requestMedia(HttpServletResponse response, Long itemId, String imageUrl) {
+    public Map<Integer, String> requestMedia(HttpServletResponse response, Long itemId, String imageUrl) {
         String finalUrl = setting.getBlogApiUrl() + "media";
 
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
@@ -353,9 +353,9 @@ public class BlogController {
         System.out.println("request result: " + text);
         JSONObject jsonObject = new JSONObject(text);
         if (jsonObject.get("id") != null) {
-            return Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
+            return Collections.singletonMap(jsonObject.getInt("id"), jsonObject.get("source_url").toString().replaceAll("^\"|\\|\"$", ""));
         }
-        return 0;
+        return Collections.singletonMap(0, "");
     }
 
     /**
@@ -487,17 +487,29 @@ public class BlogController {
                 // 画像が用意できたら投稿していく
                 if (StringUtils.hasText(imageUrl)) {
                     System.out.println("メディアポスト:" + imageUrl);
-                    Integer uploadedImageWpId = requestMedia(response, (long) itemMaster.getWp_id(), imageUrl);
+                    Map<Integer, String> wpMediaIdUrlMap = requestMedia(response, (long) itemMaster.getWp_id(), imageUrl);
+                    Integer wpMediaId = null;
+                    String mediaUrl = null;
+
+                    if (!wpMediaIdUrlMap.isEmpty()) {
+                        Map.Entry<Integer, String> entry = wpMediaIdUrlMap.entrySet().stream().findFirst().get();
+                        wpMediaId = entry.getKey();
+                        mediaUrl = entry.getValue();
+                    }
 
                     System.out.println("ポスト完了");
                     // なんかアップロードに失敗したら次のマスター商品に飛ばす
-                    if (uploadedImageWpId == null || uploadedImageWpId == 0) {
+                    if (wpMediaId == null || wpMediaId == 0) {
                         continue;
                     }
 
                     // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
-                    setMedia(itemMaster.getWp_id(), uploadedImageWpId);
-                    // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
+                    setMedia(itemMaster.getWp_id(), wpMediaId);
+
+                    // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね→画像パスで暫定対応
+                    // WPのアイキャッチ画像に登録した画像のパスを設定する
+                    itemMaster.setUrl(mediaUrl);
+                    itemMasterService.save(itemMaster);
                 }
             }
         }
@@ -835,9 +847,9 @@ public class BlogController {
 
         int n = 1;
         boolean nextFlg = true;
-        String url = setting.getBlogApiUrl() + "posts?featured_media=0&_fields[]=id&per_page=40&page=" + n;
 
         while (nextFlg) {
+            String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=id&_fields[]=featured_media&per_page=100&page=" + n;
             String res = request(response, url, request, HttpMethod.GET);
 
             // レスポンスを成形
@@ -846,7 +858,9 @@ public class BlogController {
 
                 if (ja.length() > 0) {
                     for (int i=0; i < ja.length(); i++) {
-                        resultList.add(ja.getJSONObject(i).getInt("id"));
+                        if (ja.getJSONObject(i).getInt("featured_media") != 0) {
+                            resultList.add(ja.getJSONObject(i).getInt("id"));
+                        }
                     }
                     ++n;
                 }
@@ -857,5 +871,94 @@ public class BlogController {
         }
 
         return resultList;
+    }
+
+    public Map<Integer, Integer> getPublishedWpIdFeaturedMediaList() {
+        Map<Integer, Integer> resultMap = new HashMap<>();
+
+        // リクエスト送信
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+        int n = 1;
+        boolean nextFlg = true;
+
+        while (nextFlg) {
+            String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
+            String res = request(response, url, request, HttpMethod.GET);
+
+            // レスポンスを成形
+            try {
+                JSONArray ja = new JSONArray(res);
+
+                if (ja.length() > 0) {
+                    for (int i=0; i < ja.length(); i++) {
+                        resultMap.put(ja.getJSONObject(i).getInt("id"), ja.getJSONObject(i).getInt("featured_media"));
+                    }
+                    ++n;
+                }
+            } catch (Exception e) {
+                nextFlg = false;
+                e.printStackTrace();
+            }
+        }
+        return resultMap;
+    }
+
+    public Map<Integer, String> getMediaUrlByMediaId(List<Integer> mediaIdList) {
+        Map<Integer, String> resultMap = new HashMap<>();
+
+        int start = 0;
+        int end = mediaIdList.size() -1;
+        boolean next100Flg = true;
+
+        if (end > 99) {
+            end = 99;
+        }
+
+        List<String> mediaIrListStrList = new ArrayList<>();
+
+        while (next100Flg) {
+            String tmp = mediaIdList.subList(start, end).stream().map(Object::toString).collect(Collectors.joining(","));
+            mediaIrListStrList.add(tmp);
+            if (mediaIdList.size() > end) {
+                start += 100;
+                end += 100;
+
+                if (mediaIdList.size() -1 < end) {
+                    end = mediaIdList.size() -1;
+                }
+            } else {
+                next100Flg = false;
+            }
+        }
+
+        for (String mediaIdStr : mediaIrListStrList) {
+            String res = getMediaUrl(mediaIdStr);
+            // レスポンスを成形
+            try {
+                JSONArray ja = new JSONArray(res);
+
+                if (ja.length() > 0) {
+                    for (int i=0; i < ja.length(); i++) {
+                        resultMap.put(ja.getJSONObject(i).getInt("id"), ja.getJSONObject(i).getString("source_url").replaceAll("^\"|\"$", ""));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return resultMap;
+    }
+
+    private String getMediaUrl(String mediaIdList) {
+        String url = setting.getBlogApiUrl() + "media?slug=" + mediaIdList + "&_fields[]=id&_fields[]=source_url&per_page=100";
+
+        // リクエスト送信
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        return request(response, url, request, HttpMethod.GET);
     }
 }

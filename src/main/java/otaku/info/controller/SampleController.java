@@ -12,12 +12,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
@@ -92,24 +90,25 @@ public class SampleController {
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
+     * Currently: アイキャッチ画像の画像パスをDBに取り込む→楽天に飛ばさず画像を表示できるようになる
      *
      * @return
-     * @throws ChangeSetPersister.NotFoundException
      */
     @GetMapping("/tmpMethod")
     public String tempMethod() {
-        List<ItemMaster> itemMasterList = itemMasterService.findImageNull();
-        int i = 0;
-        for (ItemMaster itemMaster : itemMasterList) {
-            if (i < 2) {
-                List<String> teamNameList = new ArrayList<>();
-                List.of(itemMaster.getTeam_id().split(",")).stream().forEach(e -> teamNameList.add(teamService.getTeamName(Long.parseLong(e))));
-                String teamName = teamNameList.stream().distinct().collect(Collectors.joining(" "));
-                String path = imageController.createImage(itemMaster.getItem_m_id().toString() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
-                System.out.println(path);
-                ++i;
-            }
-        }
+
+        // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
+        Map<Integer, Integer> wpIdFeaturedMediaMap = blogController.getPublishedWpIdFeaturedMediaList();
+        List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        // featured_media IDからメディアURLを取得する
+        Map<Integer, String> mediaIdMediaUrlMap = blogController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
+
+        // 画像パス(itemMaster.url)がnullのitemMasterを集める
+        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
+
+        itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
+        itemMasterService.saveAll(itemMasterList);
         return "done";
     }
 

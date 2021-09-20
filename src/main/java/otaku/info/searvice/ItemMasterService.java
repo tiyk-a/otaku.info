@@ -8,10 +8,7 @@ import otaku.info.entity.ItemMaster;
 import otaku.info.repository.ItemMasterRepository;
 
 import javax.transaction.Transactional;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -77,5 +74,9 @@ public class ItemMasterService {
 
     public List<ItemMaster> findByWpIdList(List<Integer> wpIdList) {
         return itemMasterRepository.findByWpIdList(wpIdList);
+    }
+
+    public List<ItemMaster> findByWpIdUrlNullList(List<Integer> wpIdList) {
+        return itemMasterRepository.findByWpIdUrlNullList(wpIdList);
     }
 }

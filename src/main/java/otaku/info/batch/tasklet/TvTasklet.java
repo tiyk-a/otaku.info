@@ -42,6 +42,11 @@ public class TvTasklet implements Tasklet {
         for (String artist : teamNameList) {
             boolean nextFlg = true;
             String urlWithParam = setting.getTvKingdom();
+
+            if (artist.equals("ARASHI")) {
+                artist = "嵐";
+            }
+            
             String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
 
             urlWithParam += param;

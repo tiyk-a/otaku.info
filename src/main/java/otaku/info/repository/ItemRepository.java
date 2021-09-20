@@ -78,6 +78,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where item_m_id = ?1")
     List<Item> gatherItems(Long itemMId);
 
-    @Query(nativeQuery = true, value = "select image1 from Item where item_m_id = ?1 and image1 is not null limit 1")
+    @Query(nativeQuery = true, value = "select image1 from item where item_m_id = ?1 and image1 is not null limit 1")
     String getImageUrlByItemMIdImage1NotNull(Long itemMId);
 }

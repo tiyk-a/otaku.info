@@ -35,13 +35,20 @@ public class BlogMediaTasklet implements Tasklet {
 
         // wpIdからitemMasterを取得。2021年以降発売の商品だけ、画像設定対象にする
         Date date = java.sql.Date.valueOf("2020-12-31");
-        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdList(wpIdList).stream().filter(e -> e.getPublication_date().after(date)).collect(Collectors.toList());
-        System.out.println("itemMasterList:" + itemMasterList.size());
 
-        // 対象商品マスタが存在すれば処理実行
-        if (itemMasterList.size() > 0) {
-            blogController.loadMedia(itemMasterList, false);
+        if (wpIdList.size() > 0) {
+            List<ItemMaster> itemMasterList = itemMasterService.findByWpIdList(wpIdList);
+            System.out.println("itemMasterList:" + itemMasterList.size());
+            List<ItemMaster> tmpList = itemMasterList.stream().filter(e -> e.getPublication_date().after(date)).collect(Collectors.toList());
+            itemMasterList.forEach(e -> System.out.println(e.getItem_m_id() + " " + e.getPublication_date()));
+            System.out.println("date: " + date + " tmpList:" + tmpList.size());
+
+            // 対象商品マスタが存在すれば処理実行
+            if (itemMasterList.size() > 0) {
+                blogController.loadMedia(tmpList, false);
+            }
         }
+
         System.out.println("--- Blog画像設定 END ---");
         return RepeatStatus.FINISHED;
     }

@@ -423,30 +423,29 @@ public class TextController {
 
     /**
      * TV番組固定ページのテキストを作成。
-     * 1日分のみ作成
+     * 1日分のみ作成、同じ日のprogramしか渡ってこないはず
      *
      * @param programList
      * @return
      */
     public String tvPageText(List<Program> programList) {
         String result = "";
-        programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
-        List<Date> dateList = new ArrayList<>();
-        for (Program program : programList) {
+        List<Program> sortedProgramList = programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
+
+        Date date = DateUtils.localDateTimeToDate(programList.get(0).getOn_air_date());
+        result = "<h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+
+        for (Program program : sortedProgramList) {
             String tmp = "";
-            Date date = dateUtils.localDateTimeToDate(program.getOn_air_date());
-            if (!dateList.contains(date)) {
-                dateList.add(date);
-                // h2 日付を追加
-                tmp = "<h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
-            }
 
             List<Long> teamIdList = List.of(program.getTeam_id().split(","))
                     .stream().map(Integer::parseInt).collect(Collectors.toList())
                     .stream().map(Integer::longValue).collect(Collectors.toList());
             List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
-            String teamName = teamNameList.stream().collect(Collectors.joining("/"));
-            tmp = tmp + "<h6>" + dtf1.format(program.getOn_air_date()) + "　" + teamName + "：" + program.getTitle() + "</h6>";
+            String teamName = String.join("/", teamNameList);
+            String stationName = stationService.getStationName(program.getStation_id());
+            String description = StringUtils.hasText(program.getDescription()) ? program.getDescription() : "";
+            tmp = tmp + "<h6>" + dtf1.format(program.getOn_air_date()) + "　" + teamName + "：" + program.getTitle() + "</h6>" + "<br /><p>放送局：" + stationName + "</p><br /><p>番組概要：" + description + "</p>";
             result = String.join("\n", result, tmp);
         }
         return result;

@@ -850,6 +850,7 @@ public class BlogController {
 
         while (nextFlg) {
             String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=id&_fields[]=featured_media&per_page=100&page=" + n;
+            System.out.println(url);
             String res = request(response, url, request, HttpMethod.GET);
 
             // レスポンスを成形

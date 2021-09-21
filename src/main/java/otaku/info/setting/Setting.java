@@ -24,5 +24,7 @@ public class Setting {
     private String blogPw;
     private String blogNoImage;
     private String generatedImage;
+    private String blogCardPre;
+    private String blogCardPos;
 
 }

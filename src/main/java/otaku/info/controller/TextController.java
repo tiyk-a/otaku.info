@@ -338,13 +338,11 @@ public class TextController {
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
             for (Item item : itemList) {
-                // 楽天アフィリエイト、ブログカードうまくはまらないので手で作る
-                StringBuilder linkCard = new StringBuilder("<a href='" + item.getUrl() + "'><div class='linkCardDiv'><img src=");
-                linkCard.append(StringUtils.hasText(item.getImage1()) ? item.getImage1() : setting.getBlogNoImage());
-                linkCard.append(" class='linkCardUrl' /><p class='linkCardTitle'>").append(item.getTitle()).append("</p></div></a>");
+                // ブログカードで楽天リンクを表示
+                String linkCard = setting.getBlogCardPre() + item.getUrl() + setting.getBlogCardPos();
 
                 // 商品テキストをまとめ、楽天テキストの末尾に加える
-                rakutenLink = rakutenLink + "\n" + linkCard.toString();
+                rakutenLink = rakutenLink + "\n" + linkCard;
             }
 
             String text = String.join("\n", h2, image, description, price, publicationDateStr, rakutenLink);

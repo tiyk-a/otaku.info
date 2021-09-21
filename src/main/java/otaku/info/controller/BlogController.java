@@ -68,7 +68,7 @@ public class BlogController {
     HttpServletResponse response;
 
     public void tmpMethod() {
-        String result = "[toc depth='5']";
+        String result = setting.getBlogCardPre() + "toc depth='5'" + setting.getBlogCardPos();
         result = result + "<br /><h2>test from java</h2>\n<h2>h22</h2><h2>h23</h2><h3>h31</h3><h6>h6</h6>";
 
         System.out.println(result);

@@ -429,11 +429,11 @@ public class TextController {
      * @return
      */
     public String tvPageText(List<Program> programList) {
-        String result = "";
+        String result = "[toc depth='5']";
         List<Program> sortedProgramList = programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
 
         Date date = DateUtils.localDateTimeToDate(programList.get(0).getOn_air_date());
-        result = "<h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+        result = result + "<br /><h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
 
         for (Program program : sortedProgramList) {
             String tmp = "";

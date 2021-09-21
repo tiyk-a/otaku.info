@@ -67,6 +67,25 @@ public class BlogController {
 
     HttpServletResponse response;
 
+    public void tmpMethod() {
+        String result = "[toc depth='5']";
+        result = result + "<br /><h2>test from java</h2>\n<h2>h22</h2><h2>h23</h2><h3>h31</h3><h6>h6</h6>";
+
+        System.out.println(result);
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("title", "java test");
+        jsonObject.put("author", 1);
+        jsonObject.put("status", "publish");
+        jsonObject.put("content", result);
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+        String url = setting.getBlogApiUrl() + "posts/";
+        String res = request(response, url, request, HttpMethod.POST);
+        System.out.println(res);
+    }
+
     /**
      * 近日販売商品のブログページ(固定)を更新します。
      * ・本日販売

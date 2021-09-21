@@ -201,8 +201,8 @@ public class SampleController {
                 System.out.println("---run12Blog画像設定 END---");
                 break;
             case 13: // tmpメソッド
-                // itemMasterの今年以降発売の商品を全て発売日順にwpにポストする。各商品、itemMasterにwp_idを忘れず入れてあげる
-//                blogController.postAllItemMaster();
+                // ショートコードが反映できるか
+                blogController.tmpMethod();
                 break;
             case 14:
                 // 商品の情報を投稿する

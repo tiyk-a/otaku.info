@@ -99,16 +99,21 @@ public class SampleController {
 
         // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
         Map<Integer, Integer> wpIdFeaturedMediaMap = blogController.getPublishedWpIdFeaturedMediaList();
+        System.out.println("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
         List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
+        System.out.println("wpIdList.size(): " + wpIdList.size());
 
         // featured_media IDからメディアURLを取得する
         Map<Integer, String> mediaIdMediaUrlMap = blogController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
+        System.out.println("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
 
         // 画像パス(itemMaster.url)がnullのitemMasterを集める
         List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
+        System.out.println("itemMasterList.size(): " + itemMasterList.size());
 
         itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
         itemMasterService.saveAll(itemMasterList);
+        System.out.println("itemMasterList.size(): " + itemMasterList.size());
         return "done";
     }
 

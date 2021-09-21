@@ -939,10 +939,10 @@ public class BlogController {
 
         List<String> mediaIrListStrList = new ArrayList<>();
 
-        while (next100Flg) {
+        while (next100Flg && start < end) {
             String tmp = mediaIdList.subList(start, end).stream().map(Object::toString).collect(Collectors.joining(","));
             mediaIrListStrList.add(tmp);
-            if (mediaIdList.size() > end) {
+            if (mediaIdList.size() > end + 1) {
                 start += 100;
                 end += 100;
 
@@ -954,6 +954,7 @@ public class BlogController {
             }
         }
 
+        System.out.println("mediaIrListStrList.size(): " + mediaIrListStrList.size());
         for (String mediaIdStr : mediaIrListStrList) {
             String res = getMediaUrl(mediaIdStr);
             // レスポンスを成形

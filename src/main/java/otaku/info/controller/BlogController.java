@@ -68,7 +68,7 @@ public class BlogController {
     HttpServletResponse response;
 
     public void tmpMethod() {
-        String result = setting.getBlogCardPre() + "toc depth='5'" + setting.getBlogCardPos();
+        String result = "[toc depth='5']";
         result = result + "<br /><h2>test from java</h2>\n<h2>h22</h2><h2>h23</h2><h3>h31</h3><h6>h6</h6>";
 
         System.out.println(result);
@@ -841,14 +841,17 @@ public class BlogController {
                 + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)));
 
         System.out.println(text);
-        // ページを更新する
-        String url = setting.getBlogApiUrl() + "pages/1707";
 
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("content", text);
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        request(response, url, request, HttpMethod.POST);
+        // テキストを用意できた時だけページを更新する
+        if (StringUtils.hasText(text)) {
+            String url = setting.getBlogApiUrl() + "pages/1707";
+
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("content", text);
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+            request(response, url, request, HttpMethod.POST);
+        }
     }
 
     /**

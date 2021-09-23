@@ -345,7 +345,7 @@ public class TextController {
 
             for (Item item : itemList) {
                 // ブログカードで楽天リンクを表示
-                String linkCard = setting.getBlogCardPre() + item.getUrl() + setting.getBlogCardPos();
+                String linkCard = "[rakuten id=" + item.getItem_code() + "]";
 
                 // 商品テキストをまとめ、楽天テキストの末尾に加える
                 rakutenLink = rakutenLink + "\n" + linkCard;

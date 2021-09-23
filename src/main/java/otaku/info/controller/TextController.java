@@ -163,7 +163,7 @@ public class TextController {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String result = dateStr + "の" + teamService.getTeamName(ele.getKey()) + "のTV出演情報です。%0A%0A";
 
-        String info = null;
+        String info = "";
         for (Program p : ele.getValue()) {
             info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
         }
@@ -234,19 +234,25 @@ public class TextController {
             num = num.replaceAll("^.*-", "");
             Long teamId = Long.valueOf(num);
             String result = "";
-            String tags = "";
+
             // Format LocalDateTime
             String formattedDateTime = program.getOn_air_date().format(dtf2);
 
             // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
             if (keyMemberMap.containsKey(teamId)) {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
-                tags = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・"))).stream().collect(Collectors.joining(" #","#",""));
+                List<String> tagList = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・")));
+                if (tagList.size() > 0) {
+                    result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
+                }
             } else {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
-                tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+                List<String> tagList = tagService.getTagByTeam(teamId);
+                if (tagList.size() > 0) {
+                    result = result + "%0A%0A" + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+                }
             }
-            resultMap.put(entry.getKey(), result + "%0A%0A" + tags);
+            resultMap.put(entry.getKey(), result);
         }
         return resultMap;
     }
@@ -430,8 +436,10 @@ public class TextController {
         String result = "[toc depth='5']";
         List<Program> sortedProgramList = programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
 
-        Date date = DateUtils.localDateTimeToDate(programList.get(0).getOn_air_date());
-        result = result + "<br /><h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+        if (programList.size() > 0) {
+            Date date = DateUtils.localDateTimeToDate(programList.get(0).getOn_air_date());
+            result = result + "<br /><h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+        }
 
         for (Program program : sortedProgramList) {
             String tmp = "";

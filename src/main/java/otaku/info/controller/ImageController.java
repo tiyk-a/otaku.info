@@ -9,6 +9,10 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 画像を生成します
@@ -24,7 +28,7 @@ public class ImageController {
     /**
      * 画像を生成します。2行のテキスト、中央配置
      *
-     * @param fileName
+     * @param fileName .pngとか識別子付きの生成するファイル名
      * @param text1
      * @param text2
      * @return
@@ -63,11 +67,41 @@ public class ImageController {
         // output
         try {
             String path = setting.getGeneratedImage() + fileName;
+            // 出力先パスが有効か確認し、ダメなら有効なパスにする
+            path = availablePath(path);
             ImageIO.write(bufferedImage, "png", new File(path));
             return path;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
+    }
+
+    /**
+     * 引数のファイルが空でオブジェクトの生成可能か確認。
+     * 空でない場合、末尾に"_連番"をつけてあげる。
+     *
+     * @param imagePath
+     * @return
+     * @throws IOException
+     */
+    private String availablePath(String imagePath) throws IOException {
+
+        String newPath = imagePath;
+        Path path = Paths.get(newPath);
+        Integer count = 1;
+
+        while (Files.exists(path)) {
+            String mimeType = Files.probeContentType(path);
+            String[] imagePathSplit = imagePath.split("\\.([^.]*)$");
+            if (mimeType != null && imagePathSplit.length > 1) {
+                newPath = setting.getImageItem() + imagePathSplit[0] + "_" + count.toString() + "." + imagePathSplit[1];
+            } else {
+                newPath = newPath + "_" + count.toString();
+            }
+            path = Paths.get(newPath);
+            ++count;
+        }
+        return newPath;
     }
 }

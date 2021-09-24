@@ -9,6 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
@@ -16,6 +17,7 @@ import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
+import otaku.info.utils.JsonUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import java.util.ArrayList;
@@ -67,39 +69,47 @@ public class RakutenController {
         return jsonObject;
     }
 
-    public List<Item> search1(List<String> searchList) {
-        List<Item> resultList = new ArrayList<>();
+//    public List<Item> search1(List<String> searchList) {
+//        List<Item> resultList = new ArrayList<>();
+//
+//        for (String key : searchList) {
+//            String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
+//            JSONObject node = request(parameter);
+//            if (node != null) {
+//
+//                if (!JsonUtils.isJsonArray(node.getString("Items"))) {
+//                    continue;
+//                }
+//
+//                JSONArray items = node.getJSONArray("Items");
+//                for (int i=0; i<items.length();i++) {
+//                    try {
+//                        Item item = new Item();
+//                        item.setItem_code(key);
+//                        item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
+//                        item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
+//                        if (JsonUtils.isJsonArray(items.getJSONObject(i).getString("mediumImageUrls"))) {
+//                            JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
+//                            if (imageArray.length() > 0) {
+//                                item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));
+//                                if (imageArray.length() > 1) {
+//                                    item.setImage2(imageArray.getJSONObject(1).getString("imageUrl").replaceAll("^\"|\"$", ""));
+//                                }
+//                                if (imageArray.length() > 2) {
+//                                    item.setImage3(imageArray.getJSONObject(2).getString("imageUrl").replaceAll("^\"|\"$", ""));
+//                                }
+//                            }
+//                            resultList.add(item);
+//                        }
+//                    } catch (Exception e) {
+//                        System.out.println(e.getMessage());
+//                    }
+//                }
+//            }
+//        }
+//        return resultList;
+//    }
 
-        for (String key : searchList) {
-            String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
-            JSONObject node = request(parameter);
-            if (node != null) {
-                JSONArray items = node.getJSONArray("Items");
-                for (int i=0; i<items.length();i++) {
-                    try {
-                        Item item = new Item();
-                        item.setItem_code(key);
-                        item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
-                        item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
-                        JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
-                        if (imageArray.length() > 0) {
-                            item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                            if (imageArray.length() > 1) {
-                                item.setImage2(imageArray.getJSONObject(1).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                            }
-                            if (imageArray.length() > 2) {
-                                item.setImage3(imageArray.getJSONObject(2).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                            }
-                        }
-                        resultList.add(item);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-            }
-        }
-        return resultList;
-    }
     /**
      * 楽天商品をキーワード検索します。
      * itemCodeだけを取得してきます。
@@ -111,7 +121,7 @@ public class RakutenController {
             String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            if (jsonObject.has("Items")) {
+            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
                 for (int i = 0; i < itemArray.length(); i++) {
                     resultList.add(itemArray.getJSONObject(i).getString("itemCode").replaceAll("^\"|\"$", ""));
@@ -134,7 +144,7 @@ public class RakutenController {
             String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            if (jsonObject.has("Items")) {
+            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray jsonArray = jsonObject.getJSONArray("Items");
                 for (int i=0; i<jsonArray.length();i++) {
                     Item item = new Item();
@@ -188,22 +198,24 @@ public class RakutenController {
             String parameter = "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             try {
-                JSONArray itemArray = jsonObject.getJSONArray("Items");
+                if (JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+                    JSONArray itemArray = jsonObject.getJSONArray("Items");
 
-                if (itemArray == null) {
-                    continue;
-                }
+                    if (itemArray == null) {
+                        continue;
+                    }
 
-                for (int i=0; i<itemArray.length();i++) {
-                    try {
-                        Item item = itemService.findByItemCode(key).orElse(new Item());
-                        if (item.getItem_code() == null) {
-                            continue;
+                    for (int i=0; i<itemArray.length();i++) {
+                        try {
+                            Item item = itemService.findByItemCode(key).orElse(new Item());
+                            if (item.getItem_code() == null) {
+                                continue;
+                            }
+                            item.setUrl(itemArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
+                            updateList.add(item);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
                         }
-                        item.setUrl(itemArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
-                        updateList.add(item);
-                    } catch (Exception e) {
-                        System.out.println(e.getMessage());
                     }
                 }
             } catch (JSONException e) {
@@ -229,41 +241,32 @@ public class RakutenController {
     }
 
     /**
-     * Imageを既存商品に追加するtmpメソッド
+     * Imageを検索して既存商品に追加するtmpメソッド
      *
      */
-    public void addImage() {
-        List<Item> itemList = itemService.findByDelFlg(false);
+    public ItemMaster addImage(ItemMaster itemMaster) {
+        List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
 
         for (Item item : itemList) {
             String parameter = "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
-            if (jsonObject.has("Items")) {
+            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
-
-                // 画像がある場合、設定に進む
-                if (itemArray.get(0) != null) {
-                    for (int i=0; i<itemArray.length();i++) {
-                        JSONArray imageArray = itemArray.getJSONObject(i).getJSONArray("mediumImageUrls");
-                        Item updatedItem = setImages(item, imageArray);
-                        itemService.saveItem(updatedItem);
-
-                        // itemMasterにも設定する
-                        ItemMaster itemMaster = itemMasterService.findById(item.getItem_m_id());
-                        boolean hasNext1 = itemMaster.fillBlankImage(item.getImage1());
-                        if (hasNext1) {
-                            boolean hasNext2 = itemMaster.fillBlankImage(item.getImage2());
-                            if (hasNext2) {
-                                itemMaster.fillBlankImage(item.getImage3());
-                            }
-
-                            // itemMasterに画像の設定があった場合はitemMasterも更新する
-                            itemMasterService.save(itemMaster);
-                        }
+                if (itemArray.get(0) != null && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
+                    JSONArray imageArray = itemArray.getJSONObject(0).getJSONArray("mediumImageUrls");
+                    if (imageArray.length() > 0) {
+                        setImages(item, imageArray);
+                        itemService.saveItem(item);
+                        setImagesItemMaster(itemMaster, imageArray);
+                        itemMasterService.save(itemMaster);
                     }
+                }
+                if (StringUtils.hasText(itemMaster.getImage3())) {
+                    continue;
                 }
             }
         }
+        return itemMaster;
     }
 
     /**
@@ -284,6 +287,19 @@ public class RakutenController {
                 }
             }
         return item;
+    }
+
+    private ItemMaster setImagesItemMaster(ItemMaster itemMaster, JSONArray imageArray) {
+        if (imageArray.length() > 0) {
+            boolean hasNext1 = itemMaster.fillBlankImage(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
+            if (imageArray.length() > 1 && hasNext1) {
+                boolean hasNext2 = itemMaster.fillBlankImage(imageArray.get(1).toString().replaceAll("^\"|\"$", ""));
+                if (imageArray.length() > 2 && hasNext2) {
+                    itemMaster.fillBlankImage(imageArray.get(2).toString().replaceAll("^\"|\"$", ""));
+                }
+            }
+        }
+        return itemMaster;
     }
 
     private void sleep() {

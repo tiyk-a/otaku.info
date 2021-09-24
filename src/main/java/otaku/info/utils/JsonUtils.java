@@ -1,7 +1,9 @@
 package otaku.info.utils;
 
 import org.json.JSONArray;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JsonUtils {
 
     public static boolean isJsonArray(String target) {

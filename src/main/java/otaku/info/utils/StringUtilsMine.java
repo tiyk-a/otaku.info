@@ -1,5 +1,7 @@
 package otaku.info.utils;
 
+import org.springframework.stereotype.Component;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.regex.Pattern;
  * 文字列操作
  *
  */
+@Component
 public class StringUtilsMine {
 
     /**

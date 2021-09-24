@@ -1,13 +1,14 @@
 package otaku.info.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import otaku.info.setting.Setting;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Component
 public class ServerUtils {
 
     @Autowired

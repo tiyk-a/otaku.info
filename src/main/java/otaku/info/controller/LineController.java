@@ -31,9 +31,6 @@ import java.util.*;
 @AllArgsConstructor
 public class LineController {
 
-//    @Autowired
-//    RestTemplate restTemplate;
-
     @Autowired
     ItemService itemService;
 

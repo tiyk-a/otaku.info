@@ -91,24 +91,6 @@ public class AnalyzeController {
         }
         return publishDateList;
     }
-    /**
-     * 文字列から年月日をみつけ、返します。
-     * 発売日、予約締切日などが引っかかる想定。
-     *
-     * @param text
-     * @return
-     */
-    public List<String> extractYMDList(String text) {
-        String regex = "20[0-2]{1}[0-9]{1}(.?)(1[0-2]{1}|0?[1-9])(.?)(3[01]|[12][0-9]|0?[1-9])";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(text);
-
-        List<String> publishDateList = new ArrayList<>();
-        while (matcher.find()) {
-            publishDateList.add(matcher.group());
-        }
-        return publishDateList;
-    }
 
     /**
      * 文字列から年月を見つけ、返します。

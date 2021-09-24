@@ -18,6 +18,7 @@ import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
+import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ public class RakutenController {
 
     @Autowired
     ItemUtils itemUtils;
+
+    @Autowired
+    ServerUtils serverUtils;
 
     @Autowired
     Setting setting;
@@ -62,53 +66,12 @@ public class RakutenController {
             if (StringUtilsSpring.hasText(res)) {
                 jsonObject = new JSONObject(res);
             }
-            sleep();
+            serverUtils.sleep();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return jsonObject;
     }
-
-//    public List<Item> search1(List<String> searchList) {
-//        List<Item> resultList = new ArrayList<>();
-//
-//        for (String key : searchList) {
-//            String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
-//            JSONObject node = request(parameter);
-//            if (node != null) {
-//
-//                if (!JsonUtils.isJsonArray(node.getString("Items"))) {
-//                    continue;
-//                }
-//
-//                JSONArray items = node.getJSONArray("Items");
-//                for (int i=0; i<items.length();i++) {
-//                    try {
-//                        Item item = new Item();
-//                        item.setItem_code(key);
-//                        item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
-//                        item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
-//                        if (JsonUtils.isJsonArray(items.getJSONObject(i).getString("mediumImageUrls"))) {
-//                            JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
-//                            if (imageArray.length() > 0) {
-//                                item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));
-//                                if (imageArray.length() > 1) {
-//                                    item.setImage2(imageArray.getJSONObject(1).getString("imageUrl").replaceAll("^\"|\"$", ""));
-//                                }
-//                                if (imageArray.length() > 2) {
-//                                    item.setImage3(imageArray.getJSONObject(2).getString("imageUrl").replaceAll("^\"|\"$", ""));
-//                                }
-//                            }
-//                            resultList.add(item);
-//                        }
-//                    } catch (Exception e) {
-//                        System.out.println(e.getMessage());
-//                    }
-//                }
-//            }
-//        }
-//        return resultList;
-//    }
 
     /**
      * 楽天商品をキーワード検索します。
@@ -155,7 +118,7 @@ public class RakutenController {
                     item.setItem_caption(StringUtilsMine.compressString(jsonArray.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
                     item.setUrl(jsonArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
                     JSONArray imageArray = jsonArray.getJSONObject(i).getJSONArray("mediumImageUrls");
-                    setImages(item, imageArray);
+                    item = setImages(item, imageArray);
                     resultList.add(item);
                 }
             }
@@ -164,18 +127,11 @@ public class RakutenController {
     }
 
     /**
-     * 楽天商品のリストをDBに保存する指示を出します。
+     * TODO: これがしっかり動いてるか確認。要。
+     * 楽天アフィリンクの更新を行います
      *
-     * @param itemList
      * @return
      */
-    public List<Item> saveItems(List<Item> itemList) {
-        System.out.println("Itemの保存を始めます。リストは以下");
-        itemList.forEach(e -> System.out.println(e.getTitle()));
-        List<Item> savedList = itemService.saveAll(itemList);
-        return savedList;
-    }
-
     public boolean updateUrl() {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(100));
@@ -226,6 +182,12 @@ public class RakutenController {
         return true;
     }
 
+    /**
+     * 楽天アフィ更新のチェックメソッド。要
+     *
+     * @param url
+     * @return
+     */
     private boolean updateTarget(String url) {
         try {
             // URLにアクセスして要素を取ってくる
@@ -241,8 +203,10 @@ public class RakutenController {
     }
 
     /**
-     * Imageを検索して既存商品に追加するtmpメソッド
+     * 楽天商品のImageを検索して既存商品に追加する
      *
+     * @param itemMaster
+     * @return
      */
     public ItemMaster addImage(ItemMaster itemMaster) {
         List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
@@ -255,14 +219,16 @@ public class RakutenController {
                 if (itemArray.get(0) != null && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
                     JSONArray imageArray = itemArray.getJSONObject(0).getJSONArray("mediumImageUrls");
                     if (imageArray.length() > 0) {
-                        setImages(item, imageArray);
+                        item = setImages(item, imageArray);
                         itemService.saveItem(item);
-                        setImagesItemMaster(itemMaster, imageArray);
+                        itemMaster = setImagesItemMaster(itemMaster, imageArray);
                         itemMasterService.save(itemMaster);
                     }
                 }
+
+                // もうマスター商品の画像３枚目まで埋まっていたら処理終了
                 if (StringUtils.hasText(itemMaster.getImage3())) {
-                    continue;
+                    break;
                 }
             }
         }
@@ -270,10 +236,11 @@ public class RakutenController {
     }
 
     /**
-     * ItemとmediumImageUrlsのリストを引数にとる
+     * ItemとmediumImageUrlsのリストを引数にと李、画像があればItemにセットし、返却する
+     * (Serviceで更新は行わない)
      *
-     * @param item
-     * @param imageArray
+     * @param item セットするItem
+     * @param imageArray 画像の入ったarray
      * @return
      */
     private Item setImages(Item item, JSONArray imageArray) {
@@ -289,6 +256,13 @@ public class RakutenController {
         return item;
     }
 
+    /**
+     * ItemとmediumImageUrlsのリストを引数にと李、画像があればItemにセットし、返却する
+     * (Serviceで更新は行わない)
+     * @param itemMaster セットするマスター商品
+     * @param imageArray 画像の入ったarray
+     * @return
+     */
     private ItemMaster setImagesItemMaster(ItemMaster itemMaster, JSONArray imageArray) {
         if (imageArray.length() > 0) {
             boolean hasNext1 = itemMaster.fillBlankImage(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
@@ -300,13 +274,5 @@ public class RakutenController {
             }
         }
         return itemMaster;
-    }
-
-    private void sleep() {
-        try{
-            Thread.sleep(10000);
-        }catch(InterruptedException e){
-            e.printStackTrace();
-        }
     }
 }

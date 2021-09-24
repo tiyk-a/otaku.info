@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 文字列操作
@@ -91,5 +93,25 @@ public class StringUtilsMine {
             }
         }
         return false;
+    }
+
+    public StringUtilsMine() {
+    }
+
+    /**
+     * 正規表現に合致するsubstringを返却します
+     *
+     * @param target regexに合致する部分を探すstring
+     * @param regex regex
+     * @return
+     */
+    public String extractSubstring(String target, String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(target);
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return null;
+        }
     }
 }

@@ -56,14 +56,6 @@ public class ItemMasterService {
         return itemMasterRepository.findWpIdNotNull();
     }
 
-    public List<ItemMaster> findImageNull() {
-        return itemMasterRepository.findImageNull();
-    }
-
-    public List<ItemMaster> findWpIdNotNullImage1Exists() {
-        return itemMasterRepository.findWpIdNotNullImage1Exists();
-    }
-
     public ItemMaster findByWpId(Integer wpId) {
         return itemMasterRepository.findByWpId(wpId);
     }

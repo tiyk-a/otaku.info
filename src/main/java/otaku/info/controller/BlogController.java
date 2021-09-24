@@ -20,12 +20,13 @@ import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
+import otaku.info.utils.ServerUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -67,28 +68,15 @@ public class BlogController {
     otaku.info.utils.DateUtils dateUtils;
 
     @Autowired
+    ServerUtils serverUtils;
+
+    @Autowired
+    StringUtilsMine stringUtilsMine;
+
+    @Autowired
     Setting setting;
 
     HttpServletResponse response;
-
-    public void tmpMethod() {
-        String result = "[toc depth='5']";
-        result = result + "<br /><h2>test from java</h2>\n<h2>h22</h2><h2>h23</h2><h3>h31</h3><h6>h6</h6>";
-
-        System.out.println(result);
-
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("title", "java test");
-        jsonObject.put("author", 1);
-        jsonObject.put("status", "publish");
-        jsonObject.put("content", result);
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-
-        String url = setting.getBlogApiUrl() + "posts/";
-        String res = request(response, url, request, HttpMethod.POST);
-        System.out.println(res);
-    }
 
     /**
      * 近日販売商品のブログページ(固定)を更新します。
@@ -139,7 +127,7 @@ public class BlogController {
      * @param headers
      * @return
      */
-    private HttpHeaders generalHeaderSet(HttpHeaders headers) {
+    public HttpHeaders generalHeaderSet(HttpHeaders headers) {
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.setContentType(MediaType.APPLICATION_JSON);
         String auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
@@ -155,7 +143,7 @@ public class BlogController {
      * @param request
      * @return
      */
-    private String request(HttpServletResponse response, String url, HttpEntity<String> request, HttpMethod method) {
+    public String request(HttpServletResponse response, String url, HttpEntity<String> request, HttpMethod method) {
 
         response.setHeader("Cache-Control", "no-cache");
 
@@ -271,29 +259,6 @@ public class BlogController {
         return (long) blogId;
     }
 
-    public void postAllItemMaster() {
-        Integer year = 2001;
-
-        Map<ItemMaster, List<Item>> itemMasterListMap = new HashMap<>();
-        while (year < 2022) {
-            System.out.println("*** year: " + year);
-            // itemMasterを集める
-            List<ItemMaster> itemMasterList = itemMasterService.findByPublicationYear(year).stream().filter(e -> e.getWp_id() == null).collect(Collectors.toList());
-            System.out.println("itemMasterList.size: " + itemMasterList.size());
-            // ひもづくitemを集める
-            itemMasterList.forEach(e -> itemMasterListMap.put(e, itemService.gatherItems(e.getItem_m_id())));
-            // itemMasterを投稿する
-            if (itemMasterListMap.size() > 0) {
-                itemMasterListMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getPublication_date()));
-                for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
-                    System.out.println("item_m_id: " + e.getKey().getItem_m_id() + " itemList size: " + e.getValue().size());
-                    postMasterItem(e.getKey(), e.getValue());
-                }
-            }
-            ++year;
-        }
-    }
-
     /**
      * マスター商品のcontextを更新する。
      *
@@ -337,12 +302,13 @@ public class BlogController {
 
     /**
      * 画像をWordPressにポストします。
+     * TODO: 楽天画像の場合、すでにWP投稿済みだったとしても毎回楽天から画像をローカルへ保存してしまう。連番がどんどん増えてしまう。
      *
      * @param response
      * @param imageUrl
      * @return /<WP画像ID, WP画像パス/>
      */
-    public Map<Integer, String> requestMedia(HttpServletResponse response, Long itemId, String imageUrl) {
+    public Map<Integer, String> requestMedia(HttpServletResponse response, Long wpId, String imageUrl) {
         String finalUrl = setting.getBlogApiUrl() + "media";
 
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
@@ -352,7 +318,8 @@ public class BlogController {
         // 楽天の画像の場合は取得しに行く
         if (imageUrl.startsWith("https")) {
             try (InputStream in = new URL(imageUrl).openStream()) {
-                imagePath = availablePath(imageUrl);
+                String identifier = stringUtilsMine.extractSubstring(imageUrl, "\\?.*$");
+                imagePath = serverUtils.availablePath(setting.getImageItem() + wpId.toString() + identifier);
                 Files.copy(in, Paths.get(imagePath));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -363,7 +330,7 @@ public class BlogController {
 
         response.setHeader("Cache-Control", "no-cache");
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        headers.add("content-disposition", "attachment; filename=" + itemId + ".png");
+        headers.add("content-disposition", "attachment; filename=" + wpId.toString() + ".png");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
@@ -385,39 +352,6 @@ public class BlogController {
     }
 
     /**
-     * 使用できるパスを見つけ、返却します
-     * 楽天の画像で使用することを想定
-     *
-     * @param imagePath "ex. Rakuten) https://thumbnail.image.rakuten.co.jp/@0_mall/book/cabinet/1058/4582515771058_1_2.jpg?_ex=128x128"
-     *                  "ex. Generated) "
-     * @return サーバー上に引数のimageを保存するパス
-     */
-    private String availablePath(String imagePath) {
-
-        String newPath = "";
-
-        if (imagePath.startsWith("https:")) {
-            newPath = setting.getImageItem() + imagePath.replaceAll("\\?.*$", "");
-        } else {
-            newPath = setting.getImageItem() + imagePath;
-        }
-
-        Path path = Paths.get(newPath);
-        Integer count = 1;
-
-        while (Files.exists(path)) {
-            if (newPath.matches("")) {
-                newPath = setting.getImageItem() + imagePath + "_" + count.toString() + ".png";
-            } else {
-                newPath = setting.getImageItem() + imagePath + "_" + count.toString() + ".png";
-            }
-            path = Paths.get(newPath);
-            ++count;
-        }
-        return newPath;
-    }
-
-    /**
      * WpIdからポストの内容を取得します。
      *
      * @param wpId
@@ -430,45 +364,13 @@ public class BlogController {
     }
 
     /**
-     * Tmpブログ新商品投稿メソッド(商品マスターごとに投稿するように修正)
-     *
-     */
-    public void tmpItemPost(List<Item> itemList) {
-        Map<ItemMaster, List<Item>> map = itemUtils.groupItem(itemList);
-        // 対象はwp_idがnullのマスター商品
-        Map<ItemMaster, List<Item>> targetMap = map.entrySet().stream().filter(e -> e.getKey().getWp_id() == null || e.getKey().getWp_id().equals(0)).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-        // targetMapのマスタ商品をブログに投稿していく
-        for (Map.Entry<ItemMaster, List<Item>> e : targetMap.entrySet()) {
-            postMasterItem(e.getKey(), e.getValue());
-        }
-    }
-
-    /**
-     * 商品リストからアイキャッチメディアの登録がない商品だけを引き抜いてリストにし返却します。
-     *
-     * @param itemList
-     * @return Item:
-     */
-    public List<Item> selectBlogData(List<Item> itemList) {
-        List<Item> resultList = new ArrayList<>();
-        for (Item item : itemList) {
-            String result = requestPostData(item.getWp_id().toString());
-            Integer featuredMedia = extractMedia(result);
-            if (featuredMedia == 0) {
-                resultList.add(item);
-            }
-        }
-        return resultList;
-    }
-
-    /**
      * アイキャッチメディアがある場合、画像IDを返却します。
      * ない場合、0
      *
      * @param text
      * @return
      */
-    private Integer extractMedia(String text) {
+    public Integer extractMedia(String text) {
         JSONObject jsonObject = new JSONObject(text);
         if (jsonObject.get("featured_media") != null) {
             return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
@@ -645,118 +547,6 @@ public class BlogController {
     }
 
     /**
-     * 商品（マスタじゃない）ページは下書きにする
-     *
-     */
-    public void deleteItemPosts() {
-
-        List<Long> wpIdList = itemService.collectWpId().stream().distinct().collect(Collectors.toList());
-
-        for (Long wpId : wpIdList) {
-            // WPにあるタグを取得する
-            String url = setting.getBlogApiUrl() + "posts/" + wpId;
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("status","draft");
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            request(response, url, request, HttpMethod.POST);
-        }
-    }
-
-    // Nullが入ってるWPIDをコンソールに出力する
-    public void listPostsContainsNull() {
-        int n = 1;
-        boolean flg = true;
-        while (flg) {
-            System.out.println(n);
-            String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
-
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            String res = request(response, url, request, HttpMethod.GET);
-
-            try {
-                if (!JsonUtils.isJsonArray(res)) {
-                    continue;
-                }
-
-                JSONArray ja = new JSONArray(res);
-                for (int i=0;i<ja.length();i++) {
-                    Integer wpId = ja.getJSONObject(i).getInt("id");
-                    Integer media = ja.getJSONObject(i).getInt("featured_media");
-                    if (media > 0) {
-                        System.out.println(wpId + ":" + media);
-                    }
-                }
-            } catch (Exception e) {
-                flg = false;
-                e.printStackTrace();
-            }
-            ++n;
-        }
-    }
-
-    /**
-     * 公開中のブログポストのcontentを上書きする（楽天リンクをカードにした）
-     *
-     */
-    public void updateContent() {
-        int n = 1;
-        String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
-
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(response, url, request, HttpMethod.GET);
-
-        try {
-            if (JsonUtils.isJsonArray(res)) {
-                JSONArray ja = new JSONArray(res);
-                for (int i=0;i<ja.length();i++) {
-                    Integer wpId = ja.getJSONObject(i).getInt("id");
-                    url = setting.getBlogApiUrl() + "posts/" + wpId;
-
-                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
-                    JSONObject jsonObject1 = new JSONObject();
-                    ItemMaster itemMaster = itemMasterService.findByWpId(wpId);
-
-                    if (itemMaster != null && itemMaster.getItem_m_id() != null) {
-                        List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-
-                        if (itemList.size() > 0) {
-                            Map<ItemMaster, List<Item>> itemMasterListMap = Collections.singletonMap(itemMaster, itemList);
-                            String text = textController.blogReleaseItemsText(itemMasterListMap).get(0);
-                            jsonObject1.put("content", text);
-                            HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                            String r = request(response, url, request1, HttpMethod.POST);
-                            System.out.println(r);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        ++n;
-    }
-
-    public void updateTitle() {
-        List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
-
-        for (ItemMaster itemMaster : itemMasterList) {
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-            String title = textController.createTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
-            jsonObject.put("title", title);
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-
-            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
-            request(response, url, request, HttpMethod.POST);
-        }
-    }
-
-    /**
      * タグが存在しなかったらWPとDB両方に登録する
      *
      */
@@ -820,6 +610,12 @@ public class BlogController {
         return blogTag;
     }
 
+    /**
+     * 日付タグをWPとDBに登録します。
+     *
+     * @param date
+     * @return
+     */
     public BlogTag registerTag(Date date) {
         String url = setting.getBlogApiUrl() + "tags/";
 
@@ -843,33 +639,6 @@ public class BlogController {
             return blogTagService.save(blogTag);
         }
         return new BlogTag();
-    }
-
-    public void addTag() {
-        getBlogTagNotSavedOnInfoDb();
-        List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
-
-        for (ItemMaster itemMaster : itemMasterList) {
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-            JSONObject jsonObject = new JSONObject();
-
-            Integer[] tags = new Integer[itemMaster.getTags().length + 1];
-            System.arraycopy(itemMaster.getTags(), 0, tags, 0, itemMaster.getTags().length);
-
-            int yyyyMMId = dateUtils.getBlogYYYYMMTag(itemMaster.getPublication_date());
-
-            // もし年月タグがまだ存在しなかったら先に登録する
-            if (yyyyMMId == 0) {
-                yyyyMMId = Math.toIntExact(registerTag(itemMaster.getPublication_date()).getBlog_tag_id());
-            }
-            tags[itemMaster.getTags().length] = yyyyMMId;
-            jsonObject.put("tags", tags);
-            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-
-            // 商品ページ投稿更新
-            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
-            request(response, url, request, HttpMethod.POST);
-        }
     }
 
     /**
@@ -941,101 +710,5 @@ public class BlogController {
         }
 
         return resultList;
-    }
-
-    public Map<Integer, Integer> getPublishedWpIdFeaturedMediaList() {
-        Map<Integer, Integer> resultMap = new HashMap<>();
-
-        // リクエスト送信
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-
-        int n = 1;
-        boolean nextFlg = true;
-
-        while (nextFlg) {
-            String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
-            String res = request(response, url, request, HttpMethod.GET);
-
-            // レスポンスを成形
-            try {
-                if (!JsonUtils.isJsonArray(res)) {
-                    continue;
-                }
-                JSONArray ja = new JSONArray(res);
-
-                if (ja.length() > 0) {
-                    for (int i=0; i < ja.length(); i++) {
-                        resultMap.put(ja.getJSONObject(i).getInt("id"), ja.getJSONObject(i).getInt("featured_media"));
-                    }
-                    ++n;
-                }
-            } catch (Exception e) {
-                nextFlg = false;
-                e.printStackTrace();
-            }
-        }
-        return resultMap;
-    }
-
-    public Map<Integer, String> getMediaUrlByMediaId(List<Integer> mediaIdList) {
-        Map<Integer, String> resultMap = new HashMap<>();
-
-        int start = 0;
-        int end = mediaIdList.size() -1;
-        boolean next100Flg = true;
-
-        if (end > 99) {
-            end = 99;
-        }
-
-        List<String> mediaIrListStrList = new ArrayList<>();
-
-        while (next100Flg && start < end) {
-            String tmp = mediaIdList.subList(start, end).stream().map(Object::toString).collect(Collectors.joining(","));
-            mediaIrListStrList.add(tmp);
-            if (mediaIdList.size() > end + 1) {
-                start += 100;
-                end += 100;
-
-                if (mediaIdList.size() -1 < end) {
-                    end = mediaIdList.size() -1;
-                }
-            } else {
-                next100Flg = false;
-            }
-        }
-
-        System.out.println("mediaIrListStrList.size(): " + mediaIrListStrList.size());
-        for (String mediaIdStr : mediaIrListStrList) {
-            String res = getMediaUrl(mediaIdStr);
-            // レスポンスを成形
-            try {
-                if (!JsonUtils.isJsonArray(res)) {
-                    continue;
-                }
-                JSONArray ja = new JSONArray(res);
-
-                if (ja.length() > 0) {
-                    for (int i=0; i < ja.length(); i++) {
-                        resultMap.put(ja.getJSONObject(i).getInt("id"), ja.getJSONObject(i).getString("source_url").replaceAll("^\"|\"$", ""));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return resultMap;
-    }
-
-    private String getMediaUrl(String mediaIdList) {
-        String url = setting.getBlogApiUrl() + "media?slug=" + mediaIdList + "&_fields[]=id&_fields[]=source_url&per_page=100";
-
-        // リクエスト送信
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        return request(response, url, request, HttpMethod.GET);
     }
 }

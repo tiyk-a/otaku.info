@@ -53,10 +53,22 @@ public class TvController  {
     final DateTimeFormatter dateFormatter = new DateTimeFormatterBuilder().appendPattern("M/d (EEE) H:m")
             .parseDefaulting(ChronoField.YEAR, Calendar.getInstance().get(Calendar.YEAR)).toFormatter(Locale.US);
 
+    /**
+     * 放送日から番組を検索し返却します。
+     *
+     * @param date
+     * @return
+     */
     public List<Program> getTvList(Date date) {
         return programService.findByOnAirDate(date);
     }
 
+    /**
+     * 番組リストをグループごとにマップして返却します。
+     *
+     * @param programList
+     * @return
+     */
     public Map<Long, List<Program>>  mapByGroup(List<Program> programList) {
         Map<Long, List<Program>> tvListMapByGroup = new HashMap<>();
 
@@ -67,7 +79,7 @@ public class TvController  {
         for (Program p : programList) {
             // マップからグループIDの要素のvalueに情報を追加して
             List<Long> teamIdList = new ArrayList<>();
-            if (p.getTeam_id() != null && !p.getTeam_id().equals("")) {
+            if (org.springframework.util.StringUtils.hasText(p.getTeam_id())) {
                 List.of(p.getTeam_id().split(",")).forEach(e -> teamIdList.add((long) Integer.parseInt(e)));
             }
             for (Long teamId : teamIdList) {
@@ -175,12 +187,12 @@ public class TvController  {
             // Programの内容を精査します。
             // アダルトサイトのデータが引っかかっていた場合、この先の処理は行わず削除してreturn
             if (program.getStation_id() == 16) {
-                break;
+                continue;
             }
 
             // 空レコードを登録しないようにします。
             if (program.getTitle().equals("") && program.getDescription().equals("") && program.getOn_air_date() == null) {
-                break;
+                continue;
             }
 
             // 既存データに重複がないか比較する

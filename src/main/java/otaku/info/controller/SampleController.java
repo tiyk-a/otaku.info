@@ -57,6 +57,9 @@ public class SampleController {
     private ImageController imageController;
 
     @Autowired
+    private TmpController tmpController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -98,13 +101,13 @@ public class SampleController {
     public String tempMethod() {
 
         // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
-        Map<Integer, Integer> wpIdFeaturedMediaMap = blogController.getPublishedWpIdFeaturedMediaList();
+        Map<Integer, Integer> wpIdFeaturedMediaMap = tmpController.getPublishedWpIdFeaturedMediaList();
         System.out.println("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
         List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
         System.out.println("wpIdList.size(): " + wpIdList.size());
 
         // featured_media IDからメディアURLを取得する
-        Map<Integer, String> mediaIdMediaUrlMap = blogController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
+        Map<Integer, String> mediaIdMediaUrlMap = tmpController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
         System.out.println("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
 
         // 画像パス(itemMaster.url)がnullのitemMasterを集める
@@ -125,7 +128,7 @@ public class SampleController {
      * @throws JSONException
      */
     @GetMapping("/twi/{artistId}")
-    public String sample1(@PathVariable String artistId) throws JSONException {
+    public String sample1(@PathVariable String artistId) {
         Item tmp = new Item();
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
@@ -143,7 +146,7 @@ public class SampleController {
         }
 
         System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
-        List<Item> savedItemList = rakutenController.saveItems(newItemList);
+        List<Item> savedItemList = itemService.saveAll(newItemList);
         System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
         List<Item> itemList = itemService.findAll();
         System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
@@ -207,7 +210,7 @@ public class SampleController {
                 break;
             case 13: // tmpメソッド
                 // ショートコードが反映できるか
-                blogController.tmpMethod();
+                tmpController.tmpMethod();
                 break;
             case 14:
                 // 商品の情報を投稿する
@@ -361,7 +364,7 @@ public class SampleController {
         if (newItemList.size() > 0) {
             System.out.println("商品を保存します");
             newItemList.forEach(e -> System.out.println(e.getTitle()));
-            savedItemList = rakutenController.saveItems(newItemList);
+            savedItemList = itemService.saveAll(newItemList);
         }
 
         // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
@@ -409,7 +412,7 @@ public class SampleController {
                         pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
                     } else {
                         System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
-                        break;
+                        continue;
                     }
                 } else {
                     System.out.println("未来商品ではないのでTweetしません");
@@ -448,12 +451,7 @@ public class SampleController {
         }
 
         // 非公式商品(「ジャニーズ研究会」「J-GENERATION」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
-        if (StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) || StringUtilsMine.arg2ContainsArg1("J-GENERATION", item.getTitle())) {
-            return true;
-        }
-
-        // どれも引っ掛からなかったらfalse
-        return false;
+        return StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) || StringUtilsMine.arg2ContainsArg1("J-GENERATION", item.getTitle());
     }
 }
 

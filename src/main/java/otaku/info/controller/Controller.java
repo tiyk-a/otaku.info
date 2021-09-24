@@ -27,6 +27,7 @@ public class Controller {
         // アフィリサイトでの検索ワード一覧
         List<String> resultList = new ArrayList<>();
         searchList.forEach(arr -> resultList.add(String.join(" ",artist, arr)));
+        // TODO: memberが入ってない？
 //        if (teamService.getMnemonic(artist) != null) {
 //            searchList.forEach(arr -> resultList.add(String.join(" ",teamService.getMnemonic(artist), arr)));
 //        }

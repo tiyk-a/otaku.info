@@ -34,9 +34,9 @@ public class DateUtils {
         return Math.toIntExact(time.convert(diff, TimeUnit.MILLISECONDS));
     }
 
-    static public Date daysAfterToday(int days) {
+    public Date daysAfterToday(int days) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
+        calendar.setTime(getToday());
         calendar.add(Calendar.DATE, days);
         return calendar.getTime();
     }
@@ -142,5 +142,18 @@ public class DateUtils {
         ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, zone);
         Instant instant = zonedDateTime.toInstant();
         return Date.from(instant);
+    }
+
+    /**
+     * 今日の0:00を返却します
+     *
+     * @return
+     */
+    public Date getToday() {
+        // 商品を集めるため今日の日付を取得
+        Date today = org.apache.commons.lang3.time.DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
+        Calendar c = Calendar.getInstance();
+        c.setTime(today);
+        return today;
     }
 }

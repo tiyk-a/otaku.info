@@ -195,4 +195,20 @@ public class ItemMaster {
             return false;
         }
     }
+
+    public boolean isNewImage(String imageUrl) {
+        if (!StringUtils.hasText(this.getImage1())) {
+            return true;
+        } else if (this.getImage1().equals(imageUrl)) {
+            return false;
+        } else if (!StringUtils.hasText(this.getImage2())) {
+            return true;
+        } else if (this.getImage2().equals(imageUrl)) {
+            return false;
+        } else if (!StringUtils.hasText(this.getImage3())) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

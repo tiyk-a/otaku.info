@@ -1,7 +1,6 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,11 +86,10 @@ public class BlogController {
     public String updateReleaseItems() {
 
         // 商品を集めるため今日の日付を取得
-        Date today = DateUtils.truncate(new Date(), Calendar.DAY_OF_MONTH);
-        Calendar c = Calendar.getInstance();
-        c.setTime(today);
-        c.add(Calendar.HOUR, 24);
-        Date to = c.getTime();
+        Date today = dateUtils.getToday();
+
+        // 24時間後の日付を取得
+        Date to = dateUtils.daysAfterToday(1);
 
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
@@ -99,10 +97,8 @@ public class BlogController {
         Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null).collect(Collectors.toList())));
 
         // 明日~1週間以内の発売商品
-        c.setTime(today);
-        c.add(Calendar.DATE, 7);
+        Date sevenDaysLater = dateUtils.daysAfterToday(7);
 
-        Date sevenDaysLater = c.getTime();
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
         List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
         // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)

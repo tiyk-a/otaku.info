@@ -266,4 +266,63 @@ public class ItemUtils {
         }
         return 0L;
     }
+
+    /**
+     * 引数で受けた商品リストをマスター商品ごとにまとめる。
+     * マスター商品がない場合は新しくレコードを作る。
+     *
+     * @param itemList
+     * @return
+     */
+    public List<ItemMaster> returnItemMaster(List<Item> itemList) {
+        List<ItemMaster> itemMasterList = new ArrayList<>();
+
+        for (Item item : itemList) {
+            // マスターがすでに商品に登録されている場合
+            if (item.getItem_m_id() != null) {
+                // まずすでにマスターが出現してるか確認
+                Item finalItem = item;
+                if (itemMasterList.stream().noneMatch(e -> e.getItem_m_id().equals(finalItem.getItem_m_id()))) {
+                    ItemMaster itemMaster = itemMasterService.getMasterById(item.getItem_m_id());
+                    if (itemMaster.isNull() || itemMaster.getItem_m_id() == null) {
+                        // 新規マスター登録が必要か判定する
+                        Long masterId = judgeNewMaster(item);
+
+                        // マスター登録が必要な場合は登録
+                        if (masterId.equals(0L)) {
+                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                            // TODO: fragile
+                            itemMaster = savedMap.keySet().stream().findFirst().get();
+                        } else {
+                            // マスター登録が不要な場合はitemにマスターIDを設定する
+                            item.setItem_m_id(masterId);
+                            itemService.saveItem(item);
+                            itemMaster = itemMasterService.findById(masterId);
+                        }
+                    }
+                    itemMasterList.add(itemMaster);
+                }
+            } else {
+                // 新規マスター登録が必要か判定する
+                Long masterId = judgeNewMaster(item);
+                ItemMaster itemMaster = new ItemMaster();
+
+                // マスター登録が必要な場合は登録
+                if (masterId.equals(0L)) {
+                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                    for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
+                        item = e.getValue();
+                        itemMaster = e.getKey();
+                    }
+                } else {
+                    // マスター登録が不要な場合はitemにマスターIDを設定する
+                    item.setItem_m_id(masterId);
+                    itemService.saveItem(item);
+                    itemMaster = itemMasterService.findById(masterId);
+                }
+                itemMasterList.add(itemMaster);
+            }
+        }
+        return itemMasterList;
+    }
 }

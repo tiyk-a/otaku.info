@@ -16,13 +16,12 @@ import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
-import otaku.info.utils.ItemUtils;
-import otaku.info.utils.JsonUtils;
-import otaku.info.utils.ServerUtils;
-import otaku.info.utils.StringUtilsMine;
+import otaku.info.utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 楽天アフェリエイトへ商品情報を取りに行くコントローラー
@@ -37,6 +36,9 @@ public class RakutenController {
 
     @Autowired
     ServerUtils serverUtils;
+
+    @Autowired
+    DateUtils dateUtils;
 
     @Autowired
     Setting setting;
@@ -134,13 +136,15 @@ public class RakutenController {
      */
     public boolean updateUrl() {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
-        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(100));
+        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
+        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null && !f.isDel_flg()).collect(Collectors.toList())));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();
-        for (Item item : itemList) {
-            if (updateTarget(item.getUrl())) {
-                targetList.add(item);
+        for (List<Item> itemList : itemMasterMap.values()) {
+            List<Item> tmpList = itemList.stream().filter(e -> updateTarget(e.getUrl())).collect(Collectors.toList());
+            if (tmpList.size() > 0) {
+                targetList.addAll(tmpList);
             }
         }
 
@@ -178,7 +182,21 @@ public class RakutenController {
                 e.printStackTrace();
             }
         }
-        itemService.saveAll(updateList);
+
+        if (updateList.size() > 0) {
+            itemService.saveAll(updateList);
+            List<ItemMaster> itemMasterList1 = itemUtils.returnItemMaster(updateList);
+            List<ItemMaster> setItemMasterList = new ArrayList<>();
+            for (ItemMaster itemMaster : itemMasterList1) {
+                List<Item> itemList = updateList.stream().filter(e -> e.getItem_m_id().equals(itemMaster.getItem_m_id())
+                        && (itemMaster.isNewImage(e.getImage1()) || itemMaster.isNewImage(e.getImage2()) || itemMaster.isNewImage(e.getImage3()))).collect(Collectors.toList());
+                if (itemList.size() > 0) {
+                    setItemMasterList.add(setImagesItemMaster(itemMaster, updateList));
+
+                }
+            }
+            itemMasterService.saveAll(setItemMasterList);
+        }
         return true;
     }
 
@@ -243,7 +261,7 @@ public class RakutenController {
      * @param imageArray 画像の入ったarray
      * @return
      */
-    private Item setImages(Item item, JSONArray imageArray) {
+    public Item setImages(Item item, JSONArray imageArray) {
             if (imageArray.length() > 0) {
                 boolean hasNext1 = item.fillBlankImage(imageArray.get(0).toString().replaceAll("^\"|\"$", ""));
                 if (imageArray.length() > 1 && hasNext1) {
@@ -270,6 +288,19 @@ public class RakutenController {
                 boolean hasNext2 = itemMaster.fillBlankImage(imageArray.get(1).toString().replaceAll("^\"|\"$", ""));
                 if (imageArray.length() > 2 && hasNext2) {
                     itemMaster.fillBlankImage(imageArray.get(2).toString().replaceAll("^\"|\"$", ""));
+                }
+            }
+        }
+        return itemMaster;
+    }
+
+    private ItemMaster setImagesItemMaster(ItemMaster itemMaster, List<Item> imageList) {
+        if (imageList.size() > 0) {
+            boolean hasNext1 = itemMaster.fillBlankImage(imageList.get(0).getImage1().replaceAll("^\"|\"$", ""));
+            if (imageList.size() > 1 && hasNext1) {
+                boolean hasNext2 = itemMaster.fillBlankImage(imageList.get(1).getImage2().replaceAll("^\"|\"$", ""));
+                if (imageList.size() > 2 && hasNext2) {
+                    itemMaster.fillBlankImage(imageList.get(2).getImage3().replaceAll("^\"|\"$", ""));
                 }
             }
         }

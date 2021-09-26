@@ -158,7 +158,7 @@ public class RakutenController {
             String parameter = "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             try {
-                if (JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+                if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                     JSONArray itemArray = jsonObject.getJSONArray("Items");
 
                     if (itemArray == null) {
@@ -234,7 +234,7 @@ public class RakutenController {
             JSONObject jsonObject = request(parameter);
             if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
-                if (itemArray.get(0) != null && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
+                if (itemArray.get(0) != null && itemArray.getJSONObject(0).has("mediumImageUrls") && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
                     JSONArray imageArray = itemArray.getJSONObject(0).getJSONArray("mediumImageUrls");
                     if (imageArray.length() > 0) {
                         item = setImages(item, imageArray);

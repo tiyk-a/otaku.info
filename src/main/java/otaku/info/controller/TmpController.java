@@ -87,7 +87,7 @@ public class TmpController {
             JSONObject node = rakutenController.request(parameter);
             if (node != null) {
 
-                if (!JsonUtils.isJsonArray(node.getString("Items"))) {
+                if (node.has("Items") && !JsonUtils.isJsonArray(node.getString("Items"))) {
                     continue;
                 }
 
@@ -98,7 +98,7 @@ public class TmpController {
                         item.setItem_code(key);
                         item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
                         item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
-                        if (JsonUtils.isJsonArray(items.getJSONObject(i).getString("mediumImageUrls"))) {
+                        if (items.getJSONObject(i).has("mediumImageUrls") && JsonUtils.isJsonArray(items.getJSONObject(i).getString("mediumImageUrls"))) {
                             JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
                             if (imageArray.length() > 0) {
                                 item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));

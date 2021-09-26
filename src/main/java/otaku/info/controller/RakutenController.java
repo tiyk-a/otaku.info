@@ -211,8 +211,7 @@ public class RakutenController {
             // URLにアクセスして要素を取ってくる
             Document d = Jsoup.connect(url).get();
             Elements e = d.getElementsByTag("title");
-            boolean test = e.text().contains("エラー");
-            return test;
+            return e.text().contains("エラー");
         } catch (Exception e) {
             // TODO: エラー出たらそのこと自体伝えた方がいい
             e.printStackTrace();

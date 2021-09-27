@@ -129,7 +129,6 @@ public class RakutenController {
     }
 
     /**
-     * TODO: これがしっかり動いてるか確認。要。
      * 楽天アフィリンクの更新を行います
      *
      * @return
@@ -148,35 +147,20 @@ public class RakutenController {
             }
         }
 
-        // 更新が必要であれば更新する
-        List<String> searchList = new ArrayList<>();
-        targetList.forEach(e -> searchList.add(e.getItem_code()));
-
         List<Item> updateList = new ArrayList<>();
+        List<Item> delItemList = new ArrayList<>();
 
-        for (String key : searchList) {
-            String parameter = "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
+        for (Item item : targetList) {
+            String parameter = "&itemCode=" + item.getItem_code() + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             try {
                 if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
-                    JSONArray itemArray = jsonObject.getJSONArray("Items");
-
-                    if (itemArray == null) {
-                        continue;
-                    }
-
-                    for (int i=0; i<itemArray.length();i++) {
-                        try {
-                            Item item = itemService.findByItemCode(key).orElse(new Item());
-                            if (item.getItem_code() == null) {
-                                continue;
-                            }
-                            item.setUrl(itemArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", ""));
-                            updateList.add(item);
-                        } catch (Exception e) {
-                            System.out.println(e.getMessage());
-                        }
-                    }
+                    String affiliateUrl = jsonObject.getJSONArray("Items").getJSONObject(0).getJSONObject("Item").getString("affiliateUrl").replaceAll("^\"|\"$", "");
+                    item.setUrl(affiliateUrl);
+                    updateList.add(item);
+                } else if (!jsonObject.has("Items")) {
+                    item.setDel_flg(true);
+                    delItemList.add(item);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -197,21 +181,26 @@ public class RakutenController {
             }
             itemMasterService.saveAll(setItemMasterList);
         }
+
+        // 更新楽天商品アフィリエイトURLが見つからなかった場合、商品のdel_flgをtrueにしたものを更新する
+        if (delItemList.size() > 0) {
+            itemService.saveAll(delItemList);
+        }
         return true;
     }
 
     /**
-     * 楽天アフィ更新のチェックメソッド。要
+     * 楽天アフィ更新のチェックメソッド
      *
      * @param url
      * @return
      */
-    private boolean updateTarget(String url) {
+    public boolean updateTarget(String url) {
         try {
             // URLにアクセスして要素を取ってくる
             Document d = Jsoup.connect(url).get();
             Elements e = d.getElementsByTag("title");
-            return e.text().contains("エラー");
+            return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません");
         } catch (Exception e) {
             // TODO: エラー出たらそのこと自体伝えた方がいい
             e.printStackTrace();

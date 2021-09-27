@@ -11,8 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.entity.AffeliUrl;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.AffeliUrlService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
@@ -45,6 +47,9 @@ public class RakutenController {
 
     @Autowired
     ItemMasterService itemMasterService;
+
+    @Autowired
+    AffeliUrlService affeliUrlService;
 
     private final ItemService itemService;
 
@@ -149,13 +154,19 @@ public class RakutenController {
 
         List<Item> updateList = new ArrayList<>();
         List<Item> delItemList = new ArrayList<>();
+        List<AffeliUrl> affeliUrlList = new ArrayList<>();
 
+        // ターゲットがあれば更新
         for (Item item : targetList) {
             String parameter = "&itemCode=" + item.getItem_code() + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             try {
                 if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                     String affiliateUrl = jsonObject.getJSONArray("Items").getJSONObject(0).getJSONObject("Item").getString("affiliateUrl").replaceAll("^\"|\"$", "");
+
+                    // 新しいアフィリURLを見つけられた場合はアフィリURLテーブルに古いURLを登録したいのでリストに追加しておく
+                    affeliUrlList.add(new AffeliUrl(item.getItem_m_id(), item.getUrl()));
+
                     item.setUrl(affiliateUrl);
                     updateList.add(item);
                 } else if (!jsonObject.has("Items")) {
@@ -168,6 +179,10 @@ public class RakutenController {
         }
 
         if (updateList.size() > 0) {
+            // 更新リストが0以上の長さの場合、アフィリURLリストも0以上のはずなため、ここで上書かれる古いアフィリURLを登録する
+            affeliUrlService.saveAll(affeliUrlList);
+
+            // 完了したら更新した商品を更新する
             itemService.saveAll(updateList);
             List<ItemMaster> itemMasterList1 = itemUtils.returnItemMaster(updateList);
             List<ItemMaster> setItemMasterList = new ArrayList<>();
@@ -200,7 +215,7 @@ public class RakutenController {
             // URLにアクセスして要素を取ってくる
             Document d = Jsoup.connect(url).get();
             Elements e = d.getElementsByTag("title");
-            return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません");
+            return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません") || d.text().contains("ページが表示できません");
         } catch (Exception e) {
             // TODO: エラー出たらそのこと自体伝えた方がいい
             e.printStackTrace();

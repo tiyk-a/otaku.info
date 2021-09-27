@@ -266,8 +266,6 @@ public class TextController {
      */
     public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
         String result = "";
-        todayMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getTitle()));
-        futureMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getTitle()));
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
         List<String> todaysElems = blogReleaseItemsText(todayMap);
@@ -301,10 +299,11 @@ public class TextController {
     public List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
         List<String> resultList = new ArrayList<>();
 
-        // マスター商品ごとにテキストを作り返却リストに入れる。
-        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet()) {
+        // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
+        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet().stream().filter(e -> e.getValue().size() > 0).sorted(Comparator.comparing(e -> e.getKey().getTitle())).collect(Collectors.toList())) {
             ItemMaster itemMaster = entry.getKey();
-            List<Item> itemList = entry.getValue();
+            List<Item> itemList = entry.getValue().stream().filter(e -> StringUtils.hasText(e.getItem_code())).collect(Collectors.toList());
+            boolean noRakutenFlg = itemList.size() > 0;
 
             String date = dateUtils.getDay(itemMaster.getPublication_date());
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
@@ -335,7 +334,7 @@ public class TextController {
 
             String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
 
-            Integer estPrice = getPrice(itemList);
+            Integer estPrice = noRakutenFlg ? getPrice(entry.getValue()) : getPrice(itemList);
             String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
@@ -343,12 +342,16 @@ public class TextController {
 
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
-            for (Item item : itemList) {
-                // ブログカードで楽天リンクを表示
-                String linkCard = "[rakuten id=" + item.getItem_code() + "]";
+            if (noRakutenFlg) {
+                rakutenLink = rakutenLink + "[rakuten kw=" + itemMaster.getTitle() + "]";
+            } else {
+                for (Item item : itemList) {
+                    // ブログカードで楽天リンクを表示
+                    String linkCard = "[rakuten id=" + item.getItem_code() + "]";
 
-                // 商品テキストをまとめ、楽天テキストの末尾に加える
-                rakutenLink = rakutenLink + "\n" + linkCard;
+                    // 商品テキストをまとめ、楽天テキストの末尾に加える
+                    rakutenLink = rakutenLink + "\n" + linkCard;
+                }
             }
 
             String text = String.join("\n", h2, image, description, price, publicationDateStr, rakutenLink);

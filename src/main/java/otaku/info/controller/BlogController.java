@@ -102,7 +102,7 @@ public class BlogController {
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
         List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
         // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
-        Map<ItemMaster, List<Item>> futureItemMasterMap = futureItemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null).collect(Collectors.toList())));
+        Map<ItemMaster, List<Item>> futureItemMasterMap = futureItemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> StringUtils.hasText(f.getTeam_id())).collect(Collectors.toList())));
 
         // テキストを生成
         String blogText = textController.blogUpdateReleaseItems(itemMasterMap, futureItemMasterMap);

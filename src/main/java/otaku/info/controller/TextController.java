@@ -8,6 +8,8 @@ import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
+import otaku.info.enums.MagazineEnum;
+import otaku.info.enums.PublisherEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -26,6 +28,9 @@ public class TextController {
 
     @Autowired
     private DateUtils dateUtils;
+
+    @Autowired
+    AnalyzeController analyzeController;
 
     @Autowired
     private ItemService itemService;
@@ -84,7 +89,9 @@ public class TextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
-            title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
+            List<Item> itemList = new ArrayList<>();
+            itemList.add(item);
+            title = createItemMasterTitle(itemList, itemMaster.getPublication_date());
             itemMaster.setTitle(title);
             // ついでに登録（更新）する
             itemMasterService.save(itemMaster);
@@ -93,6 +100,15 @@ public class TextController {
         return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
+    /**
+     * 未来発売の商品のリマインダー文章を作成します。
+     * Twitter用
+     *
+     * @param itemMaster
+     * @param item
+     * @param teamIdList
+     * @return
+     */
     public String futureItemReminder(ItemMaster itemMaster, Item item, List<Long> teamIdList) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = "";
@@ -104,6 +120,7 @@ public class TextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
+            // TODO: itemMasterにタイトルがないことありえるか？？？あり得なさそうなので、ここを通る場合はItemのタイトルを使用する、でよし。
             title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
             itemMaster.setTitle(title);
             // ついでに登録（更新）する
@@ -112,6 +129,14 @@ public class TextController {
         return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
+    /**
+     * 未来発売の商品のリマインダー文章を作成します。
+     *
+     * @param itemMaster
+     * @param item
+     * @param teamId
+     * @return
+     */
     public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
@@ -120,6 +145,7 @@ public class TextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
+            // TODO: itemMasterにタイトルがないことありえるか？？？あり得なさそうなので、ここを通る場合はItemのタイトルを使用する、でよし。
             title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
             itemMaster.setTitle(title);
             // ついでに登録（更新）する
@@ -343,11 +369,11 @@ public class TextController {
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
             if (noRakutenFlg) {
-                rakutenLink = rakutenLink + "[rakuten kw=" + itemMaster.getTitle() + "]";
+                rakutenLink = rakutenLink + "[rakuten kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
             } else {
                 for (Item item : itemList) {
                     // ブログカードで楽天リンクを表示
-                    String linkCard = "[rakuten id=" + item.getItem_code() + "]";
+                    String linkCard = "[rakuten id=" + item.getItem_code() + " amazon=1 rakuten=1 yahoo=1]";
 
                     // 商品テキストをまとめ、楽天テキストの末尾に加える
                     rakutenLink = rakutenLink + "\n" + linkCard;
@@ -434,6 +460,153 @@ public class TextController {
      */
     public String createBlogTitle(Date publicationDate, String title) {
         return  sdf1.format(publicationDate) + " " + title;
+    }
+
+    /**
+     * ItemMasterのタイトルを作成します。
+     *
+     * @return
+     */
+    public String createItemMasterTitle(List<Item> itemList, Date publicationDate) {
+        // Id, count(カウントが多い方が信頼性がある)
+        Map<Long, Integer> teamIdMap = new HashMap<>();
+        Map<Long, Integer>  memberIdMap = new HashMap<>();
+        Map<Long, Integer>  magazineEnumsIdMap = new HashMap<>();
+        Map<Long, Integer>  publisherEnumIdMap = new HashMap<>();
+
+        for (Item item : itemList) {
+            if (!StringUtils.hasText(item.getTitle())) {
+                continue;
+            }
+
+            // それぞれのItemについて、チーム名、メンバー名、出版社名、雑誌名がないか調べ、あったらリストに追加していきたい
+            // team名
+            List<Long> tmpList = teamService.findTeamIdListByText(item.getTitle());
+            if (tmpList != null && tmpList.size() > 0) {
+                for (Long id : tmpList) {
+                    Integer count = 0;
+                    if (teamIdMap.containsKey(id)) {
+                        count = teamIdMap.get(id);
+                    }
+                    teamIdMap.put(id, ++count);
+                }
+            }
+
+            // メンバー名を追加する
+            tmpList = memberService.findMemberIdByText(item.getTitle());
+            if (tmpList != null && tmpList.size() > 0) {
+                for (Long id : tmpList) {
+                    Integer count = 0;
+                    if (memberIdMap.containsKey(id)) {
+                        count = memberIdMap.get(id);
+                    }
+                    memberIdMap.put(id, ++count);
+                }
+            }
+
+            // 雑誌名を追加する。雑誌名が見つかった場合、出版社も探す
+            tmpList = MagazineEnum.findMagazineIdByText(item.getTitle());
+            if (tmpList != null && tmpList.size() > 0) {
+                for (Long id : tmpList) {
+                    Integer count = 0;
+                    if (magazineEnumsIdMap.containsKey(id)) {
+                        count = magazineEnumsIdMap.get(id);
+                    }
+                    magazineEnumsIdMap.put(id, ++count);
+                }
+
+                // 出版社名を追加する
+                tmpList = PublisherEnum.findPublisherIdByText(item.getTitle());
+                if (tmpList.size() > 0) {
+                    for (Long id : tmpList) {
+                        Integer count = 0;
+                        if (publisherEnumIdMap.containsKey(id)) {
+                            count = publisherEnumIdMap.get(id);
+                        }
+                        publisherEnumIdMap.put(id, ++count);
+                    }
+                }
+            }
+
+        }
+
+        // 採点値より、確実性の低いデータは捨てる
+        List<Long> teamIdList = new ArrayList<>();
+        List<Long> memberIdList = new ArrayList<>();
+        List<Long> magazineIdList = new ArrayList<>();
+        List<Long> publisherIdList = new ArrayList<>();
+
+        if (teamIdMap.size() > 0) {
+            teamIdList = teamIdMap.entrySet().stream().filter(e -> (float) e.getValue()/ itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
+        }
+
+        if (memberIdMap.size() > 0) {
+            memberIdList = memberIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
+        }
+
+        // 雑誌名が見つかってる場合、出版社情報も入れる
+        if (magazineEnumsIdMap.size() > 0) {
+            magazineIdList = magazineEnumsIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            if (publisherEnumIdMap.size() > 0) {
+                publisherIdList = publisherEnumIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
+            }
+        }
+
+        // 追加処理。メンバー見つかってるのにチームが対応してなかったら入れてあげる
+        if (memberIdList.size() > 0) {
+            // Serviceからの返却値は重複も含むので、distinctで抜いてあげる
+            List<Long> teamIdOfMemberList = memberService.findTeamIdListByMemberIdList(memberIdList).stream().distinct().collect(Collectors.toList());
+            if (teamIdList.size() != teamIdOfMemberList.size()) {
+                if (teamIdList.size() > teamIdOfMemberList.size()) {
+                    // teamIdOfMemberListの要素が全部入ってるかの確認をする。入ってなかったら追加
+                    List<Long> tmpList = new ArrayList<>();
+                    for (Long id : teamIdList) {
+                        if (!teamIdOfMemberList.contains(id)) {
+                            tmpList.add(id);
+                        }
+                    }
+                    if (tmpList.size() > 0) {
+                        teamIdList.addAll(tmpList);
+                    }
+                } else {
+                    // teamIdOfMemberListの方がサイズが大きい場合、既存のteamIdList要素を全て削除したdiffリストを用意、残った要素があったらteamIdListに追加する
+                    List<Long> diff = new ArrayList<>(teamIdOfMemberList);
+                    diff.removeAll(teamIdList);
+                    teamIdList.addAll(diff);
+                }
+            }
+        }
+        // 全てのItemからデータを抜いたので、これから返却するタイトルを作成する
+        String res = sdf1.format(publicationDate);
+
+        if (teamIdList.size() > 0) {
+            // TODO: enum化
+            List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
+            res = res + " " + teamNameList.stream().collect(Collectors.joining(" ", "", ""));
+        }
+
+        if (memberIdList.size() > 0) {
+            // TODO: enum化
+            List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+            res = res + " " +  memberNameList.stream().collect(Collectors.joining(" ", "", ""));
+        }
+
+        // 雑誌名が見つかってる場合、出版社情報も入れる
+        if (magazineIdList.size() > 0) {
+            List<String> magazineNameList = MagazineEnum.findMagazineNameList(magazineIdList);
+            res = res + " " + magazineNameList.stream().collect(Collectors.joining(" ", "", ""));
+
+            if (publisherIdList.size() > 0) {
+                List<String> publisherNameList = PublisherEnum.findPublisherNameList(publisherIdList);
+                res = res + " " + publisherNameList.stream().collect(Collectors.joining(" ", "", ""));
+            }
+        } else {
+            // 雑誌じゃない場合||Enumに雑誌名が見つからなかった場合の処理
+            res = res + " " + itemList.get(0).getTitle();
+        }
+
+        return res;
     }
 
     /**

@@ -71,4 +71,13 @@ public class MemberService {
     public List<String> findMemberNameByIdList(List<Long> memberIdList) {
         return memberRepository.findMemberNameByIdList(memberIdList);
     }
+
+    /**
+     * 引数のメンバーIDから、そのチームIDを返却します。重複あり。
+     * @param memberIdList
+     * @return
+     */
+    public List<Long> findTeamIdListByMemberIdList(List<Long> memberIdList) {
+        return memberRepository.findTeamIdListByMemberIdList(memberIdList);
+    }
 }

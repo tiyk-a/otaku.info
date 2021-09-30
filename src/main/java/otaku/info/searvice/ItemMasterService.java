@@ -3,9 +3,11 @@ package otaku.info.searvice;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.repository.ItemMasterRepository;
+import otaku.info.utils.ItemUtils;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -18,14 +20,31 @@ public class ItemMasterService {
     @Autowired
     private ItemService itemService;
 
+    @Autowired
     private ItemMasterRepository itemMasterRepository;
+
+    @Autowired
+    TextController textController;
 
     public ItemMaster getMasterById(Long itemMasterId) {
         return itemMasterRepository.findById(itemMasterId).orElse(new ItemMaster());
     }
 
+    /**
+     * ItemからItemMaserを作成し、登録します。
+     *
+     * @param item
+     * @return
+     */
     public Map<ItemMaster, Item> addByItem(Item item) {
         ItemMaster itemMaster = item.convertToItemMaster();
+
+        // titleがそのままうつしただけなので、よろしくない。適切に直します。
+        List<Item> itemList = new ArrayList<>();
+        itemList.add(item);
+        String title = textController.createItemMasterTitle(itemList, itemMaster.getPublication_date());
+        itemMaster.setTitle(title);
+
         ItemMaster savedItemMaster = itemMasterRepository.save(itemMaster);
         item.setItem_m_id(savedItemMaster.getItem_m_id());
         Item savedItem = itemService.saveItem(item);

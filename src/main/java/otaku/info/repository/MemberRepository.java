@@ -23,7 +23,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT member_name FROM Member WHERE member_id in ?1")
     List<String> getMemberNameList(List<Long> memberIdList);
 
-    @Query("select a.member_id from Member as a where 1 < ( select count(*) from Member as b where a.member_name = b.member_name and a.member_id <= b.member_id ) and a.member_name = ?1")
+    @Query("select a.member_id from Member as a where 1 < (select count(*) from Member as b where a.member_name = b.member_name and a.member_id <= b.member_id ) and a.member_name = ?1")
     Long getFstMemberId(String memberName);
 
     @Query("select member_id from Member as a where 1 < (select count(*) from Member as b where a.member_name = b.member_name and a.member_id >= b.member_id)")
@@ -31,4 +31,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT member_name FROM Member WHERE member_id in ?1")
     List<String> findMemberNameByIdList(List<Long> memberIdList);
+
+    @Query("select team_id from Member where member_id in ?1")
+    List<Long> findTeamIdListByMemberIdList(List<Long> memberIdList);
 }

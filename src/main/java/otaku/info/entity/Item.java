@@ -85,14 +85,14 @@ public class Item {
     private Timestamp updated_at;
 
     /**
-     * マスター商品に変換します
+     * マスター商品に変換します。特殊処理話に単純に同じ名称のカラムへ値を受け渡し。
+     * チェックカラムなどはfalseを入れます。
      *
      * @return
      */
     public ItemMaster convertToItemMaster() {
         ItemMaster itemMaster = new ItemMaster();
         BeanUtils.copyProperties(this, itemMaster);
-        itemMaster.setTitle(itemMaster.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", ""));
         itemMaster.setFct_chk(false);
         itemMaster.setDel_flg(false);
         itemMaster.setItem_m_id(null);

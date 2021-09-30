@@ -332,28 +332,7 @@ public class SampleController {
 
         if (newItemList.size() > 0) {
             for (Item item : newItemList) {
-                // 年月日のデータを集める
-                Map<String, List<Date>> resultMap = analyzeController.extractPublishDate(item.getItem_caption());
-                if (resultMap.get("publishDateList").size() == 0) {
-                    Map<String, List<Date>> resultMap2 = analyzeController.extractPublishDate(item.getTitle());
-                    if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
-                        resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
-                    }
-                    if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
-                        resultMap.put("publishDateList", resultMap2.get("publishDateList"));
-                    }
-                    if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
-                        resultMap.put("dateList", resultMap2.get("dateList"));
-                    }
-                }
-
-                if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0 ) {
-                    item.setPublication_date(resultMap.get("publishDateList").get(0));
-                    if (item.getPublication_date() == null) {
-                        item.setPublication_date(resultMap.get("dateList").get(0));
-                    }
-                }
-
+                item.setPublication_date(analyzeController.generatePublicationDate(item));
                 Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
 
                 // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。

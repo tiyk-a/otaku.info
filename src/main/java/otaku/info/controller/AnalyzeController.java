@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import org.springframework.stereotype.Controller;
+import otaku.info.entity.Item;
 import otaku.info.utils.StringUtilsMine;
 
 import java.util.regex.Matcher;
@@ -20,12 +21,46 @@ import java.util.regex.Pattern;
 public class AnalyzeController {
 
     /**
+     * 商品を引数に取り、そこから発売日っぽい部分を引き抜き、Dateを返却します。
+     *
+     * @param item
+     * @return
+     * @throws ParseException
+     */
+    public Date generatePublicationDate(Item item) throws ParseException {
+        Date result = null;
+
+        // 年月日のデータを集める
+        Map<String, List<Date>> resultMap = extractPublishDate(item.getItem_caption());
+        if (resultMap.get("publishDateList").size() == 0) {
+            Map<String, List<Date>> resultMap2 = extractPublishDate(item.getTitle());
+            if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
+                resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
+            }
+            if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
+                resultMap.put("publishDateList", resultMap2.get("publishDateList"));
+            }
+            if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
+                resultMap.put("dateList", resultMap2.get("dateList"));
+            }
+        }
+
+        if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0) {
+            result = resultMap.get("publishDateList").get(0);
+            if (item.getPublication_date() == null) {
+                result = resultMap.get("dateList").get(0);
+            }
+        }
+        return result;
+    }
+
+    /**
      * 予約締切日(reserveDue)/発売日(publishDate)/実発売日(realPublishDate)を見つけます
      *
      * @param text
      * @return
      */
-    public Map<String, List<Date>> extractPublishDate(String text) throws ParseException {
+    private Map<String, List<Date>> extractPublishDate(String text) throws ParseException {
 
         Map<String, List<Date>> resultMap = new HashMap<>();
 

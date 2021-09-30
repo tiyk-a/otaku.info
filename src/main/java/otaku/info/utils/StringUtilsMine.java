@@ -98,9 +98,6 @@ public class StringUtilsMine {
         return false;
     }
 
-    public StringUtilsMine() {
-    }
-
     /**
      * 正規表現に合致するsubstringを返却します
      *

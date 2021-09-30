@@ -179,7 +179,7 @@ public class BlogController {
         // リクエスト送信
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
-        String title = textController.createTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+        String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
         System.out.println("title: " + title);
         jsonObject.put("title", title);
         jsonObject.put("author", 1);

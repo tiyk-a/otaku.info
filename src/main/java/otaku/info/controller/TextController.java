@@ -424,7 +424,15 @@ public class TextController {
         return (int) (dis.getDistance(s1, s2) * 100);
     }
 
-    public String createTitle(Date publicationDate, String title) {
+    /**
+     * ブログタイトルを作成します。
+     * itemMasterからの発売日とタイトルを引数に想定
+     *
+     * @param publicationDate
+     * @param title
+     * @return
+     */
+    public String createBlogTitle(Date publicationDate, String title) {
         return  sdf1.format(publicationDate) + " " + title;
     }
 

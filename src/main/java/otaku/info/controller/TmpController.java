@@ -312,7 +312,7 @@ public class TmpController {
         for (ItemMaster itemMaster : itemMasterList) {
             HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
-            String title = textController.createTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+            String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
             jsonObject.put("title", title);
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 

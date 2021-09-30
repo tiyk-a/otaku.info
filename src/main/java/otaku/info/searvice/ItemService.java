@@ -159,5 +159,9 @@ public class ItemService {
     public String getImageUrlByItemMIdImage1NotNull(Long itemMId) {
         return itemRepository.getImageUrlByItemMIdImage1NotNull(itemMId);
     }
+
+    public boolean isRegistered(String code, Integer siteId) {
+        return itemRepository.isRegistered(code, siteId) > 0;
+    }
 }
 

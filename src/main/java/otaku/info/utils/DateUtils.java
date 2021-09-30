@@ -156,4 +156,14 @@ public class DateUtils {
         c.setTime(today);
         return today;
     }
+
+    /**
+     * Unix timestampをDate型にして返却します
+     *
+     * @param unix10digits
+     * @return
+     */
+    public static Date unixToDate(Long unix10digits) {
+        return new Date(unix10digits * 1000);
+    }
 }

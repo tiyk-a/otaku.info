@@ -9,11 +9,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
+import otaku.info.controller.LineController;
 
 import java.util.HashMap;
 
 @Component
 public class Scheduler {
+
+    @Autowired
+    LineController lineController;
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -67,6 +71,7 @@ public class Scheduler {
             jobLauncher.run(rakutenSearchJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
 
     }
@@ -80,6 +85,7 @@ public class Scheduler {
             jobLauncher.run(futureItemReminderJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -92,6 +98,7 @@ public class Scheduler {
             jobLauncher.run(publishAnnouncementJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -104,6 +111,7 @@ public class Scheduler {
             jobLauncher.run(rakutenSearchMemberJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -116,6 +124,7 @@ public class Scheduler {
             jobLauncher.run(tvJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -128,6 +137,7 @@ public class Scheduler {
             jobLauncher.run(tvPostJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -140,6 +150,7 @@ public class Scheduler {
             jobLauncher.run(tvAlertJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -152,6 +163,7 @@ public class Scheduler {
             jobLauncher.run(updateUrlJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -165,6 +177,7 @@ public class Scheduler {
             jobLauncher.run(blogUpdateJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 
@@ -177,6 +190,7 @@ public class Scheduler {
             jobLauncher.run(blogMediaJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
     }
 }

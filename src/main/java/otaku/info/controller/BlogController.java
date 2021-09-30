@@ -641,13 +641,13 @@ public class BlogController {
      * TV番組の固定ページを更新
      */
     public void updateTvPage() {
-        String text = textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(0)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(1)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(2)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(3)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(4)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(5)))
-                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)));
+        String text = textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(0)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(1)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(2)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(3)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(4)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(5)).stream().distinct().collect(Collectors.toList()))
+                + "\n" + textController.tvPageText(programService.findByOnAirDate(dateUtils.daysAfterToday(6)).stream().distinct().collect(Collectors.toList()));
 
         System.out.println(text);
 

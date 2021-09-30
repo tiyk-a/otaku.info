@@ -26,5 +26,8 @@ public class Setting {
     private String generatedImage;
 //    private String blogCardPre;
 //    private String blogCardPos;
+    private String yahooShoppingApi;
+    private String yahooShoppingApiPos;
+    private String yahooPhraseApi;
 
 }

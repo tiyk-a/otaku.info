@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import java.io.*;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -37,6 +38,9 @@ public class SampleController {
 
     @Autowired
     private RakutenController rakutenController;
+
+    @Autowired
+    private YahooController yahooController;
 
     @Autowired
     private TextController textController;
@@ -98,25 +102,63 @@ public class SampleController {
      * @return
      */
     @GetMapping("/tmpMethod")
-    public String tempMethod() {
+    public String tempMethod() throws FileNotFoundException {
 
-        // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
-        Map<Integer, Integer> wpIdFeaturedMediaMap = tmpController.getPublishedWpIdFeaturedMediaList();
-        System.out.println("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
-        List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
-        System.out.println("wpIdList.size(): " + wpIdList.size());
+        // Method1
+//        // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
+//        Map<Integer, Integer> wpIdFeaturedMediaMap = tmpController.getPublishedWpIdFeaturedMediaList();
+//        System.out.println("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
+//        List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
+//        System.out.println("wpIdList.size(): " + wpIdList.size());
+//
+//        // featured_media IDからメディアURLを取得する
+//        Map<Integer, String> mediaIdMediaUrlMap = tmpController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
+//        System.out.println("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
+//
+//        // 画像パス(itemMaster.url)がnullのitemMasterを集める
+//        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
+//        System.out.println("itemMasterList.size(): " + itemMasterList.size());
+//
+//        itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
+//        itemMasterService.saveAll(itemMasterList);
+//        System.out.println("itemMasterList.size(): " + itemMasterList.size());
 
-        // featured_media IDからメディアURLを取得する
-        Map<Integer, String> mediaIdMediaUrlMap = tmpController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
-        System.out.println("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
+        // Method2
+//        Item a = itemService.findByItemId(1L).orElse(new Item());
+//        Item b = itemService.findByItemId(1L).orElse(new Item());
+//        b.setImage1("test");
+//        DiffNode diff = ObjectDifferBuilder.buildDefault().compare(a, b);
+//
+//        boolean i = diff.hasChanges();
+//        boolean d = diff.childCount() == 1;
+//        // diffの中身には差分のある項目しか存在しない。第一引数を第二引数と比べてそのステータスを見ている。
+//        DiffNode.State c = diff.getChild("site_id").getState();
+//        DiffNode.State f = diff.getChild("image1").getState();
 
-        // 画像パス(itemMaster.url)がnullのitemMasterを集める
-        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
-        System.out.println("itemMasterList.size(): " + itemMasterList.size());
+        // Method3全てのitemタイトルを分析して、出版社・雑誌名などを取得したい。そしてitemMasterのtitle作成につなげたいYahoo APIを使用したい
+        String result = "";
+        // ~/Desktop/title.txtにpro環境から落としてきたitem.titleの値を入れておく。それを読んで取り込んでyahoo apiでkeyを引き出してあげる
+        try (BufferedReader br = new BufferedReader(new FileReader("/Users/chiara/Desktop/title.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                List<String> tmpList = yahooController.extractKeywords(line);
+                if (tmpList != null && tmpList.size() > 0) {
+                    result = result + String.join(" ", tmpList) + "\n";
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
-        itemMasterService.saveAll(itemMasterList);
-        System.out.println("itemMasterList.size(): " + itemMasterList.size());
+        // extractした要素を書き出してあげる
+        try{
+            File file = new File("/Users/chiara/Desktop/keys.txt");
+                FileWriter filewriter = new FileWriter(file);
+                filewriter.write(result);
+                filewriter.close();
+        }catch(IOException e){
+            System.out.println(e);
+        }
         return "done";
     }
 
@@ -271,6 +313,8 @@ public class SampleController {
     public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException {
         boolean isTeam = memberId == 0;
         List<String> list = controller.affiliSearchWord(artist);
+
+        // 楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
         List<String> itemCodeList = rakutenController.search(list);
 
         itemCodeList = itemService.findNewItemList(itemCodeList);
@@ -279,6 +323,9 @@ public class SampleController {
         if (itemCodeList.size() > 0) {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
+
+        // Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
+        newItemList.addAll(yahooController.search(list));
 
         // 検索の誤引っ掛かりした商品をストアするリスト
         List<Item> removeList = new ArrayList<>();

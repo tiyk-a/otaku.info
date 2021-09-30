@@ -33,6 +33,9 @@ public class TextController {
     AnalyzeController analyzeController;
 
     @Autowired
+    LineController lineController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -526,6 +529,9 @@ public class TextController {
                         publisherEnumIdMap.put(id, ++count);
                     }
                 }
+            } else {
+                // 雑誌名が見つからなかった場合、その旨をLINE通知する
+                lineController.post("ItemMasterの登録で雑誌名が見つかりませんでした。itemId=" + item.getItem_id());
             }
 
         }

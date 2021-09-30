@@ -76,6 +76,34 @@ public class LineController {
     }
 
     /**
+     * メッセージをLINE通知します。
+     *
+     * @param message
+     * @return
+     */
+    public String post(String message) {
+
+            String outline = message.substring(0,30);
+            System.out.println("これをpostします： " + outline);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+            Map<String, Object> map = new HashMap<>();
+            map.put("text", message);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+            ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println("Request Successful: " + outline);
+            } else {
+                System.out.println("Request Failed: " + outline);
+            }
+        return "done";
+    }
+
+    /**
      *
      * @param req カンマ区切りのStringは「i:item or p:program, 1:日時更新 or 2:del_flgオン, Id, yyyyMMdd or yyyyMMddHHmm」
      * @return

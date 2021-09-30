@@ -419,7 +419,7 @@ public class TextController {
         List<Long> memberIdList = List.of(memberIdListStr.split(","))
                 .stream().map(Integer::parseInt).collect(Collectors.toList())
                 .stream().map(Integer::longValue).collect(Collectors.toList());
-        return memberService.findMemberNameByIdList(memberIdList);
+        return memberService.getMemberNameList(memberIdList);
     }
 
     /**

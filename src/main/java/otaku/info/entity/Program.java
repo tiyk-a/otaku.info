@@ -9,6 +9,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity(name = "program")
 @Data
@@ -54,4 +57,38 @@ public class Program {
     @UpdateTimestamp
     @Column(nullable = true)
     private Timestamp updated_at;
+
+    /**
+     * チームID("n,n,n,n,n")をLongListにして返します。
+     *
+     * @return
+     */
+    public List<Long> getTeamIdList() {
+        if (this.getTeam_id().contains(",")) {
+            return List.of(this.getTeam_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
+        } else if (this.getTeam_id() != null) {
+            List<Long> teamIdList = new ArrayList<>();
+            teamIdList.add((long)Integer.parseInt(this.getTeam_id()));
+            return teamIdList;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * チームID("n,n,n,n,n")をLongListにして返します。
+     *
+     * @return
+     */
+    public List<Long> getMemberIdList() {
+        if (this.getMember_id().contains(",")) {
+            return List.of(this.getMember_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
+        } else if (this.getMember_id() != null) {
+            List<Long> memberIdList = new ArrayList<>();
+            memberIdList.add((long)Integer.parseInt(this.getMember_id()));
+            return memberIdList;
+        } else {
+            return new ArrayList<>();
+        }
+    }
 }

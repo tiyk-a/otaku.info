@@ -99,7 +99,8 @@ public class ItemUtils {
 
                         // マスター登録が必要な場合は登録
                         if (masterId.equals(0L)) {
-                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                            String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                             for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
                                 item = e.getValue();
                                 itemMaster = e.getKey();
@@ -131,7 +132,8 @@ public class ItemUtils {
 
                 // マスター登録が必要な場合は登録
                 if (masterId.equals(0L)) {
-                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                    String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                     for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
                         item = e.getValue();
                         itemMaster = e.getKey();
@@ -290,7 +292,8 @@ public class ItemUtils {
 
                         // マスター登録が必要な場合は登録
                         if (masterId.equals(0L)) {
-                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                            String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                             // TODO: fragile
                             itemMaster = savedMap.keySet().stream().findFirst().get();
                         } else {
@@ -309,7 +312,8 @@ public class ItemUtils {
 
                 // マスター登録が必要な場合は登録
                 if (masterId.equals(0L)) {
-                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item);
+                    String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                     for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
                         item = e.getValue();
                         itemMaster = e.getKey();

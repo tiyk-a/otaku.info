@@ -210,18 +210,7 @@ public class TextController {
      */
     public Map<String, String> tvAlert(Program program) {
         String stationName = stationService.getStationName(program.getStation_id());
-        List<Long> teamIdList = new ArrayList<>();
-
-        // TeamIdが空でなければリストに追加します。
-        if (program.getTeam_id() != null && !program.getTeam_id().equals("")) {
-            if (program.getTeam_id().contains(",")) {
-                teamIdList = List.of(program.getTeam_id().split(","))
-                        .stream().map(Integer::parseInt).collect(Collectors.toList())
-                        .stream().map(Integer::longValue).collect(Collectors.toList());
-            } else {
-                teamIdList.add((long)Integer.parseInt(program.getTeam_id()));
-            }
-        }
+        List<Long> teamIdList = program.getTeamIdList();
 
         Map<String, String> resultMap = new HashMap<>();
         // 返却するMapにKey(ProgramId)のみ詰め込みます。
@@ -232,17 +221,7 @@ public class TextController {
 
         // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
         List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
-        if (program.getMember_id() != null && !program.getMember_id().equals("")) {
-            // Member情報格納
-            if (program.getMember_id().contains(",")) {
-                List.of(program.getMember_id().split(","))
-                        .stream().map(Integer::parseInt).collect(Collectors.toList())
-                        .stream().map(Integer::longValue).collect(Collectors.toList())
-                        .forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
-            } else {
-                teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName((long) Integer.parseInt(program.getMember_id())));
-            }
-        }
+        program.getMemberIdList().forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
 
         // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>
         Map<Long, String> keyMemberMap = new HashMap<>();
@@ -342,14 +321,14 @@ public class TextController {
                 continue;
             }
 
-            List<String> teamNameList = findTeamName(itemMaster.getTeam_id());
+            List<String> teamNameList = findTeamName(itemMaster.getTeamIdList());
             String teamNameUnited = String.join(" ", teamNameList);
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
             // メンバー名もある場合はこちら
             if (StringUtils.hasText(itemMaster.getMember_id()) && !itemMaster.getMember_id().equals("0")) {
-                List<String> memberNameList = findMemberName(itemMaster.getMember_id());
+                List<String> memberNameList = findMemberName(itemMaster.getMemberIdList());
                 h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
             } else {
                 // メンバー名ない場合はこちら
@@ -397,31 +376,40 @@ public class TextController {
      * @return
      */
     private Integer getPrice(List<Item> itemList) {
+        System.out.println("***** getPrice *****");
         List<Integer> priceList = itemList.stream().map(e -> e.getPrice()).distinct().collect(Collectors.toList());
         if (priceList.size() == 1) {
+            System.out.println("if: " + priceList.get(0));
             return priceList.get(0);
         } else {
+            System.out.println("else: " + priceList.stream().max(Integer::compare).orElse(0));
             return priceList.stream().max(Integer::compare).orElse(0);
         }
     }
 
-    private List<String> findTeamName(String teamIdListStr) {
-        if (teamIdListStr == null || teamIdListStr.equals("")) {
+    /**
+     * チームIDリストからチーム名リストを返します。
+     *
+     * @param teamIdList
+     * @return
+     */
+    private List<String> findTeamName(List<Long> teamIdList) {
+        if (teamIdList == null || teamIdList.size() == 0) {
             return null;
         }
-        List<Long> teamIdList = List.of(teamIdListStr.split(","))
-                .stream().map(Integer::parseInt).collect(Collectors.toList())
-                .stream().map(Integer::longValue).collect(Collectors.toList());
         return teamService.findTeamNameByIdList(teamIdList);
     }
 
-    private List<String> findMemberName(String memberIdListStr) {
-        if (memberIdListStr == null || memberIdListStr.equals("")) {
+    /**
+     * メンバーIDリストからメンバー名リストを返します。
+     *
+     * @param memberIdList
+     * @return
+     */
+    private List<String> findMemberName(List<Long> memberIdList) {
+        if (memberIdList == null || memberIdList.size() == 0) {
             return null;
         }
-        List<Long> memberIdList = List.of(memberIdListStr.split(","))
-                .stream().map(Integer::parseInt).collect(Collectors.toList())
-                .stream().map(Integer::longValue).collect(Collectors.toList());
         return memberService.getMemberNameList(memberIdList);
     }
 
@@ -634,10 +622,7 @@ public class TextController {
         for (Program program : sortedProgramList) {
             String tmp = "";
 
-            List<Long> teamIdList = List.of(program.getTeam_id().split(","))
-                    .stream().map(Integer::parseInt).collect(Collectors.toList())
-                    .stream().map(Integer::longValue).collect(Collectors.toList());
-            List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
+            List<String> teamNameList = teamService.findTeamNameByIdList(program.getTeamIdList());
             String teamName = String.join("/", teamNameList);
             String stationName = stationService.getStationName(program.getStation_id());
             String description = StringUtils.hasText(program.getDescription()) ? program.getDescription() : "";

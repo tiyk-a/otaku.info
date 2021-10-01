@@ -10,7 +10,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 商品テーブル
@@ -87,12 +89,14 @@ public class Item {
     /**
      * マスター商品に変換します。特殊処理話に単純に同じ名称のカラムへ値を受け渡し。
      * チェックカラムなどはfalseを入れます。
+     * @param title textController.createItemMasterTitle(itemList, itemMaster.getPublication_date())を使用してitemMaster.titleに設定するStringを作成して渡すこと。
      *
      * @return
      */
-    public ItemMaster convertToItemMaster() {
+    public ItemMaster convertToItemMaster(String title) {
         ItemMaster itemMaster = new ItemMaster();
         BeanUtils.copyProperties(this, itemMaster);
+        itemMaster.setTitle(title);
         itemMaster.setFct_chk(false);
         itemMaster.setDel_flg(false);
         itemMaster.setItem_m_id(null);
@@ -144,5 +148,11 @@ public class Item {
         } else {
             return false;
         }
+    }
+
+    public List<Item> toList() {
+        List<Item> itemList = new ArrayList<>();
+        itemList.add(this);
+        return itemList;
     }
 }

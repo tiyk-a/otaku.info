@@ -3,11 +3,9 @@ package otaku.info.searvice;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.repository.ItemMasterRepository;
-import otaku.info.utils.ItemUtils;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -23,27 +21,23 @@ public class ItemMasterService {
     @Autowired
     private ItemMasterRepository itemMasterRepository;
 
-    @Autowired
-    TextController textController;
-
     public ItemMaster getMasterById(Long itemMasterId) {
         return itemMasterRepository.findById(itemMasterId).orElse(new ItemMaster());
     }
 
     /**
      * ItemからItemMaserを作成し、登録します。
+     * textControllerをserviceに入れたくないため、このメソッド使用時は第２引数にitemMaster.titleに登録したいStringを入れる
+     * (上記はtextController.createItemMasterTitle(itemList（第１引数のitemをリストにする）, item.getPublication_date()))で作成可能)
      *
      * @param item
      * @return
      */
-    public Map<ItemMaster, Item> addByItem(Item item) {
-        ItemMaster itemMaster = item.convertToItemMaster();
-
-        // titleがそのままうつしただけなので、よろしくない。適切に直します。
+    public Map<ItemMaster, Item> addByItem(Item item, String requestTitle) {
+        // item -> itemMaster,引数のタイトル作成のためリストにItemを入れる
         List<Item> itemList = new ArrayList<>();
         itemList.add(item);
-        String title = textController.createItemMasterTitle(itemList, itemMaster.getPublication_date());
-        itemMaster.setTitle(title);
+        ItemMaster itemMaster = item.convertToItemMaster(requestTitle);
 
         ItemMaster savedItemMaster = itemMasterRepository.save(itemMaster);
         item.setItem_m_id(savedItemMaster.getItem_m_id());

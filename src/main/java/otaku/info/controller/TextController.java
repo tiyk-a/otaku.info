@@ -273,7 +273,7 @@ public class TextController {
      * @return
      */
     public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
-        String result = "";
+        String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
         List<String> todaysElems = blogReleaseItemsText(todayMap);
@@ -281,9 +281,9 @@ public class TextController {
 
         // 本日発売の商品
         if (todaysElems.size() > 0) {
-            result = String.join("\n\n", String.join("\n\n", todaysElems));
+            result = result + "\n" + String.join("\n\n", String.join("\n\n", todaysElems));
         } else {
-            result = "<h2>今日発売の商品はありません。</h2>";
+            result = result + "\n" + "<h2>今日発売の商品はありません。</h2>";
         }
 
         // 明日以降発売の商品
@@ -311,7 +311,7 @@ public class TextController {
         for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet().stream().filter(e -> e.getValue().size() > 0).sorted(Comparator.comparing(e -> e.getKey().getTitle())).collect(Collectors.toList())) {
             ItemMaster itemMaster = entry.getKey();
             List<Item> itemList = entry.getValue().stream().filter(e -> StringUtils.hasText(e.getItem_code())).collect(Collectors.toList());
-            boolean noRakutenFlg = itemList.size() > 0;
+            boolean noRakutenFlg = itemList.size() == 0;
 
             String date = dateUtils.getDay(itemMaster.getPublication_date());
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
@@ -351,11 +351,11 @@ public class TextController {
             String rakutenLink = "<h6>楽天から購入</h6><p>";
 
             if (noRakutenFlg) {
-                rakutenLink = rakutenLink + "[rakuten kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
+                rakutenLink = rakutenLink + "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
             } else {
                 for (Item item : itemList) {
                     // ブログカードで楽天リンクを表示
-                    String linkCard = "[rakuten id=" + item.getItem_code() + " amazon=1 rakuten=1 yahoo=1]";
+                    String linkCard = "[rakuten id=" + item.getItem_code() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
 
                     // 商品テキストをまとめ、楽天テキストの末尾に加える
                     rakutenLink = rakutenLink + "\n" + linkCard;
@@ -611,12 +611,16 @@ public class TextController {
      * @return
      */
     public String tvPageText(List<Program> programList) {
+        if (programList.size() == 0) {
+            return "";
+        }
+
         String result = "[toc depth='5']";
         List<Program> sortedProgramList = programList.stream().sorted(Comparator.comparing(Program::getOn_air_date)).collect(Collectors.toList());
 
         if (programList.size() > 0) {
             Date date = DateUtils.localDateTimeToDate(programList.get(0).getOn_air_date());
-            result = result + "<br /><h2>" + sdf2.format(date) + "(" +dateUtils.getDay(date) + ")</h2>\n";
+            result = result + "<br /><h2>" + sdf2.format(date) + "(" + dateUtils.getDay(date) + ")</h2>\n";
         }
 
         for (Program program : sortedProgramList) {
@@ -631,4 +635,17 @@ public class TextController {
         }
         return result;
     }
+
+//    public String generateItemMasterTitle(List<String> wordList) {
+//        String result = "";
+//        // TODO: enumでチーム名・メンバー名のリストあったら使いやすい気がする
+//        // TODO: enumで雑誌一覧も持つ
+//
+//        // 雑誌名を見つけたらそれをトップに
+//        if (wordList.contains()) {
+//            result = wordList.stream().filter(e -> );
+//        }
+//        return ;
+//    }
+
 }

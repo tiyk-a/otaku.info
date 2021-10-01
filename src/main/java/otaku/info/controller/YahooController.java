@@ -75,7 +75,7 @@ public class YahooController {
         List<Item> itemList = new ArrayList<>();
 
         for (String key : searchList) {
-            String parameter = "&query=" + key + "&results=10";
+            String parameter = setting.getYahooShoppingApi() + "&query=" + key + "&results=10" + setting.getYahooShoppingApiPos();
             JSONObject jo = new JSONObject();
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> request = new HttpEntity<>(jo.toString(), headers);

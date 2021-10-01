@@ -338,31 +338,18 @@ public class TextController {
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
 
-            String image = StringUtils.hasText(itemMaster.getImage1()) ? "<img src=" + itemMaster.getImage1().replaceAll("\\?.*$", "") + " alt='' />" : "<img src='" + setting.getBlogNoImage() +"' />";
+            Integer estPrice = noRakutenFlg ? getPrice(entry.getValue()) : getPrice(itemList);
+
+            String headItem = "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
 
             String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
 
-            Integer estPrice = noRakutenFlg ? getPrice(entry.getValue()) : getPrice(itemList);
             String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
 
-            String rakutenLink = "<h6>楽天から購入</h6><p>";
-
-            if (noRakutenFlg) {
-                rakutenLink = rakutenLink + "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
-            } else {
-                for (Item item : itemList) {
-                    // ブログカードで楽天リンクを表示
-                    String linkCard = "[rakuten id=" + item.getItem_code() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
-
-                    // 商品テキストをまとめ、楽天テキストの末尾に加える
-                    rakutenLink = rakutenLink + "\n" + linkCard;
-                }
-            }
-
-            String text = String.join("\n", h2, image, description, price, publicationDateStr, rakutenLink);
+            String text = String.join("\n", h2, headItem, description, price, publicationDateStr);
             // 返却リストに追加する
             resultList.add(text);
         }

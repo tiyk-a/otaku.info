@@ -49,3 +49,20 @@
 #### タグをつけます
 * ひとまずグループ名をつける
 * 【予定】アーティスト名も任意でつけるようにする
+
+#### Pending Diffを見れるようにするやつ
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
+```
+// Method2
+Item a = itemService.findByItemId(1L).orElse(new Item());
+Item b = itemService.findByItemId(1L).orElse(new Item());
+b.setImage1("test");
+DiffNode diff = ObjectDifferBuilder.buildDefault().compare(a, b);
+
+boolean i = diff.hasChanges();
+boolean d = diff.childCount() == 1;
+// diffの中身には差分のある項目しか存在しない。第一引数を第二引数と比べてそのステータスを見ている。
+DiffNode.State c = diff.getChild("site_id").getState();
+DiffNode.State f = diff.getChild("image1").getState();
+```

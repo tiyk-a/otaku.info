@@ -7,7 +7,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -123,18 +122,6 @@ public class SampleController {
 //        itemMasterService.saveAll(itemMasterList);
 //        System.out.println("itemMasterList.size(): " + itemMasterList.size());
 
-        // Method2
-//        Item a = itemService.findByItemId(1L).orElse(new Item());
-//        Item b = itemService.findByItemId(1L).orElse(new Item());
-//        b.setImage1("test");
-//        DiffNode diff = ObjectDifferBuilder.buildDefault().compare(a, b);
-//
-//        boolean i = diff.hasChanges();
-//        boolean d = diff.childCount() == 1;
-//        // diffの中身には差分のある項目しか存在しない。第一引数を第二引数と比べてそのステータスを見ている。
-//        DiffNode.State c = diff.getChild("site_id").getState();
-//        DiffNode.State f = diff.getChild("image1").getState();
-
         // Method3全てのitemタイトルを分析して、出版社・雑誌名などを取得したい。そしてitemMasterのtitle作成につなげたいYahoo APIを使用したい
         String result = "";
         // ~/Desktop/title.txtにpro環境から落としてきたitem.titleの値を入れておく。それを読んで取り込んでyahoo apiでkeyを引き出してあげる
@@ -148,16 +135,6 @@ public class SampleController {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        // extractした要素を書き出してあげる
-        try{
-            File file = new File("/Users/chiara/Desktop/keys.txt");
-                FileWriter filewriter = new FileWriter(file);
-                filewriter.write(result);
-                filewriter.close();
-        }catch(IOException e){
-            System.out.println(e);
         }
         return "done";
     }

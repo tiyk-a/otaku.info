@@ -1,5 +1,7 @@
 package otaku.info.enums;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.stream.Collectors;
  * 第3引数の使い方：null->特記なし、0->悪い出版社、n->親出版社
  *
  */
+@Getter
 public enum PublisherEnum {
 
     KADOKAWA(1, "KADOKAWA", null),

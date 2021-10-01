@@ -32,22 +32,22 @@ public class AnalyzeController {
 
         // 年月日のデータを集める
         Map<String, List<Date>> resultMap = extractPublishDate(item.getItem_caption());
-        if (resultMap.get("publishDateList").size() == 0) {
+        if (resultMap.containsKey("publishDateList") && resultMap.get("publishDateList").size() == 0) {
             Map<String, List<Date>> resultMap2 = extractPublishDate(item.getTitle());
-            if (resultMap.get("reserveDueList").size() == 0 && resultMap2.get("reserveDueList").size() > 0) {
+            if (resultMap.containsKey("reserveDueList") && resultMap.get("reserveDueList").size() == 0 && resultMap2.containsKey("reserveDueList") && resultMap2.get("reserveDueList").size() > 0) {
                 resultMap.put("reserveDueList", resultMap2.get("reserveDueList"));
             }
-            if (resultMap.get("publishDateList").size() == 0 && resultMap2.get("publishDateList").size() > 0) {
+            if (resultMap.containsKey("publishDateList") && resultMap.get("publishDateList").size() == 0 && resultMap2.containsKey("publishDateList") && resultMap2.get("publishDateList").size() > 0) {
                 resultMap.put("publishDateList", resultMap2.get("publishDateList"));
             }
-            if (resultMap.get("dateList").size() == 0 && resultMap2.get("dateList").size() > 0) {
+            if (resultMap.containsKey("dateList") && resultMap.get("dateList").size() == 0 && resultMap2.containsKey("dateList") && resultMap2.get("dateList").size() > 0) {
                 resultMap.put("dateList", resultMap2.get("dateList"));
             }
         }
 
-        if (resultMap.get("publishDateList").size() > 0 || resultMap.get("dateList").size() > 0) {
+        if (resultMap.containsKey("publishDateList") && resultMap.get("publishDateList").size() > 0 || resultMap.containsKey("dateList") && resultMap.get("dateList").size() > 0) {
             result = resultMap.get("publishDateList").get(0);
-            if (item.getPublication_date() == null) {
+            if (item.getPublication_date() == null && resultMap.containsKey("dateList")) {
                 result = resultMap.get("dateList").get(0);
             }
         }

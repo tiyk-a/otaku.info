@@ -20,6 +20,7 @@ import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.enums.PublisherEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -428,6 +429,8 @@ public class SampleController {
 
     /**
      * 商品が登録不要なものかどうかチェックする
+     * true -> 不要
+     * false -> いいデータ
      *
      * @param item
      * @param name
@@ -435,26 +438,8 @@ public class SampleController {
      * @return
      */
     private boolean addToRemoveList(Item item, String name, boolean isTeam) {
-
-        // 検索の誤引っ掛かりを削除するため、アーティスト名がタイトルとdescriptionに含まれていないものを別リストに入れる
-        String mnemonic;
-        if (isTeam) {
-            mnemonic = teamService.getMnemonic(name);
-        } else {
-            mnemonic = memberService.getMnemonic(name);
-        }
-        if (!StringUtilsMine.arg2ContainsArg1(name, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(name, item.getItem_caption())) {
-            if (mnemonic != null) {
-                if (!StringUtilsMine.arg2ContainsArg1(mnemonic, item.getTitle()) && !StringUtilsMine.arg2ContainsArg1(mnemonic, item.getItem_caption())) {
-                    return true;
-                }
-            } else {
-                return true;
-            }
-        }
-
-        // 非公式商品(「ジャニーズ研究会」「J-GENERATION」)を削除リストに入れる（上のtitle/descriptionのアーティスト名チェックで引っかかっていない場合）
-        return StringUtilsMine.arg2ContainsArg1("ジャニーズ研究会", item.getTitle()) || StringUtilsMine.arg2ContainsArg1("J-GENERATION", item.getTitle());
+        // ①不適切な出版社・雑誌は削除
+       return Arrays.stream(PublisherEnum.values()).filter(e -> e.getNote().equals(0)).map(PublisherEnum::getName).anyMatch(e -> StringUtilsMine.arg2ContainsArg1(e, item.getTitle()));
     }
 }
 

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -66,7 +67,7 @@ public class Program {
     public List<Long> getTeamIdList() {
         if (this.getTeam_id() != null && this.getTeam_id().contains(",")) {
             return List.of(this.getTeam_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
-        } else if (this.getTeam_id() != null) {
+        } else if (StringUtils.hasText(this.getTeam_id())) {
             List<Long> teamIdList = new ArrayList<>();
             teamIdList.add((long)Integer.parseInt(this.getTeam_id()));
             return teamIdList;
@@ -83,7 +84,7 @@ public class Program {
     public List<Long> getMemberIdList() {
         if (this.getMember_id() != null && this.getMember_id().contains(",")) {
             return List.of(this.getMember_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
-        } else if (this.getMember_id() != null) {
+        } else if (StringUtils.hasText(this.getMember_id())) {
             List<Long> memberIdList = new ArrayList<>();
             memberIdList.add((long)Integer.parseInt(this.getMember_id()));
             return memberIdList;

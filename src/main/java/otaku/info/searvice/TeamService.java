@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import otaku.info.entity.Team;
 import otaku.info.enums.TeamEnum;
 
@@ -54,6 +55,9 @@ public class TeamService {
      * @return
      */
     public List<Long> findTeamIdListByText(String text) {
+        if (!StringUtils.hasText(text)) {
+            return new ArrayList<>();
+        }
         List<String> teamNameList = findAllTeamName();
         return teamNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> (long) TeamEnum.get(e).getId()).collect(Collectors.toList());
     }

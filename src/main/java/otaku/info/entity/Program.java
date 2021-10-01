@@ -64,7 +64,7 @@ public class Program {
      * @return
      */
     public List<Long> getTeamIdList() {
-        if (this.getTeam_id().contains(",")) {
+        if (this.getTeam_id() != null && this.getTeam_id().contains(",")) {
             return List.of(this.getTeam_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
         } else if (this.getTeam_id() != null) {
             List<Long> teamIdList = new ArrayList<>();
@@ -81,7 +81,7 @@ public class Program {
      * @return
      */
     public List<Long> getMemberIdList() {
-        if (this.getMember_id().contains(",")) {
+        if (this.getMember_id() != null && this.getMember_id().contains(",")) {
             return List.of(this.getMember_id().split(",")).stream().map(Integer::parseInt).collect(Collectors.toList()).stream().map(Integer::longValue).collect(Collectors.toList());
         } else if (this.getMember_id() != null) {
             List<Long> memberIdList = new ArrayList<>();

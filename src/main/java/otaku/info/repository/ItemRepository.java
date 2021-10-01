@@ -81,6 +81,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(nativeQuery = true, value = "select image1 from item where item_m_id = ?1 and image1 is not null limit 1")
     String getImageUrlByItemMIdImage1NotNull(Long itemMId);
 
-    @Query("select count(t) from Item where item_code = ?1 and site_id = ?2")
+    @Query("select count(*) from Item where item_code = ?1 and site_id = ?2")
     int isRegistered(String code, Integer siteId);
 }

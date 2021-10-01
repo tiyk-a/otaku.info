@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.apache.lucene.analysis.miscellaneous.PrefixAndSuffixAwareTokenFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.entity.Member;
 import otaku.info.enums.MemberEnum;
@@ -45,6 +46,9 @@ public class MemberService {
      * @return
      */
     public List<Long> findMemberIdByText(String text) {
+        if (!StringUtils.hasText(text)) {
+            return new ArrayList<>();
+        }
         List<String> memberNameList = findAllMemberName();
         return memberNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> (long) MemberEnum.get(e).getId()).collect(Collectors.toList());
     }

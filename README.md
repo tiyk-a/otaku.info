@@ -65,4 +65,9 @@ boolean d = diff.childCount() == 1;
 // diffの中身には差分のある項目しか存在しない。第一引数を第二引数と比べてそのステータスを見ている。
 DiffNode.State c = diff.getChild("site_id").getState();
 DiffNode.State f = diff.getChild("image1").getState();
+<dependency>
+    <groupId>de.danielbechler</groupId>
+    <artifactId>java-object-diff</artifactId>
+    <version>0.95</version>
+</dependency>
 ```

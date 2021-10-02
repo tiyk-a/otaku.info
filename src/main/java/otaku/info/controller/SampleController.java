@@ -282,6 +282,8 @@ public class SampleController {
 
     /**
      * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド
+     * ①楽天検索
+     * ②Yahoo検索
      *
      * @param teamId
      * @param artist

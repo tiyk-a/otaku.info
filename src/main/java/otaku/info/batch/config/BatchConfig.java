@@ -19,10 +19,10 @@ class BatchConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
-    private final RakutenSearchTasklet rakutenSearchTasklet;
+    private final ItemSearchTasklet itemSearchTasklet;
     private final FutureItemReminderTasklet futureItemReminderTasklet;
     private final PublishAnnounceTasklet publishAnnounceTasklet;
-    private final RakutenSearchMemberTasklet rakutenSearchMemberTasklet;
+    private final ItemSearchMemberTasklet itemSearchMemberTasklet;
     private final TvPostTasklet tvPostTasklet;
     private final TvAlertTasklet tvAlertTasklet;
     private final UpdateUrlTasklet updateUrlTasklet;
@@ -32,16 +32,16 @@ class BatchConfig {
     private final TvTasklet tvTasklet;
 
     @Bean
-    Step rakutenSearchStep() {
-        return stepBuilderFactory.get("rakutenSearchStep") //Step名を指定
-                .tasklet(rakutenSearchTasklet) //実行するTaskletを指定
+    Step itemSearchStep() {
+        return stepBuilderFactory.get("itemSearchStep") //Step名を指定
+                .tasklet(itemSearchTasklet) //実行するTaskletを指定
                 .build();
     }
 
     @Bean
-    Job rakutenSearchJob() {
-        return this.jobBuilderFactory.get("rakutenSearchJob").incrementer(new RunIdIncrementer())
-            .start(rakutenSearchStep()).build();
+    Job itemSearchJob() {
+        return this.jobBuilderFactory.get("itemSearchJob").incrementer(new RunIdIncrementer())
+            .start(itemSearchStep()).build();
     }
 
     @Bean
@@ -76,16 +76,16 @@ class BatchConfig {
      * @return
      */
     @Bean
-    Step rakutenSearchMemberStep() {
-        return stepBuilderFactory.get("rakutenSearchMemberStep") //Step名を指定
-                .tasklet(rakutenSearchMemberTasklet) //実行するTaskletを指定
+    Step itemSearchMemberStep() {
+        return stepBuilderFactory.get("itemSearchMemberStep") //Step名を指定
+                .tasklet(itemSearchMemberTasklet) //実行するTaskletを指定
                 .build();
     }
 
     @Bean
-    Job rakutenSearchMemberJob() {
-        return this.jobBuilderFactory.get("rakutenSearchMemberJob").incrementer(new RunIdIncrementer())
-                .start(rakutenSearchMemberStep()).build();
+    Job itemSearchMemberJob() {
+        return this.jobBuilderFactory.get("itemSearchMemberJob").incrementer(new RunIdIncrementer())
+                .start(itemSearchMemberStep()).build();
     }
 
     /**

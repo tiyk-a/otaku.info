@@ -16,7 +16,7 @@ import java.util.List;
 
 @Component
 @StepScope
-public class RakutenSearchMemberTasklet implements Tasklet {
+public class ItemSearchMemberTasklet implements Tasklet {
 
     @Autowired
     SampleController sampleController;
@@ -24,9 +24,19 @@ public class RakutenSearchMemberTasklet implements Tasklet {
     @Autowired
     MemberService memberService;
 
+    /**
+     * 各チーム個人名での新商品検索
+     * ①楽天
+     * ②Yahoo
+     * 
+     * @param contribution
+     * @param chunkContext
+     * @return
+     * @throws Exception
+     */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 楽天新商品検索（個人） START ---");
+        System.out.println("--- 新商品検索（個人） START ---");
         List<MemberSearchDto> dtoList = new ArrayList<>();
         memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
         for (MemberSearchDto dto : dtoList) {
@@ -39,7 +49,7 @@ public class RakutenSearchMemberTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 楽天新商品検索（個人） END ---");
+        System.out.println("--- 新商品検索（個人） END ---");
         return RepeatStatus.FINISHED;
     }
 }

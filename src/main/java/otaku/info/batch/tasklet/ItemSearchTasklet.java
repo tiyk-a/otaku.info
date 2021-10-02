@@ -18,7 +18,7 @@ import java.util.List;
 
 @Component
 @StepScope
-public class RakutenSearchTasklet implements Tasklet {
+public class ItemSearchTasklet implements Tasklet {
 
     @Autowired
     SampleController sampleController;
@@ -26,9 +26,19 @@ public class RakutenSearchTasklet implements Tasklet {
     @Autowired
     TeamService teamService;
 
+    /**
+     * 新商品を検索します。
+     * ①楽天
+     * ②Yahoo
+     *
+     * @param contribution
+     * @param chunkContext
+     * @return
+     * @throws Exception
+     */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 楽天新商品検索 START ---");
+        System.out.println("--- 新商品検索 START ---");
         List<Team> teamList = teamService.findAllTeam();
         Map<Long, String> artistMap = new HashMap<Long, String>();
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
@@ -42,7 +52,7 @@ public class RakutenSearchTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 楽天新商品検索 END ---");
+        System.out.println("--- 新商品検索 END ---");
         return RepeatStatus.FINISHED;
     }
 }

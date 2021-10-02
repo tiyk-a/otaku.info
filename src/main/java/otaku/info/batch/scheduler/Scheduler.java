@@ -23,8 +23,8 @@ public class Scheduler {
     private JobLauncher jobLauncher;
 
     @Autowired
-    @Qualifier("rakutenSearchJob")
-    private Job rakutenSearchJob;
+    @Qualifier("itemSearchJob")
+    private Job itemSearchJob;
 
     @Autowired
     @Qualifier("futureItemReminderJob")
@@ -35,8 +35,8 @@ public class Scheduler {
     private Job publishAnnouncementJob;
 
     @Autowired
-    @Qualifier("rakutenSearchMemberJob")
-    private Job rakutenSearchMemberJob;
+    @Qualifier("itemSearchMemberJob")
+    private Job itemSearchMemberJob;
 
     @Autowired
     @Qualifier("tvJob")
@@ -62,13 +62,13 @@ public class Scheduler {
     @Qualifier("blogMediaJob")
     private Job blogMediaJob;
 
-    @Scheduled(cron = "${cron.rakutenSearch}")
+    @Scheduled(cron = "${cron.itemSearch}")
     public void run1(){
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
         confMap.put("run1", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
         try {
-            jobLauncher.run(rakutenSearchJob, jobParameters);
+            jobLauncher.run(itemSearchJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
@@ -102,13 +102,13 @@ public class Scheduler {
         }
     }
 
-    @Scheduled(cron = "${cron.rakutenSearchMember}")
+    @Scheduled(cron = "${cron.itemSearchMember}")
     public void run5(){
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run5", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
         try {
-            jobLauncher.run(rakutenSearchMemberJob, jobParameters);
+            jobLauncher.run(itemSearchMemberJob, jobParameters);
         }catch (Exception ex){
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());

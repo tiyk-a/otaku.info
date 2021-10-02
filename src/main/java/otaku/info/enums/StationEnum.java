@@ -124,7 +124,7 @@ public enum StationEnum {
 
     StationEnum(Integer id, String name, Integer note) {
         this.id = id;
-        this.note = note;
+        this.name = name;
         this.note = note;
     }
 }

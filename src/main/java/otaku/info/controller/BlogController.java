@@ -11,6 +11,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
@@ -149,6 +150,9 @@ public class BlogController {
 
             if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
                 return "";
+                throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+            } else if (responseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST)) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST);
             }
             try {
                 Thread.sleep(5000);
@@ -684,27 +688,33 @@ public class BlogController {
             System.out.println(url);
             String res = request(response, url, request, HttpMethod.GET);
 
-            // レスポンスを成形
             try {
-                if (!JsonUtils.isJsonArray(res)) {
-                    continue;
-                }
-                JSONArray ja = new JSONArray(res);
+                String res = request(url, request, HttpMethod.GET);
 
-                if (ja.length() > 0) {
-                    for (int i=0; i < ja.length(); i++) {
-                        if (ja.getJSONObject(i).getInt("featured_media") == 0) {
-                            resultList.add(ja.getJSONObject(i).getInt("id"));
-                        }
+                // レスポンスを成形
+                try {
+                    if (!JsonUtils.isJsonArray(res)) {
+                        continue;
                     }
-                    ++n;
+                    JSONArray ja = new JSONArray(res);
+
+                    if (ja.length() > 0) {
+                        for (int i=0; i < ja.length(); i++) {
+                            if (ja.getJSONObject(i).getInt("featured_media") == 0) {
+                                resultList.add(ja.getJSONObject(i).getInt("id"));
+                            }
+                        }
+                        ++n;
+                    }
+                } catch (Exception e) {
+                    nextFlg = false;
+                    e.printStackTrace();
                 }
             } catch (Exception e) {
                 nextFlg = false;
                 e.printStackTrace();
             }
         }
-
         return resultList;
     }
 }

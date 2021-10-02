@@ -1,8 +1,8 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
@@ -60,19 +60,19 @@ public class ProgramService  {
         Program overridden = findbyProgramId(programId).orElse(new Program());
 
         // チームIDを更新
-        if (StringUtils.isBlank(overridden.getTeam_id())) {
+        if (StringUtils.hasText(overridden.getTeam_id())) {
             overridden.setTeam_id(program.getTeam_id());
         } else {
-            if (!overridden.getTeam_id().contains(program.getTeam_id())) {
+            if (StringUtils.hasText(program.getTeam_id()) && !overridden.getTeam_id().contains(program.getTeam_id())) {
                 overridden.setTeam_id(overridden.getTeam_id().concat("," + program.getTeam_id()));
             }
         }
 
         // メンバーIDを更新
-        if (StringUtils.isBlank(overridden.getMember_id())) {
+        if (StringUtils.hasText(overridden.getMember_id())) {
             overridden.setMember_id(program.getMember_id());
         } else {
-            if (!overridden.getMember_id().contains(program.getMember_id())) {
+            if (StringUtils.hasText(program.getTeam_id()) && !overridden.getMember_id().contains(program.getMember_id())) {
                 overridden.setMember_id(overridden.getMember_id().concat("," + program.getMember_id()));
             }
         }

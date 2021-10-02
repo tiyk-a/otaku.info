@@ -47,7 +47,7 @@ public class AnalyzeController {
 
         if (resultMap.containsKey("publishDateList") && resultMap.get("publishDateList").size() > 0 || resultMap.containsKey("dateList") && resultMap.get("dateList").size() > 0) {
             result = resultMap.get("publishDateList").get(0);
-            if (item.getPublication_date() == null && resultMap.containsKey("dateList")) {
+            if (item.getPublication_date() == null && resultMap.containsKey("dateList") && resultMap.get("dateList").size() > 0) {
                 result = resultMap.get("dateList").get(0);
             }
         }

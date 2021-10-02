@@ -23,7 +23,6 @@ import otaku.info.utils.JsonUtils;
 import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -76,8 +75,6 @@ public class BlogController {
     @Autowired
     Setting setting;
 
-    HttpServletResponse response;
-
     /**
      * 近日販売商品のブログページ(固定)を更新します。
      * ・本日販売
@@ -114,7 +111,7 @@ public class BlogController {
         jsonObject.put("content", blogText);
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         String finalUrl = setting.getBlogApiUrl() + "pages/33";
-        request(response, finalUrl, request, HttpMethod.POST);
+        request(finalUrl, request, HttpMethod.POST);
         return "ok";
     }
 
@@ -135,14 +132,11 @@ public class BlogController {
     /**
      * リクエストを送る
      *
-     * @param response
      * @param url
      * @param request
      * @return
      */
-    public String request(HttpServletResponse response, String url, HttpEntity<String> request, HttpMethod method) {
-
-        response.setHeader("Cache-Control", "no-cache");
+    public String request(String url, HttpEntity<String> request, HttpMethod method) {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -202,7 +196,7 @@ public class BlogController {
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
             String url = setting.getBlogApiUrl() + "posts/";
-            String res = request(response, url, request, HttpMethod.POST);
+            String res = request(url, request, HttpMethod.POST);
             // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
             if (StringUtils.hasText(res)) {
                 JSONObject jo = new JSONObject(res);
@@ -304,11 +298,10 @@ public class BlogController {
      * 画像をWordPressにポストします。
      * TODO: 楽天画像の場合、すでにWP投稿済みだったとしても毎回楽天から画像をローカルへ保存してしまう。連番がどんどん増えてしまう。
      *
-     * @param response
      * @param imageUrl
      * @return /<WP画像ID, WP画像パス/>
      */
-    public Map<Integer, String> requestMedia(HttpServletResponse response, Long wpId, String imageUrl) {
+    public Map<Integer, String> requestMedia(Long wpId, String imageUrl) {
         String finalUrl = setting.getBlogApiUrl() + "media";
 
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
@@ -328,8 +321,7 @@ public class BlogController {
             imagePath = imageUrl;
         }
 
-        response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), TeamEnum.findIdBySubSomain(subDomain));
         headers.add("content-disposition", "attachment; filename=" + wpId.toString() + ".png");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -360,7 +352,7 @@ public class BlogController {
     public String requestPostData(String wpId) {
         String finalUrl = setting.getBlogApiUrl() + "posts/" + wpId;
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        return request(response, finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
+        return request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
     }
 
     /**
@@ -396,7 +388,7 @@ public class BlogController {
                 HttpHeaders headers = generalHeaderSet(new HttpHeaders());
                 JSONObject jsonObject = new JSONObject();
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                String res = request(response, url, request, HttpMethod.GET);
+                String res = request(url, request, HttpMethod.GET);
 
                 try {
                     // アイキャッチメディアのIDを取得する
@@ -438,7 +430,7 @@ public class BlogController {
                 // 画像が用意できたら投稿していく
                 if (StringUtils.hasText(imageUrl)) {
                     System.out.println("メディアポスト:" + imageUrl);
-                    Map<Integer, String> wpMediaIdUrlMap = requestMedia(response, (long) itemMaster.getWp_id(), imageUrl);
+                    Map<Integer, String> wpMediaIdUrlMap = requestMedia((long) itemMaster.getWp_id(), imageUrl);
                     Integer wpMediaId = null;
                     String mediaUrl = null;
 
@@ -480,7 +472,7 @@ public class BlogController {
         jsonObject.put("featured_media", imageId);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        request(response, url, request, HttpMethod.POST);
+        request(url, request, HttpMethod.POST);
     }
 
     /**
@@ -500,7 +492,7 @@ public class BlogController {
                 jsonObject.put("name", dateUtils.getNextYYYYMM());
 
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                request(response, url, request, HttpMethod.POST);
+                request(url, request, HttpMethod.POST);
             }
         }
     }
@@ -516,7 +508,7 @@ public class BlogController {
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(response, url, request, HttpMethod.GET);
+        String res = request(url, request, HttpMethod.GET);
         List<BlogTag> blogTagList = new ArrayList<>();
 
         try {
@@ -560,7 +552,7 @@ public class BlogController {
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(response, url, request, HttpMethod.GET);
+        String res = request(url, request, HttpMethod.GET);
 
         BlogTag blogTag = new BlogTag();
 
@@ -584,7 +576,7 @@ public class BlogController {
                         HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
                         JSONObject jsonObject1 = new JSONObject();
                         HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers);
-                        String res1 = request(response, url1, request1, HttpMethod.GET);
+                        String res1 = request(url1, request1, HttpMethod.GET);
 
                         try {
                             if (!JsonUtils.isJsonArray(res1)) {
@@ -624,7 +616,7 @@ public class BlogController {
         jo.put("name", dateUtils.getYYYYMM(date));
 
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
-        String res = request(response, url, request, HttpMethod.POST);
+        String res = request(url, request, HttpMethod.POST);
 
         JSONObject jsonObject1 = new JSONObject(res);
 
@@ -663,7 +655,7 @@ public class BlogController {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("content", text);
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            request(response, url, request, HttpMethod.POST);
+            request(url, request, HttpMethod.POST);
         }
     }
 
@@ -686,8 +678,6 @@ public class BlogController {
         while (nextFlg) {
             String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=id&_fields[]=featured_media&per_page=100&page=" + n;
             System.out.println(url);
-            String res = request(response, url, request, HttpMethod.GET);
-
             try {
                 String res = request(url, request, HttpMethod.GET);
 

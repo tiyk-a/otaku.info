@@ -17,7 +17,6 @@ import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,8 +49,6 @@ public class TmpController {
     @Autowired
     ItemUtils itemUtils;
 
-    HttpServletResponse response;
-
     /**
      * [From] BlogController
      */
@@ -70,7 +67,7 @@ public class TmpController {
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
         String url = setting.getBlogApiUrl() + "posts/";
-        String res = blogController.request(response, url, request, HttpMethod.POST);
+        String res = blogController.request(url, request, HttpMethod.POST);
         System.out.println(res);
     }
 
@@ -216,7 +213,7 @@ public class TmpController {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("status","draft");
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            blogController.request(response, url, request, HttpMethod.POST);
+            blogController.request(url, request, HttpMethod.POST);
         }
     }
 
@@ -234,7 +231,7 @@ public class TmpController {
             HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            String res = blogController.request(response, url, request, HttpMethod.GET);
+            String res = blogController.request(url, request, HttpMethod.GET);
 
             try {
                 if (!JsonUtils.isJsonArray(res)) {
@@ -269,7 +266,7 @@ public class TmpController {
         HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = blogController.request(response, url, request, HttpMethod.GET);
+        String res = blogController.request(url, request, HttpMethod.GET);
 
         try {
             if (JsonUtils.isJsonArray(res)) {
@@ -290,7 +287,7 @@ public class TmpController {
                             String text = textController.blogReleaseItemsText(itemMasterListMap).get(0);
                             jsonObject1.put("content", text);
                             HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                            String r = blogController.request(response, url, request1, HttpMethod.POST);
+                            String r = blogController.request(url, request1, HttpMethod.POST);
                             System.out.println(r);
                         }
                     }
@@ -317,7 +314,7 @@ public class TmpController {
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
             String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
-            blogController.request(response, url, request, HttpMethod.POST);
+            blogController.request(url, request, HttpMethod.POST);
         }
     }
 
@@ -348,7 +345,7 @@ public class TmpController {
 
             // 商品ページ投稿更新
             String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
-            blogController.request(response, url, request, HttpMethod.POST);
+            blogController.request(url, request, HttpMethod.POST);
         }
     }
 
@@ -371,7 +368,7 @@ public class TmpController {
 
         while (nextFlg) {
             String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
-            String res = blogController.request(response, url, request, HttpMethod.GET);
+            String res = blogController.request(url, request, HttpMethod.GET);
 
             // レスポンスを成形
             try {
@@ -466,6 +463,6 @@ public class TmpController {
         HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        return blogController.request(response, url, request, HttpMethod.GET);
+        return blogController.request(url, request, HttpMethod.GET);
     }
 }

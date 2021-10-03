@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -17,9 +18,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
+import otaku.info.dto.ItemRelElems;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.entity.ItemMasterRelation;
+import otaku.info.entity.ItemRelation;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
@@ -80,6 +84,12 @@ public class SampleController {
 
     @Autowired
     private ItemMasterService itemMasterService;
+
+    @Autowired
+    private ItemRelationService itemRelationService;
+
+    @Autowired
+    private ItemMasterRelationService itemMasterRelationService;
 
     @Autowired
     Scheduler scheduler;
@@ -152,8 +162,11 @@ public class SampleController {
         Item tmp = new Item();
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
-        tmp.setTeam_id("1");
-        itemService.saveItem(tmp);
+        ItemRelation ir = new ItemRelation();
+        Item savedItem = itemService.saveItem(tmp);
+        ir.setItem_id(savedItem.getItem_id());
+        ir.setTeam_id(1L);
+        itemRelationService.save(ir);
 
         List<String> list = controller.affiliSearchWord(artistId);
         List<String> itemCodeList = rakutenController.search(list);
@@ -315,38 +328,6 @@ public class SampleController {
                 item.setPublication_date(analyzeController.generatePublicationDate(item));
                 Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
 
-                // 既に商品が登録されていたら（同一商品コード）、チーム名とメンバー名は追加する。
-                if (savedItem != null) {
-                    String savedTeamId = item.getTeam_id();
-                    if (savedTeamId == null || savedTeamId.equals("")) {
-                        item.setTeam_id(teamId.toString());
-                    } else {
-                        if (!savedTeamId.contains(teamId.toString())) {
-                            item.setTeam_id(savedTeamId.concat("," + teamId));
-                        }
-                    }
-
-                    // 個人検索の場合、member_idを設定する。
-                    if (!isTeam) {
-                        String savedMemberId = item.getMember_id();
-                        if (savedMemberId == null || savedMemberId.equals("")) {
-                            item.setMember_id(memberId.toString());
-                        } else {
-                            if (!savedMemberId.contains(memberId.toString())) {
-                                item.setMember_id(savedMemberId.concat("," + memberId));
-                            }
-                        }
-                    }
-                } else {
-                    // 既存商品がなかったら新規登録
-                    item.setTeam_id(teamId.toString());
-
-                    // 個人検索の場合、member_idを設定する。
-                    if (!isTeam) {
-                        item.setMember_id(memberId.toString());
-                    }
-                }
-
                 // チームで削除チェック（チーム）合致orメンバーで削除チェック（メンバー）合致なら削除リストに追加
                 if ((isTeam && addToRemoveList(item, artist, true)) || (!isTeam && addToRemoveList(item, artist, false))) {
                     // 削除対象であれば削除リストに入れる。
@@ -371,10 +352,58 @@ public class SampleController {
             System.out.println("商品を保存します");
             newItemList.forEach(e -> System.out.println(e.getTitle()));
             savedItemList = itemService.saveAll(newItemList);
+
+            if (savedItemList.size() > 0) {
+                List<ItemRelation> itemRelationList = new ArrayList<>();
+                for (Item item : savedItemList) {
+                    if (memberId == 0L) memberId = null;
+                    itemRelationList.add(new ItemRelation(null, item.getItem_id(), teamId, memberId, null, null, null));
+                }
+
+                // すでに登録されてるrelレコードがあったら重複嫌なので抜く
+                itemRelationList = itemRelationService.removeExistRecord(itemRelationList);
+                if (itemRelationList.size() > 0) {
+                    itemRelationService.saveAll(itemRelationList);
+                }
+            }
         }
 
         // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
         Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
+        // itemMasterRelも更新する
+        for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
+            List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(e.getKey().getItem_m_id());
+            List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
+            itemMasterRelationList.forEach(f -> itemMasterRelElemsList.add(new ItemRelElems(null, f.getItem_m_id(), f.getTeam_id(), f.getMember_id(), f.getWp_id())));
+
+            List<ItemRelation> itemRelationList = itemRelationService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
+            List<ItemRelElems> itemRelElemsList = new ArrayList<>();
+            itemRelationList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), f.getMember_id(), null)));
+            List<ItemRelElems> itemRelElemsDataList = itemRelElemsList.stream().distinct().collect(Collectors.toList());
+            if (itemRelElemsDataList.size() > 0 && itemMasterRelElemsList.size() > 0 && itemRelElemsDataList.size() > itemMasterRelElemsList.size()) {
+                List<ItemRelElems> sameElemsList = new ArrayList<>();
+
+                for (ItemRelElems item : itemRelElemsDataList) {
+                    for (ItemRelElems itemMaster : itemMasterRelElemsList) {
+                        if (item.getTeam_id().equals(itemMaster.getTeam_id()) && item.getMember_id().equals(itemMaster.getMember_id())) {
+                            sameElemsList.add(item);
+                            break;
+                        }
+                    }
+                }
+
+                if (sameElemsList.size() > 0) {
+                    itemRelElemsDataList.removeAll(sameElemsList);
+                }
+                if (itemRelElemsDataList.size() > 0) {
+                    List<ItemMasterRelation> toSaveItemMasterRelationList = new ArrayList<>();
+                    for (ItemRelElems f : itemRelElemsDataList) {
+                        toSaveItemMasterRelationList.add(new ItemMasterRelation(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getMember_id(), null, null, null));
+                    }
+                    itemMasterRelationService.saveAll(toSaveItemMasterRelationList);
+                }
+            }
+        }
 
         // ブログ投稿（新規/更新）を行う
         blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()));

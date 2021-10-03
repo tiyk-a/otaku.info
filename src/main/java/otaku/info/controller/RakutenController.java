@@ -16,6 +16,7 @@ import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.AffeliUrlService;
 import otaku.info.searvice.ItemMasterService;
+import otaku.info.searvice.ItemRelationService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.*;
@@ -50,6 +51,9 @@ public class RakutenController {
 
     @Autowired
     AffeliUrlService affeliUrlService;
+
+    @Autowired
+    ItemRelationService itemRelationService;
 
     private final ItemService itemService;
 
@@ -141,7 +145,7 @@ public class RakutenController {
     public boolean updateUrl() {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
-        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> f.getTeam_id() != null && !f.isDel_flg()).collect(Collectors.toList())));
+        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> itemRelationService.findByItemId(f.getItem_id()) != null && itemRelationService.findByItemId(f.getItem_id()).size() > 0 && !f.isDel_flg()).collect(Collectors.toList())));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();

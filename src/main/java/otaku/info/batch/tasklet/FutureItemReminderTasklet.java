@@ -11,6 +11,7 @@ import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemRelationService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.ItemUtils;
@@ -38,6 +39,9 @@ public class FutureItemReminderTasklet implements Tasklet {
     TeamService teamService;
 
     @Autowired
+    ItemRelationService itemRelationService;
+
+    @Autowired
     ItemUtils itemUtils;
 
     @Override
@@ -62,24 +66,23 @@ public class FutureItemReminderTasklet implements Tasklet {
 
     private void post(ItemMaster itemMaster, List<Item> itemList) throws Exception {
         // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
-        List<String> teamIdArr = new ArrayList<>();
-        itemList.forEach(e -> teamIdArr.addAll(Arrays.asList(e.getTeam_id().split(","))));
-        itemList.stream().distinct().collect(Collectors.toList());
+        List<Long> teamIdArr = new ArrayList<>();
+        itemList.forEach(e -> teamIdArr.addAll(itemRelationService.getTeamIdListByItemId(e.getItem_id())));
+        itemList = itemList.stream().distinct().collect(Collectors.toList());
 
         if (teamIdArr.size() > 1) {
             // 固有Twitterのないチームの投稿用オブジェクト
             List<Long> noTwitterTeamIdList = new ArrayList<>();
 
             // 固有Twitterのあるなしで分ける
-            for (String idStr : teamIdArr) {
-                long teamId = Long.parseLong(idStr);
+            for (Long teamId : teamIdArr) {
                 String twId = teamService.getTwitterId(teamId);
                 if (twId == null) {
                     // 固有アカウントがない場合
                     noTwitterTeamIdList.add(teamId);
                 } else {
                     // 固有アカウントがある場合
-                    String text = textController.futureItemReminder(itemMaster, itemList.get(0), idStr);
+                    String text = textController.futureItemReminder(itemMaster, itemList.get(0), teamId);
                     pythonController.post(Math.toIntExact(teamId), text);
                 }
             }
@@ -89,10 +92,10 @@ public class FutureItemReminderTasklet implements Tasklet {
                 String text = textController.futureItemReminder(itemMaster, itemList.get(0), noTwitterTeamIdList);
                 pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
             }
-        } else {
+        } else if (teamIdArr.size() == 1) {
             // チームが１つしかなかったらそのまま投稿
-            long teamId = Long.parseLong(teamIdArr.get(0));
-            String text = textController.futureItemReminder(itemMaster, itemList.get(0), Long.parseLong(teamIdArr.get(0)));
+            long teamId = teamIdArr.get(0);
+            String text = textController.futureItemReminder(itemMaster, itemList.get(0), teamId);
             pythonController.post(Math.toIntExact(teamId), text);
         }
         try {

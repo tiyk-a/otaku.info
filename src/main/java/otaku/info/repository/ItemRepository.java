@@ -66,8 +66,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where del_flg = 0 and publication_date is not null and item_m_id is null")
     List<Item> findNotDeleted();
 
-    @Query("select t from Item t where team_id like ?1 and publication_date = ?2 and item_m_id is not null")
-    List<Item> findSimilarItemList(String teamId, Date publicationDate);
+    @Query(nativeQuery = true, value = "select a.* from item a inner join item_relation b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and item_m_id is not null")
+    List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
     @Query("select t from Item t where item_m_id = ?1")
     List<Item> findByMasterId(Long itemMasterId);

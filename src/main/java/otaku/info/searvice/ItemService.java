@@ -3,8 +3,10 @@ package otaku.info.searvice;
 import java.util.*;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
+import otaku.info.entity.ItemRelation;
 import otaku.info.repository.ItemRepository;
 import otaku.info.utils.DateUtils;
 
@@ -20,6 +22,9 @@ import javax.transaction.Transactional;
 public class ItemService {
 
     private DateUtils dateUtils;
+
+    @Autowired
+    ItemRelationService itemRelationService;
 
     private final ItemRepository itemRepository;
 
@@ -130,14 +135,11 @@ public class ItemService {
      * @return
      */
     public List<Item> findSimilarItemList(Item item) {
-        List<String> teamIdList = new ArrayList<>();
+        List<Long> teamIdList = itemRelationService.getTeamIdListByItemId(item.getItem_id());
         List<Item> resultList = new ArrayList<>();
 
-        // 商品のteamIdを抽出
-        Arrays.stream(item.getTeam_id().split(",")).forEach(e -> teamIdList.add(e));
-
         // それぞれのteamIdでマスタ商品の登録がある商品を探す
-        for (String teamId : teamIdList) {
+        for (Long teamId : teamIdList) {
             // teamIdと発売日とマスタ登録ありで検索し、リストに入っていなかったら追加する
             itemRepository.findSimilarItemList(teamId, item.getPublication_date()).stream().filter(e -> !resultList.contains(e)).forEach(e -> resultList.add(e));
         }

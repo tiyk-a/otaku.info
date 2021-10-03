@@ -11,10 +11,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.entity.BlogTag;
-import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
-import otaku.info.entity.Program;
+import otaku.info.entity.*;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
@@ -55,6 +52,12 @@ public class BlogController {
 
     @Autowired
     TeamService teamService;
+
+    @Autowired
+    ItemRelationService itemRelationService;
+
+    @Autowired
+    ItemMasterRelationService itemMasterRelationService;
 
     @Autowired
     ItemUtils itemUtils;
@@ -111,7 +114,7 @@ public class BlogController {
             // teamIdでmapされたそれぞれのItemMasterにおいて、ひもづくItemリストを取得し、Mapを作る
             for (Map.Entry<Long, List<ItemMaster>> e : tmpMap.entrySet()) {
                 // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
-                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> g.getTeam_id() != null).collect(Collectors.toList())));
+                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> itemRelationService.findByItemId(g.getItem_id())!= null && itemRelationService.findByItemId(g.getItem_id()).size() > 0).collect(Collectors.toList())));
                 teamIdItemMasterItemMap.put(e.getKey(), itemMasterMap);
             }
         }
@@ -146,7 +149,7 @@ public class BlogController {
             // teamIdでmapされたそれぞれのItemMasterにおいて、ひもづくItemリストを取得し、Mapを作る
             for (Map.Entry<Long, List<ItemMaster>> e : tmpMap1.entrySet()) {
                 // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
-                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> g.getTeam_id() != null).collect(Collectors.toList())));
+                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> itemRelationService.findByItemId(g.getItem_id()) != null && itemRelationService.findByItemId(g.getItem_id()).size() > 0).collect(Collectors.toList())));
                 teamIdItemMasterItemFutureMap.put(e.getKey(), itemMasterMap);
             }
         }
@@ -290,12 +293,12 @@ public class BlogController {
      */
     public Long postMasterItem(ItemMaster itemMaster, List<Item> itemList) {
 
-        // TODO:これ、サイト情報今入れてないけどどうなる→運用でカバーはできる。個別ブログに移行するグループのitem_m_idは消して、投稿し直してその時にID入れてあげればこの処理自体に問題はない
-        if (itemMaster.getWp_id() != null) {
+        List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(itemMaster.getItem_m_id());
+        if (itemMasterRelationList.stream().anyMatch(e -> e.getWp_id() != null)) {
             updateMasterItem(itemMaster, itemList);
         }
 
-        int blogId = 0;
+        Integer blogId = 0;
 
         // リクエスト送信
         Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(itemMaster.getTeamIdList()));
@@ -330,17 +333,13 @@ public class BlogController {
                     JSONObject jo = new JSONObject(res);
                     if (jo.get("id") != null) {
                         blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
-                        System.out.println("posted wp blog id: " + blogId);
+                        System.out.println("posted wp blog id: " + blogId.toString());
 
                         // ItemMasterにwpIdがすでに登録されていたらItemMasterを複製し、そちらにwp_idを登録してあげる
-                        // TODO: ItemMasterのTeamIdが複数になっていることにより、今のままだとWpIdがどのブログに繋がってるかわからない。subDomainを入れるカラムを追加するか、ItemMasterのteamIdは1つのみinteger/longにするよう変えないといけない
-                        if (itemMaster.getWp_id() != null) {
-                            ItemMaster copiedItemMaster = itemMaster.adjustedCopy();
-                            copiedItemMaster.setItem_m_id(null);
-                            copiedItemMaster.setWp_id(blogId);
-                            itemMasterService.save(copiedItemMaster);
-                        } else {
-                            itemMaster.setWp_id(blogId);
+                        String wpId = "";
+                        if (StringUtils.hasText(itemMaster.getWp_id())) {
+                            wpId = itemMaster.getWp_id() + ",";
+                            itemMaster.setWp_id(wpId + blogId.toString());
                             itemMasterService.save(itemMaster);
                         }
 
@@ -432,6 +431,7 @@ public class BlogController {
     public void postOrUpdate(List<ItemMaster> itemMasterList) {
 
         for (ItemMaster itemMaster : itemMasterList) {
+            // 各teamIdにおいて
             // ブログを投稿する
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
             if (itemMaster.getWp_id() == null) {

@@ -85,6 +85,8 @@ public class ItemUtils {
                         if (itemMaster.getItem_m_id().equals(item.getItem_m_id())) {
                             List<Item> tmpList = resultMap.get(itemMaster);
                             tmpList.add(item);
+                            item.setItem_m_id(itemMaster.getItem_m_id());
+                            itemService.saveItem(item);
                             resultMap.put(itemMaster, tmpList);
                         }
                     }
@@ -115,6 +117,8 @@ public class ItemUtils {
                     // マスターが見つかった場合orマスターが見つからなかった→新規登録して変数を上書きした後
                     List<Item> tmpList = new ArrayList<>();
                     tmpList.add(item);
+                    item.setItem_m_id(itemMaster.getItem_m_id());
+                    itemService.saveItem(item);
                     resultMap.put(itemMaster, tmpList);
 
                     // サービス使ってマスターを取りに行ってきたのでtmpリストに追加する
@@ -125,6 +129,8 @@ public class ItemUtils {
                         itemMasterList.add(itemMaster);
                     }
                 }
+
+
             } else {
                 // 新規マスター登録が必要か判定する
                 Long masterId = judgeNewMaster(item);

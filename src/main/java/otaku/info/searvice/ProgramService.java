@@ -27,6 +27,10 @@ public class ProgramService  {
         return programRepository.findByOnAirDate(date);
     }
 
+    public List<Program> findByOnAirDateBeterrn(Date from, Date to) {
+        return programRepository.findByOnAirDateBeterrn(from, to);
+    }
+
     public List<Program> findByOnAirDateTimeTeamId(LocalDateTime ldt, int hour) {
         return programRepository.findByOnAirDateTeamId(ldt, ldt.plusHours(hour));
     }

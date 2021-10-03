@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.beans.BeanUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
 import otaku.info.enums.WpTagEnum;
@@ -245,5 +246,16 @@ public class ItemMaster {
         } else {
             return new ArrayList<>();
         }
+    }
+
+    public ItemMaster adjustedCopy() {
+        ItemMaster newItemMaster = new ItemMaster();
+        BeanUtils.copyProperties(this, newItemMaster);
+        newItemMaster.setItem_m_id(null);
+        newItemMaster.setFct_chk(false);
+        newItemMaster.setWp_id(null);
+        newItemMaster.setCreated_at(null);
+        newItemMaster.setUpdated_at(null);
+        return newItemMaster;
     }
 }

@@ -123,7 +123,6 @@ public class TextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
-            // TODO: itemMasterにタイトルがないことありえるか？？？あり得なさそうなので、ここを通る場合はItemのタイトルを使用する、でよし。
             title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
             itemMaster.setTitle(title);
             // ついでに登録（更新）する
@@ -148,7 +147,6 @@ public class TextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
-            // TODO: itemMasterにタイトルがないことありえるか？？？あり得なさそうなので、ここを通る場合はItemのタイトルを使用する、でよし。
             title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
             itemMaster.setTitle(title);
             // ついでに登録（更新）する
@@ -276,8 +274,8 @@ public class TextController {
         String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
-        List<String> todaysElems = blogReleaseItemsText(todayMap);
-        List<String> futureElems = blogReleaseItemsText(futureMap);
+        List<String> todaysElems = todayMap == null ? new ArrayList<>() : blogReleaseItemsText(todayMap);
+        List<String> futureElems = futureMap == null ? new ArrayList<>() : blogReleaseItemsText(futureMap);
 
         // 本日発売の商品
         if (todaysElems.size() > 0) {
@@ -562,13 +560,11 @@ public class TextController {
         String res = sdf1.format(publicationDate);
 
         if (teamIdList.size() > 0) {
-            // TODO: enum化
             List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
             res = res + " " + teamNameList.stream().collect(Collectors.joining(" ", "", ""));
         }
 
         if (memberIdList.size() > 0) {
-            // TODO: enum化
             List<String> memberNameList = memberService.getMemberNameList(memberIdList);
             res = res + " " +  memberNameList.stream().collect(Collectors.joining(" ", "", ""));
         }
@@ -625,8 +621,6 @@ public class TextController {
 
 //    public String generateItemMasterTitle(List<String> wordList) {
 //        String result = "";
-//        // TODO: enumでチーム名・メンバー名のリストあったら使いやすい気がする
-//        // TODO: enumで雑誌一覧も持つ
 //
 //        // 雑誌名を見つけたらそれをトップに
 //        if (wordList.contains()) {

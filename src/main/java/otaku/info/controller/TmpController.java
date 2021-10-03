@@ -6,9 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import otaku.info.entity.BlogTag;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.BlogTagService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
@@ -44,10 +47,126 @@ public class TmpController {
     ItemMasterService itemMasterService;
 
     @Autowired
+    BlogTagService blogTagService;
+
+    @Autowired
     DateUtils dateUtils;
 
     @Autowired
     ItemUtils itemUtils;
+
+    /**
+     * [From] BlogController
+     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * TODO: エラーが出ないように治してね
+     * 認証などどのリクエストでも必要なヘッダーをセットする(第2引数がリストではなくチーム1件の場合)。
+     *
+     * @param headers
+     * @return
+     */
+    public HttpHeaders generalHeaderSet(HttpHeaders headers) {
+
+        headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String auth = "";
+        // TODO: 走らせたいならここをチームによってurl変更するように修正
+        auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+        headers.add("Authorization", "Basic " + auth);
+        return headers;
+    }
+
+    /**
+     * [From] BlogController
+     * WpIdからポストの内容を取得します。
+     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * TODO: エラーが出ないように治してね
+     *
+     * @param wpId
+     * @return
+     */
+    public String requestPostData(String wpId) {
+        // TODO: 走らせたいならここをチームによってurl変更するように修正
+        String finalUrl = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        return blogController.request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
+    }
+
+    /**
+     * [From] BlogController
+     * 日付タグをWPとDBに登録します。
+     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * TODO: エラーが出ないように治してね
+     *
+     * @param date
+     * @return
+     */
+    public BlogTag registerTag(Date date) {
+        // TODO: チームによってurlを変更
+        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags/";
+
+        HttpHeaders h = generalHeaderSet(new HttpHeaders()) ;
+        JSONObject jo = new JSONObject();
+        jo.put("name", dateUtils.getYYYYMM(date));
+
+        HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
+        String res = blogController.request(url, request, HttpMethod.POST);
+
+        JSONObject jsonObject1 = new JSONObject(res);
+
+        int yyyyMMId;
+        if (jsonObject1.get("id") != null) {
+            yyyyMMId = jsonObject1.getInt("id");
+            String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
+            BlogTag blogTag = new BlogTag();
+            blogTag.setTag_name(dateUtils.getYYYYMM(date));
+            blogTag.setWp_tag_id((long) yyyyMMId);
+            blogTag.setLink(link);
+            return blogTagService.save(blogTag);
+        }
+        return new BlogTag();
+    }
+
+    /**
+     * WPにあるがDBにないタグを保存する
+     *
+     */
+    public void getBlogTagNotSavedOnInfoDb() {
+        // TODO: チームによってurlを変更
+        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+        JSONObject jsonObject = new JSONObject();
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String res = blogController.request(url, request, HttpMethod.GET);
+        List<BlogTag> blogTagList = new ArrayList<>();
+
+        try {
+            if (JsonUtils.isJsonArray(res)) {
+                JSONArray ja = new JSONArray(res);
+                for (int i=0;i<ja.length();i++) {
+                    Integer wpId = ja.getJSONObject(i).getInt("id");
+                    String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
+                    String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
+
+                    if (blogTagService.findBlogTagIdByTagName(tagName) == 0) {
+                        BlogTag blogTag = new BlogTag();
+                        blogTag.setWp_tag_id((long)wpId);
+                        blogTag.setTag_name(tagName);
+                        blogTag.setLink(link);
+                        blogTagList.add(blogTag);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // infoDBに保存されていないタグは保存する
+        if (blogTagList.size() > 0) {
+            blogTagService.saveIfNotSaved(blogTagList);
+        }
+    }
 
     /**
      * [From] BlogController
@@ -58,7 +177,7 @@ public class TmpController {
 
         System.out.println(result);
 
-        HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("title", "java test");
         jsonObject.put("author", 1);
@@ -66,7 +185,7 @@ public class TmpController {
         jsonObject.put("content", result);
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
-        String url = setting.getBlogApiUrl() + "posts/";
+        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/";
         String res = blogController.request(url, request, HttpMethod.POST);
         System.out.println(res);
     }
@@ -188,7 +307,7 @@ public class TmpController {
     public List<Item> selectBlogData(List<Item> itemList) {
         List<Item> resultList = new ArrayList<>();
         for (Item item : itemList) {
-            String result = blogController.requestPostData(item.getWp_id().toString());
+            String result = requestPostData(item.getWp_id().toString());
             Integer featuredMedia = blogController.extractMedia(result);
             if (featuredMedia == 0) {
                 resultList.add(item);
@@ -208,8 +327,8 @@ public class TmpController {
 
         for (Long wpId : wpIdList) {
             // WPにあるタグを取得する
-            String url = setting.getBlogApiUrl() + "posts/" + wpId;
-            HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+            String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("status","draft");
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -226,9 +345,9 @@ public class TmpController {
         boolean flg = true;
         while (flg) {
             System.out.println(n);
-            String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
+            String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&per_page=40&page=" + n;
 
-            HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
             String res = blogController.request(url, request, HttpMethod.GET);
@@ -261,9 +380,9 @@ public class TmpController {
      */
     public void updateContent() {
         int n = 1;
-        String url = setting.getBlogApiUrl() + "posts?status=publish&per_page=40&page=" + n;
+        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&per_page=40&page=" + n;
 
-        HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         String res = blogController.request(url, request, HttpMethod.GET);
@@ -273,9 +392,9 @@ public class TmpController {
                 JSONArray ja = new JSONArray(res);
                 for (int i=0;i<ja.length();i++) {
                     Integer wpId = ja.getJSONObject(i).getInt("id");
-                    url = setting.getBlogApiUrl() + "posts/" + wpId;
+                    url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
 
-                    HttpHeaders headers1 = blogController.generalHeaderSet(new HttpHeaders());
+                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
                     JSONObject jsonObject1 = new JSONObject();
                     ItemMaster itemMaster = itemMasterService.findByWpId(wpId);
 
@@ -307,13 +426,13 @@ public class TmpController {
         List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
 
         for (ItemMaster itemMaster : itemMasterList) {
-            HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
             jsonObject.put("title", title);
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
-            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
+            String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + itemMaster.getWp_id();
             blogController.request(url, request, HttpMethod.POST);
         }
     }
@@ -323,11 +442,11 @@ public class TmpController {
      * 既存のWP投稿に対して、DBのタグby teamにyyyyMMタグを追加してWPにポストします。
      */
     public void addTag() {
-        blogController.getBlogTagNotSavedOnInfoDb();
+        getBlogTagNotSavedOnInfoDb();
         List<ItemMaster> itemMasterList = itemMasterService.findWpIdNotNull();
 
         for (ItemMaster itemMaster : itemMasterList) {
-            HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
 
             Integer[] tags = new Integer[itemMaster.getTags().length + 1];
@@ -337,14 +456,14 @@ public class TmpController {
 
             // もし年月タグがまだ存在しなかったら先に登録する
             if (yyyyMMId == 0) {
-                yyyyMMId = Math.toIntExact(blogController.registerTag(itemMaster.getPublication_date()).getBlog_tag_id());
+                yyyyMMId = Math.toIntExact(registerTag(itemMaster.getPublication_date()).getBlog_tag_id());
             }
             tags[itemMaster.getTags().length] = yyyyMMId;
             jsonObject.put("tags", tags);
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
             // 商品ページ投稿更新
-            String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id();
+            String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + itemMaster.getWp_id();
             blogController.request(url, request, HttpMethod.POST);
         }
     }
@@ -359,7 +478,7 @@ public class TmpController {
         Map<Integer, Integer> resultMap = new HashMap<>();
 
         // リクエスト送信
-        HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
@@ -367,7 +486,7 @@ public class TmpController {
         boolean nextFlg = true;
 
         while (nextFlg) {
-            String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
+            String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
             String res = blogController.request(url, request, HttpMethod.GET);
 
             // レスポンスを成形
@@ -457,10 +576,10 @@ public class TmpController {
      * @return eternalPath
      */
     private String getMediaUrl(String mediaId) {
-        String url = setting.getBlogApiUrl() + "media?slug=" + mediaId + "&_fields[]=id&_fields[]=source_url&per_page=100";
+        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "media?slug=" + mediaId + "&_fields[]=id&_fields[]=source_url&per_page=100";
 
         // リクエスト送信
-        HttpHeaders headers = blogController.generalHeaderSet(new HttpHeaders());
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         return blogController.request(url, request, HttpMethod.GET);

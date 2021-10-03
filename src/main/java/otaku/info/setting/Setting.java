@@ -13,8 +13,14 @@ public class Setting {
 
     private String test;
     private String imageItem;
-    private String blogApiUrl;
     private String blogWebUrl;
+    private String blogApiPath;
+    private String blogHttps;
+    private String blogDomain;
+    private String sixtonesBlogPw;
+    private String snowmanBlogPw;
+    private String naniwaBlogPw;
+    private String kinpriBlogPw;
     private String tvKingdom;
     private String pythonTwitter;
     private String lineUrl;

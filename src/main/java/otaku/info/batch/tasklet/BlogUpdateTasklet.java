@@ -8,6 +8,9 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
+import otaku.info.enums.TeamEnum;
+
+import java.util.List;
 
 @Component
 @StepScope
@@ -20,11 +23,16 @@ public class BlogUpdateTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- Blog Update START ---");
         System.out.println("①固定商品ページ");
+        System.out.println(System.getProperty("user.name"));
         // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。
-        blogController.addNextMonthTag();
+        List<String> domainList = TeamEnum.getAllSubDomain();
+        for (String subDomain : domainList) {
+            blogController.addNextMonthTag(subDomain);
+        }
         // 近日発売新商品情報を更新
         blogController.updateReleaseItems();
         System.out.println("②固定TV出演情報ページ");
+        System.out.println(System.getProperty("user.name"));
         blogController.updateTvPage();
         System.out.println("--- Blog Update END ---");
         return RepeatStatus.FINISHED;

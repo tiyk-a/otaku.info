@@ -7,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.controller.TvController;
@@ -53,7 +54,7 @@ public class TvPostTasklet implements Tasklet {
 
             // Mapの要素１つずつ（=1グループずつ）投稿へ進める
             for (Map.Entry<Long, List<Program>> ele : tvListMapByGroup.entrySet()) {
-                String text = null;
+                String text = "";
 
                 if (ele.getValue().size() > 0) {
                     // 出演情報のあるグループ
@@ -63,11 +64,13 @@ public class TvPostTasklet implements Tasklet {
                     if (forToday) {
                         text = textController.tvPost(ele, forToday, calToday.getTime());
                     } else {
-                        text = textController.tvPost(ele, forToday, calTmrw.getTime());
+                        text = textController.tvPost(ele, !forToday, calTmrw.getTime());
                     }
                 }
                 // Twitter post指示
-                pythonController.post(ele.getKey().intValue(), text);
+                if (StringUtils.hasText(text)) {
+                    pythonController.post(ele.getKey().intValue(), text);
+                }
             }
         }
 

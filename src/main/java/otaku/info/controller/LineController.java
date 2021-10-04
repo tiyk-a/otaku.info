@@ -52,9 +52,22 @@ public class LineController {
      * @throws JSONException
      */
     public String postAll(List<String> messageList) {
+        if (messageList == null || messageList.size() == 0) {
+            return "done";
+        }
 
         for (String msg: messageList) {
-            String outline = msg.substring(0,30);
+            if (msg == null) {
+                continue;
+            }
+
+            String outline = "";
+            if (msg.length() < 31) {
+                outline = msg;
+            } else {
+                outline = msg.substring(0,30);
+            }
+
             System.out.println("これをpostします： " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

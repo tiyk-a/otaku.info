@@ -40,6 +40,10 @@ public class ItemService {
     }
 
     public List<Item> saveAll(List<Item> itemList) {
+        for (Item item : itemList) {
+            System.out.println(item.getItem_caption().length());
+            System.out.println(item.getItem_caption());
+        }
         return itemRepository.saveAll(itemList);
     }
 
@@ -148,10 +152,6 @@ public class ItemService {
 
     public List<Item> findByMasterId(Long itemMasterId) {
         return itemRepository.findByMasterId(itemMasterId);
-    }
-
-    public List<Long> collectWpId() {
-        return itemRepository.collectWpId();
     }
 
     public List<Item> gatherItems(Long itemMId) {

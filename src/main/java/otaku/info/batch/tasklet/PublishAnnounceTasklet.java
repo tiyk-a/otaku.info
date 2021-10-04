@@ -11,6 +11,7 @@ import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
+import otaku.info.searvice.ItemMasterRelationService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
@@ -37,6 +38,9 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     ItemMasterService itemMasterService;
 
+    @Autowired
+    ItemMasterRelationService itemMasterRelationService;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 商品発売日アナウンス START ---");
@@ -44,13 +48,12 @@ public class PublishAnnounceTasklet implements Tasklet {
 
         for (ItemMaster itemMaster : itemMasterList) {
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-            String[] teamIdArr = itemMaster.getTeam_id().split(",");
-            if (teamIdArr.length > 0) {
+            List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            if (teamIdList.size() > 0) {
                 // 固有Twitterのないチームの投稿用オブジェクト
                 List<Long> noTwitterTeamIdList = new ArrayList<>();
 
-                for (String idStr : teamIdArr) {
-                    long teamId = Long.parseLong(idStr);
+                for (Long teamId : teamIdList) {
                     String twId = teamService.getTwitterId(teamId);
                     if (twId == null) {
                         noTwitterTeamIdList.add(teamId);

@@ -110,6 +110,16 @@ public enum TeamEnum {
      * @return
      */
     public static List<String> getAllSubDomain() {
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain() != null).map(e -> e.getSubDomain()).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain() != null).map(TeamEnum::getSubDomain).collect(Collectors.toList());
+    }
+
+    /**
+     * 引数のTeamIdListからチーム名リストを返却します。
+     *
+     * @param teamIdList
+     * @return
+     */
+    public static List<String> findTeamNameListByTeamIdList(List<Long> teamIdList) {
+        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f ->(e.id.equals(f)))).map(TeamEnum::getName).collect(Collectors.toList());
     }
 }

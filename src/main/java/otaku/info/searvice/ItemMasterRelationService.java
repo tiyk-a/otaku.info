@@ -24,4 +24,16 @@ public class ItemMasterRelationService {
     public List<ItemMasterRelation> saveAll(List<ItemMasterRelation> itemMasterRelationList) {
         return itemMasterRelationRepository.saveAll(itemMasterRelationList);
     }
+
+    public List<Long> findTeamIdListByItemMId(Long itemMId) {
+        return itemMasterRelationRepository.findTeamIdListByItemMId(itemMId);
+    }
+
+    public List<Long> findMemberIdListByItemMId(Long itemMId) {
+        return  itemMasterRelationRepository.findMemberIdListByItemMId(itemMId);
+    }
+
+    public Long getWpIdByItemMId(Long itemMId) {
+        return itemMasterRelationRepository.getWpIdByItemMId(itemMId);
+    }
 }

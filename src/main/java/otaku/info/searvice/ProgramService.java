@@ -76,7 +76,7 @@ public class ProgramService  {
         if (StringUtils.hasText(overridden.getMember_id())) {
             overridden.setMember_id(program.getMember_id());
         } else {
-            if (StringUtils.hasText(program.getTeam_id()) && !overridden.getMember_id().contains(program.getMember_id())) {
+            if (StringUtils.hasText(program.getTeam_id()) && (StringUtils.hasText(overridden.getMember_id()) && StringUtils.hasText(program.getMember_id()) && !overridden.getMember_id().contains(program.getMember_id()))) {
                 overridden.setMember_id(overridden.getMember_id().concat("," + program.getMember_id()));
             }
         }

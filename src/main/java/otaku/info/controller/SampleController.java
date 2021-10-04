@@ -25,6 +25,7 @@ import otaku.info.entity.ItemMaster;
 import otaku.info.entity.ItemMasterRelation;
 import otaku.info.entity.ItemRelation;
 import otaku.info.enums.PublisherEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -329,7 +330,7 @@ public class SampleController {
                 Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
 
                 // チームで削除チェック（チーム）合致orメンバーで削除チェック（メンバー）合致なら削除リストに追加
-                if ((isTeam && addToRemoveList(item, artist, true)) || (!isTeam && addToRemoveList(item, artist, false))) {
+                if ((isTeam && addToRemoveList(item))) {
                     // 削除対象であれば削除リストに入れる。
                     removeList.add(item);
                 }
@@ -406,16 +407,17 @@ public class SampleController {
         }
 
         // ブログ投稿（新規/更新）を行う
-        blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()));
+        // Map<新規登録ItemMaster/update ItemMaster>
+        Map<List<ItemMaster>, List<ItemMaster>> itemMasterMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()));
 
-        // マップから、新しいitemMasterだけ引き出す。5分以内に登録されたitemMasterが対象、とすればいいだろうか
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        calendar.add(Calendar.MINUTE, -5);
         List<ItemMaster> newItemMasterList = new ArrayList<>();
-        itemMasterListMap.entrySet().stream().filter(e -> e.getKey().getCreated_at().after(calendar.getTime())).forEach(e -> newItemMasterList.add(e.getKey()));
+        List<ItemMaster> updatedItemMasterList = new ArrayList<>();
+        for (Map.Entry<List<ItemMaster>, List<ItemMaster>> e : itemMasterMap.entrySet()) {
+            newItemMasterList = e.getKey();
+            updatedItemMasterList = e.getValue();
+        }
 
-        // 保存した商品が新しい商品マスタの場合、Tweetする
+        // 新規登録したitemMasterがある場合
         if (newItemMasterList.size() > 0) {
             System.out.println("保存したItemMasterをTweetします");
             for (ItemMaster itemMaster: newItemMasterList) {
@@ -425,29 +427,28 @@ public class SampleController {
 
                 if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(itemMaster.getTitle());
-                    String[] teamIdArr = itemMaster.getTeam_id().split(",");
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, Long.parseLong(teamIdArr[teamIdArr.length - 1]));
-                    String result;
-                    String memberIdStr = itemMaster.getMember_id();
-                    if (memberIdStr != null && !memberIdStr.equals("")) {
-                        List<Long> memberIdList = new ArrayList<>();
-                        List.of(memberIdStr.split(",")).forEach(e -> memberIdList.add((long) Integer.parseInt(e)));
-                        if (memberIdList.size() == 1) {
-                            String memberName = memberService.getMemberName(memberIdList.get(0));
-                            result = textController.twitterPerson(twiDto, memberName);
-                        } else {
-                            List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-                            result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
+                    List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+                    if (teamIdList.size() > 0) {
+                        Map<Long, String> twIdMap = teamService.getTeamIdTwIdMapByTeamIdList(teamIdList);
+                        for (Map.Entry<Long, String> e : twIdMap.entrySet()) {
+                            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, e.getKey());
+                            String result;
+
+                            List<Long> memberIdList = itemMasterRelationService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
+                            if (memberIdList != null && memberIdList.size() > 0) {
+                                if (memberIdList.size() == 1) {
+                                    String memberName = memberService.getMemberName(memberIdList.get(0));
+                                    result = textController.twitterPerson(twiDto, memberName);
+                                } else {
+                                    List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+                                    result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
+                                }
+                            } else {
+                                result = textController.twitter(twiDto);
+                            }
+                            // Twitter投稿
+                            pythonController.post(Math.toIntExact(e.getKey()), result);
                         }
-                    } else {
-                        result = textController.twitter(twiDto);
-                    }
-                    if (itemMaster.getTeam_id() != null) {
-                        // Twitter投稿
-                        pythonController.post(Math.toIntExact(Long.parseLong(teamIdArr[teamIdArr.length - 1])), result);
-                    } else {
-                        System.out.println("TeamがNullのためTweetしません" + item.getItem_code() + ":" + item.getTitle());
-                        continue;
                     }
                 } else {
                     System.out.println("未来商品ではないのでTweetしません");
@@ -464,13 +465,18 @@ public class SampleController {
      * false -> いいデータ
      *
      * @param item
-     * @param name
-     * @param isTeam チーム:メンバー
      * @return
      */
-    private boolean addToRemoveList(Item item, String name, boolean isTeam) {
+    private boolean addToRemoveList(Item item) {
         // ①不適切な出版社・雑誌は削除
-       return Arrays.stream(PublisherEnum.values()).filter(e -> e.getNote().equals(0)).map(PublisherEnum::getName).anyMatch(e -> StringUtilsMine.arg2ContainsArg1(e, item.getTitle()));
+        for (PublisherEnum e : PublisherEnum.values()) {
+            if (e.getNote() != null && e.getNote().equals(0)) {
+                if (StringUtilsMine.arg2ContainsArg1(e.getName(), item.getTitle())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 

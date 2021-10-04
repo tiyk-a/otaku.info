@@ -10,6 +10,7 @@ import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.MagazineEnum;
 import otaku.info.enums.PublisherEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -52,6 +53,9 @@ public class TextController {
 
     @Autowired
     private ItemMasterService itemMasterService;
+
+    @Autowired
+    private ItemMasterRelationService itemMasterRelationService;
 
     @Autowired
     private Setting setting;
@@ -163,9 +167,11 @@ public class TextController {
      */
     public String releasedItemAnnounce(ItemMaster itemMaster, Item item) {
         String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A"
-                + setting.getBlogWebUrl() + "item/" + itemMaster.getWp_id() + "%0A" + "楽天リンクはこちら↓%0A"
+                + setting.getBlogWebUrl() + "item/" + itemMasterRelationService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "楽天リンクはこちら↓%0A"
                 + item.getUrl();
-        String tags = tagService.getTagByTeam(Long.parseLong(itemMaster.getTeam_id())).stream().collect(Collectors.joining(" #","#",""));
+        // TODO: twitterタグ、DB使わないで取れてる
+        List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
     }
 
@@ -315,18 +321,19 @@ public class TextController {
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
 
             // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (!StringUtils.hasText(itemMaster.getTeam_id())) {
+            if (itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id()) == null) {
                 continue;
             }
 
-            List<String> teamNameList = findTeamName(itemMaster.getTeamIdList());
+            List<String> teamNameList = teamService.findTeamNameByIdList(itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id()));
             String teamNameUnited = String.join(" ", teamNameList);
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
             // メンバー名もある場合はこちら
-            if (StringUtils.hasText(itemMaster.getMember_id()) && !itemMaster.getMember_id().equals("0")) {
-                List<String> memberNameList = findMemberName(itemMaster.getMemberIdList());
+            List<Long> memberIdList = itemMasterRelationService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
+            if (memberIdList.size() > 0) {
+                List<String> memberNameList = memberService.getMemberNameList(memberIdList);
                 h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
             } else {
                 // メンバー名ない場合はこちら

@@ -46,4 +46,8 @@ public class BlogTagService {
         }
         return blogTag;
     }
+
+    public List<Integer> findBlogTagIdListByTagNameList(List<String> tagNameList) {
+        return blogTagRepository.findBlogTagIdListByTagNameList(tagNameList);
+    }
 }

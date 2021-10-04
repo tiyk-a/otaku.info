@@ -51,7 +51,13 @@ public class BlogController {
     BlogTagService blogTagService;
 
     @Autowired
+    TagService tagService;
+
+    @Autowired
     TeamService teamService;
+
+    @Autowired
+    MemberService memberService;
 
     @Autowired
     ItemRelationService itemRelationService;
@@ -89,15 +95,16 @@ public class BlogController {
         Date to = dateUtils.daysAfterToday(1);
 
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
+        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> itemMasterRelationService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
         // 上で取得したマスター商品をteamIdごとにマップする
         Map<Long, List<ItemMaster>> tmpMap = new HashMap<>();
         for (ItemMaster itemMaster : itemMasterList) {
-            if (itemMaster.getTeamIdList() == null || itemMaster.getTeamIdList().size() == 0) {
+            List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            if (teamIdList.size() == 0) {
                 continue;
             }
 
-            for (Long teamId : itemMaster.getTeamIdList()) {
+            for (Long teamId : teamIdList) {
                 List<ItemMaster> tmpList = new ArrayList<>();
                 if (tmpMap.containsKey(teamId)) {
                     tmpList = tmpMap.get(teamId);
@@ -122,17 +129,18 @@ public class BlogController {
         // 明日~1週間以内の発売商品
         Date sevenDaysLater = dateUtils.daysAfterToday(7);
 
-        // 今日発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> e.getTeam_id() != null).collect(Collectors.toList());
+        // 明日以降発売マスター商品(teamIdがNullのマスターは削除)
+        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> itemMasterRelationService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
 
         // 上で取得したマスター商品をteamIdごとにマップする
         Map<Long, List<ItemMaster>> tmpMap1 = new HashMap<>();
         for (ItemMaster itemMaster : futureItemMasterList) {
-            if (itemMaster.getTeamIdList() == null || itemMaster.getTeamIdList().size() == 0) {
+            List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            if (teamIdList.size() == 0) {
                 continue;
             }
 
-            for (Long teamId : itemMaster.getTeamIdList()) {
+            for (Long teamId : teamIdList) {
                 List<ItemMaster> tmpList = new ArrayList<>();
                 if (tmpMap1.containsKey(teamId)) {
                     tmpList = tmpMap1.get(teamId);
@@ -294,31 +302,52 @@ public class BlogController {
     public Long postMasterItem(ItemMaster itemMaster, List<Item> itemList) {
 
         List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(itemMaster.getItem_m_id());
+
         if (itemMasterRelationList.stream().anyMatch(e -> e.getWp_id() != null)) {
             updateMasterItem(itemMaster, itemList);
         }
 
+        List<Long> teamIdList = itemMasterRelationList.stream().map(e -> e.getTeam_id()).distinct().collect(Collectors.toList());
+        List<Long> memberIdList = itemMasterRelationList.stream().map(e -> e.getMember_id()).distinct().collect(Collectors.toList());
+
+        // tag:チーム名と発売日の年月を用意したい(idで指定してあげないといけない（stringでまず集めて、最後にidを見つけに行くor新規登録）)
+        // itemMaster -> teamIdList -> teamName -> tag
+        List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
+        // memberを追加
+        List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+
+        if (memberNameList.size() > 0) {
+            tagList.addAll(memberNameList);
+        }
+
+        String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+        System.out.println("title: " + title);
+
+        String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0);
+
         Integer blogId = 0;
 
         // リクエスト送信
-        Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(itemMaster.getTeamIdList()));
+        Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(itemMasterRelationList.stream().map(e -> e.getTeam_id()).collect(Collectors.toList())));
+
+        // subdomainの数だけ帰ってくる
         if (headersMap.size() > 0) {
 
+            // 投稿するドメインごと
             for (Map.Entry<String, HttpHeaders> entry : headersMap.entrySet()) {
                 JSONObject jsonObject = new JSONObject();
-                String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
-                System.out.println("title: " + title);
                 jsonObject.put("title", title);
                 jsonObject.put("author", 1);
                 jsonObject.put("categories", new Integer[]{5});
 
-                // tag:チーム名と発売日の年月
+                // 年月
                 BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey());
-                Integer[] tags = new Integer[itemMaster.getTags().length + 1];
-                if (yyyyMMTag != null && yyyyMMTag.getBlog_tag_id() != null) {
-                    System.arraycopy(itemMaster.getTags(), 0, tags, 0, itemMaster.getTags().length);
-                    tags[itemMaster.getTags().length] = Math.toIntExact(yyyyMMTag.getBlog_tag_id());
-                }
+                tagList.add(yyyyMMTag.getTag_name());
+
+                // TODO: チームメイトメンバー名が登録されrてるか、新規追加必要か確認執拗
+                // BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey()); for all
+                Integer[] tags = (Integer[]) blogTagService.findBlogTagIdListByTagNameList(tagList).toArray();
+
                 jsonObject.put("tags", tags);
                 if (setting.getTest().equals("dev")) {
                     jsonObject.put("status", "draft");
@@ -332,19 +361,29 @@ public class BlogController {
 
                 String res = request(url, request, HttpMethod.POST);
 
-                // うまくポストが完了してStringが返却されたらwpIdをitemに登録する
+                // うまくポストが完了してStringが返却されたらwpIdをRelに登録する
                 if (StringUtils.hasText(res)) {
                     JSONObject jo = new JSONObject(res);
                     if (jo.get("id") != null) {
                         blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
-                        System.out.println("posted wp blog id: " + blogId.toString());
+                        System.out.println("posted wp blog id: " + blogId.toString() + " Subdomain:" + entry.getKey());
+                        List<ItemMasterRelation> newItemMasterRelationList = new ArrayList<>();
 
-                        // ItemMasterにwpIdがすでに登録されていたらItemMasterを複製し、そちらにwp_idを登録してあげる
-                        String wpId = "";
-                        if (StringUtils.hasText(itemMaster.getWp_id())) {
-                            wpId = itemMaster.getWp_id() + ",";
-                            itemMaster.setWp_id(wpId + blogId.toString());
-                            itemMasterService.save(itemMaster);
+                        if (memberIdList.size() > 0) {
+                            // memberIdListの中からteamがこれのやつを引き抜きたい
+                            List<Long> membersOfThisTeam = itemMasterRelationList.stream().filter(e -> e.getTeam_id().equals(entry.getKey())).map(e -> e.getMember_id()).collect(Collectors.toList());
+                            if (membersOfThisTeam.size() > 0) {
+                                for (Long memberId : membersOfThisTeam) {
+                                    ItemMasterRelation itemMasterRelation = new ItemMasterRelation(null, itemMaster.getItem_m_id(), (long) TeamEnum.findIdBySubDomain(entry.getKey()), memberId, (long) blogId, null, null);
+                                    newItemMasterRelationList.add(itemMasterRelation);
+                                }
+                            }
+                        } else {
+                            ItemMasterRelation itemMasterRelation = new ItemMasterRelation(null, itemMaster.getItem_m_id(), (long) TeamEnum.findIdBySubDomain(entry.getKey()), null, (long) blogId, null, null);
+                            newItemMasterRelationList.add(itemMasterRelation);
+                        }
+                        if (newItemMasterRelationList.size() > 0) {
+                            itemMasterRelationService.saveAll(newItemMasterRelationList);
                         }
 
                         // 画像を登録する
@@ -405,47 +444,86 @@ public class BlogController {
      */
     public void updateMasterItem(ItemMaster itemMaster, List<Item> itemList) {
         String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0);
+        List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(itemMaster.getItem_m_id());
 
-        if (itemMaster.getTeamIdList().size() > 0) {
-            Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(itemMaster.getTeamIdList()));
+        if (itemMasterRelationList.stream().anyMatch(e -> e.getWp_id() == null)) {
+            postMasterItem(itemMaster, itemList);
+        }
+
+        List<Long> teamIdList = itemMasterRelationList.stream().map(e -> e.getTeam_id()).distinct().collect(Collectors.toList());
+        List<Long> memberIdList = itemMasterRelationList.stream().map(e -> e.getMember_id()).distinct().collect(Collectors.toList());
+
+        if (teamIdList.size() > 0) {
+            Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(teamIdList));
+            List<ItemMasterRelation> newItemMasterRelationList = new ArrayList<>();
 
             if (headersMap.size() > 0) {
+                // サブドメインごとに処理する
                 for (Map.Entry<String, HttpHeaders> entry : headersMap.entrySet()) {
+                    Long teamId = (long) TeamEnum.findIdBySubDomain(entry.getKey());
+                    String wpId = itemMasterRelationList.stream().filter(e -> e.getTeam_id().equals(teamId)).map(e -> e.getWp_id()).findFirst().get().toString();
+
                     JSONObject jsonObject = new JSONObject();
-                    // TODO: ひとまず、複数のTeamIdがあったとしても同じContextを設定しているがOK？Adjust必要ではない？
                     jsonObject.put("content", content);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), entry.getValue());
-                    String url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/" + itemMaster.getWp_id();
+                    String url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/" + wpId;
 
                     String res = request(url, request, HttpMethod.POST);
                     JSONObject jo = new JSONObject(res);
                     if (jo.get("id") != null) {
+                        Integer blogId = Integer.parseInt(jo.get("id").toString().replaceAll("^\"|\"$", ""));
+
+                        if (memberIdList.size() > 0) {
+                            // memberIdListの中からteamがこれのやつを引き抜きたい
+                            List<Long> membersOfThisTeam = itemMasterRelationList.stream().filter(e -> e.getTeam_id().equals(entry.getKey())).map(e -> e.getMember_id()).collect(Collectors.toList());
+                            if (membersOfThisTeam.size() > 0) {
+                                for (Long memberId : membersOfThisTeam) {
+                                    ItemMasterRelation itemMasterRelation = new ItemMasterRelation(null, itemMaster.getItem_m_id(), (long) TeamEnum.findIdBySubDomain(entry.getKey()), memberId, (long) blogId, null, null);
+                                    newItemMasterRelationList.add(itemMasterRelation);
+                                }
+                            }
+                        } else {
+                            ItemMasterRelation itemMasterRelation = new ItemMasterRelation(null, itemMaster.getItem_m_id(), (long) TeamEnum.findIdBySubDomain(entry.getKey()), null, (long) blogId, null, null);
+                            newItemMasterRelationList.add(itemMasterRelation);
+                        }
                         System.out.println("Blog posted: " + url + "\n" + content + "\n" + Long.parseLong(jo.get("id").toString().replaceAll("^\"|\"$", "")));
                     }
                 }
+            }
+
+            if (newItemMasterRelationList.size() > 0) {
+                itemMasterRelationService.saveAll(newItemMasterRelationList);
             }
         }
     }
 
     /**
      * ブログのマスタ商品投稿を更新する。
+     * 1要素のみのMap<新規追加itemMaster,更新itemMaster>を返却します。
      *
      * @param itemMasterList itemMasterIdを返す
      */
-    public void postOrUpdate(List<ItemMaster> itemMasterList) {
+    public Map<List<ItemMaster>, List<ItemMaster>> postOrUpdate(List<ItemMaster> itemMasterList) {
+        List<ItemMaster> newItemMasterList = new ArrayList<>();
+        List<ItemMaster> updateItemMasterList = new ArrayList<>();
 
         for (ItemMaster itemMaster : itemMasterList) {
             // 各teamIdにおいて
             // ブログを投稿する
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-            if (itemMaster.getWp_id() == null) {
+            List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(itemMaster.getItem_m_id());
+            boolean isNewPost = itemMasterRelationList.stream().noneMatch(e -> e.getWp_id() != null);
+            if (isNewPost) {
                 // 新規投稿する
                 postMasterItem(itemMaster, itemList);
+                newItemMasterList.add(itemMaster);
             } else {
                 // 既存投稿を更新する(完全洗い替え)
                 updateMasterItem(itemMaster, itemList);
+                updateItemMasterList.add(itemMaster);
             }
         }
+        return Collections.singletonMap(newItemMasterList, updateItemMasterList);
     }
 
 //    /**
@@ -536,12 +614,12 @@ public class BlogController {
         return 0;
     }
 
-    /**
-     * 商品画像1をWordpressに登録します。
-     *
-     * @param itemMasterList 登録対象
-     * @param wpChk WPへアイキャッチメディアの設定が既にあるかチェックを投げるかフラグ
-     */
+//    /**
+//     * 商品画像1をWordpressに登録します。
+//     *
+//     * @param itemMasterList 登録対象
+//     * @param wpChk WPへアイキャッチメディアの設定が既にあるかチェックを投げるかフラグ
+//     */
 //    public void loadMedia(List<ItemMaster> itemMasterList, boolean wpChk) {
 //        for (ItemMaster itemMaster : itemMasterList) {
 //
@@ -625,12 +703,12 @@ public class BlogController {
 //        }
 //    }
 
-    /**
-     * 投稿にアイキャッチメディアを設定し、更新します。
-     *
-     * @param wpId
-     * @param imageId
-     */
+//    /**
+//     * 投稿にアイキャッチメディアを設定し、更新します。
+//     *
+//     * @param wpId
+//     * @param imageId
+//     */
 //    private void setMedia(Integer wpId, Integer imageId) {
 //        // TODO: チームによってurlを変更
 //        String url = setting.getBlogApiUrl() + "posts/" + wpId;

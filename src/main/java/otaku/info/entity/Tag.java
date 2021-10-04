@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.sql.Timestamp;
 
+/**
+ * Twitterとかに使うTag
+ *
+ */
 @Entity(name = "tag")
 @Data
 @NoArgsConstructor

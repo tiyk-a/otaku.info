@@ -84,4 +84,8 @@ public class ItemMasterService {
     public List<ItemMaster> findByWpIdUrlNullList(List<Integer> wpIdList) {
         return itemMasterRepository.findByWpIdUrlNullList(wpIdList);
     }
+
+    public List<ItemMaster> findByPublicationYearWpIdNull(Integer year) {
+        return itemMasterRepository.findByPublicationYearWpIdNull(year);
+    }
 }

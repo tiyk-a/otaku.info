@@ -115,4 +115,22 @@ public class TeamService {
     public List<String> findTeamNameByIdList(List<Long> teamIdList) {
         return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> f.equals((long) e.getId()))).map(TeamEnum::getName).collect(Collectors.toList());
     }
+
+    public List<String> findTwIdListByTeamIdList(List<Long> teamIdList) {
+        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).map(TeamEnum::getTw_id).map(e -> {if (e == null) e = "";
+            return "";
+        }).distinct().collect(Collectors.toList());
+    }
+
+    public Map<Long, String> getTeamIdTwIdMapByTeamIdList(List<Long> teamIdList) {
+        Map<Long, String> tmpMap = new HashMap<>();
+        Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).forEach(e -> tmpMap.put((long)e.getId(), e.getTw_id()));
+        Map<Long, String> resultMap = new HashMap<>();
+        for (Map.Entry<Long, String> e : tmpMap.entrySet()) {
+            if (!resultMap.containsKey(e.getValue())) {
+                resultMap.put(e.getKey(), e.getValue());
+            }
+        }
+        return resultMap;
+    }
 }

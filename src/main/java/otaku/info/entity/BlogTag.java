@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 
 /**
- * BlogTagテーブル
+ * BlogTagテーブル(Wp tag)
  *
  */
 @Entity(name = "blog_tag")

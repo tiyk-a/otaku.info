@@ -320,8 +320,12 @@ public class BlogController {
                     tags[itemMaster.getTags().length] = Math.toIntExact(yyyyMMTag.getBlog_tag_id());
                 }
                 jsonObject.put("tags", tags);
-                jsonObject.put("status", "publish");
-                jsonObject.put("content", textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0));
+                if (setting.getTest().equals("dev")) {
+                    jsonObject.put("status", "draft");
+                } else {
+                    jsonObject.put("status", "publish");
+                }
+                jsonObject.put("content", content);
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), entry.getValue());
 
                 String url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/";

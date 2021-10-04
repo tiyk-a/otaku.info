@@ -41,12 +41,6 @@ public class Item {
     @Column(nullable = true)
     private int price;
 
-    @Column(nullable = false)
-    private String team_id;
-
-    @Column(nullable = true)
-    private String member_id;
-
     @Column(nullable = true)
     private String title;
 
@@ -65,9 +59,6 @@ public class Item {
 
     @Column(nullable = true)
     private String image3;
-
-    @Column(nullable = true)
-    private Integer wp_id;
 
     @Column(nullable = false)
     private boolean fct_chk;
@@ -101,7 +92,6 @@ public class Item {
         itemMaster.setDel_flg(false);
         itemMaster.setItem_m_id(null);
         itemMaster.setUrl(null);
-        itemMaster.setWp_id(null);
         return itemMaster;
     }
 

@@ -72,9 +72,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where item_m_id = ?1")
     List<Item> findByMasterId(Long itemMasterId);
 
-    @Query("select wp_id from Item where wp_id is not null")
-    List<Long> collectWpId();
-
     @Query("select t from Item t where item_m_id = ?1")
     List<Item> gatherItems(Long itemMId);
 

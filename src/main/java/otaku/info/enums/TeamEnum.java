@@ -66,7 +66,14 @@ public enum TeamEnum {
         if (argSubDomain == null) {
             return null;
         }
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(argSubDomain)).findFirst().orElse(null);
+        TeamEnum result = null;
+        for (TeamEnum e : TeamEnum.values()) {
+            if (e.getSubDomain().equals(argSubDomain)) {
+                result = e;
+                break;
+            }
+        }
+        return result;
     }
 
     /**

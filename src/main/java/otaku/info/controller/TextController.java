@@ -564,7 +564,11 @@ public class TextController {
             }
         }
         // 全てのItemからデータを抜いたので、これから返却するタイトルを作成する
-        String res = sdf1.format(publicationDate);
+        String res = "";
+        System.out.println("textController:568 publicationDate=" + publicationDate);
+        if (publicationDate != null) {
+            res = sdf1.format(publicationDate);
+        }
 
         if (teamIdList.size() > 0) {
             List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);

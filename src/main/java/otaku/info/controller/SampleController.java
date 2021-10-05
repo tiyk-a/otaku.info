@@ -357,7 +357,9 @@ public class SampleController {
             if (savedItemList.size() > 0) {
                 List<ItemRelation> itemRelationList = new ArrayList<>();
                 for (Item item : savedItemList) {
-                    if (memberId == 0L) memberId = null;
+                    if (memberId!= null && memberId.equals(0L)) {
+                        memberId = null;
+                    }
                     itemRelationList.add(new ItemRelation(null, item.getItem_id(), teamId, memberId, null, null, null));
                 }
 

@@ -197,7 +197,8 @@ public class BlogController {
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
                     // TODO: 固定ページはブログにより異なるから修正が必要
-                    String finalUrl = blogDomainGenerator(TeamEnum.findSubDomainById(Math.toIntExact(e.getKey()))) + setting.getBlogApiPath() + "pages/33";
+                    Integer teamId = Math.toIntExact(e.getKey());
+                    String finalUrl = blogDomainGenerator(TeamEnum.findSubDomainById(teamId)) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamId);
                     request(finalUrl, request, HttpMethod.POST);
                 }
             }
@@ -253,6 +254,7 @@ public class BlogController {
 
         String auth = "";
         if (subDomain != null) {
+            TeamEnum e = TeamEnum.getBySubDomain(subDomain);
             auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getBlogPw().getBytes()));
         } else {
             auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
@@ -926,8 +928,9 @@ public class BlogController {
         // テキストを用意できた時だけページを更新する
         if (resultMap.size() > 0) {
             for (Map.Entry<String, String> e : resultMap.entrySet()) {
-                String url = blogDomainGenerator(e.getKey()) + setting.getBlogApiPath() + "pages/1707";
-                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getKey());
+                String subDomain = e.getKey();
+                String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", e.getValue());
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -995,7 +998,7 @@ public class BlogController {
      */
     private String blogDomainGenerator(String subDomain) {
         if (StringUtils.hasText(subDomain)) {
-            return setting.getBlogHttps() + subDomain.replaceAll("\\.", "/") + setting.getBlogDomain();
+            return setting.getBlogHttps() + subDomain + setting.getBlogDomain();
         } else {
             return setting.getBlogWebUrl();
         }

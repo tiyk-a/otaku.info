@@ -192,7 +192,7 @@ public class TextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date) {
+    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Integer teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String result = dateStr + "の" + teamService.getTeamName(ele.getKey()) + "のTV出演情報です。%0A%0A";
 
@@ -202,7 +202,7 @@ public class TextController {
         }
 
         // blogへの誘導
-        String blog = "一覧はこちら%0Ahttps://otakuinfo.fun/pages/1707";
+        String blog = "一覧はこちら%0Ahttps://otakuinfo.fun/pages/" + TeamEnum.getTvPageId(teamId);
         return result + info + blog;
     }
 

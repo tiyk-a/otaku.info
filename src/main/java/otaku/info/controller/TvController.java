@@ -1,7 +1,6 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,11 +8,10 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.Program;
+import otaku.info.entity.PRel;
 import otaku.info.entity.Station;
-import otaku.info.searvice.MemberService;
-import otaku.info.searvice.ProgramService;
-import otaku.info.searvice.StationService;
-import otaku.info.searvice.TeamService;
+import otaku.info.enums.MemberEnum;
+import otaku.info.searvice.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -45,6 +43,9 @@ public class TvController  {
 
     @Autowired
     private StationService stationService;
+
+    @Autowired
+    private PRelService pRelService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -78,10 +79,8 @@ public class TvController  {
         // マップのvalueに情報を追加していく
         for (Program p : programList) {
             // マップからグループIDの要素のvalueに情報を追加して
-            List<Long> teamIdList = new ArrayList<>();
-            if (org.springframework.util.StringUtils.hasText(p.getTeam_id())) {
-                List.of(p.getTeam_id().split(",")).forEach(e -> teamIdList.add((long) Integer.parseInt(e)));
-            }
+            List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
+
             for (Long teamId : teamIdList) {
                 List<Program> list = tvListMapByGroup.get(teamId);
                 list.add(p);
@@ -98,6 +97,8 @@ public class TvController  {
      * @param detailTitleMap
      */
     public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName) throws IOException {
+        List<PRel> relList = new ArrayList<>();
+
         for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
             String[] valueArr = e.getValue();
 
@@ -137,8 +138,11 @@ public class TvController  {
                 teamIdList.addAll(teamService.findTeamIdListByText(teamName));
             }
 
-            String teamIdStr = StringUtils.join(teamIdList, ',');
-            program.setTeam_id(teamIdStr);
+            for (Long teamId : teamIdList) {
+                PRel rel = new PRel();
+                rel.setTeam_id(teamId);
+                relList.add(rel);
+            }
 
             // 取得テキスト（TV情報・タイトル）からメンバー名を抽出する
             List<Long> memberIdList = memberService.findMemberIdByText(valueArr[0]);
@@ -161,9 +165,23 @@ public class TvController  {
                 }
             }
 
+//             Memberがある場合
             if (memberIdList.size() > 0) {
-                String memberIdStr = StringUtils.join(memberIdList, ',');
-                program.setMember_id(memberIdStr);
+                for (Long memberId : memberIdList) {
+                    Long teamId = MemberEnum.getTeamIdById(memberId);
+                    if (relList.stream().anyMatch(f -> f.getTeam_id().equals(teamId) && f.getMember_id() == null)) {
+                        for (PRel rel : relList) {
+                            if (rel.getTeam_id().equals(teamId) && rel.getMember_id() == null) {
+                                rel.setMember_id(memberId);
+                            }
+                        }
+                    } else {
+                        PRel rel = new PRel();
+                        rel.setTeam_id(teamId);
+                        rel.setMember_id(memberId);
+                        relList.add(rel);
+                    }
+                }
             }
 
             String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
@@ -200,22 +218,27 @@ public class TvController  {
 
             // 登録or更新処理
             if (isExisting) {
-                // すでに登録があったら内容を比較し、違いがあれば更新
+                // TODO: ここ入るとrelListせっかく作ったのに使わず終わる。無駄
+                // 内容が同じProgramを取得
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-                boolean isTotallySame = isTotallySame(existingP, program);
+                // チームとメンバーとdescriptionが同じか確認する
+                boolean isTotallySame = isTotallySame(existingP, program.getDescription(), teamIdList, memberIdList);
 
-                // 完全に同じデータの場合、登録・更新どちらも行わない。
-                // 更新
-                if (!isTotallySame || (existingP.getTeam_id().equals("")) && !program.getTeam_id().equals("")) {
-
-                    programService.overwrite(existingP.getProgram_id(), program);
-                    System.out.println("TV番組を更新：" + program.toString());
+                if (!isTotallySame) {
+                    // チームとメンバーの更新をする
+                    programService.overwrite(existingP.getProgram_id(), teamIdList, memberIdList);
                 }
+//
+//                if (relList.size() > 0) {
+//                    relList.forEach(f -> f.setTeam_id(existingP.getProgram_id()));
+//                }
             } else {
                 // 既存登録がなければ新規登録します。
-                programService.save(program);
+                Program savedP = programService.save(program);
+                relList.forEach(f -> f.setTeam_id(savedP.getProgram_id()));
                 System.out.println("TV番組を登録：" + program.toString());
             }
+            pRelService.saveAll(relList);
         }
     }
 
@@ -248,39 +271,56 @@ public class TvController  {
      * Title, Station_id, On_air_dateで比較元番組を取得しているため、この3項目はこのメソッド内でチェックしない。
      *
      * @param existingP
-     * @param program
+     * @param description
+     * @param teamIdList
+     * @param memberIdList
      * @return
      */
-    private boolean isTotallySame(Program existingP, Program program) {
+    private boolean isTotallySame(Program existingP, String description, List<Long> teamIdList, List<Long> memberIdList) {
 
-        // member_id
-        if (existingP.getMember_id() == null) {
-            if (program.getMember_id() != null) {
+        // 簡単なものから確認してreturnしていく
+        // description
+        if (existingP.getDescription() == null) {
+            if (description != null) {
                 return false;
             }
         } else {
-            if (!existingP.getMember_id().equals(program.getMember_id())) {
+            if (!existingP.getDescription().equals(description)) {
                 return false;
+            }
+        }
+
+        // member_id
+        List<Long> eMemberIdList = pRelService.getMemberIdList(existingP.getProgram_id());
+        if (memberIdList == null) {
+            if (eMemberIdList != null) {
+                return false;
+            }
+        } else {
+            if (eMemberIdList == null || memberIdList.size() != eMemberIdList.size()) {
+                return false;
+            }
+            for (Long memberId : memberIdList) {
+                if (eMemberIdList.stream().noneMatch(e -> e.equals(memberId))) {
+                    return false;
+                }
             }
         }
 
         // team_id
-        if (existingP.getTeam_id() == null) {
-            if (program.getTeam_id() != null) {
+        List<Long> eTeamIdList = pRelService.getTeamIdList(existingP.getProgram_id());
+        if (teamIdList == null) {
+            if (eTeamIdList != null) {
                 return false;
             }
         } else {
-            if (!existingP.getTeam_id().equals(program.getTeam_id())) {
+            if (eTeamIdList == null || teamIdList.size() != eTeamIdList.size()) {
                 return false;
             }
-        }
-
-        // description
-        if (existingP.getDescription() == null) {
-            return program.getDescription() == null;
-        } else {
-            if (!existingP.getDescription().equals(program.getDescription())) {
-                return false;
+            for (Long teamId : teamIdList) {
+                if (eTeamIdList.stream().noneMatch(e -> e.equals(teamId))) {
+                    return false;
+                }
             }
         }
         return true;

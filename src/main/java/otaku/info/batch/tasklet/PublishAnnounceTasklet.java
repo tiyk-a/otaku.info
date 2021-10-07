@@ -11,7 +11,7 @@ import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.ItemMasterRelationService;
+import otaku.info.searvice.IMRelService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
@@ -39,7 +39,7 @@ public class PublishAnnounceTasklet implements Tasklet {
     ItemMasterService itemMasterService;
 
     @Autowired
-    ItemMasterRelationService itemMasterRelationService;
+    IMRelService IMRelService;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -48,7 +48,7 @@ public class PublishAnnounceTasklet implements Tasklet {
 
         for (ItemMaster itemMaster : itemMasterList) {
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-            List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
             if (teamIdList.size() > 0) {
                 // 固有Twitterのないチームの投稿用オブジェクト
                 List<Long> noTwitterTeamIdList = new ArrayList<>();

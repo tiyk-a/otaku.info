@@ -22,10 +22,9 @@ import otaku.info.dto.ItemRelElems;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.entity.ItemMasterRelation;
-import otaku.info.entity.ItemRelation;
+import otaku.info.entity.IMRel;
+import otaku.info.entity.ItemRel;
 import otaku.info.enums.PublisherEnum;
-import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -87,10 +86,10 @@ public class SampleController {
     private ItemMasterService itemMasterService;
 
     @Autowired
-    private ItemRelationService itemRelationService;
+    private ItemRelService itemRelService;
 
     @Autowired
-    private ItemMasterRelationService itemMasterRelationService;
+    private IMRelService IMRelService;
 
     @Autowired
     Scheduler scheduler;
@@ -135,19 +134,20 @@ public class SampleController {
 //        System.out.println("itemMasterList.size(): " + itemMasterList.size());
 
         // Method3全てのitemタイトルを分析して、出版社・雑誌名などを取得したい。そしてitemMasterのtitle作成につなげたいYahoo APIを使用したい
-        String result = "";
-        // ~/Desktop/title.txtにpro環境から落としてきたitem.titleの値を入れておく。それを読んで取り込んでyahoo apiでkeyを引き出してあげる
-        try (BufferedReader br = new BufferedReader(new FileReader("/Users/chiara/Desktop/title.txt"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                List<String> tmpList = yahooController.extractKeywords(line);
-                if (tmpList != null && tmpList.size() > 0) {
-                    result = result + String.join(" ", tmpList) + "\n";
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        String result = "";
+//        // ~/Desktop/title.txtにpro環境から落としてきたitem.titleの値を入れておく。それを読んで取り込んでyahoo apiでkeyを引き出してあげる
+//        try (BufferedReader br = new BufferedReader(new FileReader("/Users/chiara/Desktop/title.txt"))) {
+//            String line;
+//            while ((line = br.readLine()) != null) {
+//                List<String> tmpList = yahooController.extractKeywords(line);
+//                if (tmpList != null && tmpList.size() > 0) {
+//                    result = result + String.join(" ", tmpList) + "\n";
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        System.out.println(setting.getTest());
         return "done";
     }
 
@@ -163,11 +163,11 @@ public class SampleController {
         Item tmp = new Item();
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
-        ItemRelation ir = new ItemRelation();
+        ItemRel ir = new ItemRel();
         Item savedItem = itemService.saveItem(tmp);
         ir.setItem_id(savedItem.getItem_id());
         ir.setTeam_id(1L);
-        itemRelationService.save(ir);
+        itemRelService.save(ir);
 
         List<String> list = controller.affiliSearchWord(artistId);
         List<String> itemCodeList = rakutenController.search(list);
@@ -200,6 +200,16 @@ public class SampleController {
                 System.out.println("---run2未発売商品リマインダー START---");
                 scheduler.run2();
                 System.out.println("---run2未発売商品リマインダー END---");
+                break;
+            case 3:
+                // relテーブルを入れる
+                System.out.println("moveItemToItemRel");
+                tmpController.moveItemToItemRel2();
+                System.out.println("moveItemMasterToIMRel");
+                tmpController.moveItemMasterToIMRel2();
+                System.out.println("moveProgramToPRel");
+                tmpController.moveProgramToPRel2();
+                System.out.println("END case3.");
                 break;
             case 4:
                 System.out.println("---run4商品発売日アナウンス START---");
@@ -236,12 +246,12 @@ public class SampleController {
                 scheduler.run11();
                 System.out.println("---run11Blog Update END---");
                 break;
-            case 12:
-                // 商品の情報を投稿する
-                System.out.println("---run12Blog画像設定 START---");
-                scheduler.run12();
-                System.out.println("---run12Blog画像設定 END---");
-                break;
+//            case 12:
+//                // 商品の情報を投稿する
+//                System.out.println("---run12Blog画像設定 START---");
+//                scheduler.run12();
+//                System.out.println("---run12Blog画像設定 END---");
+//                break;
             case 13: // tmpメソッド
                 // ショートコードが反映できるか
                 tmpController.tmpMethod();
@@ -355,18 +365,18 @@ public class SampleController {
             savedItemList = itemService.saveAll(newItemList);
 
             if (savedItemList.size() > 0) {
-                List<ItemRelation> itemRelationList = new ArrayList<>();
+                List<ItemRel> itemRelList = new ArrayList<>();
                 for (Item item : savedItemList) {
                     if (memberId!= null && memberId.equals(0L)) {
                         memberId = null;
                     }
-                    itemRelationList.add(new ItemRelation(null, item.getItem_id(), teamId, memberId, null, null, null));
+                    itemRelList.add(new ItemRel(null, item.getItem_id(), teamId, memberId, null, null, null));
                 }
 
                 // すでに登録されてるrelレコードがあったら重複嫌なので抜く
-                itemRelationList = itemRelationService.removeExistRecord(itemRelationList);
-                if (itemRelationList.size() > 0) {
-                    itemRelationService.saveAll(itemRelationList);
+                itemRelList = itemRelService.removeExistRecord(itemRelList);
+                if (itemRelList.size() > 0) {
+                    itemRelService.saveAll(itemRelList);
                 }
             }
         }
@@ -375,13 +385,13 @@ public class SampleController {
         Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
         // itemMasterRelも更新する
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
-            List<ItemMasterRelation> itemMasterRelationList = itemMasterRelationService.findByItemMId(e.getKey().getItem_m_id());
+            List<IMRel> IMRelList = IMRelService.findByItemMId(e.getKey().getItem_m_id());
             List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
-            itemMasterRelationList.forEach(f -> itemMasterRelElemsList.add(new ItemRelElems(null, f.getItem_m_id(), f.getTeam_id(), f.getMember_id(), f.getWp_id())));
+            IMRelList.forEach(f -> itemMasterRelElemsList.add(new ItemRelElems(null, f.getItem_m_id(), f.getTeam_id(), f.getMember_id(), f.getWp_id())));
 
-            List<ItemRelation> itemRelationList = itemRelationService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
+            List<ItemRel> itemRelList = itemRelService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
             List<ItemRelElems> itemRelElemsList = new ArrayList<>();
-            itemRelationList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), f.getMember_id(), null)));
+            itemRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), f.getMember_id(), null)));
             List<ItemRelElems> itemRelElemsDataList = itemRelElemsList.stream().distinct().collect(Collectors.toList());
             if (itemRelElemsDataList.size() > 0 && itemMasterRelElemsList.size() > 0 && itemRelElemsDataList.size() > itemMasterRelElemsList.size()) {
                 List<ItemRelElems> sameElemsList = new ArrayList<>();
@@ -399,11 +409,11 @@ public class SampleController {
                     itemRelElemsDataList.removeAll(sameElemsList);
                 }
                 if (itemRelElemsDataList.size() > 0) {
-                    List<ItemMasterRelation> toSaveItemMasterRelationList = new ArrayList<>();
+                    List<IMRel> toSaveIMRelList = new ArrayList<>();
                     for (ItemRelElems f : itemRelElemsDataList) {
-                        toSaveItemMasterRelationList.add(new ItemMasterRelation(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getMember_id(), null, null, null));
+                        toSaveIMRelList.add(new IMRel(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getMember_id(), null, null, null));
                     }
-                    itemMasterRelationService.saveAll(toSaveItemMasterRelationList);
+                    IMRelService.saveAll(toSaveIMRelList);
                 }
             }
         }
@@ -429,14 +439,14 @@ public class SampleController {
 
                 if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(itemMaster.getTitle());
-                    List<Long> teamIdList = itemMasterRelationService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+                    List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
                     if (teamIdList.size() > 0) {
                         Map<Long, String> twIdMap = teamService.getTeamIdTwIdMapByTeamIdList(teamIdList);
                         for (Map.Entry<Long, String> e : twIdMap.entrySet()) {
                             TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, e.getKey());
                             String result;
 
-                            List<Long> memberIdList = itemMasterRelationService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
+                            List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
                             if (memberIdList != null && memberIdList.size() > 0) {
                                 if (memberIdList.size() == 1) {
                                     String memberName = memberService.getMemberName(memberIdList.get(0));

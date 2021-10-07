@@ -1,21 +1,28 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import otaku.info.entity.Program;
+import otaku.info.entity.PRel;
+import otaku.info.enums.MemberEnum;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
 import java.time.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor
 public class ProgramService  {
+
+    @Autowired
+    PRelService pRelService;
 
     private final ProgramRepository programRepository;
 
@@ -53,36 +60,81 @@ public class ProgramService  {
     }
 
     /**
-     * チームIDとメンバーIDのみをoverrideします。
+     * Programのチーム情報・メンバー情報を更新します。
      *
      * @param programId
-     * @param program
+     * @param teamIdList
+     * @param memberIdList
      * @return
      */
-    public Program overwrite(Long programId, Program program) {
+    public List<PRel> overwrite(Long programId, List<Long> teamIdList, List<Long> memberIdList) {
         // 更新するレコード
-        Program overridden = findbyProgramId(programId).orElse(new Program());
+        List<PRel> curPRelList = pRelService.getListByProgramId(programId);
+        List<PRel> addRelList = new ArrayList<>();
 
-        // チームIDを更新
-        if (StringUtils.hasText(overridden.getTeam_id())) {
-            overridden.setTeam_id(program.getTeam_id());
-        } else {
-            if (StringUtils.hasText(program.getTeam_id()) && !overridden.getTeam_id().contains(program.getTeam_id())) {
-                overridden.setTeam_id(overridden.getTeam_id().concat("," + program.getTeam_id()));
+        // TeamIdの追加処理
+        if (teamIdList != null && teamIdList.size() > 0) {
+            List<Long> curTeamIdList = curPRelList.stream().map(PRel::getTeam_id).collect(Collectors.toList());
+
+            for (Long candTeamId : teamIdList) {
+                if (!curTeamIdList.contains(candTeamId)) {
+                    PRel rel = new PRel();
+                    rel.setProgram_id(programId);
+                    rel.setTeam_id(candTeamId);
+                    addRelList.add(rel);
+                }
             }
         }
 
-        // メンバーIDを更新
-        if (StringUtils.hasText(overridden.getMember_id())) {
-            overridden.setMember_id(program.getMember_id());
-        } else {
-            if (StringUtils.hasText(program.getTeam_id()) && (StringUtils.hasText(overridden.getMember_id()) && StringUtils.hasText(program.getMember_id()) && !overridden.getMember_id().contains(program.getMember_id()))) {
-                overridden.setMember_id(overridden.getMember_id().concat("," + program.getMember_id()));
+        // MemberIdの追加処理
+        if (memberIdList != null && memberIdList.size() > 0) {
+            List<Long> curMemberIdList = new ArrayList<>();
+            for (PRel rel : curPRelList) {
+                if (rel.getMember_id() != null) {
+                    curMemberIdList.add(rel.getMember_id());
+                }
+            }
+
+            for (Long candMemberId : memberIdList) {
+                if (!curMemberIdList.contains(candMemberId)) {
+                    // 既存RelのTeamにこのメンバーのチームがあって、Memberが空だったら入れてあげる
+                    Long teamId = MemberEnum.getTeamIdById(candMemberId);
+                    if (curPRelList.stream().anyMatch(e -> e.getTeam_id().equals(teamId) && e.getMember_id() == null)) {
+                        for (PRel rel : curPRelList) {
+                            if (rel.getTeam_id().equals(teamId) && rel.getMember_id() == null) {
+                                curPRelList.remove(rel);
+                                rel.setMember_id(candMemberId);
+                                addRelList.add(rel);
+                                break;
+                            }
+                        }
+                    } else if (addRelList.size() > 0 && addRelList.stream().anyMatch(e -> e.getTeam_id().equals(teamId))) {
+                        // 今回追加するRelリストのTeamにこのメンバーのチームがあったらMember空だから入れてあげる
+                        for (PRel rel : addRelList) {
+                            if (rel.getTeam_id().equals(teamId)) {
+                                rel.setMember_id(candMemberId);
+                                break;
+                            }
+                        }
+                    } else {
+                        // 既存RelのTeamにこのメンバーのチームがなかったら、新規でRelを作ってあげる
+                        PRel rel = new PRel();
+                        rel.setProgram_id(programId);
+                        rel.setTeam_id(teamId);
+                        rel.setMember_id(candMemberId);
+                        addRelList.add(rel);
+                    }
+                }
             }
         }
+        if (addRelList.size() > 0) {
+            pRelService.saveAll(addRelList);
+        }
+        curPRelList.addAll(addRelList);
+        return curPRelList;
+    }
 
-        // データを更新しているのでfct_chkカラムは未確認(false)にする。
-        overridden.setFct_chk(false);
-        return programRepository.save(overridden);
+    public List<Program> findall() {
+        return programRepository.findAll();
     }
 }

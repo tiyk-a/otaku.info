@@ -166,4 +166,8 @@ public class DateUtils {
     public static Date unixToDate(Long unix10digits) {
         return new Date(unix10digits * 1000);
     }
+
+    public Long ldtToMilliseconds(LocalDateTime ldt) {
+        return LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
 }

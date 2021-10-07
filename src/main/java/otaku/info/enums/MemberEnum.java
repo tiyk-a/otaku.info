@@ -110,4 +110,8 @@ public enum MemberEnum {
     public static MemberEnum get(String argName) {
         return Arrays.stream(MemberEnum.values()).filter(e -> e.name.equals(argName)).findFirst().orElse(null);
     }
+
+    public static Long getTeamIdById(Long argMemberId) {
+        return Arrays.stream(MemberEnum.values()).filter(e -> e.id.equals(argMemberId)).map(e -> (long) e.getTeamId()).findFirst().orElse(0L);
+    }
 }

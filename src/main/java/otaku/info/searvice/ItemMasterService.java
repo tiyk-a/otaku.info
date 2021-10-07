@@ -88,4 +88,8 @@ public class ItemMasterService {
     public List<ItemMaster> findByPublicationYearWpIdNull(Integer year) {
         return itemMasterRepository.findByPublicationYearWpIdNull(year);
     }
+
+    public List<ItemMaster> findAll() {
+        return itemMasterRepository.findAll();
+    }
 }

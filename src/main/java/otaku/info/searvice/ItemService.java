@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
-import otaku.info.entity.ItemRelation;
 import otaku.info.repository.ItemRepository;
 import otaku.info.utils.DateUtils;
 
@@ -24,7 +23,7 @@ public class ItemService {
     private DateUtils dateUtils;
 
     @Autowired
-    ItemRelationService itemRelationService;
+    ItemRelService itemRelService;
 
     private final ItemRepository itemRepository;
 
@@ -139,7 +138,7 @@ public class ItemService {
      * @return
      */
     public List<Item> findSimilarItemList(Item item) {
-        List<Long> teamIdList = itemRelationService.getTeamIdListByItemId(item.getItem_id());
+        List<Long> teamIdList = itemRelService.getTeamIdListByItemId(item.getItem_id());
         List<Item> resultList = new ArrayList<>();
 
         // それぞれのteamIdでマスタ商品の登録がある商品を探す

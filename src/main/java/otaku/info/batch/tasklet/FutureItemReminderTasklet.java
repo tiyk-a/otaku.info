@@ -11,13 +11,12 @@ import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.ItemRelationService;
+import otaku.info.searvice.ItemRelService;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.TeamService;
 import otaku.info.utils.ItemUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +38,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     TeamService teamService;
 
     @Autowired
-    ItemRelationService itemRelationService;
+    ItemRelService itemRelService;
 
     @Autowired
     ItemUtils itemUtils;
@@ -67,7 +66,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     private void post(ItemMaster itemMaster, List<Item> itemList) throws Exception {
         // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
         List<Long> teamIdArr = new ArrayList<>();
-        itemList.forEach(e -> teamIdArr.addAll(itemRelationService.getTeamIdListByItemId(e.getItem_id())));
+        itemList.forEach(e -> teamIdArr.addAll(itemRelService.getTeamIdListByItemId(e.getItem_id())));
         itemList = itemList.stream().distinct().collect(Collectors.toList());
 
         if (teamIdArr.size() > 1) {

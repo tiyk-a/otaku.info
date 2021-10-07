@@ -63,7 +63,8 @@ public class PythonController {
         List<String> lineList = new ArrayList<>();
 
         // 開発環境の場合Twitterに投稿しない
-        if (setting.getTest().equals("dev")) {
+        System.out.println("Env: " + setting.getTest());
+        if (setting.getTest() != null && setting.getTest().equals("dev")) {
             lineList.add(text + " ■teamId=" + teamId);
         } else {
             if (teamId != null && StringUtils.hasText(text)) {

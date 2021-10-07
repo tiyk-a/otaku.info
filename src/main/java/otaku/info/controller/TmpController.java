@@ -19,7 +19,6 @@ import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,381 +69,254 @@ public class TmpController {
     @Autowired
     ItemUtils itemUtils;
 
-//    public void moveItemToItemRel() {
+//    /**
+//     * Item -> ItemRel
+//     * Item.team_id, member_id, wp_idが存在しないとエラーになります
+//     */
+//    public void moveItemToItemRel2() {
 //        List<Item> itemList = itemService.findAll();
-//        List<ItemRel> itemRelList = new ArrayList<>();
-//        for (Item item : itemList) {
-//            List<Long> teamIdList = getLongIdList(item.getTeam_id());
-//            if (teamIdList != null && teamIdList.size() > 0) {
-//                for (Long teamId : teamIdList) {
-//                    List<ItemRel> itemRelList4Item = new ArrayList<>();
-//                    ItemRel rel = new ItemRel();
-//                    rel.setItem_id(item.getItem_id());
-//                    rel.setTeam_id(teamId);
+//        List<ItemRel> saveList = new ArrayList<>();
+//        for (Item i : itemList) {
+//            if (i.getTeam_id() == null) {
+//                continue;
+//            }
 //
-//                    List<Long> memberIdList = getLongIdList(item.getMember_id());
-//                    if (memberIdList != null && memberIdList.size() > 0) {
-//                        for (Long memberId : memberIdList) {
-//                            if (rel.getMember_id() == null) {
-//                                rel.setMember_id(memberId);
-//                                itemRelList4Item.add(rel);
-//                            } else {
-//                                ItemRel tmpRel = new ItemRel();
-//                                BeanUtils.copyProperties(rel, tmpRel);
-//                                tmpRel.setMember_id(memberId);
-//                                itemRelList4Item.add(tmpRel);
-//                            }
-//                            itemRelList4Item.add(rel);
-//                        }
-//                    } else {
-//                        itemRelList4Item.add(rel);
-//                    }
-//                    if (item.getWp_id() != null) {
-//                        Long wpId = getWpIdJudge((long)item.getWp_id(), teamId);
-//                        if (!wpId.equals(0L)) {
-//                            itemRelList4Item.stream().forEach(e -> e.setWp_id(wpId));
-//                        }
-//                    }
-//                    itemRelList.addAll(itemRelList4Item);
+//            ItemRel rel = new ItemRel();
+//            rel.setItem_id(i.getItem_id());
+//
+//            List<Long> teamIdList = getLongIdList(i.getTeam_id());
+//            for (Long teamId : teamIdList) {
+//                if (teamId == 0) {
+//                    continue;
+//                }
+//                if (rel.getTeam_id() == null) {
+//                    rel.setTeam_id(teamId);
+//                    saveList.add(rel);
+//                } else {
+//                    ItemRel newRel = new ItemRel();
+//                    BeanUtils.copyProperties(rel, newRel);
+//                    newRel.setTeam_id(teamId);
+//                    saveList.add(newRel);
 //                }
 //            }
+//        }
 //
-//            System.out.println("itemRelList size: " + itemRelList.size());
-//            if (itemRelList.size() > 0) {
-//                List<ItemRel> removedList = itemRelService.removeExistRecord(itemRelList);
-//                System.out.println("removedList size: " + removedList.size());
-//                itemRelService.saveAll(removedList);
+//        // ここでitemIdとteamIdだけ入れたrelを全部登録する
+//        if (saveList.size() > 0) {
+//            itemRelService.saveAll(saveList);
+//        }
+//
+//        // memberのあるitemだけ処理入る
+//        List<Item> memberItemList = itemList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
+//        System.out.println("memberItemList size: " + memberItemList.size());
+//        List<ItemRel> memberSaveList = new ArrayList<>();
+//
+//        for (Item i : memberItemList) {
+//            if (i.getMember_id() == null) {
+//                continue;
 //            }
+//
+//            List<Long> mIdList = getLongIdList(i.getMember_id());
+//            for (Long mId : mIdList) {
+//                Long teamId = MemberEnum.getTeamIdById(mId);
+//                ItemRel rel = itemRelService.findByItemIdTeamIdMemberIdNull(i.getItem_id(), teamId);
+//
+//                if (rel == null) {
+//                    ItemRel newRel = new ItemRel();
+//                    newRel.setItem_id(i.getItem_id());
+//                    newRel.setTeam_id(teamId);
+//                    newRel.setMember_id(mId);
+//                    memberSaveList.add(newRel);
+//                } else {
+//                    rel.setMember_id(mId);
+//                    memberSaveList.add(rel);
+//                }
+//            }
+//        }
+//        itemRelService.saveAll(memberSaveList);
+//
+//        // wpIdがあったItemだけ、総合ブログのteamIdだったらrelにwpIdセットします
+//        List<Item> wpItemList = itemList.stream().filter(e -> e.getWp_id() != null).collect(Collectors.toList());
+//        List<ItemRel> wpSaveList = new ArrayList<>();
+//
+//        for (Item i : wpItemList) {
+//            if (i.getWp_id() == null) {
+//                continue;
+//            }
+//
+//            List<ItemRel> wpAddRelList = itemRelService.findByItemId(i.getItem_id());
+//            for (ItemRel rel : wpAddRelList) {
+//                if (TeamEnum.findSubDomainById(Math.toIntExact(rel.getTeam_id())).equals("NA")) {
+//                    rel.setWp_id((long)i.getWp_id());
+//                    wpSaveList.add(rel);
+//                }
+//            }
+//        }
+//
+//        if (wpSaveList.size() > 0) {
+//            itemRelService.saveAll(wpSaveList);
 //        }
 //    }
 
-    public void moveItemToItemRel2() {
-        List<Item> itemList = itemService.findAll();
-        List<ItemRel> saveList = new ArrayList<>();
-        for (Item i : itemList) {
-            if (i.getTeam_id() == null) {
-                continue;
-            }
-
-            ItemRel rel = new ItemRel();
-            rel.setItem_id(i.getItem_id());
-
-            List<Long> teamIdList = getLongIdList(i.getTeam_id());
-            for (Long teamId : teamIdList) {
-                if (teamId == 0) {
-                    continue;
-                }
-                if (rel.getTeam_id() == null) {
-                    rel.setTeam_id(teamId);
-                    saveList.add(rel);
-                } else {
-                    ItemRel newRel = new ItemRel();
-                    BeanUtils.copyProperties(rel, newRel);
-                    newRel.setTeam_id(teamId);
-                    saveList.add(newRel);
-                }
-            }
-        }
-
-        // ここでitemIdとteamIdだけ入れたrelを全部登録する
-        if (saveList.size() > 0) {
-            itemRelService.saveAll(saveList);
-        }
-
-        // memberのあるitemだけ処理入る
-        List<Item> memberItemList = itemList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
-        System.out.println("memberItemList size: " + memberItemList.size());
-        List<ItemRel> memberSaveList = new ArrayList<>();
-
-        for (Item i : memberItemList) {
-            if (i.getMember_id() == null) {
-                continue;
-            }
-
-            List<Long> mIdList = getLongIdList(i.getMember_id());
-            for (Long mId : mIdList) {
-                Long teamId = MemberEnum.getTeamIdById(mId);
-                ItemRel rel = itemRelService.findByItemIdTeamIdMemberIdNull(i.getItem_id(), teamId);
-
-                if (rel == null) {
-                    ItemRel newRel = new ItemRel();
-                    newRel.setItem_id(i.getItem_id());
-                    newRel.setTeam_id(teamId);
-                    newRel.setMember_id(mId);
-                    memberSaveList.add(newRel);
-                } else {
-                    rel.setMember_id(mId);
-                    memberSaveList.add(rel);
-                }
-            }
-        }
-        itemRelService.saveAll(memberSaveList);
-
-        // wpIdがあったItemだけ、総合ブログのteamIdだったらrelにwpIdセットします
-        List<Item> wpItemList = itemList.stream().filter(e -> e.getWp_id() != null).collect(Collectors.toList());
-        List<ItemRel> wpSaveList = new ArrayList<>();
-
-        for (Item i : wpItemList) {
-            if (i.getWp_id() == null) {
-                continue;
-            }
-
-            List<ItemRel> wpAddRelList = itemRelService.findByItemId(i.getItem_id());
-            for (ItemRel rel : wpAddRelList) {
-                if (TeamEnum.findSubDomainById(Math.toIntExact(rel.getTeam_id())).equals("NA")) {
-                    rel.setWp_id((long)i.getWp_id());
-                    wpSaveList.add(rel);
-                }
-            }
-        }
-
-        if (wpSaveList.size() > 0) {
-            itemRelService.saveAll(wpSaveList);
-        }
-    }
-
-//    public void moveItemMasterToIMRel() {
+//    /**
+//     * ItemMaster -> Rel
+//     * Itemmaster.team_id, member_id, wp_idが存在しないとエラーになります
+//     */
+//    public void moveItemMasterToIMRel2() {
 //        List<ItemMaster> itemMList = itemMasterService.findAll();
-//        List<IMRel> iMRelList = new ArrayList<>();
+//        List<IMRel> saveList = new ArrayList<>();
 //        for (ItemMaster im : itemMList) {
+//            if (im.getTeam_id() == null) {
+//                continue;
+//            }
+//
+//            IMRel rel = new IMRel();
+//            rel.setItem_m_id(im.getItem_m_id());
 //            List<Long> teamIdList = getLongIdList(im.getTeam_id());
-//            if (teamIdList != null && teamIdList.size() > 0) {
-//                for (Long teamId : teamIdList) {
-//                    List<IMRel> iMRelList4Item = new ArrayList<>();
-//                    IMRel rel = new IMRel();
-//                    rel.setItem_m_id(im.getItem_m_id());
+//            for (Long teamId : teamIdList) {
+//                if (teamId == 0) {
+//                    continue;
+//                }
+//                if (rel.getTeam_id() == null) {
 //                    rel.setTeam_id(teamId);
-//
-//                    List<Long> memberIdList = getLongIdList(im.getMember_id());
-//                    if (memberIdList != null && memberIdList.size() > 0) {
-//                        for (Long memberId : memberIdList) {
-//                            if (rel.getMember_id() == null) {
-//                                rel.setMember_id(memberId);
-//                                iMRelList4Item.add(rel);
-//                            } else {
-//                                IMRel tmpRel = new IMRel();
-//                                BeanUtils.copyProperties(rel, tmpRel);
-//                                tmpRel.setMember_id(memberId);
-//                                iMRelList4Item.add(tmpRel);
-//                            }
-//                        }
-//                    } else {
-//                        iMRelList4Item.add(rel);
-//                    }
-//                    if (im.getWp_id() != null) {
-//                        Long wpId = getWpIdJudge((long)im.getWp_id(), teamId);
-//                        if (!wpId.equals(0L)) {
-//                            iMRelList4Item.stream().forEach(e -> e.setWp_id(wpId));
-//                        }
-//                    }
-//                    iMRelList.addAll(iMRelList4Item);
+//                    saveList.add(rel);
+//                } else {
+//                    IMRel newRel = new IMRel();
+//                    BeanUtils.copyProperties(rel, newRel);
+//                    newRel.setTeam_id(teamId);
+//                    saveList.add(newRel);
 //                }
 //            }
+//        }
 //
-//            System.out.println("iMRelList size: " + iMRelList.size());
-//            if (iMRelList.size() > 0) {
-//                List<IMRel> removedList = imRelService.removeExistRecord(iMRelList);
-//                System.out.println("removedList size: " + removedList.size());
-//                imRelService.saveAll(iMRelList);
+//        if (saveList.size() > 0) {
+//            imRelService.saveAll(saveList);
+//        }
+//
+//        // member
+//        List<ItemMaster> memberItemList = itemMList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
+//        List<IMRel> memberSaveList = new ArrayList<>();
+//
+//        for (ItemMaster im : memberItemList) {
+//            if (im.getMember_id() == null) {
+//                continue;
 //            }
+//
+//            List<Long> memberIdList = getLongIdList(im.getMember_id());
+//            for (Long mId : memberIdList) {
+//                Long teamId = MemberEnum.getTeamIdById(mId);
+//                IMRel rel = imRelService.findByItemIdTeamIdMemberIdNull(im.getItem_m_id(), teamId);
+//
+//                if (rel == null) {
+//                    IMRel newRel = new IMRel();
+//                    newRel.setItem_m_id(im.getItem_m_id());
+//                    newRel.setTeam_id(teamId);
+//                    newRel.setMember_id(mId);
+//                    memberSaveList.add(newRel);
+//                } else {
+//                    rel.setMember_id(mId);
+//                    memberSaveList.add(rel);
+//                }
+//            }
+//        }
+//
+//        if (memberSaveList.size() > 0) {
+//            imRelService.saveAll(memberSaveList);
+//        }
+//
+//        // wpId
+//        List<ItemMaster> wpIMList = itemMList.stream().filter(e -> e.getWp_id() != null && e.getTeam_id() != null).collect(Collectors.toList());
+//        List<IMRel> wpSaveList = new ArrayList<>();
+//        for (ItemMaster im : wpIMList) {
+//            if (im.getWp_id() == null) {
+//                continue;
+//            }
+//
+//            List<IMRel> wpAddRelList = imRelService.findByItemMId(im.getItem_m_id());
+//            for (IMRel rel : wpAddRelList) {
+//
+//                System.out.println(rel.getTeam_id() + " " + rel.getItem_m_id());
+//                if (rel.getTeam_id() == 0) {
+//                    continue;
+//                }
+//                if (TeamEnum.findSubDomainById(Math.toIntExact(rel.getTeam_id())).equals("NA")) {
+//                    rel.setWp_id((long)im.getWp_id());
+//                    wpSaveList.add(rel);
+//                }
+//            }
+//        }
+//
+//        if (wpSaveList.size() > 0) {
+//            imRelService.saveAll(wpSaveList);
 //        }
 //    }
 
-    public void moveItemMasterToIMRel2() {
-        List<ItemMaster> itemMList = itemMasterService.findAll();
-        List<IMRel> saveList = new ArrayList<>();
-        for (ItemMaster im : itemMList) {
-            if (im.getTeam_id() == null) {
-                continue;
-            }
-
-            IMRel rel = new IMRel();
-            rel.setItem_m_id(im.getItem_m_id());
-            List<Long> teamIdList = getLongIdList(im.getTeam_id());
-            for (Long teamId : teamIdList) {
-                if (teamId == 0) {
-                    continue;
-                }
-                if (rel.getTeam_id() == null) {
-                    rel.setTeam_id(teamId);
-                    saveList.add(rel);
-                } else {
-                    IMRel newRel = new IMRel();
-                    BeanUtils.copyProperties(rel, newRel);
-                    newRel.setTeam_id(teamId);
-                    saveList.add(newRel);
-                }
-            }
-        }
-
-        if (saveList.size() > 0) {
-            imRelService.saveAll(saveList);
-        }
-
-        // member
-        List<ItemMaster> memberItemList = itemMList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
-        List<IMRel> memberSaveList = new ArrayList<>();
-
-        for (ItemMaster im : memberItemList) {
-            if (im.getMember_id() == null) {
-                continue;
-            }
-
-            List<Long> memberIdList = getLongIdList(im.getMember_id());
-            for (Long mId : memberIdList) {
-                Long teamId = MemberEnum.getTeamIdById(mId);
-                IMRel rel = imRelService.findByItemIdTeamIdMemberIdNull(im.getItem_m_id(), teamId);
-
-                if (rel == null) {
-                    IMRel newRel = new IMRel();
-                    newRel.setItem_m_id(im.getItem_m_id());
-                    newRel.setTeam_id(teamId);
-                    newRel.setMember_id(mId);
-                    memberSaveList.add(newRel);
-                } else {
-                    rel.setMember_id(mId);
-                    memberSaveList.add(rel);
-                }
-            }
-        }
-
-        if (memberSaveList.size() > 0) {
-            imRelService.saveAll(memberSaveList);
-        }
-
-        // wpId
-        List<ItemMaster> wpIMList = itemMList.stream().filter(e -> e.getWp_id() != null && e.getTeam_id() != null).collect(Collectors.toList());
-        List<IMRel> wpSaveList = new ArrayList<>();
-        for (ItemMaster im : wpIMList) {
-            if (im.getWp_id() == null) {
-                continue;
-            }
-
-            List<IMRel> wpAddRelList = imRelService.findByItemMId(im.getItem_m_id());
-            for (IMRel rel : wpAddRelList) {
-
-                System.out.println(rel.getTeam_id() + " " + rel.getItem_m_id());
-                if (rel.getTeam_id() == 0) {
-                    continue;
-                }
-                if (TeamEnum.findSubDomainById(Math.toIntExact(rel.getTeam_id())).equals("NA")) {
-                    rel.setWp_id((long)im.getWp_id());
-                    wpSaveList.add(rel);
-                }
-            }
-        }
-
-        if (wpSaveList.size() > 0) {
-            imRelService.saveAll(wpSaveList);
-        }
-    }
-
-//    public void moveProgramToPRel() {
+//    /**
+//     * Program -> Rel
+//     * Program.team_id, member_idが存在しないとエラーになります
+//     */
+//    public void moveProgramToPRel2() {
 //        List<Program> programList = programService.findall();
-//        List<PRel> pRelList = new ArrayList<>();
+//        List<PRel> saveList = new ArrayList<>();
 //        for (Program p : programList) {
-//            List<Long> teamIdList = getLongIdList(p.getTeam_id());
-//            List<PRel> prelList4Program = new ArrayList<>();
-//            if (teamIdList != null && teamIdList.size() > 0) {
-//                for (Long teamId : teamIdList) {
-//                    PRel rel = new PRel();
-//                    rel.setProgram_id(p.getProgram_id());
-//                    rel.setTeam_id(teamId);
+//            if (p.getTeam_id() == null) {
+//                continue;
+//            }
 //
-//                    List<Long> memberIdList = getLongIdList(p.getMember_id());
-//                    if (memberIdList != null && memberIdList.size() > 0) {
-//                        for (Long memberId : memberIdList) {
-//                            if (rel.getMember_id() == null) {
-//                                rel.setMember_id(memberId);
-//                                prelList4Program.add(rel);
-//                            } else {
-//                                PRel tmpRel = new PRel();
-//                                BeanUtils.copyProperties(rel, tmpRel);
-//                                tmpRel.setMember_id(memberId);
-//                                prelList4Program.add(tmpRel);
-//                            }
-//                        }
-//                    } else {
-//                        prelList4Program.add(rel);
-//                    }
+//            PRel rel = new PRel();
+//            rel.setProgram_id(p.getProgram_id());
+//            List<Long> teamIdList = getLongIdList(p.getTeam_id());
+//            for (Long teamId : teamIdList) {
+//                if (teamId == 0) {
+//                    continue;
+//                }
+//                if (rel.getTeam_id() == null) {
+//                    rel.setTeam_id(teamId);
+//                    saveList.add(rel);
+//                } else {
+//                    PRel newRel = new PRel();
+//                    BeanUtils.copyProperties(rel, newRel);
+//                    newRel.setTeam_id(teamId);
+//                    saveList.add(newRel);
 //                }
 //            }
+//        }
 //
-//            pRelList.addAll(prelList4Program);
-//            System.out.println("pRelList size: " + pRelList.size());
-//            if (pRelList.size() > 0) {
-//                pRelService.saveAll(pRelList);
+//        if (saveList.size() > 0) {
+//            pRelService.saveAll(saveList);
+//        }
+//
+//        // member
+//        List<Program> memberProgramList = programList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
+//        List<PRel> memberSaveList = new ArrayList<>();
+//
+//        for (Program p : memberProgramList) {
+//            if (p.getMember_id() == null) {
+//                continue;
 //            }
-//            if (pRelList.size() > 0) {
-//                List<PRel> removedList = pRelService.removeExistRecord(pRelList);
-//                System.out.println("removedList size: " + removedList.size());
-//                pRelService.saveAll(pRelList);
+//
+//            List<Long> memberIdList = getLongIdList(p.getMember_id());
+//            for (Long mId : memberIdList) {
+//                Long teamId = MemberEnum.getTeamIdById(mId);
+//                PRel rel = pRelService.findByItemIdTeamIdMemberIdNull(p.getProgram_id(), teamId);
+//
+//                if (rel == null) {
+//                    PRel newRel = new PRel();
+//                    newRel.setProgram_id(p.getProgram_id());
+//                    newRel.setTeam_id(teamId);
+//                    newRel.setMember_id(mId);
+//                    memberSaveList.add(newRel);
+//                } else {
+//                    rel.setMember_id(mId);
+//                    memberSaveList.add(rel);
+//                }
 //            }
 //        }
+//
+//        if (memberSaveList.size() > 0) {
+//            pRelService.saveAll(memberSaveList);
+//        }
 //    }
-
-    public void moveProgramToPRel2() {
-        List<Program> programList = programService.findall();
-        List<PRel> saveList = new ArrayList<>();
-        for (Program p : programList) {
-            if (p.getTeam_id() == null) {
-                continue;
-            }
-
-            PRel rel = new PRel();
-            rel.setProgram_id(p.getProgram_id());
-            List<Long> teamIdList = getLongIdList(p.getTeam_id());
-            for (Long teamId : teamIdList) {
-                if (teamId == 0) {
-                    continue;
-                }
-                if (rel.getTeam_id() == null) {
-                    rel.setTeam_id(teamId);
-                    saveList.add(rel);
-                } else {
-                    PRel newRel = new PRel();
-                    BeanUtils.copyProperties(rel, newRel);
-                    newRel.setTeam_id(teamId);
-                    saveList.add(newRel);
-                }
-            }
-        }
-
-        if (saveList.size() > 0) {
-            pRelService.saveAll(saveList);
-        }
-
-        // member
-        List<Program> memberProgramList = programList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
-        List<PRel> memberSaveList = new ArrayList<>();
-
-        for (Program p : memberProgramList) {
-            if (p.getMember_id() == null) {
-                continue;
-            }
-
-            List<Long> memberIdList = getLongIdList(p.getMember_id());
-            for (Long mId : memberIdList) {
-                Long teamId = MemberEnum.getTeamIdById(mId);
-                PRel rel = pRelService.findByItemIdTeamIdMemberIdNull(p.getProgram_id(), teamId);
-
-                if (rel == null) {
-                    PRel newRel = new PRel();
-                    newRel.setProgram_id(p.getProgram_id());
-                    newRel.setTeam_id(teamId);
-                    newRel.setMember_id(mId);
-                    memberSaveList.add(newRel);
-                } else {
-                    rel.setMember_id(mId);
-                    memberSaveList.add(rel);
-                }
-            }
-        }
-
-        if (memberSaveList.size() > 0) {
-            pRelService.saveAll(memberSaveList);
-        }
-    }
 
     /**
      * teamIdリストを返します

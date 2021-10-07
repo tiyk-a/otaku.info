@@ -203,13 +203,13 @@ public class SampleController {
                 break;
             case 3:
                 // relテーブルを入れる
-                System.out.println("moveItemToItemRel");
-                tmpController.moveItemToItemRel2();
-                System.out.println("moveItemMasterToIMRel");
-                tmpController.moveItemMasterToIMRel2();
-                System.out.println("moveProgramToPRel");
-                tmpController.moveProgramToPRel2();
-                System.out.println("END case3.");
+//                System.out.println("moveItemToItemRel");
+//                tmpController.moveItemToItemRel2();
+//                System.out.println("moveItemMasterToIMRel");
+//                tmpController.moveItemMasterToIMRel2();
+//                System.out.println("moveProgramToPRel");
+//                tmpController.moveProgramToPRel2();
+//                System.out.println("END case3.");
                 break;
             case 4:
                 System.out.println("---run4商品発売日アナウンス START---");

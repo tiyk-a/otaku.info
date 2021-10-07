@@ -9,12 +9,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.sql.Timestamp;
 
-@Entity(name = "item_relation")
+@Entity(name = "item_rel")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "item_relation")
-public class ItemRelation {
+@Table(name = "item_rel")
+public class ItemRel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

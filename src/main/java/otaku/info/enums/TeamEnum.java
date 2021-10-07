@@ -13,22 +13,21 @@ import java.util.stream.Collectors;
 public enum TeamEnum {
 
     SNOWMAN(6,null,"","","Snow man","snowmanhayainfo", "snowman.", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18,20),
-    KANJANI8(7,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    SEXYZONE(8,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    TOKIO(9,null,"トキオ","","TOKIO","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    V6(10,null,"ブイシックス","","V6","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    ARASHI(11,null,"アラシ","嵐","ARASHI","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    NEWS(12,null,"ニュース","","NEWS Johnny's","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KISMYFT2(13,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    ABCZ(14,null,"エービーシーズィー","エビ","A.B.C-Z","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    JOHNNYSWEST(15,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KINGPRINCE(16,null,"キングアンドプリンス ","キンプリ ","King & Prince ","princehayainfo", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    KANJANI8(7,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    SEXYZONE(8,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    TOKIO(9,null,"トキオ","","TOKIO","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    V6(10,null,"ブイシックス","","V6","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    ARASHI(11,null,"アラシ","嵐","ARASHI","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    NEWS(12,null,"ニュース","","NEWS Johnny's","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    KISMYFT2(13,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    ABCZ(14,null,"エービーシーズィー","エビ","A.B.C-Z","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    JOHNNYSWEST(15,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    KINGPRINCE(16,null,"キングアンドプリンス ","キンプリ ","King & Prince ","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18,20),
     SIXTONES(17,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "sixtones.", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20,22),
     NANIWADANSHI(18,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "naniwadanshi.", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18,20),
-    HEYSAYJUMP(19,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KATTUN(20,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KINKIKIDS(21,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707);
-
+    HEYSAYJUMP(19,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    KATTUN(20,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
+    KINKIKIDS(21,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707);
     private Integer id;
     private String anniversary;
     private String kana;

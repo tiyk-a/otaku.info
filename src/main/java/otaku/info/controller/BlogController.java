@@ -63,7 +63,7 @@ public class BlogController {
     ItemRelService itemRelService;
 
     @Autowired
-    IMRelService IMRelService;
+    IMRelService iMRelService;
 
     @Autowired
     PRelService pRelService;
@@ -98,11 +98,11 @@ public class BlogController {
         Date to = dateUtils.daysAfterToday(1);
 
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> IMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
+        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
         // 上で取得したマスター商品をteamIdごとにマップする
         Map<Long, List<ItemMaster>> tmpMap = new HashMap<>();
         for (ItemMaster itemMaster : itemMasterList) {
-            List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
             if (teamIdList.size() == 0) {
                 continue;
             }
@@ -133,12 +133,12 @@ public class BlogController {
         Date sevenDaysLater = dateUtils.daysAfterToday(7);
 
         // 明日以降発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> IMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
+        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
 
         // 上で取得したマスター商品をteamIdごとにマップする
         Map<Long, List<ItemMaster>> tmpMap1 = new HashMap<>();
         for (ItemMaster itemMaster : futureItemMasterList) {
-            List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+            List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
             if (teamIdList.size() == 0) {
                 continue;
             }
@@ -306,7 +306,7 @@ public class BlogController {
      */
     public Long postMasterItem(ItemMaster itemMaster, List<Item> itemList) {
 
-        List<IMRel> IMRelList = IMRelService.findByItemMId(itemMaster.getItem_m_id());
+        List<IMRel> IMRelList = iMRelService.findByItemMId(itemMaster.getItem_m_id());
 
         if (IMRelList.stream().anyMatch(e -> e.getWp_id() != null)) {
             updateMasterItem(itemMaster, itemList);
@@ -397,7 +397,7 @@ public class BlogController {
                                 newIMRelList.add(IMRel);
                             }
                             if (newIMRelList.size() > 0) {
-                                IMRelService.saveAll(newIMRelList);
+                                iMRelService.saveAll(newIMRelList);
                             }
 
                             // 画像を登録する
@@ -459,7 +459,7 @@ public class BlogController {
      */
     public void updateMasterItem(ItemMaster itemMaster, List<Item> itemList) {
         String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0);
-        List<IMRel> IMRelList = IMRelService.findByItemMId(itemMaster.getItem_m_id());
+        List<IMRel> IMRelList = iMRelService.findByItemMId(itemMaster.getItem_m_id());
 
         if (IMRelList.stream().anyMatch(e -> e.getWp_id() == null)) {
             postMasterItem(itemMaster, itemList);
@@ -507,7 +507,7 @@ public class BlogController {
             }
 
             if (newIMRelList.size() > 0) {
-                IMRelService.saveAll(newIMRelList);
+                iMRelService.saveAll(newIMRelList);
             }
         }
     }
@@ -526,7 +526,7 @@ public class BlogController {
             // 各teamIdにおいて
             // ブログを投稿する
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-            List<IMRel> IMRelList = IMRelService.findByItemMId(itemMaster.getItem_m_id());
+            List<IMRel> IMRelList = iMRelService.findByItemMId(itemMaster.getItem_m_id());
             boolean isNewPost = IMRelList.stream().noneMatch(e -> e.getWp_id() != null);
             if (isNewPost) {
                 // 新規投稿する

@@ -2,7 +2,6 @@ package otaku.info.controller;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +9,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
-import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;

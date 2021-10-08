@@ -62,9 +62,9 @@ public class TvPostTasklet implements Tasklet {
 
                     // 文章を作成
                     if (forToday) {
-                        text = textController.tvPost(ele, forToday, calToday.getTime(), Math.toIntExact(ele.getKey()));
+                        text = textController.tvPost(ele, forToday, calToday.getTime(), ele.getKey());
                     } else {
-                        text = textController.tvPost(ele, forToday, calTmrw.getTime(), Math.toIntExact(ele.getKey()));
+                        text = textController.tvPost(ele, forToday, calTmrw.getTime(), ele.getKey());
                     }
                 }
                 // Twitter post指示

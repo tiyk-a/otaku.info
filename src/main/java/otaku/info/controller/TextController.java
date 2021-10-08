@@ -9,12 +9,14 @@ import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.MagazineEnum;
+import otaku.info.enums.MemberEnum;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -68,6 +70,7 @@ public class TextController {
     private SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
     private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
     private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+    private DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     /**
      * DateをStringにして返却します
@@ -195,7 +198,7 @@ public class TextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Integer teamId) {
+    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String result = dateStr + "の" + teamService.getTeamName(ele.getKey()) + "のTV出演情報です。%0A%0A";
 
@@ -446,6 +449,9 @@ public class TextController {
      * @return
      */
     public String createBlogTitle(Date publicationDate, String title) {
+        if (publicationDate == null) {
+            return "";
+        }
         return  sdf1.format(publicationDate) + " " + title;
     }
 
@@ -608,17 +614,18 @@ public class TextController {
      * @param programList
      * @return
      */
-    public String tvPageText(List<Program> programList, String subDomain) {
+    public String tvPageText(List<Program> programList, String subDomain) throws ParseException {
         if (programList.size() == 0) {
             return "";
         }
 
-        String result = "[toc depth='5']";
+        String result = "[toc depth='6']";
         // 丁寧にプログラムをソートする（放送日、チーム）
-        // 1:日付ごとにまとめる
-        Map<Date, List<Program>> datePMap = new HashMap<>();
+        // 1:日付ごとにまとめる<DateStr, List<Program>>
+        Map<String, List<Program>> datePMap = new TreeMap<>();
         for (Program p : programList) {
-            Date targetDate = dateUtils.localDateTimeToDate(p.getOn_air_date());
+
+            String targetDate = dtf3.format(p.getOn_air_date());
             List<Program> tmpList;
             if (!datePMap.containsKey(targetDate)) {
                 tmpList = new ArrayList<>();
@@ -632,56 +639,91 @@ public class TextController {
         }
 
         // 2: 日付でまとまったMapの中身を時間で並べ替える
+        // 放送局だけの異なる番組をまとめたい<DateStr, Map<title, List<Program>>>
+        Map<String, Map<String, List<Program>>> gatheredMap = new TreeMap<>();
         if (datePMap.size() > 0) {
-            for (Map.Entry<Date, List<Program>> e : datePMap.entrySet()) {
-                List<Program> sortedPList = e.getValue().stream().sorted(Comparator.comparing(f -> Math.toIntExact(dateUtils.ldtToMilliseconds(f.getOn_air_date())))).collect(Collectors.toList());
-                datePMap.put(e.getKey(), sortedPList);
+            for (Map.Entry<String, List<Program>> e : datePMap.entrySet()) {
+                Map<String, List<Program>> tmpMap = new TreeMap<>();
+                List<Program> tmpList;
+                for (Program p : e.getValue()) {
+                    if (tmpMap.containsKey(p.getTitle())) {
+                        tmpList = tmpMap.get(p.getTitle());
+                        if (!tmpList.get(0).getOn_air_date().equals(p.getOn_air_date())) {
+                            tmpList = new ArrayList<>();
+                        }
+                    } else {
+                        tmpList = new ArrayList<>();
+                    }
+                    tmpList.add(p);
+                    tmpMap.put(p.getTitle(), tmpList);
+                }
+                gatheredMap.put(e.getKey(), tmpMap);
             }
         }
 
         // ソートされた日付ごとのマップができたので、それぞれの日の文章を作成する
-        for (Map.Entry<Date, List<Program>> e : datePMap.entrySet()) {
-            // まずh2用意
-            String tmp = "<h2>" + sdf2.format(e.getKey()) + "(" + dateUtils.getDay(e.getKey()) + ")</h2>\n";
+        // 結果をまとめるリスト<h2, 番組ごとのテキストのリスト>
+        Map<String, List<String>> textByDays = new TreeMap<>();
+        List<String> textList = new ArrayList<>();
+        String h2 = "";
+        for (Map.Entry<String, Map<String, List<Program>>> e : gatheredMap.entrySet()) {
 
             // 総合ブログの場合チーム名の取得とかが必要
-            if (subDomain.equals("NA")) {
-                for (Program p : e.getValue()) {
-                    List<Long> pTeamIdList = pRelService.getTeamIdList(p.getProgram_id());
-                    List<String> teamNameList = teamService.findTeamNameByIdList(pTeamIdList);
-                    String teamName = String.join("/", teamNameList);
-                    String stationName = stationService.getStationName(p.getStation_id());
-                    String description = StringUtils.hasText(p.getDescription()) ? p.getDescription() : "";
-                    tmp = tmp + "</br ><h6>" + dtf1.format(p.getOn_air_date()) + "　" + teamName + "：" + p.getTitle() + "</h6>" + "<br /><p>放送局：" + stationName + "</p><br /><p>番組概要：" + description + "</p>";
-                }
-            } else {
-                // subdomainの場合チーム名はわかってるので不要
-                for (Program p : e.getValue()) {
-                    List<Long> pMemberIdList = pRelService.getMemberIdList(p.getProgram_id());
+            String tmp = "";
+            for (Map.Entry<String, List<Program>> p : e.getValue().entrySet()) {
+                Program masterP = p.getValue().get(0);
 
-                    String memberName = "";
-                    if (pMemberIdList != null && pMemberIdList.size() > 0) {
-                        List<String> memberNameList = memberService.getMemberNameList(pMemberIdList);
-                        memberName = String.join("/", memberNameList);
+                String teamName = "";
+                if (subDomain.equals("NA")) {
+                    List<Long> pTeamIdList = pRelService.getTeamIdList(masterP.getProgram_id());
+                    if (pTeamIdList != null && pTeamIdList.get(0) != null && !pTeamIdList.get(0).equals(0L)) {
+                        List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
+                        teamName = String.join("/", teamNameList);
                     }
-                    String stationName = stationService.getStationName(p.getStation_id());
-                    String description = StringUtils.hasText(p.getDescription()) ? p.getDescription() : "";
-                    tmp = tmp + "</br ><h6>" + dtf1.format(p.getOn_air_date()) + "　" + memberName + "：" + p.getTitle() + "</h6>" + "<br /><p>放送局：" + stationName + "</p><br /><p>番組概要：" + description + "</p>";
                 }
+
+                String memberName = "";
+                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getProgram_id());
+                if (memberIdList != null && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
+
+                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
+                    memberName = String.join("/", memberNameList);
+                }
+
+                String description = StringUtils.hasText(masterP.getDescription()) ? masterP.getDescription() : "";
+                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + masterP.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
+
+                String broad = "<p>放送局：";
+                for (Program r : p.getValue()) {
+                    String stationName = stationService.getStationName(r.getStation_id());
+                    broad = broad + stationName + "<br />";
+                }
+                broad = broad + "</p>";
+                tmp = tmp + broad;
+                textList.add(tmp);
+                tmp = "";
             }
-            result = String.join("\n", result, tmp);
+
+            // リストの最後の要素の場合、h2を用意、マップに要素を追加、使い回すリストとh2を空にする
+            // h2用意
+            String date = e.getKey().replaceAll("^\\d{4}", "");
+            date = date.substring(0,2) + "/" + date.substring(2, 4);
+            String day = dateUtils.getDay(e.getKey());
+            h2 = "<h2>" + date + "(" +  day + ")</h2>\n";
+            textByDays.put(h2, textList);
+            h2 = "";
+            textList = new ArrayList<>();
+        }
+
+        // ループ終わったら日毎のリストをまとめる
+        List<String> htmlList = new ArrayList<>();
+        for (Map.Entry<String, List<String>> e : textByDays.entrySet()) {
+            htmlList.add(String.join("\n", e.getKey(), String.join("\n", e.getValue())));
+        }
+
+        if (htmlList.size() > 0) {
+            result = String.join("\n", result, String.join("\n", htmlList));
         }
         return result;
     }
-
-//    public String generateItemMasterTitle(List<String> wordList) {
-//        String result = "";
-//
-//        // 雑誌名を見つけたらそれをトップに
-//        if (wordList.contains()) {
-//            result = wordList.stream().filter(e -> );
-//        }
-//        return ;
-//    }
-
 }

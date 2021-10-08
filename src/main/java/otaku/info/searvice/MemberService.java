@@ -1,14 +1,12 @@
 package otaku.info.searvice;
 
 import lombok.AllArgsConstructor;
-import org.apache.lucene.analysis.miscellaneous.PrefixAndSuffixAwareTokenFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.entity.Member;
 import otaku.info.enums.MemberEnum;
-import otaku.info.enums.TeamEnum;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
@@ -60,7 +58,7 @@ public class MemberService {
      * @return
      */
     public TeamIdMemberNameDto getMapTeamIdMemberName(Long memberId) {
-        Member member = MemberEnum.get(Math.toIntExact(memberId)).convertToEntity();
+        Member member = MemberEnum.get(memberId).convertToEntity();
         TeamIdMemberNameDto dto = new TeamIdMemberNameDto();
         BeanUtils.copyProperties(member, dto);
         return dto;
@@ -83,7 +81,7 @@ public class MemberService {
      * @return
      */
     public String getMemberName(Long memberId) {
-        return MemberEnum.get(Math.toIntExact(memberId)).getName();
+        return MemberEnum.get(memberId).getName();
     }
 
     /**
@@ -93,7 +91,29 @@ public class MemberService {
      * @return
      */
     public List<String> getMemberNameList(List<Long> memberIdList) {
-        return Arrays.stream(MemberEnum.values()).filter(e -> memberIdList.stream().anyMatch(f -> f.equals((long) e.getId()))).map(MemberEnum::getName).collect(Collectors.toList());
+        List<String> resList = new ArrayList<>();
+        if (memberIdList == null || (memberIdList.size() < 2 && (memberIdList.get(0) == null || memberIdList.get(0) == 0))) {
+            resList.add("");
+        } else {
+            for (MemberEnum e : MemberEnum.values()) {
+                for (Long mId : memberIdList) {
+                    if (mId == null || mId == 0) {
+                        resList.add("");
+                    } else {
+                        if (mId.equals(e.getId())) {
+                            System.out.println(mId);
+                            System.out.println(e.getId());
+                            resList.add(e.getName());
+                        }
+                    }
+                }
+            }
+        }
+
+        if (resList.size() == 0) {
+            resList.add("");
+        }
+        return resList;
     }
 
     /**

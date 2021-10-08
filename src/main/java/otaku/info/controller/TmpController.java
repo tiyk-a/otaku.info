@@ -345,7 +345,7 @@ public class TmpController {
      * @return
      */
     private Long getWpIdJudge(Long wpId, Long teamId) {
-        String subDomain = TeamEnum.findSubDomainById(Math.toIntExact(teamId));
+        String subDomain = TeamEnum.findSubDomainById(teamId);
         if (subDomain.equals("NA")) {
             return wpId;
         } else {

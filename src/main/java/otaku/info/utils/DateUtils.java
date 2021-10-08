@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.searvice.BlogTagService;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ public class DateUtils {
     private String dayOfWeek[] = {"", "日", "月", "火", "水", "木", "金", "土"};
 
     private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyMM");
+    private SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
 
     @Autowired
     BlogTagService blogTagService;
@@ -99,6 +101,14 @@ public class DateUtils {
     }
 
     public String getDay(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int index = c.get(Calendar.DAY_OF_WEEK);
+        return dayOfWeek[index];
+    }
+
+    public String getDay(String dateStr) throws ParseException {
+        Date date = sdf2.parse(dateStr);
         Calendar c = Calendar.getInstance();
         c.setTime(date);
         int index = c.get(Calendar.DAY_OF_WEEK);

@@ -78,7 +78,7 @@ public class TeamService {
      * @return
      */
     public String getTeamName(Long teamId) {
-        return TeamEnum.get(Math.toIntExact(teamId)).getName();
+        return TeamEnum.get(teamId).getName();
     }
 
 //    /**
@@ -103,7 +103,7 @@ public class TeamService {
      * @return
      */
     public String getTwitterId(Long teamId) {
-        return TeamEnum.get(Math.toIntExact(teamId)).getTw_id();
+        return TeamEnum.get(teamId).getTw_id();
     }
 
     /**

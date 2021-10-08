@@ -20,6 +20,7 @@ import otaku.info.utils.JsonUtils;
 import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
+import java.text.ParseException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -193,16 +194,15 @@ public class BlogController {
         // リクエスト送信
         if (requestMap.size() > 0) {
             for (Map.Entry<Long, String> e : requestMap.entrySet()) {
-                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainById(Math.toIntExact(e.getKey())));
+                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainById(e.getKey()));
 
                 if (headersMap != null && headersMap.size() > 0) {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
-                    // TODO: 固定ページはブログにより異なるから修正が必要
-                    Integer teamId = Math.toIntExact(e.getKey());
-                    String finalUrl = blogDomainGenerator(TeamEnum.findSubDomainById(teamId)) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamId);
-                    request(finalUrl, request, HttpMethod.POST);
+                    String finalUrl = blogDomainGenerator(TeamEnum.findSubDomainById(e.getKey())) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(e.getKey());
+                    String res = request(finalUrl, request, HttpMethod.POST);
+                    System.out.println(res);
                 }
             }
         }
@@ -321,7 +321,7 @@ public class BlogController {
         // memberを追加
         List<String> memberNameList = memberService.getMemberNameList(memberIdList);
 
-        if (memberNameList.size() > 0) {
+        if (memberNameList != null && memberNameList.size() > 0) {
             tagList.addAll(memberNameList);
         }
 
@@ -898,7 +898,7 @@ public class BlogController {
     /**
      * TV番組の固定ページを更新(送信先ブログごとにまとめる)
      */
-    public void updateTvPage() {
+    public void updateTvPage() throws ParseException {
         // 該当期間内の番組を全て取得
         List<Program> tmpList = programService.findByOnAirDateBeterrn(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
 
@@ -909,6 +909,9 @@ public class BlogController {
                 List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
                 if (teamIdList != null && teamIdList.size() > 0) {
                     for (Long teamId : teamIdList) {
+                        if (teamId == 0) {
+                            continue;
+                        }
                         // Mapにする<ProgramId_TeamId, Program>
                         confirmedMap.put(p.getProgram_id() + "_" + teamId, p);
                     }
@@ -922,7 +925,7 @@ public class BlogController {
             Map<String, Map<String, Program>> domainMap = new HashMap<>();
             for (Map.Entry<String, Program> e : confirmedMap.entrySet()) {
                 Long teamId = Long.valueOf(e.getKey().replaceAll("^\\d*_", ""));
-                String subDomain = TeamEnum.findSubDomainById(Math.toIntExact(teamId));
+                String subDomain = TeamEnum.findSubDomainById(teamId);
 
                 Map<String, Program> tmpMap;
                 if (domainMap.containsKey(subDomain)) {
@@ -932,24 +935,6 @@ public class BlogController {
                 }
                 tmpMap.put(e.getKey(), e.getValue());
                 domainMap.put(subDomain, tmpMap);
-
-//                List<ProgramRel> pRelList = programRelService.getListByProgramId(teamId);
-//                if (pRelList.size() == 0) {
-//                    continue;
-//                }
-//
-//                for (Long teamId : pRelList.stream().map(ProgramRel::getTeam_id).collect(Collectors.toList())) {
-//
-//                    List<Program> tmpPList;
-//                    String subDomain = TeamEnum.findSubDomainById(Math.toIntExact(teamId));
-//                    if (tmpMap.containsKey(subDomain)) {
-//                        tmpPList = tmpMap.get(subDomain);
-//                    } else {
-//                        tmpPList = new ArrayList<>();
-//                    }
-//                    tmpPList.add(p);
-//                    tmpMap.put(subDomain, tmpPList);
-//                }
             }
 
             // subDomainごとにまとめられたので、それぞれのドメインごとにテキストを作ってあげる
@@ -975,7 +960,7 @@ public class BlogController {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                    request(url, request, HttpMethod.POST);
+                    String res = request(url, request, HttpMethod.POST);
                     postChkMap.put(subDomain, true);
                 }
             }
@@ -990,7 +975,7 @@ public class BlogController {
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                        request(url, request, HttpMethod.POST);
+                        String res = request(url, request, HttpMethod.POST);
                         postChkMap.put(subDomain, true);
                     }
                 }
@@ -1005,7 +990,7 @@ public class BlogController {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                request(url, request, HttpMethod.POST);
+                String res = request(url, request, HttpMethod.POST);
                 postChkMap.put(subDomain, true);
             }
         }

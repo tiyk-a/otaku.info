@@ -12,23 +12,23 @@ import java.util.stream.Collectors;
 @Getter
 public enum TeamEnum {
 
-    SNOWMAN(6,null,"","","Snow man","snowmanhayainfo", "snowman.", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18,20),
-    KANJANI8(7,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    SEXYZONE(8,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    TOKIO(9,null,"トキオ","","TOKIO","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    V6(10,null,"ブイシックス","","V6","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    ARASHI(11,null,"アラシ","嵐","ARASHI","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    NEWS(12,null,"ニュース","","NEWS Johnny's","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KISMYFT2(13,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    ABCZ(14,null,"エービーシーズィー","エビ","A.B.C-Z","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    JOHNNYSWEST(15,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KINGPRINCE(16,null,"キングアンドプリンス ","キンプリ ","King & Prince ","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18,20),
-    SIXTONES(17,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "sixtones.", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20,22),
-    NANIWADANSHI(18,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "naniwadanshi.", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18,20),
-    HEYSAYJUMP(19,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KATTUN(20,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707),
-    KINKIKIDS(21,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33,1707);
-    private Integer id;
+    SNOWMAN(6L,null,"","","Snow man","snowmanhayainfo", "snowman.", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
+    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    SEXYZONE(8L,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    TOKIO(9L,null,"トキオ","","TOKIO","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    V6(10L,null,"ブイシックス","","V6","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    ARASHI(11L,null,"アラシ","嵐","ARASHI","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    NEWS(12L,null,"ニュース","","NEWS Johnny's","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KISMYFT2(13L,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    ABCZ(14L,null,"エービーシーズィー","エビ","A.B.C-Z","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince ","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
+    SIXTONES(17L,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "sixtones.", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
+    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "naniwadanshi.", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
+    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KATTUN(20L,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINKIKIDS(21L,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
+    private Long id;
     private String anniversary;
     private String kana;
     private String mnemonic;
@@ -38,10 +38,10 @@ public enum TeamEnum {
     private String subDomain;
     /** TODO: apiPwに変更したいです */
     private String blogPw;
-    private Integer itemPageId;
-    private Integer tvPageId;
+    private Long itemPageId;
+    private Long tvPageId;
 
-    TeamEnum(Integer id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain, String blogPw, Integer itemPageId, Integer tvPageId) {
+    TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain, String blogPw, Long itemPageId, Long tvPageId) {
         this.id = id;
         this.anniversary = anniversary;
         this.kana = kana;
@@ -58,7 +58,7 @@ public enum TeamEnum {
         return new Team((long) this.id, this.name, this.kana, this.mnemonic, this.anniversary, this.tw_id, null, null);
     }
 
-    public static TeamEnum get(Integer argId) {
+    public static TeamEnum get(Long argId) {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.id.equals(argId)).findFirst().orElse(null);
     }
 
@@ -72,8 +72,8 @@ public enum TeamEnum {
         }
         TeamEnum result = null;
         for (TeamEnum e : TeamEnum.values()) {
-            System.out.println("TeamEnum: " + e.getSubDomain());
             if (e.getSubDomain() != null && e.getSubDomain().equals(argSubDomain)) {
+                System.out.println("TeamEnum: " + e.getSubDomain());
                 result = e;
                 break;
             }
@@ -88,8 +88,8 @@ public enum TeamEnum {
      * @param argSubDomain
      * @return
      */
-    public static Integer findIdBySubDomain(String argSubDomain) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(argSubDomain)).findFirst().map(TeamEnum::getId).orElse(0);
+    public static Long findIdBySubDomain(String argSubDomain) {
+        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(argSubDomain)).findFirst().map(TeamEnum::getId).orElse(0L);
     }
 
     /**
@@ -99,7 +99,7 @@ public enum TeamEnum {
      * @param argId
      * @return
      */
-    public static String findSubDomainById(Integer argId) {
+    public static String findSubDomainById(Long argId) {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.id.equals(argId)).findFirst().map(e -> e.getSubDomain()).orElse(null);
     }
 
@@ -132,10 +132,26 @@ public enum TeamEnum {
      * @return
      */
     public static List<String> findTeamNameListByTeamIdList(List<Long> teamIdList) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f ->(e.id.equals(f)))).map(TeamEnum::getName).collect(Collectors.toList());
+        if (teamIdList == null || teamIdList.get(0) == null) {
+            return null;
+        }
+        List<String> resultList = new ArrayList<>();
+
+        for (Long teamId : teamIdList) {
+            for (TeamEnum e : TeamEnum.values()) {
+                if (teamId == null || teamId.equals(0L)) {
+                    continue;
+                }
+                if (e.getId().equals(teamId)) {
+                    resultList.add(e.getName());
+                    break;
+                }
+            }
+        }
+        return resultList;
     }
 
-    public static String getItemPageId(Integer teamId) {
+    public static String getItemPageId(Long teamId) {
         if (teamId == null) {
             return null;
         }
@@ -150,7 +166,7 @@ public enum TeamEnum {
         return result.getItemPageId().toString();
     }
 
-    public static String getTvPageId(Integer teamId) {
+    public static String getTvPageId(Long teamId) {
         if (teamId == null) {
             return null;
         }

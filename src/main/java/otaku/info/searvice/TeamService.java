@@ -81,21 +81,6 @@ public class TeamService {
         return TeamEnum.get(teamId).getName();
     }
 
-//    /**
-//     * manage画面で使用、今画面見ないので未対応
-//     *
-//     * @return
-//     */
-//    public Map<Long, String> getAllIdNameMap() {
-//        List<String> list = teamRepository.getAllIdNameMap();
-//        Map<Long, String> resultMap = new HashMap<>();
-//        for (String s: list) {
-//            String[] elem = s.split("_");
-//            resultMap.put(Long.parseLong(elem[0]),elem[1]);
-//        }
-//        return resultMap;
-//    }
-
     /**
      * 引数IDを持つチームのtwitterIdを返します。
      *

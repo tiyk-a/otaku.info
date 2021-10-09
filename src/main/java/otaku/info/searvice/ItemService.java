@@ -81,30 +81,6 @@ public class ItemService {
         return itemRepository.findByFctChk(isFctChked);
     }
 
-    public boolean deleteByItemIdList(List<Integer> idList) {
-        List<Long> longIdList = new ArrayList<>();
-        idList.forEach(e -> longIdList.add(Long.valueOf(e)));
-        int result = itemRepository.deleteByItemIdList(longIdList);
-        return longIdList.size() == result;
-    }
-
-    public List<Long> getItemIdListByDlt_flg(List<Integer> idList, boolean del_flg) {
-        List<Long> longIdList = new ArrayList<>();
-        idList.forEach(e -> longIdList.add(Long.valueOf(e)));
-        return itemRepository.getNotDeletedItemIdList(longIdList, del_flg);
-    }
-
-    public boolean updateAllPublicationDate(Map<Long, Date> map) {
-        boolean successFlg = true;
-        for (Map.Entry<Long, Date> m : map.entrySet()) {
-            int result = itemRepository.updateAllPublicationDate(m.getKey(), m.getValue());
-            if (result == 0) {
-                successFlg = false;
-            }
-        }
-        return successFlg;
-    }
-
     public List<Long> getItemIdListNotUpdated(Map<Long, Date> map) {
         List<Long> leftItemIdList = new ArrayList<>();
         for (Map.Entry<Long, Date> m : map.entrySet()) {
@@ -113,10 +89,6 @@ public class ItemService {
             }
         }
         return leftItemIdList;
-    }
-
-    public List<Item> findItemsBetween(Date from, Date to) {
-        return itemRepository.findItemsBetween(from, to);
     }
 
     public Optional<Item> findByItemCode(String itemCode) {
@@ -155,10 +127,6 @@ public class ItemService {
 
     public List<Item> gatherItems(Long itemMId) {
         return itemRepository.gatherItems(itemMId);
-    }
-
-    public String getImageUrlByItemMIdImage1NotNull(Long itemMId) {
-        return itemRepository.getImageUrlByItemMIdImage1NotNull(itemMId);
     }
 
     public boolean isRegistered(String code, Integer siteId) {

@@ -65,20 +65,12 @@ public class ItemMasterService {
         return itemMasterRepository.saveAll(itemMasterList);
     }
 
-    public List<ItemMaster> findWpIdNotNull() {
-        return itemMasterRepository.findWpIdNotNull();
-    }
-
     public ItemMaster findByWpId(Integer wpId) {
         return itemMasterRepository.findByWpId(wpId);
     }
 
     public List<ItemMaster> findByPublicationYear(Integer year) {
         return itemMasterRepository.findByPublicationYear(year);
-    }
-
-    public List<ItemMaster> findByWpIdList(List<Integer> wpIdList) {
-        return itemMasterRepository.findByWpIdList(wpIdList);
     }
 
     public List<ItemMaster> findByWpIdUrlNullList(List<Integer> wpIdList) {

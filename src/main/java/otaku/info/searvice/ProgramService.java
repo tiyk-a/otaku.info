@@ -133,8 +133,4 @@ public class ProgramService  {
         curPRelList.addAll(addRelList);
         return curPRelList;
     }
-
-    public List<Program> findall() {
-        return programRepository.findAll();
-    }
 }

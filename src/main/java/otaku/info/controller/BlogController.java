@@ -226,7 +226,7 @@ public class BlogController {
 
         for (String subDomain : subDomainList) {
             HttpHeaders newHeaders = new HttpHeaders();
-            BeanUtils.copyProperties(headers, new HttpHeaders());
+            BeanUtils.copyProperties(headers, newHeaders);
             newHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
             newHeaders.setContentType(MediaType.APPLICATION_JSON);
 
@@ -518,7 +518,7 @@ public class BlogController {
      *
      * @param itemMasterList itemMasterIdを返す
      */
-    public Map<List<ItemMaster>, List<ItemMaster>> postOrUpdate(List<ItemMaster> itemMasterList) {
+    public Map<List<ItemMaster>, List<ItemMaster>> postOrUpdate(List<ItemMaster> itemMasterList) throws InterruptedException {
         List<ItemMaster> newItemMasterList = new ArrayList<>();
         List<ItemMaster> updateItemMasterList = new ArrayList<>();
 
@@ -537,6 +537,7 @@ public class BlogController {
                 updateMasterItem(itemMaster, itemList);
                 updateItemMasterList.add(itemMaster);
             }
+            Thread.sleep(500);
         }
         return Collections.singletonMap(newItemMasterList, updateItemMasterList);
     }

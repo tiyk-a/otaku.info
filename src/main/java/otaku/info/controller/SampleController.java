@@ -188,7 +188,7 @@ public class SampleController {
     }
 
     @GetMapping("/batch/{id}")
-    public String batch(@PathVariable String id) {
+    public String batch(@PathVariable String id) throws InterruptedException {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
@@ -314,7 +314,7 @@ public class SampleController {
      * @return
      * @throws JSONException
      */
-    public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException {
+    public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException, InterruptedException {
         boolean isTeam = memberId == 0;
         List<String> list = controller.affiliSearchWord(artist);
 

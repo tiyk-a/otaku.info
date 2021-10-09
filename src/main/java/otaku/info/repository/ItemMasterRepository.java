@@ -39,4 +39,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where YEAR(publication_date) = ?1 and b.wp_id is null")
     List<ItemMaster> findByPublicationYearWpIdNull(Integer year);
+
+    @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where b.wp_id is null")
+    List<ItemMaster> findAllNotPosted();
 }

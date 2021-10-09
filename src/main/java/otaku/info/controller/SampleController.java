@@ -210,6 +210,8 @@ public class SampleController {
 //                System.out.println("moveProgramToPRel");
 //                tmpController.moveProgramToPRel2();
 //                System.out.println("END case3.");
+                // itemMaster入れる
+                insertIM();
                 break;
             case 4:
                 System.out.println("---run4商品発売日アナウンス START---");
@@ -302,6 +304,13 @@ public class SampleController {
             }
         }
         return result;
+    }
+
+    private void insertIM() throws InterruptedException {
+        // 対象IM（wpIdがnull）を取得
+        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
+        Map<List<ItemMaster>, List<ItemMaster>> result = blogController.postOrUpdate(imList);
+        System.out.println(result.size());
     }
 
     /**

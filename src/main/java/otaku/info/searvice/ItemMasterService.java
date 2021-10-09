@@ -89,7 +89,7 @@ public class ItemMasterService {
         return itemMasterRepository.findByPublicationYearWpIdNull(year);
     }
 
-    public List<ItemMaster> findAll() {
-        return itemMasterRepository.findAll();
+    public List<ItemMaster> findAllNotPosted() {
+        return itemMasterRepository.findAllNotPosted();
     }
 }

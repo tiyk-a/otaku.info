@@ -102,7 +102,7 @@ public enum MemberEnum {
     }
 
     public Member convertToEntity() {
-        return new Member((long) this.id, (long) this.teamId, this.name, this.kana, this.mnemonic, this.birthday, null, null);
+        return new Member( this.id,  this.teamId, this.name, this.kana, this.mnemonic, this.birthday, null, null);
     }
 
     public static MemberEnum get(Long argId) {
@@ -114,7 +114,7 @@ public enum MemberEnum {
     }
 
     public static Long getTeamIdById(Long argMemberId) {
-        return Arrays.stream(MemberEnum.values()).filter(e -> e.id.equals(argMemberId)).map(e -> (long) e.getTeamId()).findFirst().orElse(0L);
+        return Arrays.stream(MemberEnum.values()).filter(e -> e.id.equals(argMemberId)).map(e -> e.getTeamId()).findFirst().orElse(0L);
     }
 
     public static List<String> findMNameListByIdList(List<Long> mIdList) {

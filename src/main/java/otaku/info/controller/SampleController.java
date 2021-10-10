@@ -20,11 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.ItemRelElems;
 import otaku.info.dto.TwiDto;
-import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
-import otaku.info.entity.IMRel;
-import otaku.info.entity.ItemRel;
+import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
@@ -233,10 +231,23 @@ public class SampleController {
                 scheduler.run7();
                 System.out.println("---run7TV番組投稿処理 END---");
                 break;
+            case 8:
+                List<String> list = TeamEnum.getAllSubDomain();
+                List<String> deleted = new ArrayList<>();
+                for (String l : list) {
+                    if (!deleted.contains(l)) {
+                        deleted.add(l);
+                    }
+                }
+                for (String s : deleted) {
+                    blogController.insertTags(s);
+                }
+                break;
             case 9:
                 System.out.println("---run9TVアラート START---");
                 scheduler.run9();
                 System.out.println("---run9TVアラート END---");
+                break;
             case 10:
                 System.out.println("---run10DB商品アフェリリンク更新 START---");
                 scheduler.run10();
@@ -456,7 +467,7 @@ public class SampleController {
                             String result;
 
                             List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-                            if (memberIdList != null && memberIdList.size() > 0) {
+                            if (memberIdList != null && !memberIdList.isEmpty()) {
                                 if (memberIdList.size() == 1) {
                                     String memberName = memberService.getMemberName(memberIdList.get(0));
                                     result = textController.twitterPerson(twiDto, memberName);

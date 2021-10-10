@@ -39,10 +39,6 @@ public class ItemService {
     }
 
     public List<Item> saveAll(List<Item> itemList) {
-        for (Item item : itemList) {
-            System.out.println(item.getItem_caption().length());
-            System.out.println(item.getItem_caption());
-        }
         return itemRepository.saveAll(itemList);
     }
 

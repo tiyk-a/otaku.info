@@ -70,12 +70,12 @@ public class PRelService {
         for (PRel rel : imRelList) {
             if (rel.getMember_id() == null) {
                 boolean exists = pRelRepository.existsByElem(rel.getProgram_id(), rel.getTeam_id()) > 0;
-                if (!exists) {
+                if (!exists && rel.getProgram_id() != null) {
                     returnList.add(rel);
                 }
             } else {
                 boolean exists = pRelRepository.existsByElem(rel.getProgram_id(), rel.getTeam_id(), rel.getMember_id()) > 0;
-                if (!exists) {
+                if (!exists && rel.getProgram_id() != null) {
                     returnList.add(rel);
                 }
             }

@@ -81,10 +81,14 @@ public class TvController  {
             // マップからグループIDの要素のvalueに情報を追加して
             List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
 
-            for (Long teamId : teamIdList) {
-                List<Program> list = tvListMapByGroup.get(teamId);
-                list.add(p);
-                tvListMapByGroup.put(teamId, list);
+            if (teamIdList != null && !teamIdList.isEmpty()) {
+                for (Long teamId : teamIdList) {
+                    List<Program> list = tvListMapByGroup.get(teamId);
+                    if (list != null && !list.isEmpty()) {
+                        list.add(p);
+                        tvListMapByGroup.put(teamId, list);
+                    }
+                }
             }
         }
 

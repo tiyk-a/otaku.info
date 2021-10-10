@@ -73,7 +73,7 @@ public class ProgramService  {
         List<PRel> addRelList = new ArrayList<>();
 
         // TeamIdの追加処理
-        if (teamIdList != null && teamIdList.size() > 0) {
+        if (teamIdList != null && !teamIdList.isEmpty()) {
             List<Long> curTeamIdList = curPRelList.stream().map(PRel::getTeam_id).collect(Collectors.toList());
 
             for (Long candTeamId : teamIdList) {
@@ -87,7 +87,7 @@ public class ProgramService  {
         }
 
         // MemberIdの追加処理
-        if (memberIdList != null && memberIdList.size() > 0) {
+        if (memberIdList != null && !memberIdList.isEmpty()) {
             List<Long> curMemberIdList = new ArrayList<>();
             for (PRel rel : curPRelList) {
                 if (rel.getMember_id() != null) {

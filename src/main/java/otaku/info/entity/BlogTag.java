@@ -29,4 +29,7 @@ public class BlogTag {
 
     @Column(nullable = true)
     private String link;
+
+    @Column(nullable = false)
+    private Long team_id;
 }

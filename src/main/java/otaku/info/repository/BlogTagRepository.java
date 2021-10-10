@@ -9,8 +9,8 @@ import java.util.Optional;
 
 public interface BlogTagRepository extends JpaRepository<BlogTag, Long> {
 
-    @Query("select wp_tag_id from blog_tag where tag_name = ?1")
-    Optional<Integer> findBlogTagIdByTagName(String tagName);
+    @Query("select wp_tag_id from blog_tag where tag_name = ?1 and team_id = ?2")
+    Optional<Integer> findBlogTagIdByTagName(String tagName, Long teamId);
 
     @Query("select count(t) from blog_tag t where tag_name = ?1")
     int exists(String tagName);

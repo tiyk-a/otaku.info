@@ -424,46 +424,46 @@ public class TmpController {
         return new BlogTag();
     }
 
-    /**
-     * WPにあるがDBにないタグを保存する
-     *
-     */
-    public void getBlogTagNotSavedOnInfoDb() {
-        // TODO: チームによってurlを変更
-        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
-
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = blogController.request(url, request, HttpMethod.GET);
-        List<BlogTag> blogTagList = new ArrayList<>();
-
-        try {
-            if (JsonUtils.isJsonArray(res)) {
-                JSONArray ja = new JSONArray(res);
-                for (int i=0;i<ja.length();i++) {
-                    Integer wpId = ja.getJSONObject(i).getInt("id");
-                    String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
-                    String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
-
-                    if (blogTagService.findBlogTagIdByTagName(tagName) == 0) {
-                        BlogTag blogTag = new BlogTag();
-                        blogTag.setWp_tag_id((long)wpId);
-                        blogTag.setTag_name(tagName);
-                        blogTag.setLink(link);
-                        blogTagList.add(blogTag);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // infoDBに保存されていないタグは保存する
-        if (blogTagList.size() > 0) {
-            blogTagService.saveIfNotSaved(blogTagList);
-        }
-    }
+//    /**
+//     * WPにあるがDBにないタグを保存する
+//     *
+//     */
+//    public void getBlogTagNotSavedOnInfoDb() {
+//        // TODO: チームによってurlを変更
+//        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
+//
+//        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+//        JSONObject jsonObject = new JSONObject();
+//        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+//        String res = blogController.request(url, request, HttpMethod.GET);
+//        List<BlogTag> blogTagList = new ArrayList<>();
+//
+//        try {
+//            if (JsonUtils.isJsonArray(res)) {
+//                JSONArray ja = new JSONArray(res);
+//                for (int i=0;i<ja.length();i++) {
+//                    Integer wpId = ja.getJSONObject(i).getInt("id");
+//                    String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
+//                    String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
+//
+//                    if (blogTagService.findBlogTagIdByTagName(tagName) == 0) {
+//                        BlogTag blogTag = new BlogTag();
+//                        blogTag.setWp_tag_id((long)wpId);
+//                        blogTag.setTag_name(tagName);
+//                        blogTag.setLink(link);
+//                        blogTagList.add(blogTag);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        // infoDBに保存されていないタグは保存する
+//        if (blogTagList.size() > 0) {
+//            blogTagService.saveIfNotSaved(blogTagList);
+//        }
+//    }
 
     /**
      * [From] BlogController

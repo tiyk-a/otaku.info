@@ -45,7 +45,7 @@ public class TeamService {
      * @return
      */
     public String getMnemonic(String teamName) {
-        return TeamEnum.get(teamName).getName();
+        return TeamEnum.get(teamName).getMnemonic();
     }
 
     /**
@@ -59,7 +59,7 @@ public class TeamService {
             return new ArrayList<>();
         }
         List<String> teamNameList = findAllTeamName();
-        return teamNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> (long) TeamEnum.get(e).getId()).collect(Collectors.toList());
+        return teamNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> TeamEnum.get(e).getId()).collect(Collectors.toList());
     }
 
     /**
@@ -68,7 +68,7 @@ public class TeamService {
      * @return
      */
     public List<Long> getAllId() {
-        return Arrays.stream(TeamEnum.values()).map(e -> (long) e.getId()).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).map(e -> e.getId()).collect(Collectors.toList());
     }
 
     /**
@@ -78,7 +78,12 @@ public class TeamService {
      * @return
      */
     public String getTeamName(Long teamId) {
-        return TeamEnum.get(teamId).getName();
+        TeamEnum e = TeamEnum.get(teamId);
+        if (e != null) {
+            return e.getName();
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -98,7 +103,7 @@ public class TeamService {
      * @return
      */
     public List<String> findTeamNameByIdList(List<Long> teamIdList) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> f.equals((long) e.getId()))).map(TeamEnum::getName).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> f.equals(e.getId()))).map(TeamEnum::getName).collect(Collectors.toList());
     }
 
     public List<String> findTwIdListByTeamIdList(List<Long> teamIdList) {

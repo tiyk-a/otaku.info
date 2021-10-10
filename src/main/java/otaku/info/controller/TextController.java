@@ -200,7 +200,13 @@ public class TextController {
      */
     public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
-        String result = dateStr + "の" + teamService.getTeamName(ele.getKey()) + "のTV出演情報です。%0A%0A";
+        String teamName = teamService.getTeamName(ele.getKey());
+        String result= "";
+        if (!teamName.equals("")) {
+            result = dateStr + "の" + teamName + "のTV出演情報です。%0A%0A";
+        } else {
+            result = dateStr + "のTV出演情報です。%0A%0A";
+        }
 
         String info = "";
         for (Program p : ele.getValue()) {
@@ -232,7 +238,12 @@ public class TextController {
         // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
         List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
         List<Long> memberIdList = pRelService.getMemberIdList(program.getProgram_id());
-        memberIdList.forEach(e -> teamIdMemberNameDtoList.add(memberService.getMapTeamIdMemberName(e)));
+        for (Long mId : memberIdList) {
+            TeamIdMemberNameDto dto = memberService.getMapTeamIdMemberName(mId);
+            if (dto != null && dto.getMember_name() != null) {
+                teamIdMemberNameDtoList.add(dto);
+            }
+        }
 
         // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>
         Map<Long, String> keyMemberMap = new HashMap<>();
@@ -265,7 +276,13 @@ public class TextController {
                     result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
                 }
             } else {
-                result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + teamService.getTeamName(teamId) + "が出演します。ぜひご覧ください！";
+                String teamName = teamService.getTeamName(teamId);
+                if (!teamName.equals("")) {
+                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" +teamName  + "が出演します。ぜひご覧ください！";
+                } else {
+                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に出演情報があります。ぜひご確認ください！";
+                }
+
                 List<String> tagList = tagService.getTagByTeam(teamId);
                 if (tagList.size() > 0) {
                     result = result + "%0A%0A" + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
@@ -375,13 +392,10 @@ public class TextController {
      * @return
      */
     private Integer getPrice(List<Item> itemList) {
-        System.out.println("***** getPrice *****");
         List<Integer> priceList = itemList.stream().map(e -> e.getPrice()).distinct().collect(Collectors.toList());
         if (priceList.size() == 1) {
-            System.out.println("if: " + priceList.get(0));
             return priceList.get(0);
         } else {
-            System.out.println("else: " + priceList.stream().max(Integer::compare).orElse(0));
             return priceList.stream().max(Integer::compare).orElse(0);
         }
     }
@@ -475,7 +489,7 @@ public class TextController {
             // それぞれのItemについて、チーム名、メンバー名、出版社名、雑誌名がないか調べ、あったらリストに追加していきたい
             // team名
             List<Long> tmpList = teamService.findTeamIdListByText(item.getTitle());
-            if (tmpList != null && tmpList.size() > 0) {
+            if (tmpList != null && !tmpList.isEmpty()) {
                 for (Long id : tmpList) {
                     Integer count = 0;
                     if (teamIdMap.containsKey(id)) {
@@ -487,7 +501,7 @@ public class TextController {
 
             // メンバー名を追加する
             tmpList = memberService.findMemberIdByText(item.getTitle());
-            if (tmpList != null && tmpList.size() > 0) {
+            if (tmpList != null && !tmpList.isEmpty()) {
                 for (Long id : tmpList) {
                     Integer count = 0;
                     if (memberIdMap.containsKey(id)) {
@@ -499,7 +513,7 @@ public class TextController {
 
             // 雑誌名を追加する。雑誌名が見つかった場合、出版社も探す
             tmpList = MagazineEnum.findMagazineIdByText(item.getTitle());
-            if (tmpList != null && tmpList.size() > 0) {
+            if (tmpList != null && !tmpList.isEmpty()) {
                 for (Long id : tmpList) {
                     Integer count = 0;
                     if (magazineEnumsIdMap.containsKey(id)) {
@@ -676,7 +690,7 @@ public class TextController {
                 String teamName = "";
                 if (subDomain.equals("NA")) {
                     List<Long> pTeamIdList = pRelService.getTeamIdList(masterP.getProgram_id());
-                    if (pTeamIdList != null && pTeamIdList.get(0) != null && !pTeamIdList.get(0).equals(0L)) {
+                    if (pTeamIdList != null && !pTeamIdList.isEmpty() && !pTeamIdList.get(0).equals(0L)) {
                         List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
                         teamName = String.join("/", teamNameList);
                     }
@@ -684,7 +698,7 @@ public class TextController {
 
                 String memberName = "";
                 List<Long> memberIdList = pRelService.getMemberIdList(masterP.getProgram_id());
-                if (memberIdList != null && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
+                if (memberIdList != null && !memberIdList.isEmpty() && !memberIdList.get(0).equals(0L)) {
 
                     List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
                     memberName = String.join("/", memberNameList);

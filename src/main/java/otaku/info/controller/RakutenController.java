@@ -118,7 +118,7 @@ public class RakutenController {
             String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl%2CmediumImageUrls&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
-            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+            if (jsonObject != null && jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray jsonArray = jsonObject.getJSONArray("Items");
                 for (int i=0; i<jsonArray.length();i++) {
                     Item item = new Item();
@@ -145,7 +145,7 @@ public class RakutenController {
     public boolean updateUrl() {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
-        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> itemRelService.findByItemId(f.getItem_id()) != null && itemRelService.findByItemId(f.getItem_id()).size() > 0 && !f.isDel_flg()).collect(Collectors.toList())));
+        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> itemRelService.findByItemId(f.getItem_id()) != null && !itemRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg()).collect(Collectors.toList())));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();

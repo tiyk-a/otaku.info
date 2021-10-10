@@ -22,7 +22,7 @@ public enum TeamEnum {
     KISMYFT2(13L,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
     ABCZ(14L,null,"エービーシーズィー","エビ","A.B.C-Z","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
     JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince ","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
+    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
     SIXTONES(17L,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "sixtones.", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
     NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "naniwadanshi.", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
     HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
@@ -55,7 +55,7 @@ public enum TeamEnum {
     }
 
     public Team convertToEntity() {
-        return new Team((long) this.id, this.name, this.kana, this.mnemonic, this.anniversary, this.tw_id, null, null);
+        return new Team(this.id, this.name, this.kana, this.mnemonic, this.anniversary, this.tw_id, null, null);
     }
 
     public static TeamEnum get(Long argId) {
@@ -66,6 +66,7 @@ public enum TeamEnum {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.name.equals(argName)).findFirst().orElse(null);
     }
 
+    // TODO: メソッドめいと処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる
     public static TeamEnum getBySubDomain(String argSubDomain) {
         if (argSubDomain == null) {
             return null;
@@ -73,9 +74,19 @@ public enum TeamEnum {
         TeamEnum result = null;
         for (TeamEnum e : TeamEnum.values()) {
             if (e.getSubDomain() != null && e.getSubDomain().equals(argSubDomain)) {
-                System.out.println("TeamEnum: " + e.getSubDomain());
                 result = e;
                 break;
+            }
+        }
+
+        if (result == null) {
+            for (TeamEnum e : TeamEnum.values()) {
+                if (e.getName() != null
+                        && e.getName()
+                        .equals(argSubDomain)) {
+                    result = e;
+                    break;
+                }
             }
         }
         return result;
@@ -89,7 +100,15 @@ public enum TeamEnum {
      * @return
      */
     public static Long findIdBySubDomain(String argSubDomain) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(argSubDomain)).findFirst().map(TeamEnum::getId).orElse(0L);
+        // teamIdがnullの場合、デフォルト（としてえび）のteamIdを入れる
+        Long teamId = TeamEnum.ABCZ.getId();
+        for (TeamEnum e : TeamEnum.values()) {
+            if (e.getSubDomain().equals(argSubDomain)) {
+                teamId = e.getId();
+                break;
+            }
+        }
+        return teamId;
     }
 
     /**
@@ -113,7 +132,7 @@ public enum TeamEnum {
         if (teamIdList == null || teamIdList.size() == 0) {
             return new ArrayList<>();
         }
-        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).map(TeamEnum::getName).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).map(TeamEnum::getSubDomain).collect(Collectors.toList());
     }
 
     /**

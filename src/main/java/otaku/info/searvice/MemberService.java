@@ -48,7 +48,7 @@ public class MemberService {
             return new ArrayList<>();
         }
         List<String> memberNameList = findAllMemberName();
-        return memberNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> (long) MemberEnum.get(e).getId()).collect(Collectors.toList());
+        return memberNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> MemberEnum.get(e).getId()).collect(Collectors.toList());
     }
 
     /**
@@ -58,9 +58,12 @@ public class MemberService {
      * @return
      */
     public TeamIdMemberNameDto getMapTeamIdMemberName(Long memberId) {
-        Member member = MemberEnum.get(memberId).convertToEntity();
         TeamIdMemberNameDto dto = new TeamIdMemberNameDto();
-        BeanUtils.copyProperties(member, dto);
+        MemberEnum e = MemberEnum.get(memberId);
+        if (e != null) {
+            Member member = e.convertToEntity();
+            BeanUtils.copyProperties(member, dto);
+        }
         return dto;
     }
 
@@ -92,26 +95,20 @@ public class MemberService {
      */
     public List<String> getMemberNameList(List<Long> memberIdList) {
         List<String> resList = new ArrayList<>();
-        if (memberIdList == null || (memberIdList.size() < 2 && (memberIdList.get(0) == null || memberIdList.get(0) == 0))) {
-            resList.add("");
-        } else {
+        if (memberIdList != null || !memberIdList.isEmpty()) {
             for (MemberEnum e : MemberEnum.values()) {
-                for (Long mId : memberIdList) {
-                    if (mId == null || mId == 0) {
-                        resList.add("");
-                    } else {
-                        if (mId.equals(e.getId())) {
-                            System.out.println(mId);
-                            System.out.println(e.getId());
-                            resList.add(e.getName());
+                if (e != null && e.getId() != null) {
+                    for (Long mId : memberIdList) {
+                        if (mId == null || mId == 0) {
+                            resList.add("");
+                        } else {
+                            if (mId.equals(e.getId())) {
+                                resList.add(e.getName());
+                            }
                         }
                     }
                 }
             }
-        }
-
-        if (resList.size() == 0) {
-            resList.add("");
         }
         return resList;
     }
@@ -122,6 +119,6 @@ public class MemberService {
      * @return
      */
     public List<Long> findTeamIdListByMemberIdList(List<Long> memberIdList) {
-        return Arrays.stream(MemberEnum.values()).filter(e -> memberIdList.stream().anyMatch(f -> f.equals((long) e.getId()))).map(e -> (long) e.getId()).collect(Collectors.toList());
+        return Arrays.stream(MemberEnum.values()).filter(e -> memberIdList.stream().anyMatch(f -> f.equals(e.getId()))).map(e -> e.getId()).collect(Collectors.toList());
     }
 }

@@ -78,12 +78,7 @@ public class LineController {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
-
-            if (response.getStatusCode() == HttpStatus.OK) {
-                System.out.println("Request Successful: " + outline);
-            } else {
-                System.out.println("Request Failed: " + outline);
-            }
+            System.out.println(outline + ":" + response);
         }
         return "done";
     }
@@ -108,11 +103,7 @@ public class LineController {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
 
-            if (response.getStatusCode() == HttpStatus.OK) {
-                System.out.println("Request Successful: " + outline);
-            } else {
-                System.out.println("Request Failed: " + outline);
-            }
+            System.out.println("Request Successful: " + outline);
         return "done";
     }
 

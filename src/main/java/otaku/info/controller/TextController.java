@@ -698,7 +698,7 @@ public class TextController {
 
                 String memberName = "";
                 List<Long> memberIdList = pRelService.getMemberIdList(masterP.getProgram_id());
-                if (memberIdList != null && !memberIdList.isEmpty() && !memberIdList.get(0).equals(0L)) {
+                if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
 
                     List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
                     memberName = String.join("/", memberNameList);

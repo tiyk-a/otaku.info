@@ -139,33 +139,40 @@ public class BlogController {
 
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
-        // 上で取得したマスター商品をteamIdごとにマップする
-        Map<Long, List<ItemMaster>> tmpMap = new HashMap<>();
-        for (ItemMaster itemMaster : itemMasterList) {
-            List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-            if (teamIdList.size() == 0) {
-                continue;
-            }
 
-            for (Long teamId : teamIdList) {
-                List<ItemMaster> tmpList = new ArrayList<>();
-                if (tmpMap.containsKey(teamId)) {
-                    tmpList = tmpMap.get(teamId);
-                }
-                tmpList.add(itemMaster);
-                tmpMap.put(teamId, tmpList);
-            }
+        // subDomainごとにまとめる
+        Map<String, Map<ItemMaster, List<Item>>> teamIdItemMasterItemMap = new TreeMap<>();
+        List<String> subDomainList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getSubDomain).distinct().collect(Collectors.toList());
+        for (String s : subDomainList) {
+            teamIdItemMasterItemMap.put(s, new TreeMap<>());
         }
 
-        Map<Long, Map<ItemMaster, List<Item>>> teamIdItemMasterItemMap = new HashMap<>();
-        // Map<teamId, List<ItemMaster>>
-        if (tmpMap.size() > 0) {
+        for (ItemMaster itemMaster : itemMasterList) {
+            // itemMasterとitemListは用意できた
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
+            List<String> subDomainList1 = itemRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
-            // teamIdでmapされたそれぞれのItemMasterにおいて、ひもづくItemリストを取得し、Mapを作る
-            for (Map.Entry<Long, List<ItemMaster>> e : tmpMap.entrySet()) {
-                // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
-                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> itemRelService.findByItemId(g.getItem_id())!= null && !itemRelService.findByItemId(g.getItem_id()).isEmpty()).collect(Collectors.toList())));
-                teamIdItemMasterItemMap.put(e.getKey(), itemMasterMap);
+            for (String subDomain : subDomainList1) {
+                Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemMap.get(subDomain);
+                if (tmpMap1.containsKey(itemMaster)) {
+                    List<Item> tmpList = tmpMap1.get(itemMaster);
+                    // itemListからdiffを見つけてそれだけを追加してあげる
+                    List<Item> diffList = new ArrayList<>();
+                    for (Item i : tmpList) {
+                        if (!diffList.contains(i)) {
+                            diffList.add(i);
+                        }
+                    }
+
+                    if (diffList.size() > 0) {
+                        tmpList.addAll(diffList);
+                    }
+                    tmpMap1.put(itemMaster, tmpList);
+                } else {
+                    tmpMap1.put(itemMaster, itemList);
+                }
+                teamIdItemMasterItemMap.put(subDomain, tmpMap1);
             }
         }
 
@@ -175,43 +182,58 @@ public class BlogController {
         // 明日以降発売マスター商品(teamIdがNullのマスターは削除)
         List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
 
-        // 上で取得したマスター商品をteamIdごとにマップする
-        Map<Long, List<ItemMaster>> tmpMap1 = new HashMap<>();
-        for (ItemMaster itemMaster : futureItemMasterList) {
-            List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-            if (teamIdList.size() == 0) {
-                continue;
-            }
-
-            for (Long teamId : teamIdList) {
-                List<ItemMaster> tmpList = new ArrayList<>();
-                if (tmpMap1.containsKey(teamId)) {
-                    tmpList = tmpMap1.get(teamId);
-                }
-                tmpList.add(itemMaster);
-                tmpMap1.put(teamId, tmpList);
-            }
+        // subDomainごとにまとめる
+        Map<String, Map<ItemMaster, List<Item>>> teamIdItemMasterItemFutureMap = new TreeMap<>();
+        for (String s : subDomainList) {
+            teamIdItemMasterItemFutureMap.put(s, new TreeMap<>());
         }
 
-        Map<Long, Map<ItemMaster, List<Item>>> teamIdItemMasterItemFutureMap = new HashMap<>();
-        // Map<teamId, List<ItemMaster>>
-        if (tmpMap1.size() > 0) {
+        for (ItemMaster itemMaster : futureItemMasterList) {
+            // itemMasterとitemListは用意できた
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
+            List<String> subDomainList1 = itemRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
-            // teamIdでmapされたそれぞれのItemMasterにおいて、ひもづくItemリストを取得し、Mapを作る
-            for (Map.Entry<Long, List<ItemMaster>> e : tmpMap1.entrySet()) {
-                // 今日発売マスター商品からマスターと商品マップを作る(teamIdがNullの商品は削除)
-                Map<ItemMaster, List<Item>> itemMasterMap = e.getValue().stream().collect(Collectors.toMap(f -> f, f -> itemService.findByMasterId(f.getItem_m_id()).stream().filter(g -> itemRelService.findByItemId(g.getItem_id()) != null && !itemRelService.findByItemId(g.getItem_id()).isEmpty()).collect(Collectors.toList())));
-                teamIdItemMasterItemFutureMap.put(e.getKey(), itemMasterMap);
+            for (String subDomain : subDomainList1) {
+                Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
+                if (tmpMap1.containsKey(itemMaster)) {
+                    List<Item> tmpList = tmpMap1.get(itemMaster);
+                    // itemListからdiffを見つけてそれだけを追加してあげる
+                    List<Item> diffList = new ArrayList<>();
+                    for (Item i : tmpList) {
+                        if (!diffList.contains(i)) {
+                            diffList.add(i);
+                        }
+                    }
+
+                    if (diffList.size() > 0) {
+                        tmpList.addAll(diffList);
+                    }
+                    tmpMap1.put(itemMaster, tmpList);
+                } else {
+                    tmpMap1.put(itemMaster, itemList);
+                }
+                teamIdItemMasterItemFutureMap.put(subDomain, tmpMap1);
             }
         }
 
         // ここまでで、明日と先１週間に発売される商品のMapは完成した
-        // MapをteamIdでまとめ、それぞれテキストを生成、それぞれrequest送信する
+        // MapをsubDomainでまとめ、それぞれテキストを生成、それぞれrequest送信する
+        Map<String, String> requestMap = new TreeMap<>();
+
+        for (TeamEnum e : TeamEnum.values()) {
+            if (!requestMap.containsKey(e.getSubDomain())) {
+                requestMap.put(e.getSubDomain(), "先１週間の新発売情報はありません");
+            }
+        }
+
         String blogText = "";
-        Map<Long, String> requestMap = new HashMap<>();
         if (teamIdItemMasterItemMap.size() > 0) {
+            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
+
+            }
             // <teamId, blogText>
-            for (Map.Entry<Long, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
+            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
                 // 明日のリストはあるが未来のリストがそもそもない→明日のだけでテキスト作る
                 if (teamIdItemMasterItemFutureMap.size() == 0) {
                     blogText = textController.blogUpdateReleaseItems(e.getValue(), null);
@@ -223,25 +245,24 @@ public class BlogController {
             }
         } else if (teamIdItemMasterItemFutureMap.size() > 0) {
             // 明日の発売商品がないがその先１週間はある場合
-            for (Map.Entry<Long, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemFutureMap.entrySet()) {
+            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemFutureMap.entrySet()) {
                 blogText = textController.blogUpdateReleaseItems(null, e.getValue());
                 requestMap.put(e.getKey(), blogText);
             }
         }
-        // 明日のも先１週間もどっちもない(size() == 0)なら、そのままtext = ""、mapへの追加もなし
 
         // リクエスト送信
         if (requestMap.size() > 0) {
-            for (Map.Entry<Long, String> e : requestMap.entrySet()) {
-                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainById(e.getKey()));
+            for (Map.Entry<String, String> e : requestMap.entrySet()) {
+                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), e.getKey());
 
                 if (headersMap != null && !headersMap.isEmpty()) {
+                    TeamEnum teamEnum = TeamEnum.getBySubDomain(e.getKey());
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
-                    String finalUrl = blogDomainGenerator(TeamEnum.findSubDomainById(e.getKey())) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(e.getKey());
+                    String finalUrl = blogDomainGenerator(teamEnum.getSubDomain()) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamEnum.getId());
                     String res = request(finalUrl, request, HttpMethod.POST);
-                    System.out.println(res);
                 }
             }
         }
@@ -261,7 +282,7 @@ public class BlogController {
             return null;
         }
 
-        Map<String ,HttpHeaders> resultMap = new HashMap<>();
+        Map<String ,HttpHeaders> resultMap = new TreeMap<>();
 
         for (String subDomain : subDomainList) {
             // TODO: new httpheaderつけるとうまく行かないから既存のヘッダーにうわかき（同じ名前で別ようそ投げ込む）してみてるよ。うまく進むならwould be committed
@@ -322,6 +343,8 @@ public class BlogController {
      */
     public String request(String url, HttpEntity<String> request, HttpMethod method) {
 
+        String result = "";
+
         try {
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
@@ -336,11 +359,14 @@ public class BlogController {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return responseEntity.getBody();
+            result = responseEntity.getBody();
         } catch (Exception e) {
             e.printStackTrace();
-            return "";
+            result = "";
         }
+
+        System.out.println("Request result: " + result);
+        return result;
     }
 
     /**
@@ -352,14 +378,14 @@ public class BlogController {
      */
     public Long postMasterItem(ItemMaster itemMaster, List<Item> itemList) {
 
-        List<IMRel> IMRelList = iMRelService.findByItemMId(itemMaster.getItem_m_id());
+        List<IMRel> iMRelList = iMRelService.findByItemMId(itemMaster.getItem_m_id());
 
-        if (IMRelList.stream().anyMatch(e -> e.getWp_id() != null)) {
+        if (iMRelList.stream().anyMatch(e -> e.getWp_id() != null)) {
             updateMasterItem(itemMaster, itemList);
         }
 
-        List<Long> teamIdList = IMRelList.stream().map(e -> e.getTeam_id()).distinct().collect(Collectors.toList());
-        List<Long> memberIdList = IMRelList.stream().map(e -> e.getMember_id()).distinct().collect(Collectors.toList());
+        List<Long> teamIdList = iMRelList.stream().map(e -> e.getTeam_id()).distinct().collect(Collectors.toList());
+        List<Long> memberIdList = iMRelList.stream().map(e -> e.getMember_id()).distinct().collect(Collectors.toList());
 
         // tag:チーム名と発売日の年月を用意したい(idで指定してあげないといけない（stringでまず集めて、最後にidを見つけに行くor新規登録）)
         // itemMaster -> teamIdList -> teamName -> tag
@@ -499,16 +525,19 @@ public class BlogController {
                         }
                     }
 
-                    // wpIdが取得できなかったら、存在しないということなのでそのサブドメインは新規投稿してあげる
-                    if (wpId.equals("")) {
-                        postMasterItem(itemMaster, itemList, entry.getKey());
-                    }
-
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", content);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), entry.getValue());
-                    String url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/" + wpId;
 
+                    // wpIdが取得できなかったら、存在しないということなのでそのサブドメインは新規投稿してあげる
+                    String url = "";
+                    if (wpId.equals("")) {
+                        url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/";
+                    } else {
+                        url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/" + wpId;
+                    }
+
+                    // ここで投稿
                     String res = request(url, request, HttpMethod.POST);
                     JSONObject jo = new JSONObject(res);
                     if (jo.get("id") != null) {
@@ -770,6 +799,7 @@ public class BlogController {
     public void addNextMonthTag(String subDomain) {
         // どの月でも存在する27・28日の場合、チェックに通す
         if (dateUtils.getDate() == 27 || dateUtils.getDate() == 28) {
+            System.out.println("月末につき月タグ確認処理");
             // info DBのblogTagテーブルに翌月のyyyyMMタグが存在するか？
             Long teamId = TeamEnum.findIdBySubDomain(subDomain);
             Integer wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
@@ -783,6 +813,7 @@ public class BlogController {
 
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
                 request(url, request, HttpMethod.POST);
+                System.out.println(subDomain + ":次の月タグ追加");
             }
         }
     }
@@ -940,7 +971,7 @@ public class BlogController {
         List<Program> tmpList = programService.findByOnAirDateBeterrn(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
 
         // 複数Teamがひもづく場合はそれぞれ投稿するため、Mapにする<ProgramId_TeamId, Program>
-        Map<String, Program> confirmedMap = new HashMap<>();
+        Map<String, Program> confirmedMap = new TreeMap<>();
         if (tmpList.size() > 0) {
             for (Program p : tmpList) {
                 List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
@@ -959,7 +990,7 @@ public class BlogController {
         // 1件以上データが見つかったら
         if (confirmedMap.size() > 0) {
             // subDomainでまとめるMap<Subdomain, Map<ProgramId_TeamId, Program>>
-            Map<String, Map<String, Program>> domainMap = new HashMap<>();
+            Map<String, Map<String, Program>> domainMap = new TreeMap<>();
             for (Map.Entry<String, Program> e : confirmedMap.entrySet()) {
                 Long teamId = Long.valueOf(e.getKey().replaceAll("^\\d*_", ""));
                 String subDomain = TeamEnum.findSubDomainById(teamId);
@@ -968,14 +999,14 @@ public class BlogController {
                 if (domainMap.containsKey(subDomain)) {
                     tmpMap = domainMap.get(subDomain);
                 } else {
-                    tmpMap = new HashMap<>();
+                    tmpMap = new TreeMap<>();
                 }
                 tmpMap.put(e.getKey(), e.getValue());
                 domainMap.put(subDomain, tmpMap);
             }
 
             // subDomainごとにまとめられたので、それぞれのドメインごとにテキストを作ってあげる
-            Map<String, String> resultMap = new HashMap<>();
+            Map<String, String> resultMap = new TreeMap<>();
             if (domainMap.size() > 0) {
                 for (Map.Entry<String, Map<String, Program>> e : domainMap.entrySet()) {
                     List<Program> pList = e.getValue().entrySet().stream().map(f -> f.getValue()).collect(Collectors.toList());
@@ -986,7 +1017,7 @@ public class BlogController {
 
             // テキストを用意できた時だけページを更新する
             // 各サブドメインがpostされたかチェックつけるMap<Subdomain, T/F>
-            Map<String, Boolean> postChkMap = new HashMap<>();
+            Map<String, Boolean> postChkMap = new TreeMap<>();
             TeamEnum.getAllSubDomain().stream().distinct().forEach(e -> postChkMap.put(e, false));
 
             if (resultMap.size() > 0) {
@@ -997,7 +1028,7 @@ public class BlogController {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                    String res = request(url, request, HttpMethod.POST);
+                    request(url, request, HttpMethod.POST);
                     postChkMap.put(subDomain, true);
                 }
             }
@@ -1012,13 +1043,13 @@ public class BlogController {
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                        String res = request(url, request, HttpMethod.POST);
+                        request(url, request, HttpMethod.POST);
                         postChkMap.put(subDomain, true);
                     }
                 }
             }
         } else {
-            Map<String, Boolean> postChkMap = new HashMap<>();
+            Map<String, Boolean> postChkMap = new TreeMap<>();
             TeamEnum.getAllSubDomain().stream().distinct().forEach(e -> postChkMap.put(e, false));
             for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                 String subDomain = e.getKey();
@@ -1027,61 +1058,11 @@ public class BlogController {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                String res = request(url, request, HttpMethod.POST);
+                request(url, request, HttpMethod.POST);
                 postChkMap.put(subDomain, true);
             }
         }
     }
-
-//    /**
-//     * アイキャッチメディアの設定がないWPIDを取得します
-//     *
-//     * @return
-//     */
-//    public List<Integer> findNoEyeCatchPosts() {
-//        List<Integer> resultList = new ArrayList<>();
-//
-//        // リクエスト送信
-//        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-//        JSONObject jsonObject = new JSONObject();
-//        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-//
-//        int n = 1;
-//        boolean nextFlg = true;
-//
-//        while (nextFlg) {
-//            // TODO: チームによってurlを変更
-//            String url = setting.getBlogApiUrl() + "posts?status=publish&_fields[]=id&_fields[]=featured_media&per_page=100&page=" + n;
-//            System.out.println(url);
-//            try {
-//                String res = request(url, request, HttpMethod.GET);
-//
-//                // レスポンスを成形
-//                try {
-//                    if (!JsonUtils.isJsonArray(res)) {
-//                        continue;
-//                    }
-//                    JSONArray ja = new JSONArray(res);
-//
-//                    if (ja.length() > 0) {
-//                        for (int i=0; i < ja.length(); i++) {
-//                            if (ja.getJSONObject(i).getInt("featured_media") == 0) {
-//                                resultList.add(ja.getJSONObject(i).getInt("id"));
-//                            }
-//                        }
-//                        ++n;
-//                    }
-//                } catch (Exception e) {
-//                    nextFlg = false;
-//                    e.printStackTrace();
-//                }
-//            } catch (Exception e) {
-//                nextFlg = false;
-//                e.printStackTrace();
-//            }
-//        }
-//        return resultList;
-//    }
 
     /**
      * 引数で受けたサブドメインからリクエストに使用するドメインを作成します。

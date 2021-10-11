@@ -108,11 +108,24 @@ public class DateUtils {
     }
 
     public String getDay(String dateStr) throws ParseException {
-        Date date = sdf2.parse(dateStr);
-        Calendar c = Calendar.getInstance();
-        c.setTime(date);
-        int index = c.get(Calendar.DAY_OF_WEEK);
-        return dayOfWeek[index];
+        Date date = null;
+        if (dateStr.matches("^\\d{8}$")) {
+            date = sdf2.parse(dateStr);
+        } else if (dateStr.matches("\\d{8}")) {
+            String tmp = dateStr.replaceAll("[^\\d{8}]", "");
+            if (tmp.length() > 8) {
+                String tmp2 = tmp.substring(0,7);
+                date = sdf2.parse(tmp2);
+            }
+        }
+        if (date == null) {
+            return "-";
+        } else {
+            Calendar c = Calendar.getInstance();
+            c.setTime(date);
+            int index = c.get(Calendar.DAY_OF_WEEK);
+            return dayOfWeek[index];
+        }
     }
 
 //    public int getBlogYYYYMMTag(Date date) {

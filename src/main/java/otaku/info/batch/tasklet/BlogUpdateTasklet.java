@@ -12,6 +12,13 @@ import otaku.info.enums.TeamEnum;
 
 import java.util.List;
 
+/**
+ * ブログ固定ページを更新します
+ * ①商品ページ（トップ）
+ * ②TVページ
+ * 各ドメイン更新します
+ *
+ */
 @Component
 @StepScope
 public class BlogUpdateTasklet implements Tasklet {
@@ -31,9 +38,11 @@ public class BlogUpdateTasklet implements Tasklet {
         }
         // 近日発売新商品情報を更新
         blogController.updateReleaseItems();
+        System.out.println("①固定商品ページ完了");
         System.out.println("②固定TV出演情報ページ");
         System.out.println(System.getProperty("user.name"));
         blogController.updateTvPage();
+        System.out.println("②固定TV出演情報ページ完了");
         System.out.println("--- Blog Update END ---");
         return RepeatStatus.FINISHED;
     }

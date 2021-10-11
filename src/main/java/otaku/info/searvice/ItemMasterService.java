@@ -84,4 +84,8 @@ public class ItemMasterService {
     public List<ItemMaster> findAllNotPosted() {
         return itemMasterRepository.findAllNotPosted();
     }
+
+    public List<ItemMaster> findDateAfterTeamIdLimit(Date from, Long teamId, Long limit) {
+        return itemMasterRepository.findDateAfterTeamIdLimit(from, teamId, limit);
+    }
 }

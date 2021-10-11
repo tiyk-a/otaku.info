@@ -176,11 +176,12 @@ public class BlogController {
             }
         }
 
-        // 明日~1週間以内の発売商品
-        Date sevenDaysLater = dateUtils.daysAfterToday(7);
-
-        // 明日以降発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> futureItemMasterList = itemMasterService.findItemsBetweenDelFlg(to, sevenDaysLater, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
+        // 明日以降発売マスター商品(クエリがうまくできなくてチームごとに取りに行ってる😭
+        List<ItemMaster> tmpList = new ArrayList<>();
+        for (TeamEnum e : TeamEnum.values()) {
+            tmpList.addAll(itemMasterService.findDateAfterTeamIdLimit(to, e.getId(), 10L));
+        }
+        List<ItemMaster> futureItemMasterList = tmpList.stream().distinct().collect(Collectors.toList());
 
         // subDomainごとにまとめる
         Map<String, Map<ItemMaster, List<Item>>> teamIdItemMasterItemFutureMap = new TreeMap<>();
@@ -197,19 +198,19 @@ public class BlogController {
             for (String subDomain : subDomainList1) {
                 Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
                 if (tmpMap1.containsKey(itemMaster)) {
-                    List<Item> tmpList = tmpMap1.get(itemMaster);
+                    List<Item> tmpList1 = tmpMap1.get(itemMaster);
                     // itemListからdiffを見つけてそれだけを追加してあげる
                     List<Item> diffList = new ArrayList<>();
-                    for (Item i : tmpList) {
+                    for (Item i : tmpList1) {
                         if (!diffList.contains(i)) {
                             diffList.add(i);
                         }
                     }
 
                     if (diffList.size() > 0) {
-                        tmpList.addAll(diffList);
+                        tmpList1.addAll(diffList);
                     }
-                    tmpMap1.put(itemMaster, tmpList);
+                    tmpMap1.put(itemMaster, tmpList1);
                 } else {
                     tmpMap1.put(itemMaster, itemList);
                 }
@@ -229,9 +230,6 @@ public class BlogController {
 
         String blogText = "";
         if (teamIdItemMasterItemMap.size() > 0) {
-            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
-
-            }
             // <teamId, blogText>
             for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
                 // 明日のリストはあるが未来のリストがそもそもない→明日のだけでテキスト作る
@@ -278,27 +276,32 @@ public class BlogController {
      */
     public Map<String, HttpHeaders> generalHeaderSet(HttpHeaders headers, List<String> subDomainList) {
 
-        if (subDomainList == null || subDomainList.isEmpty()) {
-            return null;
-        }
-
         Map<String ,HttpHeaders> resultMap = new TreeMap<>();
 
-        for (String subDomain : subDomainList) {
-            // TODO: new httpheaderつけるとうまく行かないから既存のヘッダーにうわかき（同じ名前で別ようそ投げ込む）してみてるよ。うまく進むならwould be committed
-//            HttpHeaders newHeaders = new HttpHeaders();
-//            BeanUtils.copyProperties(headers, newHeaders);
+        if (subDomainList == null || subDomainList.isEmpty()) {
             headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String auth = "";
-            if (subDomain != null) {
-                auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getBlogPw().getBytes()));
-            } else {
-                auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
-            }
+            String auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
             headers.add("Authorization", "Basic " + auth);
-            resultMap.put(subDomain, headers);
+            resultMap.put("", headers);
+        } else {
+            for (String subDomain : subDomainList) {
+                // TODO: new httpheaderつけるとうまく行かないから既存のヘッダーにうわかき（同じ名前で別ようそ投げ込む）してみてるよ。うまく進むならwould be committed
+//            HttpHeaders newHeaders = new HttpHeaders();
+//            BeanUtils.copyProperties(headers, newHeaders);
+                headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                String auth = "";
+                if (subDomain != null) {
+                    auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getBlogPw().getBytes()));
+                } else {
+                    auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+                }
+                headers.add("Authorization", "Basic " + auth);
+                resultMap.put(subDomain, headers);
+            }
         }
 
         return resultMap;

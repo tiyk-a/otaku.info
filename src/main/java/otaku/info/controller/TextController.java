@@ -408,7 +408,7 @@ public class TextController {
      */
     private List<String> findTeamName(List<Long> teamIdList) {
         if (teamIdList == null || teamIdList.size() == 0) {
-            return null;
+            return new ArrayList<>();
         }
         return teamService.findTeamNameByIdList(teamIdList);
     }
@@ -421,7 +421,7 @@ public class TextController {
      */
     private List<String> findMemberName(List<Long> memberIdList) {
         if (memberIdList == null || memberIdList.size() == 0) {
-            return null;
+            return new ArrayList<>();
         }
         return memberService.getMemberNameList(memberIdList);
     }

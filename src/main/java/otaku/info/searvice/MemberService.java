@@ -119,6 +119,6 @@ public class MemberService {
      * @return
      */
     public List<Long> findTeamIdListByMemberIdList(List<Long> memberIdList) {
-        return Arrays.stream(MemberEnum.values()).filter(e -> memberIdList.stream().anyMatch(f -> f.equals(e.getId()))).map(e -> e.getId()).collect(Collectors.toList());
+        return Arrays.stream(MemberEnum.values()).filter(e -> memberIdList.stream().anyMatch(f -> f.equals(e.getId()))).map(MemberEnum::getId).collect(Collectors.toList());
     }
 }

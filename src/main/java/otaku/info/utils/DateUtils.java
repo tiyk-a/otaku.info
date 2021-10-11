@@ -55,7 +55,7 @@ public class DateUtils {
 
     public static Date getFirstDate(Date date) {
 
-        if (date==null) return null;
+        if (date==null) return new Date();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -73,7 +73,7 @@ public class DateUtils {
     // 月末日を返す
     public static Date getLastDate(Date date) {
 
-        if (date==null) return null;
+        if (date==null) return new Date();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);

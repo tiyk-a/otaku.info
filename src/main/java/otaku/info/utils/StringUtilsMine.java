@@ -111,7 +111,7 @@ public class StringUtilsMine {
         if (matcher.find()) {
             return matcher.group(1);
         } else {
-            return null;
+            return "";
         }
     }
 }

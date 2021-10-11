@@ -68,7 +68,7 @@ public class TeamService {
      * @return
      */
     public List<Long> getAllId() {
-        return Arrays.stream(TeamEnum.values()).map(e -> e.getId()).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
     }
 
     /**

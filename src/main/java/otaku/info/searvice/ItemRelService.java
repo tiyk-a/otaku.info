@@ -62,6 +62,6 @@ public class ItemRelService {
     }
 
     public ItemRel findByItemIdTeamIdMemberIdNull(Long itemId, Long teamId) {
-        return itemRelRepository.findByItemIdTeamIdMemberIdNull(itemId, teamId).orElse(null);
+        return itemRelRepository.findByItemIdTeamIdMemberIdNull(itemId, teamId).orElse(new ItemRel());
     }
 }

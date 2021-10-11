@@ -62,6 +62,6 @@ public class IMRelService {
     }
 
     public IMRel findByItemIdTeamIdMemberIdNull(Long iMId, Long teamId) {
-        return iMRelRepository.findByItemIdTeamIdMemberIdNull(iMId, teamId).orElse(null);
+        return iMRelRepository.findByItemIdTeamIdMemberIdNull(iMId, teamId).orElse(new IMRel());
     }
 }

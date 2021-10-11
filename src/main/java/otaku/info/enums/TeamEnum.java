@@ -69,7 +69,8 @@ public enum TeamEnum {
     // TODO: メソッドめいと処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる
     public static TeamEnum getBySubDomain(String argSubDomain) {
         if (argSubDomain == null) {
-            return null;
+            // なんとなくデフォはえびさん
+            return TeamEnum.ABCZ;
         }
         TeamEnum result = null;
         for (TeamEnum e : TeamEnum.values()) {
@@ -152,7 +153,7 @@ public enum TeamEnum {
      */
     public static List<String> findTeamNameListByTeamIdList(List<Long> teamIdList) {
         if (teamIdList == null || teamIdList.get(0) == null) {
-            return null;
+            return new ArrayList<>();
         }
         List<String> resultList = new ArrayList<>();
 
@@ -172,7 +173,7 @@ public enum TeamEnum {
 
     public static String getItemPageId(Long teamId) {
         if (teamId == null) {
-            return null;
+            return "";
         }
         TeamEnum result = null;
         for (TeamEnum e : TeamEnum.values()) {
@@ -187,7 +188,7 @@ public enum TeamEnum {
 
     public static String getTvPageId(Long teamId) {
         if (teamId == null) {
-            return null;
+            return "";
         }
         TeamEnum result = null;
         for (TeamEnum e : TeamEnum.values()) {

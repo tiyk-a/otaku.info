@@ -142,7 +142,7 @@ public class YahooController {
             String url = setting.getYahooPhraseApi();
             String res = request(url, request, HttpMethod.POST);
             if (!StringUtils.hasText(res)) {
-                return null;
+                return new ArrayList<>();
             }
             JSONObject jsonObject = new JSONObject(res);
             if (jsonObject.has("result") && jsonObject.getJSONObject("result").has("phrases")) {

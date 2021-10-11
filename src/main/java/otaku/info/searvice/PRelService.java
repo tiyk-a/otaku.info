@@ -84,6 +84,6 @@ public class PRelService {
     }
 
     public PRel findByItemIdTeamIdMemberIdNull(Long programId, Long teamId) {
-        return pRelRepository.findByItemIdTeamIdMemberIdNull(programId, teamId).orElse(null);
+        return pRelRepository.findByItemIdTeamIdMemberIdNull(programId, teamId).orElse(new PRel());
     }
 }

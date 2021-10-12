@@ -78,6 +78,9 @@ public class BlogController {
     ServerUtils serverUtils;
 
     @Autowired
+    JsonUtils jsonUtils;
+
+    @Autowired
     StringUtilsMine stringUtilsMine;
 
     @Autowired
@@ -459,7 +462,7 @@ public class BlogController {
 
                     // うまくポストが完了してStringが返却されたらwpIdをRelに登録する
                     if (StringUtils.hasText(res)) {
-                        JSONObject jo = new JSONObject(res);
+                        JSONObject jo = jsonUtils.createJsonObject(res);
                         if (jo.get("id") != null) {
                             blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
                             System.out.println("posted wp blog id: " + blogId.toString() + " Subdomain:" + entry.getKey());
@@ -542,7 +545,7 @@ public class BlogController {
 
                     // ここで投稿
                     String res = request(url, request, HttpMethod.POST);
-                    JSONObject jo = new JSONObject(res);
+                    JSONObject jo = jsonUtils.createJsonObject(res);
                     if (jo.get("id") != null) {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
 
@@ -681,7 +684,7 @@ public class BlogController {
      * @return
      */
     public Integer extractMedia(String text) {
-        JSONObject jsonObject = new JSONObject(text);
+        JSONObject jsonObject = jsonUtils.createJsonObject(text);
         if (jsonObject.get("featured_media") != null) {
             return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
         }
@@ -948,7 +951,7 @@ public class BlogController {
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
         String res = request(url, request, HttpMethod.POST);
 
-        JSONObject jsonObject1 = new JSONObject(res);
+        JSONObject jsonObject1 = jsonUtils.createJsonObject(res);
 
         int yyyyMMId;
         if (jsonObject1.get("id") != null) {

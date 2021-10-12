@@ -2,7 +2,7 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -15,6 +15,7 @@ import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.ProgramService;
 import otaku.info.setting.Setting;
+import otaku.info.utils.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -36,6 +37,9 @@ public class LineController {
 
     @Autowired
     ProgramService programService;
+
+    @Autowired
+    JsonUtils jsonUtils;
 
     @Autowired
     Setting setting;
@@ -116,7 +120,7 @@ public class LineController {
      */
     @PostMapping("/line/db")
     public String dbManage(@RequestBody String req) throws JSONException, ParseException {
-        JSONObject json = new JSONObject(req);
+        JSONObject json = jsonUtils.createJsonObject(req);
         String text = (String) json.get("text");
         String[] elems = text.split(",");
 

@@ -34,6 +34,9 @@ public class YahooController {
     @Autowired
     ServerUtils serverUtils;
 
+    @Autowired
+    JsonUtils jsonUtils;
+
     HttpServletResponse response;
 
     /**
@@ -79,7 +82,8 @@ public class YahooController {
             JSONObject jo = new JSONObject();
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> request = new HttpEntity<>(jo.toString(), headers);
-            JSONObject jsonObject = new JSONObject(request(parameter, request, HttpMethod.GET));
+            String res = request(parameter, request, HttpMethod.GET);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("hits") && JsonUtils.isJsonArray(jsonObject.get("hits"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("hits");
@@ -144,7 +148,7 @@ public class YahooController {
             if (!StringUtils.hasText(res)) {
                 return new ArrayList<>();
             }
-            JSONObject jsonObject = new JSONObject(res);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res);
             if (jsonObject.has("result") && jsonObject.getJSONObject("result").has("phrases")) {
                 JSONArray jsonArray = jsonObject.getJSONObject("result").getJSONArray("phrases");
                 if(jsonArray.length() > 0) {

@@ -67,6 +67,9 @@ public class TmpController {
     @Autowired
     ItemUtils itemUtils;
 
+    @Autowired
+    JsonUtils jsonUtils;
+
 //    /**
 //     * Item -> ItemRel
 //     * Item.team_id, member_id, wp_idが存在しないとエラーになります
@@ -409,7 +412,7 @@ public class TmpController {
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
         String res = blogController.request(url, request, HttpMethod.POST);
 
-        JSONObject jsonObject1 = new JSONObject(res);
+        JSONObject jsonObject1 = jsonUtils.createJsonObject(res);
 
         int yyyyMMId;
         if (jsonObject1.get("id") != null) {

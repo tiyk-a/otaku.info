@@ -55,6 +55,9 @@ public class RakutenController {
     @Autowired
     ItemRelService itemRelService;
 
+    @Autowired
+    JsonUtils jsonUtils;
+
     private final ItemService itemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
@@ -75,7 +78,7 @@ public class RakutenController {
             String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtilsSpring.hasText(res)) {
-                jsonObject = new JSONObject(res);
+                jsonObject = jsonUtils.createJsonObject(res);
             }
             serverUtils.sleep();
         } catch (Exception e) {
@@ -92,6 +95,10 @@ public class RakutenController {
         List<String> resultList = new ArrayList<>();
 
         for (String key : searchList) {
+            if (key == null) {
+                continue;
+            }
+
             String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす

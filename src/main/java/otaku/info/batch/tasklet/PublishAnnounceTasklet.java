@@ -9,15 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
-import otaku.info.entity.Item;
+import otaku.info.entity.IMRel;
 import otaku.info.entity.ItemMaster;
+import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.IMRelService;
 import otaku.info.searvice.ItemMasterService;
-import otaku.info.searvice.ItemService;
-import otaku.info.searvice.TeamService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Component
 @StepScope
@@ -30,42 +28,57 @@ public class PublishAnnounceTasklet implements Tasklet {
     TextController textController;
 
     @Autowired
-    ItemService itemService;
-
-    @Autowired
-    TeamService teamService;
-
-    @Autowired
     ItemMasterService itemMasterService;
 
     @Autowired
     IMRelService IMRelService;
 
+    /**
+     * TODO: 今日発売のあるチームだけポストする
+     *
+     * @param contribution
+     * @param chunkContext
+     * @return
+     * @throws Exception
+     */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 商品発売日アナウンス START ---");
         List<ItemMaster> itemMasterList = itemMasterService.findReleasedItemList();
+        System.out.println("itemMasterList size: " + itemMasterList.size());
+        Integer postCount = 0;
 
         for (ItemMaster itemMaster : itemMasterList) {
-            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-            List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-            if (teamIdList.size() > 0) {
-                // 固有Twitterのないチームの投稿用オブジェクト
-                List<Long> noTwitterTeamIdList = new ArrayList<>();
+            List<IMRel> relList = IMRelService.findByItemMId(itemMaster.getItem_m_id());
+            if (relList.size() > 0) {
+                // member違いのrelもあるのでチームごとにrelListをまとめる
+                Map<Long, List<IMRel>> teamMemberMap = new TreeMap<>();
+                for (IMRel rel : relList) {
+                    List<IMRel> tmpList = new ArrayList<>();
+                    if (teamMemberMap.containsKey(rel.getTeam_id())) {
+                        tmpList = teamMemberMap.get(rel.getTeam_id());
+                    }
+                    tmpList.add(rel);
+                    teamMemberMap.put(rel.getTeam_id(), tmpList);
+                }
 
-                for (Long teamId : teamIdList) {
-                    String twId = teamService.getTwitterId(teamId);
-                    if (twId == null) {
-                        noTwitterTeamIdList.add(teamId);
+                Map<Long, List<IMRel>> noTwMap = new HashMap<>();
+                for (Map.Entry<Long, List<IMRel>> e : teamMemberMap.entrySet()) {
+                    // twIdがない場合
+                    if (TeamEnum.get(e.getKey()).getTw_id().equals("")) {
+                        noTwMap.put(e.getKey(), e.getValue());
                     } else {
-                        String text = textController.releasedItemAnnounce(itemMaster, itemList.get(0));
-                        pythonController.post(Math.toIntExact(teamId), text);
+                        String text = textController.releasedItemAnnounce(itemMaster, e.getKey());
+                        pythonController.post(Math.toIntExact(e.getKey()), text);
+                        ++postCount;
                     }
                 }
 
-                if (noTwitterTeamIdList.size() > 0) {
-                    String text = textController.releasedItemAnnounce(itemMaster, itemList.get(0));
-                    pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
+                // 個別TWないチームのデータがあったら
+                if (noTwMap.size() > 0) {
+                    String text = textController.releasedItemAnnounce(itemMaster,7L);
+                    pythonController.post(0, text);
+                    ++postCount;
                 }
             }
 
@@ -75,6 +88,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
+        System.out.println("postCount: " + postCount);
         System.out.println("--- 商品発売日アナウンス END ---");
         return RepeatStatus.FINISHED;
     }

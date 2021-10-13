@@ -93,7 +93,16 @@ public class TeamService {
      * @return
      */
     public String getTwitterId(Long teamId) {
-        return TeamEnum.get(teamId).getTw_id();
+        String result = "";
+        TeamEnum e = TeamEnum.get(teamId);
+        if (e != null) {
+            result = e.getTw_id();
+        }
+        if (result.equals("")) {
+            // デフォルトえびさん
+            result = TeamEnum.ABCZ.getTw_id();
+        }
+        return result;
     }
 
     /**

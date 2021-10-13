@@ -93,25 +93,31 @@ public class TextController {
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
-    public String futureItemReminder(ItemMaster itemMaster, Item item, String teamIdStr) {
-        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+    public String futureItemReminder(ItemMaster im, Long teamId) {
+        int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "";
-        tags = tags + " " + tagService.getTagByTeam(Long.parseLong(teamIdStr)).stream().collect(Collectors.joining(" #","#",""));
-        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
+        tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        String blogUrl = blogDomainGenerator(teamId) + "item/" + im.getItem_m_id();
         String title = "";
-        if (StringUtils.hasText(itemMaster.getTitle())) {
-            title = itemMaster.getTitle();
-        } else {
-            List<Item> itemList = new ArrayList<>();
-            itemList.add(item);
-            title = createItemMasterTitle(itemList, itemMaster.getPublication_date());
-            itemMaster.setTitle(title);
-            // ついでに登録（更新）する
-            itemMasterService.save(itemMaster);
+        if (StringUtils.hasText(im.getTitle())) {
+            title = im.getTitle();
         }
 
-        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A%0A" + tags;
     }
+
+//    public String futureItemReminder(ItemMaster itemMaster, Item item, String teamIdStr) {
+//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+//        String tags = "";
+//        tags = tags + " " + tagService.getTagByTeam(Long.parseLong(teamIdStr)).stream().collect(Collectors.joining(" #","#",""));
+//        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
+//        String title = "";
+//        if (StringUtils.hasText(itemMaster.getTitle())) {
+//            title = itemMaster.getTitle();
+//        }
+//
+//        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+//    }
 
     /**
      * 未来発売の商品のリマインダー文章を作成します。
@@ -152,7 +158,7 @@ public class TextController {
     public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
+        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
@@ -175,6 +181,16 @@ public class TextController {
         String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A"
                 + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "楽天リンクはこちら↓%0A"
                 + item.getUrl();
+        // TODO: twitterタグ、DB使わないで取れてる
+        List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
+        return str1 + "%0A" + tags;
+    }
+
+    public String releasedItemAnnounce(ItemMaster itemMaster, Long teamId) {
+        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
+
+        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A" + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "詳細はこちら↓%0A" + blogUrl;
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
         String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
@@ -739,5 +755,30 @@ public class TextController {
             result = String.join("\n", result, String.join("\n", htmlList));
         }
         return result;
+    }
+
+    /**
+     * 引数で受けたサブドメインからリクエストに使用するドメインを作成します。
+     * 引数のサブドメインがnullの場合は、総合ブログ（親）のパスを返します。
+     *
+     * @param teamId
+     * @return
+     */
+    private String blogDomainGenerator(Long teamId) {
+        TeamEnum e = TeamEnum.get(teamId);
+        String url = "";
+
+        if (e != null) {
+            String subDomain = e.getSubDomain();
+            // 総合ブログのsubdomain"NA"に合致しない場合とする場合で分けてる
+            if (subDomain != null && !subDomain.equals("")) {
+                url = setting.getBlogHttps() + subDomain + setting.getBlogDomain();
+            }
+        }
+
+        if (url.equals("")) {
+            url = setting.getBlogWebUrl();
+        }
+        return url;
     }
 }

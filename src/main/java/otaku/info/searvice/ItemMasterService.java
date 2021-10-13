@@ -88,4 +88,8 @@ public class ItemMasterService {
     public List<ItemMaster> findDateAfterTeamIdLimit(Date from, Long teamId, Long limit) {
         return itemMasterRepository.findDateAfterTeamIdLimit(from, teamId, limit);
     }
+
+    public List<ItemMaster> findNearFutureIMByTeamId(Long teamId) {
+        return itemMasterRepository.findNearFutureIMByTeamId(teamId);
+    }
 }

@@ -9,17 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
-import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.ItemRelService;
-import otaku.info.searvice.ItemService;
-import otaku.info.searvice.TeamService;
-import otaku.info.utils.ItemUtils;
+import otaku.info.enums.TeamEnum;
+import otaku.info.searvice.ItemMasterService;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 @StepScope
@@ -32,75 +26,55 @@ public class FutureItemReminderTasklet implements Tasklet {
     TextController textController;
 
     @Autowired
-    ItemService itemService;
+    ItemMasterService itemMasterService;
 
-    @Autowired
-    TeamService teamService;
-
-    @Autowired
-    ItemRelService itemRelService;
-
-    @Autowired
-    ItemUtils itemUtils;
-
+    /**
+     * TODO: 日数ではなくteamごとに件数指定で取得、全チームの情報を流すように変更します。
+     *
+     * @param contribution
+     * @param chunkContext
+     * @return
+     * @throws Exception
+     */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         System.out.println("--- 未発売商品リマインダー START ---");
-        // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
-        List<Item> itemList = itemUtils.roundByPublicationDate(itemService.findFutureItemByDate(10));
 
-        // 商品マスタ：その商品リストのマップ
-        Map<ItemMaster, List<Item>> itemMap = itemUtils.groupItem(itemList);
+        for (TeamEnum e : TeamEnum.values()) {
+            // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
+            List<ItemMaster> imList = itemMasterService.findNearFutureIMByTeamId(e.getId());
+            System.out.println(e.getName() + "imList size: " + imList.size());
 
-        for (Map.Entry<ItemMaster, List<Item>> e : itemMap.entrySet()) {
-            post(e.getKey(), e.getValue());
-        }
-        System.out.println("--- 未発売商品リマインダー END ---");
+            post(imList, e);
+            System.out.println("--- 未発売商品リマインダー END ---");
 //        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
 //        List<Item> tmpList = itemService.findNotDeleted();
 //        blogController.tmpItemPost(tmpList);
 //        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
+        }
         return RepeatStatus.FINISHED;
     }
 
-    private void post(ItemMaster itemMaster, List<Item> itemList) throws Exception {
-        // 一つの商品に複数チームが登録されている場合、固有のTwitterがあるチームはそれぞれ投稿、固有Twitterがないチームはタグとチーム名全部つけて１つ投稿
-        List<Long> teamIdArr = new ArrayList<>();
-        itemList.forEach(e -> teamIdArr.addAll(itemRelService.getTeamIdListByItemId(e.getItem_id())));
-        itemList = itemList.stream().distinct().collect(Collectors.toList());
+    private void post(List<ItemMaster> imList, TeamEnum teamEnum) throws Exception {
 
-        if (teamIdArr.size() > 1) {
-            // 固有Twitterのないチームの投稿用オブジェクト
-            List<Long> noTwitterTeamIdList = new ArrayList<>();
-
-            // 固有Twitterのあるなしで分ける
-            for (Long teamId : teamIdArr) {
-                String twId = teamService.getTwitterId(teamId);
-                if (twId == null) {
-                    // 固有アカウントがない場合
-                    noTwitterTeamIdList.add(teamId);
-                } else {
-                    // 固有アカウントがある場合
-                    String text = textController.futureItemReminder(itemMaster, itemList.get(0), teamId);
-                    pythonController.post(Math.toIntExact(teamId), text);
-                }
-            }
-
-            // 固有Twitterなしチームがある場合はここでまとめて投稿する
-            if (noTwitterTeamIdList.size() > 0) {
-                String text = textController.futureItemReminder(itemMaster, itemList.get(0), noTwitterTeamIdList);
-                pythonController.post(Math.toIntExact(noTwitterTeamIdList.get(0)), text);
-            }
-        } else if (teamIdArr.size() == 1) {
-            // チームが１つしかなかったらそのまま投稿
-            long teamId = teamIdArr.get(0);
-            String text = textController.futureItemReminder(itemMaster, itemList.get(0), teamId);
-            pythonController.post(Math.toIntExact(teamId), text);
+        // TODO: 未来商品が全くないチームについての処理
+        if (imList.isEmpty()) {
+//            pythonController.post(teamEnum.getId(), teamEnum.getName() + "の新商品情報は");
+            System.out.println(teamEnum.getName() + "imList empty");
         }
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+        Integer postCount = 0;
+        for (ItemMaster im : imList) {
+            // TODO: メンバー名を取得していない
+            String text = textController.futureItemReminder(im, teamEnum.getId());
+            pythonController.post(Math.toIntExact(teamEnum.getId()), text);
+            ++postCount;
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        System.out.println("postCount: " + postCount);
     }
 }

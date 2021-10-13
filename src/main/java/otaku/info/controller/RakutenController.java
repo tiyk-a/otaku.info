@@ -10,6 +10,8 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.AffeliUrl;
 import otaku.info.entity.Item;
@@ -64,11 +66,12 @@ public class RakutenController {
 
     /**
      * 楽天APIにリクエストを投げる
+     * TODO: returnを変える。正常終了した時としなかった時、しなかったら次のリクエスト求めた方がいいから
      *
      * @param param Additional params. Will be connected to degault params
      * @return
      */
-    public JSONObject request(String param) {
+    public JSONObject request(String param) throws InterruptedException {
         JSONObject jsonObject = null;
 
         try {
@@ -82,7 +85,15 @@ public class RakutenController {
             }
             serverUtils.sleep();
         } catch (Exception e) {
-            e.printStackTrace();
+            if (e instanceof HttpClientErrorException) {
+                System.out.println("Too many request. sleep");
+                Thread.sleep(60000);
+            } else if (e instanceof HttpServerErrorException) {
+                System.out.println("Server error");
+                Thread.sleep(60000);
+            } else {
+                e.printStackTrace();
+            }
         }
         return jsonObject;
     }
@@ -91,8 +102,12 @@ public class RakutenController {
      * 楽天商品をキーワード検索します。
      * itemCodeだけを取得してきます。
      */
-    public List<String> search(List<String> searchList) {
+    public List<String> search(List<String> searchList) throws InterruptedException {
         List<String> resultList = new ArrayList<>();
+
+        if (searchList == null || searchList.isEmpty()) {
+            return new ArrayList<>();
+        }
 
         for (String key : searchList) {
             if (key == null) {
@@ -118,7 +133,7 @@ public class RakutenController {
      * @param itemCodeList
      * @return
      */
-    public List<Item> getDetailsByItemCodeList(List<String> itemCodeList) {
+    public List<Item> getDetailsByItemCodeList(List<String> itemCodeList) throws InterruptedException {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : itemCodeList) {
@@ -149,7 +164,7 @@ public class RakutenController {
      *
      * @return
      */
-    public boolean updateUrl() {
+    public boolean updateUrl() throws InterruptedException {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
         Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> itemRelService.findByItemId(f.getItem_id()) != null && !itemRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg()).collect(Collectors.toList())));
@@ -240,7 +255,7 @@ public class RakutenController {
      * @param itemMaster
      * @return
      */
-    public ItemMaster addImage(ItemMaster itemMaster) {
+    public ItemMaster addImage(ItemMaster itemMaster) throws InterruptedException {
         List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
 
         for (Item item : itemList) {

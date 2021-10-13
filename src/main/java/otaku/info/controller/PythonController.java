@@ -84,7 +84,7 @@ public class PythonController {
                 ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
 
                 lineList.add(text + " ■teamId=" + teamId);
-                System.out.println(response.getStatusCode() + ":" + text);
+                System.out.println("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
             }
         }
         // LINEに投稿完了通知を送る

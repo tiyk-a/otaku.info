@@ -64,6 +64,7 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.itemSearch}")
     public void run1(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
         confMap.put("run1", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -73,11 +74,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
-
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.futureItemReminder}")
     public void run2(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run2", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -87,10 +91,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.publishAnnounce}")
     public void run4(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run4", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -100,10 +108,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.itemSearchMember}")
     public void run5(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run5", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -113,10 +125,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvSearch}")
     public void run6(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run6", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -126,10 +142,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvPost}")
     public void run7(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run7", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -139,10 +159,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvAlert}")
     public void run9(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run9", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -152,10 +176,14 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.updateUrl}")
     public void run10(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run10", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -165,11 +193,15 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     // 固定ページの更新
     @Scheduled(cron = "${cron.blogUpdate}")
     public void run11(){
+        Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run11", new JobParameter(System.currentTimeMillis()));
         JobParameters jobParameters = new JobParameters(confMap);
@@ -179,6 +211,9 @@ public class Scheduler {
             System.out.println(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.blogMedia}")

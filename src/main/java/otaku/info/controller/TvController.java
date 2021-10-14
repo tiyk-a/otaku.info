@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import otaku.info.entity.Program;
 import otaku.info.entity.PRel;
 import otaku.info.entity.Station;
@@ -27,25 +28,25 @@ import java.util.regex.Pattern;
 public class TvController  {
 
     @Autowired
-    private ProgramService programService;
+    private final ProgramService programService;
 
     @Autowired
-    private TeamService teamService;
+    private final TeamService teamService;
 
     @Autowired
-    private TextController textController;
+    private final TextController textController;
 
     @Autowired
-    private PythonController pythonController;
+    private final PythonController pythonController;
 
     @Autowired
-    private MemberService memberService;
+    private final MemberService memberService;
 
     @Autowired
-    private StationService stationService;
+    private final StationService stationService;
 
     @Autowired
-    private PRelService pRelService;
+    private final PRelService pRelService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -125,14 +126,14 @@ public class TvController  {
             }
 
             // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細画面）からとる
-            if (teamIdList.size() == 0 && StringUtilsSpring.hasText(valueArr[1])) {
+            if (teamIdList.size() == 0 && StringUtils.hasText(valueArr[1])) {
                 String[] detail = getDetails(valueArr[1]);
 
                 // 番組概要からチーム名を取得
                 teamIdList.addAll(teamService.findTeamIdListByText(detail[0]));
 
                 // 番組概要からチーム名を取得
-                if (teamIdList.size() == 0 && StringUtilsSpring.hasText(detail[1])) {
+                if (teamIdList.size() == 0 && StringUtils.hasText(detail[1])) {
                     teamIdList.addAll(teamService.findTeamIdListByText(detail[1]));
                 }
             }
@@ -157,14 +158,14 @@ public class TvController  {
             }
 
             // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細画面）からとる
-            if (memberIdList.size() == 0 && StringUtilsSpring.hasText(valueArr[1])) {
+            if (memberIdList.size() == 0 && StringUtils.hasText(valueArr[1])) {
                 String[] detail = getDetails(valueArr[1]);
 
                 // 番組概要からメンバー名を取得
                 memberIdList.addAll(memberService.findMemberIdByText(detail[0]));
 
                 // 番組概要からメンバー名を取得
-                if (memberIdList.size() == 0 && StringUtilsSpring.hasText(detail[1])) {
+                if (memberIdList.size() == 0 && StringUtils.hasText(detail[1])) {
                     memberIdList.addAll(memberService.findMemberIdByText(detail[1]));
                 }
             }
@@ -314,9 +315,7 @@ public class TvController  {
         // team_id
         List<Long> eTeamIdList = pRelService.getTeamIdList(existingP.getProgram_id());
         if (teamIdList == null) {
-            if (eTeamIdList != null) {
-                return false;
-            }
+            return eTeamIdList == null;
         } else {
             if (eTeamIdList == null || teamIdList.size() != eTeamIdList.size()) {
                 return false;

@@ -86,13 +86,13 @@ public enum MagazineEnum {
     NIHON_EIGA_NAVI(63,"日本映画navi","ニホンエイガナビ",5),
     BIST(64,"美ST","ビスト",17);
 
-    private Integer id;
-    private String name;
-    private String kana;
-    private Integer publisherId;
+    private final Integer id;
+    private final String name;
+    private final String kana;
+    private final Integer publisherId;
 
 
-    private MagazineEnum(Integer id, String name, String kana, Integer publisherId) {
+    MagazineEnum(Integer id, String name, String kana, Integer publisherId) {
         this.id = id;
         this.name = name;
         this.kana = kana;

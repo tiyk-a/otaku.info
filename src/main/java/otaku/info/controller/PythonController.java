@@ -31,22 +31,22 @@ public class PythonController {
     LineController lineController;
 
     @Autowired
-    private ProgramService programService;
+    private final ProgramService programService;
 
     @Autowired
-    private StationService stationService;
+    private final StationService stationService;
 
     @Autowired
-    private TeamService teamService;
+    private final TeamService teamService;
 
     @Autowired
-    private MemberService memberService;
+    private final MemberService memberService;
 
     @Autowired
-    private DateUtils dateUtils;
+    private final DateUtils dateUtils;
 
     @Autowired
-    private Setting setting;
+    private final Setting setting;
 
     /**
      * Pythonにツイートするようにデータを送る

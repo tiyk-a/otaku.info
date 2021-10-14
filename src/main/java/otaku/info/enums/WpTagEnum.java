@@ -28,11 +28,11 @@ public enum WpTagEnum {
     TOKIO(14, 9),
     V6(15, 10);
 
-    private Integer wpTagId;
-    private Integer dbTeamId;
+    private final Integer wpTagId;
+    private final Integer dbTeamId;
 
 
-    private WpTagEnum(int wpTagId, int dbTeamId) {
+    WpTagEnum(int wpTagId, int dbTeamId) {
         this.wpTagId = wpTagId;
         this.dbTeamId = dbTeamId;
     }

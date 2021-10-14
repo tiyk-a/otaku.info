@@ -118,9 +118,9 @@ public enum StationEnum {
     IGO(111,"囲碁・将棋チャンネル",0),
     BS_ASAHI_4K_BA(112,"BS朝日4Kバラエティー,趣味／教育,情報／ワイドショー",0);
 
-    private Integer id;
-    private String name;
-    private Integer note;
+    private final Integer id;
+    private final String name;
+    private final Integer note;
 
     StationEnum(Integer id, String name, Integer note) {
         this.id = id;

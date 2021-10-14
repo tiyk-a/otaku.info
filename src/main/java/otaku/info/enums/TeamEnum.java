@@ -28,18 +28,18 @@ public enum TeamEnum {
     HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
     KATTUN(20L,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
     KINKIKIDS(21L,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
-    private Long id;
-    private String anniversary;
-    private String kana;
-    private String mnemonic;
-    private String name;
-    private String tw_id;
+    private final Long id;
+    private final String anniversary;
+    private final String kana;
+    private final String mnemonic;
+    private final String name;
+    private final String tw_id;
     /** 固有WPブログが用意されてる場合、サブドメインの固有値部分を指定。ない場合、null */
-    private String subDomain;
+    private final String subDomain;
     /** TODO: apiPwに変更したいです */
-    private String blogPw;
-    private Long itemPageId;
-    private Long tvPageId;
+    private final String blogPw;
+    private final Long itemPageId;
+    private final Long tvPageId;
 
     TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain, String blogPw, Long itemPageId, Long tvPageId) {
         this.id = id;

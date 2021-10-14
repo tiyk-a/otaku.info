@@ -56,14 +56,14 @@ public enum PublisherEnum {
     BUNGEI_SHUNSYU(39, "文藝春秋", null),
     SANKEIDO_PUB(40, "三慧堂出版", null);
 
-    private Integer id;
-    private String name;
+    private final Integer id;
+    private final String name;
 
     /** nullは特記なし、0は取り込まない出版社、それ以外の数字は親出版社がある場合（その出版社は子出版社である） */
-    private Integer note;
+    private final Integer note;
 
 
-    private PublisherEnum(int id, String name, Integer note) {
+    PublisherEnum(int id, String name, Integer note) {
         this.id = id;
         this.name = name;
         this.note = note;

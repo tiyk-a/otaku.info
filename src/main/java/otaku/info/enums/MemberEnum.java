@@ -85,12 +85,12 @@ public enum MemberEnum {
     JOICHIRO_FUJIWARA(102L,new Date(1996-1900,2-1,8),"ふじわらじょういちろう","藤原丈一郎","丈丈くん",18L),
     KAZUYA_OHASHI(103L,new Date(1997-1900,8-1,9),"おおはしかずや","大橋和也","大橋君はっすんかずくん",18L);
 
-    private Long id;
-    private Date birthday;
-    private String kana;
-    private String name;
-    private String mnemonic;
-    private Long teamId;
+    private final Long id;
+    private final Date birthday;
+    private final String kana;
+    private final String name;
+    private final String mnemonic;
+    private final Long teamId;
 
     MemberEnum(Long id, Date birthday, String kana, String name, String mnemonic, Long teamId) {
         this.id = id;

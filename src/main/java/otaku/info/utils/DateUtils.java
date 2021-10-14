@@ -19,10 +19,10 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class DateUtils {
 
-    private String dayOfWeek[] = {"", "日", "月", "火", "水", "木", "金", "土"};
+    private final String[] dayOfWeek = {"", "日", "月", "火", "水", "木", "金", "土"};
 
-    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyMM");
-    private SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
+    private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyMM");
+    private final SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMdd");
 
     @Autowired
     BlogTagService blogTagService;

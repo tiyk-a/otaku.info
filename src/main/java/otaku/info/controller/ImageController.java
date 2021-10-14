@@ -23,7 +23,7 @@ public class ImageController {
     ServerUtils serverUtils;
 
     @Autowired
-    private Setting setting;
+    private final Setting setting;
 
     /**
      * 画像を生成します。2行のテキスト、中央配置

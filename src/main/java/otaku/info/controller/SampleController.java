@@ -84,10 +84,16 @@ public class SampleController {
     private ItemMasterService itemMasterService;
 
     @Autowired
-    private ItemRelService itemRelService;
+    private IRelService iRelService;
 
     @Autowired
-    private IMRelService IMRelService;
+    private IRelMemService iRelMemService;
+
+    @Autowired
+    private IMRelService iMRelService;
+
+    @Autowired
+    private IMRelMemService imRelMemService;
 
     @Autowired
     Scheduler scheduler;
@@ -101,7 +107,7 @@ public class SampleController {
     @Autowired
     private DateUtils dateUtils;
 
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -157,15 +163,15 @@ public class SampleController {
      * @throws JSONException
      */
     @GetMapping("/twi/{artistId}")
-    public String sample1(@PathVariable String artistId) {
+    public String sample1(@PathVariable String artistId) throws InterruptedException {
         Item tmp = new Item();
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
-        ItemRel ir = new ItemRel();
+        IRel ir = new IRel();
         Item savedItem = itemService.saveItem(tmp);
         ir.setItem_id(savedItem.getItem_id());
         ir.setTeam_id(1L);
-        itemRelService.save(ir);
+        iRelService.save(ir);
 
         List<String> list = controller.affiliSearchWord(artistId);
         List<String> itemCodeList = rakutenController.search(list);
@@ -209,7 +215,10 @@ public class SampleController {
 //                tmpController.moveProgramToPRel2();
 //                System.out.println("END case3.");
                 // itemMaster入れる
-                insertIM();
+//                insertIM();
+//                insertImRelMem();
+//                removeImRel();
+//                removeDuplRel();
                 break;
             case 4:
                 System.out.println("---run4商品発売日アナウンス START---");
@@ -259,12 +268,6 @@ public class SampleController {
                 scheduler.run11();
                 System.out.println("---run11Blog Update END---");
                 break;
-//            case 12:
-//                // 商品の情報を投稿する
-//                System.out.println("---run12Blog画像設定 START---");
-//                scheduler.run12();
-//                System.out.println("---run12Blog画像設定 END---");
-//                break;
             case 13: // tmpメソッド
                 // ショートコードが反映できるか
                 tmpController.tmpMethod();
@@ -276,9 +279,156 @@ public class SampleController {
 //                blogController.tmpItemPost(itemList);
                 System.out.println("---Tmpブログ新商品投稿メソッドEND---");
                 break;
+            case 15:
+                // irelの重複を解消
+                orderiRel();
+//                orderiRel2();
+//                orderiRel3();
+                break;
+            case 16:
+                orderM();
+//                orderM2();
+//                orderM3();
+                break;
         }
             return "Done";
     }
+
+    /**
+     * irelの整理(からteamを入れてあげる)
+     */
+    private void orderiRel() {
+//        ・全部取得ー＞itemでまとめる→teamでまとめる
+        List<IRel> iRelList = iRelService.findAll();
+        List<IRel> updateList = new ArrayList<>();
+        List<IRel> removeList = new ArrayList<>();
+        for (IRel rel : iRelList) {
+            // もしteamIdがなかったら同じitemIdを持つレコードとってくる
+            if (rel.getTeam_id() == 0) {
+                List<IRel> groupList = iRelService.findByItemIdTeamIdNotNull(rel.getItem_id());
+                if (groupList.size() > 0) {
+                    IRel subRel = groupList.get(0);
+                    rel.setTeam_id(subRel.getTeam_id());
+                    updateList.add(rel);
+                } else {
+                    removeList.add(rel);
+                }
+            }
+        }
+        iRelService.saveAll(updateList);
+        iRelService.removeAll(removeList);
+    }
+
+    /**
+     * irelの整理(重複を削除してあげる)
+     */
+//    private void orderiRel2() {
+////        ・全部取得ー＞itemでまとめる→teamでまとめる
+//        List<IRel> iRelList = iRelService.findAll();
+//        List<IRel> opeList = iRelService.findAll();
+//        List<IRel> removeList = new ArrayList<>();
+//        for (IRel rel : iRelList) {
+//            for (IRel ope : opeList) {
+//                // 一致するレコードがあったら
+//                if (rel.getI_rel_id() != ope.getI_rel_id() && rel.getItem_id() == ope.getItem_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
+//                    if (rel.getI_rel_id() > ope.getI_rel_id()) {
+//                        if (!removeList.contains(rel)) {
+//                            removeList.add(rel);
+//                        }
+//                    } else {
+//                        if (!removeList.contains(ope)) {
+//                            removeList.add(ope);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        iRelService.removeAll(removeList);
+//    }
+
+    /**
+     * irelの整理(memberを入れてあげる)
+     */
+//    private void orderiRel3() {
+////        ・全部取得ー＞itemでまとめる→teamでまとめる
+//        List<IRel> iRelList = iRelService.findAll();
+//        List<IRelMem> relMenList = new ArrayList<>();
+//        for (IRel rel : iRelList) {
+//            if (rel.getMember_id() != null) {
+//                IRelMem relMen = new IRelMem(null, rel.getI_rel_id(), rel.getMember_id(), null, null);
+//                relMenList.add(relMen);
+//            }
+//        }
+//        iRelMemService.saveAll(relMenList);
+//    }
+
+    /**
+     * irelの整理(からteamを入れてあげる)
+     */
+    private void orderM() {
+//        ・全部取得ー＞itemでまとめる→teamでまとめる
+        List<IMRel> iRelList = iMRelService.findAll();
+        List<IMRel> updateList = new ArrayList<>();
+        List<IMRel> removeList = new ArrayList<>();
+        for (IMRel rel : iRelList) {
+            // もしteamIdがなかったら同じitemIdを持つレコードとってくる
+            if (rel.getTeam_id() == 0) {
+                List<IMRel> groupList = iMRelService.findByItemIdTeamIdNotNull(rel.getItem_m_id());
+                if (groupList.size() > 0) {
+                    IMRel subRel = groupList.get(0);
+                    rel.setTeam_id(subRel.getTeam_id());
+                    updateList.add(rel);
+                } else {
+                    removeList.add(rel);
+                }
+            }
+        }
+        iMRelService.saveAll(updateList);
+        iMRelService.removeAll(removeList);
+    }
+
+    /**
+     * irelの整理(重複を削除してあげる)
+     */
+//    private void orderM2() {
+////        ・全部取得ー＞itemでまとめる→teamでまとめる
+//        List<IMRel> iRelList = iMRelService.findAll();
+//        List<IMRel> opeList = iMRelService.findAll();
+//        List<IMRel> removeList = new ArrayList<>();
+//        for (IMRel rel : iRelList) {
+//            for (IMRel ope : opeList) {
+//                // 一致するレコードがあったら
+//                if (rel.getIm_rel_id() != ope.getIm_rel_id() && rel.getItem_m_id() == ope.getItem_m_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
+//                    if (rel.getIm_rel_id() > ope.getIm_rel_id()) {
+//                        if (!removeList.contains(rel)) {
+//                            removeList.add(rel);
+//                        }
+//                    } else {
+//                        if (!removeList.contains(ope)) {
+//                            removeList.add(ope);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        iMRelService.removeAll(removeList);
+//    }
+
+    /**
+     * irelの整理(memberを入れてあげる)
+     */
+//    private void orderM3() {
+////        ・全部取得ー＞itemでまとめる→teamでまとめる
+//        List<IMRel> iRelList = iMRelService.findAll();
+//        List<IMRelMem> relMenList = new ArrayList<>();
+//        for (IMRel rel : iRelList) {
+//            if (rel.getMember_id() != null) {
+//                IMRelMem relMen = new IMRelMem(null, rel.getIm_rel_id(), null, null);
+//                relMenList.add(relMen);
+//            }
+//        }
+//        imRelMemService.saveAll(relMenList);
+//    }
 
     /**
      * Itemに不適切な商品が入ってしまっていたらItemId指定でdel_flgをonにします。
@@ -317,6 +467,11 @@ public class SampleController {
         return result;
     }
 
+    /**
+     * wpidの入っていないIMをポストする
+     *
+     * @throws InterruptedException
+     */
     private void insertIM() throws InterruptedException {
         // 対象IM（wpIdがnull）を取得
         List<ItemMaster> imList = itemMasterService.findAllNotPosted();
@@ -335,7 +490,7 @@ public class SampleController {
      * @throws JSONException
      */
     public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException, InterruptedException {
-        boolean isTeam = memberId == 0;
+        boolean isTeam = memberId == 0L;
         List<String> list = controller.affiliSearchWord(artist);
 
         // 楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
@@ -385,18 +540,26 @@ public class SampleController {
             savedItemList = itemService.saveAll(newItemList);
 
             if (savedItemList.size() > 0) {
-                List<ItemRel> itemRelList = new ArrayList<>();
+                List<IRel> iRelList = new ArrayList<>();
                 for (Item item : savedItemList) {
                     if (memberId!= null && memberId.equals(0L)) {
                         memberId = null;
                     }
-                    itemRelList.add(new ItemRel(null, item.getItem_id(), teamId, memberId, null, null, null));
+                    iRelList.add(new IRel(null, item.getItem_id(), teamId, null, null));
                 }
 
                 // すでに登録されてるrelレコードがあったら重複嫌なので抜く
-                itemRelList = itemRelService.removeExistRecord(itemRelList);
-                if (itemRelList.size() > 0) {
-                    itemRelService.saveAll(itemRelList);
+                iRelList = iRelService.removeExistRecord(iRelList);
+                if (iRelList.size() > 0) {
+                    List<IRel> savedList = iRelService.saveAll(iRelList);
+                    if (memberId != null && memberId != 0L) {
+                        List<IRelMem> memList = new ArrayList<>();
+                        for (IRel rel : savedList) {
+                            IRelMem relMem = new IRelMem(null, rel.getI_rel_id(), memberId, null, null);
+                            memList.add(relMem);
+                        }
+                        iRelMemService.saveAll(memList);
+                    }
                 }
             }
         }
@@ -405,13 +568,29 @@ public class SampleController {
         Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
         // itemMasterRelも更新する
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
-            List<IMRel> IMRelList = IMRelService.findByItemMId(e.getKey().getItem_m_id());
+            List<IMRel> IMRelList = iMRelService.findByItemMId(e.getKey().getItem_m_id());
             List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
-            IMRelList.forEach(f -> itemMasterRelElemsList.add(new ItemRelElems(null, f.getItem_m_id(), f.getTeam_id(), f.getMember_id(), f.getWp_id())));
+            for (IMRel rel :IMRelList) {
+                List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+                if (imRelMemList.size() > 0) {
+                    for (IMRelMem f : imRelMemList) {
+                        ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), f.getMember_id(), rel.getWp_id());
+                        itemMasterRelElemsList.add(elem);
+                    }
+                } else {
+                    ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), null, rel.getWp_id());
+                    itemMasterRelElemsList.add(elem);
+                }
+            }
 
-            List<ItemRel> itemRelList = itemRelService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
+            List<IRel> iRelList = iRelService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
             List<ItemRelElems> itemRelElemsList = new ArrayList<>();
-            itemRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), f.getMember_id(), null)));
+            final Long tmp = memberId;
+            if (memberId != null && memberId != 0L) {
+                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), tmp, null)));
+            } else {
+                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), null, null)));
+            }
             List<ItemRelElems> itemRelElemsDataList = itemRelElemsList.stream().distinct().collect(Collectors.toList());
             if (itemRelElemsDataList.size() > 0 && itemMasterRelElemsList.size() > 0 && itemRelElemsDataList.size() > itemMasterRelElemsList.size()) {
                 List<ItemRelElems> sameElemsList = new ArrayList<>();
@@ -428,12 +607,22 @@ public class SampleController {
                 if (sameElemsList.size() > 0) {
                     itemRelElemsDataList.removeAll(sameElemsList);
                 }
+                // TODO: 復活すること
                 if (itemRelElemsDataList.size() > 0) {
                     List<IMRel> toSaveIMRelList = new ArrayList<>();
                     for (ItemRelElems f : itemRelElemsDataList) {
-                        toSaveIMRelList.add(new IMRel(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getMember_id(), null, null, null));
+                        IMRel rel = new IMRel(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getWp_id(),  null, null);
+                        if (f.getMember_id() != null) {
+                            IMRel savedRel = iMRelService.save(rel);
+                            IMRelMem relMem = new IMRelMem(null, savedRel.getIm_rel_id(), f.getMember_id(), null, null);
+                            imRelMemService.save(relMem);
+                        } else {
+                            toSaveIMRelList.add(rel);
+                        }
                     }
-                    IMRelService.saveAll(toSaveIMRelList);
+                    if (toSaveIMRelList.size() > 0) {
+                        iMRelService.saveAll(toSaveIMRelList);
+                    }
                 }
             }
         }
@@ -459,25 +648,26 @@ public class SampleController {
 
                 if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(itemMaster.getTitle());
-                    List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+                    List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
                     if (teamIdList.size() > 0) {
                         Map<Long, String> twIdMap = teamService.getTeamIdTwIdMapByTeamIdList(teamIdList);
                         for (Map.Entry<Long, String> e : twIdMap.entrySet()) {
                             TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, e.getKey());
                             String result;
 
-                            List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-                            if (memberIdList != null && !memberIdList.isEmpty()) {
-                                if (memberIdList.size() == 1) {
-                                    String memberName = memberService.getMemberName(memberIdList.get(0));
-                                    result = textController.twitterPerson(twiDto, memberName);
-                                } else {
-                                    List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-                                    result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
-                                }
-                            } else {
+                            // TODO: text作成、memberを抜いてる
+//                            List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
+//                            if (memberIdList != null && !memberIdList.isEmpty()) {
+//                                if (memberIdList.size() == 1) {
+//                                    String memberName = memberService.getMemberName(memberIdList.get(0));
+//                                    result = textController.twitterPerson(twiDto, memberName);
+//                                } else {
+//                                    List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+//                                    result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
+//                                }
+//                            } else {
                                 result = textController.twitter(twiDto);
-                            }
+//                            }
                             // Twitter投稿
                             pythonController.post(Math.toIntExact(e.getKey()), result);
                         }

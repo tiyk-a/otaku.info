@@ -18,7 +18,7 @@ import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.AffeliUrlService;
 import otaku.info.searvice.ItemMasterService;
-import otaku.info.searvice.ItemRelService;
+import otaku.info.searvice.IRelService;
 import otaku.info.searvice.ItemService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.*;
@@ -55,7 +55,7 @@ public class RakutenController {
     AffeliUrlService affeliUrlService;
 
     @Autowired
-    ItemRelService itemRelService;
+    IRelService iRelService;
 
     @Autowired
     JsonUtils jsonUtils;
@@ -80,7 +80,7 @@ public class RakutenController {
             System.out.println("RAKUTEN SEARCH URL: " + finalUrl);
             String res = restTemplate.getForObject(finalUrl, String.class);
 
-            if (StringUtilsSpring.hasText(res)) {
+            if (StringUtils.hasText(res)) {
                 jsonObject = jsonUtils.createJsonObject(res);
             }
             serverUtils.sleep();
@@ -167,7 +167,7 @@ public class RakutenController {
     public boolean updateUrl() throws InterruptedException {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
-        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> itemRelService.findByItemId(f.getItem_id()) != null && !itemRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg()).collect(Collectors.toList())));
+        Map<ItemMaster, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getItem_m_id()).stream().filter(f -> iRelService.findByItemId(f.getItem_id()) != null && !iRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg()).collect(Collectors.toList())));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();

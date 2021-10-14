@@ -48,7 +48,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where wp_id is not null and updated_at >= ?1 and image1 is not null")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join item_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and item_m_id is not null")
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and item_m_id is not null")
     List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
     @Query("select t from Item t where item_m_id = ?1")

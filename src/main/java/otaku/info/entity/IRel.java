@@ -7,30 +7,31 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.sql.Timestamp;
 
-@Entity(name = "item_rel")
+@Entity(name = "i_rel")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "item_rel")
-public class ItemRel {
+@IdClass(value=IRelKey.class)
+@Table(name = "i_rel")
+public class IRel implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long i_rel_id;
 
+    @Id
     @Column(nullable = false)
     private Long item_id;
 
+    @Id
     @Column(nullable = false)
     private Long team_id;
 
     @Column(nullable = true)
     private Long member_id;
-
-    @Column(nullable = true)
-    private Long wp_id;
 
     @CreationTimestamp
     @Column(nullable = true)

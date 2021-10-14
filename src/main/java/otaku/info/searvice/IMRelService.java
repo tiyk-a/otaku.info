@@ -31,9 +31,9 @@ public class IMRelService {
         return iMRelRepository.findTeamIdListByItemMId(itemMId);
     }
 
-    public List<Long> findMemberIdListByItemMId(Long itemMId) {
-        return  iMRelRepository.findMemberIdListByItemMId(itemMId);
-    }
+//    public List<Long> findMemberIdListByItemMId(Long itemMId) {
+//        return  iMRelRepository.findMemberIdListByItemMId(itemMId);
+//    }
 
     public Long getWpIdByItemMId(Long itemMId) {
         return iMRelRepository.getWpIdByItemMId(itemMId);
@@ -46,22 +46,39 @@ public class IMRelService {
     public List<IMRel> removeExistRecord(List<IMRel> imRelList) {
         List<IMRel> returnList = new ArrayList<>();
         for (IMRel rel : imRelList) {
-            if (rel.getMember_id() == null) {
-                boolean exists = iMRelRepository.existsByElem(rel.getItem_m_id(), rel.getTeam_id()) > 0;
-                if (!exists) {
-                    returnList.add(rel);
-                }
-            } else {
-                boolean exists = iMRelRepository.existsByElem(rel.getItem_m_id(), rel.getTeam_id(), rel.getMember_id()) > 0;
-                if (!exists) {
-                    returnList.add(rel);
-                }
+            boolean exists = iMRelRepository.existsByElem(rel.getItem_m_id(), rel.getTeam_id()) > 0;
+            if (!exists) {
+                returnList.add(rel);
             }
         }
         return returnList;
     }
 
-    public IMRel findByItemIdTeamIdMemberIdNull(Long iMId, Long teamId) {
-        return iMRelRepository.findByItemIdTeamIdMemberIdNull(iMId, teamId).orElse(new IMRel());
+//    public IMRel findByItemIdTeamIdMemberIdNull(Long iMId, Long teamId) {
+//        return iMRelRepository.findByItemIdTeamIdMemberIdNull(iMId, teamId).orElse(new IMRel());
+//    }
+
+    public IMRel save(IMRel rel) {
+        return iMRelRepository.save(rel);
+    }
+
+    public IMRel findByImIdTeamId(Long imId, Long teamId) {
+        return iMRelRepository.findByImIdTeamId(imId, teamId);
+    }
+
+    public List<IMRel> findAllMemberIdNotNull() {
+        return iMRelRepository.findAllMemberIdNotNull();
+    }
+
+    public void removeAll(List<IMRel> relList) {
+        iMRelRepository.deleteAll(relList);
+    }
+
+    public List<IMRel> findAllMemberNull() {
+        return iMRelRepository.findAllMemberNull();
+    }
+
+    public List<IMRel> findByItemIdTeamIdNotNull(Long imId) {
+        return iMRelRepository.findByItemIdTeamIdNotNull(imId);
     }
 }

@@ -60,7 +60,10 @@ public class BlogController {
     MemberService memberService;
 
     @Autowired
-    ItemRelService itemRelService;
+    IRelService iRelService;
+
+    @Autowired
+    IMRelMemService imRelMemService;
 
     @Autowired
     IMRelService iMRelService;
@@ -154,7 +157,7 @@ public class BlogController {
             // itemMasterとitemListは用意できた
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
-            List<String> subDomainList1 = itemRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
+            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
                 Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemMap.get(subDomain);
@@ -196,7 +199,7 @@ public class BlogController {
             // itemMasterとitemListは用意できた
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
-            List<String> subDomainList1 = itemRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
+            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
                 Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
@@ -390,8 +393,14 @@ public class BlogController {
             updateMasterItem(itemMaster, itemList);
         }
 
-        List<Long> teamIdList = iMRelList.stream().map(e -> e.getTeam_id()).distinct().collect(Collectors.toList());
-        List<Long> memberIdList = iMRelList.stream().map(e -> e.getMember_id()).distinct().collect(Collectors.toList());
+        List<Long> teamIdList = iMRelList.stream().map(IMRel::getTeam_id).distinct().collect(Collectors.toList());
+        List<Long> memberIdList = new ArrayList<>();
+        for (IMRel rel : iMRelList) {
+            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+            if (relMemList.size() > 0) {
+                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
+            }
+        }
 
         // tag:チーム名と発売日の年月を用意したい(idで指定してあげないといけない（stringでまず集めて、最後にidを見つけに行くor新規登録）)
         // itemMaster -> teamIdList -> teamName -> tag
@@ -466,24 +475,9 @@ public class BlogController {
                         if (jo.get("id") != null) {
                             blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
                             System.out.println("posted wp blog id: " + blogId.toString() + " Subdomain:" + entry.getKey());
-                            List<IMRel> newIMRelList = new ArrayList<>();
-
-                            if (memberIdList.size() > 0) {
-                                // memberIdListの中からteamがこれのやつを引き抜きたい
-                                List<Long> membersOfThisTeam = iMRelList.stream().filter(e -> e.getTeam_id().equals(entry.getKey())).map(e -> e.getMember_id()).collect(Collectors.toList());
-                                if (membersOfThisTeam.size() > 0) {
-                                    for (Long memberId : membersOfThisTeam) {
-                                        IMRel IMRel = new IMRel(null, itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()), memberId, blogId, null, null);
-                                        newIMRelList.add(IMRel);
-                                    }
-                                }
-                            } else {
-                                IMRel IMRel = new IMRel(null, itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()), null, blogId, null, null);
-                                newIMRelList.add(IMRel);
-                            }
-                            if (newIMRelList.size() > 0) {
-                                iMRelService.saveAll(newIMRelList);
-                            }
+                            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()));
+                            rel.setWp_id(blogId);
+                            iMRelService.save(rel);
                             System.out.println("*** itemMaster saved");
                         }
                     }
@@ -495,7 +489,7 @@ public class BlogController {
                 }
             }
         }
-        return (long) blogId;
+        return blogId;
     }
 
     /**
@@ -514,7 +508,13 @@ public class BlogController {
         }
 
         List<Long> teamIdList = iMRelList.stream().map(IMRel::getTeam_id).distinct().collect(Collectors.toList());
-        List<Long> memberIdList = iMRelList.stream().map(IMRel::getMember_id).distinct().collect(Collectors.toList());
+        List<Long> memberIdList = new ArrayList<>();
+        for (IMRel rel : iMRelList) {
+            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+            if (relMemList.size() > 0) {
+                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
+            }
+        }
 
         if (teamIdList.size() > 0) {
             Map<String, HttpHeaders> headersMap = generalHeaderSet(new HttpHeaders(), TeamEnum.findSubDomainListByIdList(teamIdList));
@@ -548,27 +548,12 @@ public class BlogController {
                     JSONObject jo = jsonUtils.createJsonObject(res);
                     if (jo.get("id") != null) {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
-
-                        if (memberIdList.size() > 0) {
-                            // memberIdListの中からteamがこれのやつを引き抜きたい
-                            List<Long> membersOfThisTeam = iMRelList.stream().filter(e -> e.getTeam_id().equals(entry.getKey())).map(e -> e.getMember_id()).collect(Collectors.toList());
-                            if (membersOfThisTeam.size() > 0) {
-                                for (Long memberId : membersOfThisTeam) {
-                                    IMRel IMRel = new IMRel(null, itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()), memberId, blogId, null, null);
-                                    newIMRelList.add(IMRel);
-                                }
-                            }
-                        } else {
-                            IMRel IMRel = new IMRel(null, itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()), null, blogId, null, null);
-                            newIMRelList.add(IMRel);
-                        }
+                        IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getItem_m_id(), TeamEnum.findIdBySubDomain(entry.getKey()));
+                        rel.setWp_id(blogId);
+                        iMRelService.save(rel);
                         System.out.println("Blog posted: " + url + "\n" + content + "\n" + Long.parseLong(jo.get("id").toString().replaceAll("^\"|\"$", "")));
                     }
                 }
-            }
-
-            if (newIMRelList.size() > 0) {
-                iMRelService.saveAll(newIMRelList);
             }
         }
     }

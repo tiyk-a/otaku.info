@@ -20,10 +20,10 @@ import javax.transaction.Transactional;
 @AllArgsConstructor
 public class ItemService {
 
-    private DateUtils dateUtils;
+    private final DateUtils dateUtils;
 
     @Autowired
-    ItemRelService itemRelService;
+    IRelService iRelService;
 
     private final ItemRepository itemRepository;
 
@@ -106,7 +106,7 @@ public class ItemService {
      * @return
      */
     public List<Item> findSimilarItemList(Item item) {
-        List<Long> teamIdList = itemRelService.getTeamIdListByItemId(item.getItem_id());
+        List<Long> teamIdList = iRelService.getTeamIdListByItemId(item.getItem_id());
         List<Item> resultList = new ArrayList<>();
 
         // それぞれのteamIdでマスタ商品の登録がある商品を探す

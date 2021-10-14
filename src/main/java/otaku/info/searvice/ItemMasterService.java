@@ -16,10 +16,10 @@ import java.util.*;
 public class ItemMasterService {
 
     @Autowired
-    private ItemService itemService;
+    private final ItemService itemService;
 
     @Autowired
-    private ItemMasterRepository itemMasterRepository;
+    private final ItemMasterRepository itemMasterRepository;
 
     public ItemMaster getMasterById(Long itemMasterId) {
         return itemMasterRepository.findById(itemMasterId).orElse(new ItemMaster());

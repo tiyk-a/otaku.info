@@ -44,7 +44,7 @@ public class TmpController {
     ProgramService programService;
 
     @Autowired
-    ItemRelService itemRelService;
+    IRelService iRelService;
 
     @Autowired
     IMRelService imRelService;
@@ -328,7 +328,7 @@ public class TmpController {
     private List<Long> getLongIdList(String teamIdStr) {
         List<Long> resultList = new ArrayList<>();
         if (teamIdStr != null) {
-            List<String> strList = Arrays.asList(teamIdStr.split(","));
+            String[] strList = teamIdStr.split(",");
             for (String s : strList) {
                 System.out.println(s);
                 try {
@@ -495,7 +495,7 @@ public class TmpController {
      * @param searchList
      * @return
      */
-    public List<Item> search1(List<String> searchList) {
+    public List<Item> search1(List<String> searchList) throws InterruptedException {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : searchList) {

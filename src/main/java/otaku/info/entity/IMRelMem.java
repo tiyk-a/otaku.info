@@ -10,31 +10,25 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
-@Entity(name = "im_rel")
+@Entity(name = "im_rel_mem")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(value=IMRelKey.class)
-@Table(name = "im_rel")
-public class IMRel implements Serializable {
+@IdClass(value=IMRelMemKey.class)
+@Table(name = "im_rel_mem")
+public class IMRelMem implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long im_rel_mem_id;
+
+    @Id
+    @Column(nullable = false)
     private Long im_rel_id;
 
     @Id
     @Column(nullable = false)
-    private Long item_m_id;
-
-    @Id
-    @Column(nullable = false)
-    private Long team_id;
-
-    @Column(nullable = true)
     private Long member_id;
-
-    @Column(nullable = true)
-    private Long wp_id;
 
     @CreationTimestamp
     @Column(nullable = true)

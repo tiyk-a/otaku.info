@@ -8,7 +8,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
-import otaku.info.controller.TextController;
+import otaku.info.controller.TwTextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.enums.TeamEnum;
@@ -25,7 +25,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     PythonController pythonController;
 
     @Autowired
-    TextController textController;
+    TwTextController twTextController;
 
     @Autowired
     ItemService itemService;
@@ -74,7 +74,7 @@ public class FutureItemReminderTasklet implements Tasklet {
             Item item = itemService.findByMasterId(im.getItem_m_id()).get(0);
             String text = "";
             if (item != null) {
-                text = textController.futureItemReminder(im, teamEnum.getId(), item);
+                text = twTextController.futureItemReminder(im, teamEnum.getId(), item);
             }
             pythonController.post(Math.toIntExact(teamEnum.getId()), text);
             ++postCount;

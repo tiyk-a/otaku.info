@@ -3,11 +3,12 @@ package otaku.info.controller;
 import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
-import otaku.info.entity.*;
+import otaku.info.entity.Item;
+import otaku.info.entity.ItemMaster;
+import otaku.info.entity.Program;
 import otaku.info.enums.MagazineEnum;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.PublisherEnum;
@@ -22,13 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * 投稿用のテキストを色々と生成します。
- *
- */
-@Controller
-public class TextController {
-
+public class TwTextController {
     @Autowired
     private DateUtils dateUtils;
 
@@ -75,7 +70,7 @@ public class TextController {
     private final DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
     private final DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-   /**
+    /**
      * Twitterポスト用のメッセージを作成します。
      *
      * @param twiDto
@@ -84,6 +79,84 @@ public class TextController {
     public String twitter(TwiDto twiDto) {
         String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
+    }
+
+    public String futureItemReminder(ItemMaster im, Long teamId, Item item) {
+        int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
+        String tags = "";
+        tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+//        String blogUrl = blogDomainGenerator(teamId) + "item/" + im.getItem_m_id();
+        String title = "";
+        if (StringUtils.hasText(im.getTitle())) {
+            title = im.getTitle();
+        }
+
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) + "%0Aリンクはこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+    }
+
+//    public String futureItemReminder(ItemMaster itemMaster, Item item, String teamIdStr) {
+//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+//        String tags = "";
+//        tags = tags + " " + tagService.getTagByTeam(Long.parseLong(teamIdStr)).stream().collect(Collectors.joining(" #","#",""));
+//        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
+//        String title = "";
+//        if (StringUtils.hasText(itemMaster.getTitle())) {
+//            title = itemMaster.getTitle();
+//        }
+//
+//        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+//    }
+
+    /**
+     * 未来発売の商品のリマインダー文章を作成します。
+     * Twitter用
+     *
+     * @param itemMaster
+     * @param item
+     * @param teamIdList
+     * @return
+     */
+    public String futureItemReminder(ItemMaster itemMaster, Item item, List<Long> teamIdList) {
+        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+        String tags = "";
+        for (Long teamId : teamIdList) {
+            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        }
+        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
+        String title = "";
+        if (StringUtils.hasText(itemMaster.getTitle())) {
+            title = itemMaster.getTitle();
+        } else {
+            title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
+            itemMaster.setTitle(title);
+            // ついでに登録（更新）する
+            itemMasterService.save(itemMaster);
+        }
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+    }
+
+    /**
+     * 未来発売の商品のリマインダー文章を作成します。
+     *
+     * @param itemMaster
+     * @param item
+     * @param teamId
+     * @return
+     */
+    public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
+        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+        String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+//        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
+        String title = "";
+        if (StringUtils.hasText(itemMaster.getTitle())) {
+            title = itemMaster.getTitle();
+        } else {
+            title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
+            itemMaster.setTitle(title);
+            // ついでに登録（更新）する
+            itemMasterService.save(itemMaster);
+        }
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0Aリンクはこちら↓%0A" + item.getUrl() + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
     /**
@@ -110,6 +183,15 @@ public class TextController {
         List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
         String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
+    }
+
+    public String twitterPerson(TwiDto twiDto, String memberName) {
+        String result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        if (result.length() + memberName.length() < 135) {
+            result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
+        }
+        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        return result + "%0A%0A" + tags;
     }
 
     /**
@@ -216,115 +298,6 @@ public class TextController {
     }
 
     /**
-     * WordPressブログのリリース情報固定ページ表示用のテキストを作成
-     *
-     * @param todayMap
-     * @param futureMap
-     * @return
-     */
-    public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
-        String result = "[toc depth='4']";
-
-        // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
-        List<String> todaysElems = todayMap == null ? new ArrayList<>() : blogReleaseItemsText(todayMap);
-        List<String> futureElems = futureMap == null ? new ArrayList<>() : blogReleaseItemsText(futureMap);
-
-        // 本日発売の商品
-        if (todaysElems.size() > 0) {
-            result = result + "\n" + String.join("\n\n", String.join("\n\n", todaysElems));
-        } else {
-            result = result + "\n" + "<h2>今日発売の商品はありません。</h2>";
-        }
-
-        // 明日以降発売の商品
-        String result2 = "";
-        if (futureElems.size() > 0) {
-            result2 = String.join("\n\n", result, String.join("\n\n", futureElems));
-        } else {
-            result2 = String.join("\n\n", result, "<h2>明日以降1週間内発売の商品はありません。</h2>");
-        }
-
-        // テキストは返却
-        return result2;
-    }
-
-    /**
-     * 商品ブログ投稿文章
-     *
-     * @param itemMasterListMap
-     * @return
-     */
-    public List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
-        List<String> resultList = new ArrayList<>();
-
-        // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
-        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet().stream().filter(e -> e.getValue().size() > 0).sorted(Comparator.comparing(e -> e.getKey().getTitle())).collect(Collectors.toList())) {
-            ItemMaster itemMaster = entry.getKey();
-            List<Item> itemList = entry.getValue().stream().filter(e -> StringUtils.hasText(e.getItem_code())).collect(Collectors.toList());
-            boolean noRakutenFlg = itemList.size() == 0;
-
-            String date = dateUtils.getDay(itemMaster.getPublication_date());
-            String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
-
-            // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id()) == null) {
-                continue;
-            }
-
-            List<String> teamNameList = teamService.findTeamNameByIdList(IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id()));
-            String teamNameUnited = String.join(" ", teamNameList);
-
-            // h2で表示したい商品のタイトルを生成
-            String h2 = "";
-            // TODO: メンバー名今なし
-            // メンバー名もある場合はこちら
-//            List<Long> memberIdList = imRelMemService.findMemberIdListByRelId();
-//                    IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-//            if (memberIdList.size() > 0) {
-//                List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-//                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
-//            } else {
-                // メンバー名ない場合はこちら
-                h2 = String.join(" ", publicationDate, teamNameUnited, itemMaster.getTitle());
-//            }
-
-            // htmlタグ付与
-            h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
-
-            Integer estPrice = noRakutenFlg ? getPrice(entry.getValue()) : getPrice(itemList);
-
-            String headItem = "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
-
-            String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
-
-            String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
-
-            String pubDate = sdf1.format(itemMaster.getPublication_date());
-            String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
-
-            String text = String.join("\n", h2, headItem, description, price, publicationDateStr);
-            // 返却リストに追加する
-            resultList.add(text);
-        }
-        return resultList;
-    }
-
-    /**
-     * 商品の金額（多分これが正しい）を返す
-     *
-     * @param itemList
-     * @return
-     */
-    private Integer getPrice(List<Item> itemList) {
-        List<Integer> priceList = itemList.stream().map(e -> e.getPrice()).distinct().collect(Collectors.toList());
-        if (priceList.size() == 1) {
-            return priceList.get(0);
-        } else {
-            return priceList.stream().max(Integer::compare).orElse(0);
-        }
-    }
-
-    /**
      * レーベンシュタイン距離で文字列の類似度を判定
      * @param s1
      * @param s2
@@ -350,21 +323,6 @@ public class TextController {
         // 入力チェックは割愛
         JaroWinklerDistance dis =  new JaroWinklerDistance();
         return (int) (dis.getDistance(s1, s2) * 100);
-    }
-
-    /**
-     * ブログタイトルを作成します。
-     * itemMasterからの発売日とタイトルを引数に想定
-     *
-     * @param publicationDate
-     * @param title
-     * @return
-     */
-    public String createBlogTitle(Date publicationDate, String title) {
-        if (publicationDate == null) {
-            return "";
-        }
-        return  sdf1.format(publicationDate) + " " + title;
     }
 
     /**

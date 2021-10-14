@@ -8,7 +8,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
-import otaku.info.controller.TextController;
+import otaku.info.controller.TwTextController;
 import otaku.info.entity.IMRel;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
@@ -27,7 +27,7 @@ public class PublishAnnounceTasklet implements Tasklet {
     PythonController pythonController;
 
     @Autowired
-    TextController textController;
+    TwTextController twTextController;
 
     @Autowired
     ItemService itemService;
@@ -76,7 +76,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                         Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
                         String text = "";
                         if (item != null) {
-                            text = textController.releasedItemAnnounce(itemMaster, e.getKey(), item);
+                            text = twTextController.releasedItemAnnounce(itemMaster, e.getKey(), item);
                         }
                         pythonController.post(Math.toIntExact(e.getKey()), text);
                         ++postCount;
@@ -88,7 +88,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                     Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
                     String text = "";
                     if (item != null) {
-                        text = textController.releasedItemAnnounce(itemMaster,7L, item);
+                        text = twTextController.releasedItemAnnounce(itemMaster,7L, item);
                     }
                     pythonController.post(0, text);
                     ++postCount;

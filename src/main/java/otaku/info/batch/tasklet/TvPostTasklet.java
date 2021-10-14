@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import otaku.info.controller.PythonController;
-import otaku.info.controller.TextController;
 import otaku.info.controller.TvController;
+import otaku.info.controller.TwTextController;
 import otaku.info.entity.Program;
 
 import java.util.*;
@@ -23,7 +23,7 @@ public class TvPostTasklet implements Tasklet {
     TvController tvController;
 
     @Autowired
-    TextController textController;
+    TwTextController twTextController;
 
     @Autowired
     PythonController pythonController;
@@ -62,9 +62,9 @@ public class TvPostTasklet implements Tasklet {
 
                     // 文章を作成
                     if (forToday) {
-                        text = textController.tvPost(ele, forToday, calToday.getTime(), ele.getKey());
+                        text = twTextController.tvPost(ele, forToday, calToday.getTime(), ele.getKey());
                     } else {
-                        text = textController.tvPost(ele, forToday, calTmrw.getTime(), ele.getKey());
+                        text = twTextController.tvPost(ele, forToday, calTmrw.getTime(), ele.getKey());
                     }
                 }
                 // Twitter post指示

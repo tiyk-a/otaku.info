@@ -8,7 +8,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
-import otaku.info.controller.TextController;
+import otaku.info.controller.TwTextController;
 import otaku.info.entity.Program;
 import otaku.info.searvice.ProgramService;
 
@@ -25,7 +25,7 @@ public class TvAlertTasklet implements Tasklet {
     PythonController pythonController;
 
     @Autowired
-    TextController textController;
+    TwTextController twTextController;
 
     @Autowired
     ProgramService programService;
@@ -38,7 +38,7 @@ public class TvAlertTasklet implements Tasklet {
         if (programList.size() > 0) {
             // Postする番組の投稿文を作る Map<ProgramId-TeamId, text>
             Map<String, String> postMap = new HashMap<>();
-            programList.forEach(e -> postMap.putAll(textController.tvAlert(e)));
+            programList.forEach(e -> postMap.putAll(twTextController.tvAlert(e)));
             // Post
             if (postMap.size() > 0) {
                 for (Map.Entry<String, String> post : postMap.entrySet()) {

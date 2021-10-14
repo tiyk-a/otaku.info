@@ -45,8 +45,7 @@ public class SampleController {
     private YahooController yahooController;
 
     @Autowired
-    private TextController textController;
-
+    private TwTextController twTextController;
     @Autowired
     private Controller controller;
 
@@ -666,7 +665,7 @@ public class SampleController {
 //                                    result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
 //                                }
 //                            } else {
-                                result = textController.twitter(twiDto);
+                                result = twTextController.twitter(twiDto);
 //                            }
                             // Twitter投稿
                             pythonController.post(Math.toIntExact(e.getKey()), result);

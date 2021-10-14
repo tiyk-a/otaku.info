@@ -48,7 +48,7 @@ public class ProgramService  {
 
     public Optional<Program> findbyProgramId(Long programId) {
         return programRepository.findById(programId);
-    };
+    }
 
     public boolean hasProgram(String title, Long stationId, LocalDateTime onAirDate) {
         Long result = programRepository.hasProgram(title, stationId, onAirDate);

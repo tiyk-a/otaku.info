@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
+import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.ItemMasterService;
+import otaku.info.searvice.ItemService;
 
 import java.util.List;
 
@@ -24,6 +26,9 @@ public class FutureItemReminderTasklet implements Tasklet {
 
     @Autowired
     TextController textController;
+
+    @Autowired
+    ItemService itemService;
 
     @Autowired
     ItemMasterService itemMasterService;
@@ -66,7 +71,11 @@ public class FutureItemReminderTasklet implements Tasklet {
         Integer postCount = 0;
         for (ItemMaster im : imList) {
             // TODO: メンバー名を取得していない
-            String text = textController.futureItemReminder(im, teamEnum.getId());
+            Item item = itemService.findByMasterId(im.getItem_m_id()).get(0);
+            String text = "";
+            if (item != null) {
+                text = textController.futureItemReminder(im, teamEnum.getId(), item);
+            }
             pythonController.post(Math.toIntExact(teamEnum.getId()), text);
             ++postCount;
             try {

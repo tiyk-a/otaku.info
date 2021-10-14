@@ -17,6 +17,7 @@ public class GlobalErrorHandler {
 
     @ExceptionHandler(Exception.class)
     public void exceptionHandler(Exception e) {
-        lineController.post(System.currentTimeMillis() + ":" + Arrays.toString(e.getStackTrace()).substring(0,200));
+        e.printStackTrace();
+        lineController.post("😨Error:" + System.currentTimeMillis() + ":" + Arrays.toString(e.getStackTrace()).substring(0,200));
     }
 }

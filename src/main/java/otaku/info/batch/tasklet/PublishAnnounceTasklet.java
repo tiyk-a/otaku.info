@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TextController;
 import otaku.info.entity.IMRel;
+import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.IMRelService;
 import otaku.info.searvice.ItemMasterService;
+import otaku.info.searvice.ItemService;
 
 import java.util.*;
 
@@ -26,6 +28,9 @@ public class PublishAnnounceTasklet implements Tasklet {
 
     @Autowired
     TextController textController;
+
+    @Autowired
+    ItemService itemService;
 
     @Autowired
     ItemMasterService itemMasterService;
@@ -68,7 +73,11 @@ public class PublishAnnounceTasklet implements Tasklet {
                     if (TeamEnum.get(e.getKey()).getTw_id().equals("")) {
                         noTwMap.put(e.getKey(), e.getValue());
                     } else {
-                        String text = textController.releasedItemAnnounce(itemMaster, e.getKey());
+                        Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
+                        String text = "";
+                        if (item != null) {
+                            text = textController.releasedItemAnnounce(itemMaster, e.getKey(), item);
+                        }
                         pythonController.post(Math.toIntExact(e.getKey()), text);
                         ++postCount;
                     }
@@ -76,7 +85,11 @@ public class PublishAnnounceTasklet implements Tasklet {
 
                 // 個別TWないチームのデータがあったら
                 if (noTwMap.size() > 0) {
-                    String text = textController.releasedItemAnnounce(itemMaster,7L);
+                    Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
+                    String text = "";
+                    if (item != null) {
+                        text = textController.releasedItemAnnounce(itemMaster,7L, item);
+                    }
                     pythonController.post(0, text);
                     ++postCount;
                 }

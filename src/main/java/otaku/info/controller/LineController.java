@@ -96,7 +96,7 @@ public class LineController {
     public String post(String message) {
 
             String outline = message.substring(0,30);
-            System.out.println("これをpostします： " + outline);
+            System.out.println("これをpostします： " + message);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));

@@ -91,9 +91,7 @@ public class StringUtilsMine {
 
         // arg1にスペースがあったら切り取って検索もする
         if (arg1.contains(" ")) {
-            if (arg2.contains(arg1.replaceAll(" ", ""))) {
-                return true;
-            }
+            return arg2.contains(arg1.replaceAll(" ", ""));
         }
         return false;
     }

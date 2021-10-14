@@ -115,22 +115,14 @@ public class Item {
             return true;
         } else if (this.getImage1().equals(imageUrl)) {
             // image1と引数が同じ値だったら、image2/3に入れてはいけないのでimage2/3が空かどうかでreturn値を決める
-            if (this.getImage2() == null || this.getImage3() == null) {
-                return true;
-            } else {
-                return false;
-            }
+            return this.getImage2() == null || this.getImage3() == null;
         } else if (this.getImage2() == null) {
             // image2が空だったら入れる
             this.setImage2(imageUrl);
             return true;
         } else if (this.getImage2().equals(imageUrl)) {
             // image2と引数が同じ値だったら、image3に入れてはいけないのでimage3が空かどうかでreturn値を決める
-            if (this.getImage3() == null) {
-                return true;
-            } else {
-                return false;
-            }
+            return this.getImage3() == null;
         } else if (this.getImage3() == null) {
             // image3が空だったら入れる
             this.setImage3(imageUrl);

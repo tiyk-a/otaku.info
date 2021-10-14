@@ -16,7 +16,7 @@ public class Controller {
     private static final List<String> searchList = new ArrayList<String>(Arrays.asList("雑誌", "CD", "DVD"));
 
     @Autowired
-    private TeamService teamService;
+    private final TeamService teamService;
 
     /**
      * アフィリサイトの検索キーワードを生成し返却する

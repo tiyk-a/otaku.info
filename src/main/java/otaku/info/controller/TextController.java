@@ -60,17 +60,20 @@ public class TextController {
     private IMRelService IMRelService;
 
     @Autowired
+    private IMRelMemService imRelMemService;
+
+    @Autowired
     private PRelService pRelService;
 
     @Autowired
     private Setting setting;
 
-    private SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
-    private SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
-    private SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
-    private DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
-    private DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
-    private DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
+    private final SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
+    private final SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
+    private final DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
+    private final DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+    private final DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     /**
      * DateをStringにして返却します
@@ -93,17 +96,17 @@ public class TextController {
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
-    public String futureItemReminder(ItemMaster im, Long teamId) {
+    public String futureItemReminder(ItemMaster im, Long teamId, Item item) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "";
         tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        String blogUrl = blogDomainGenerator(teamId) + "item/" + im.getItem_m_id();
+//        String blogUrl = blogDomainGenerator(teamId) + "item/" + im.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(im.getTitle())) {
             title = im.getTitle();
         }
 
-        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A%0A" + tags;
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) + "%0Aリンクはこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
 //    public String futureItemReminder(ItemMaster itemMaster, Item item, String teamIdStr) {
@@ -158,7 +161,7 @@ public class TextController {
     public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
+//        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
@@ -168,7 +171,7 @@ public class TextController {
             // ついでに登録（更新）する
             itemMasterService.save(itemMaster);
         }
-        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0Aリンクはこちら↓%0A" + item.getUrl() + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
     /**
@@ -187,10 +190,10 @@ public class TextController {
         return str1 + "%0A" + tags;
     }
 
-    public String releasedItemAnnounce(ItemMaster itemMaster, Long teamId) {
-        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
+    public String releasedItemAnnounce(ItemMaster itemMaster, Long teamId, Item item) {
+//        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
 
-        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A" + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "詳細はこちら↓%0A" + blogUrl;
+        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A" + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "詳細はこちら↓%0A" + item.getUrl();
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
         String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
@@ -370,15 +373,17 @@ public class TextController {
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
+            // TODO: メンバー名今なし
             // メンバー名もある場合はこちら
-            List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-            if (memberIdList.size() > 0) {
-                List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
-            } else {
+//            List<Long> memberIdList = imRelMemService.findMemberIdListByRelId();
+//                    IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
+//            if (memberIdList.size() > 0) {
+//                List<String> memberNameList = memberService.getMemberNameList(memberIdList);
+//                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
+//            } else {
                 // メンバー名ない場合はこちら
                 h2 = String.join(" ", publicationDate, teamNameUnited, itemMaster.getTitle());
-            }
+//            }
 
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";

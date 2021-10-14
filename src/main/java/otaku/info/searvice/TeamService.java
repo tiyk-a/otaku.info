@@ -123,7 +123,7 @@ public class TeamService {
 
     public Map<Long, String> getTeamIdTwIdMapByTeamIdList(List<Long> teamIdList) {
         Map<Long, String> tmpMap = new HashMap<>();
-        Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).forEach(e -> tmpMap.put((long)e.getId(), e.getTw_id()));
+        Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).forEach(e -> tmpMap.put(e.getId(), e.getTw_id()));
         Map<Long, String> resultMap = new HashMap<>();
         for (Map.Entry<Long, String> e : tmpMap.entrySet()) {
             if (!resultMap.containsKey(e.getValue())) {

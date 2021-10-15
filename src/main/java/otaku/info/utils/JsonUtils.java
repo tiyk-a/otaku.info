@@ -16,7 +16,7 @@ public class JsonUtils extends JSONObject {
             jo = new JSONObject(str);
         } catch (Exception e) {
             // TODO: jsonにエラーが見つかったらどうするかの対処を考えたい。ファイルに書き出すか？同じの取りに行かないようにしたいな？
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
         if (jo == null) {

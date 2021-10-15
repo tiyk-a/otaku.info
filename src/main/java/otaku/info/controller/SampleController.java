@@ -205,19 +205,8 @@ public class SampleController {
                 System.out.println("---run2未発売商品リマインダー END---");
                 break;
             case 3:
-                // relテーブルを入れる
-//                System.out.println("moveItemToItemRel");
-//                tmpController.moveItemToItemRel2();
-//                System.out.println("moveItemMasterToIMRel");
-//                tmpController.moveItemMasterToIMRel2();
-//                System.out.println("moveProgramToPRel");
-//                tmpController.moveProgramToPRel2();
-//                System.out.println("END case3.");
-                // itemMaster入れる
-//                insertIM();
-//                insertImRelMem();
-//                removeImRel();
-//                removeDuplRel();
+                blogController.chkWpId();
+                blogController.chkWpIdByBlog();
                 break;
             case 4:
                 System.out.println("---run4商品発売日アナウンス START---");

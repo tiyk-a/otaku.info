@@ -53,6 +53,15 @@
 #### Pending Diffを見れるようにするやつ
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+
+#### 絵文字の使用
+文字数削減のために絵文字使うことにしました
+###### System.out.println
+🕊Twitter投稿
+💬LINE通知
+
+###### Github
+🐛Bug fix
 ```
 // Method2
 Item a = itemService.findByItemId(1L).orElse(new Item());

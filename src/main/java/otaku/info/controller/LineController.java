@@ -72,7 +72,7 @@ public class LineController {
                 outline = msg.substring(0,30);
             }
 
-            System.out.println("これをpostします： " + outline);
+            System.out.println("💬 " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -96,7 +96,7 @@ public class LineController {
     public String post(String message) {
 
             String outline = message.substring(0,30);
-            System.out.println("これをpostします： " + message);
+            System.out.println("💬 " + message);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));

@@ -628,7 +628,7 @@ public class SampleController {
 
         // 新規登録したitemMasterがある場合
         if (newItemMasterList.size() > 0) {
-            System.out.println("保存したItemMasterをTweetします");
+            System.out.println("🕊保存したItemMaster ");
             for (ItemMaster itemMaster: newItemMasterList) {
 
                 // 楽天リンクなどで必要なためリストの一番目のitemを取得
@@ -661,7 +661,7 @@ public class SampleController {
                         }
                     }
                 } else {
-                    System.out.println("未来商品ではないのでTweetしません");
+                    System.out.println("❌🕊未来商品ではない");
                     System.out.println(item.getTitle());
                 }
             }

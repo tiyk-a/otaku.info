@@ -24,7 +24,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "item_master")
-public class ItemMaster {
+public class ItemMaster implements Comparable<ItemMaster> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +35,12 @@ public class ItemMaster {
 
     @Column(nullable = true)
     private String title;
+
+    @Column(nullable = true)
+    private Long team_id;
+
+    @Column(nullable = true)
+    private Long wp_id;
 
     @Column(nullable = true)
     private String item_caption;
@@ -65,6 +71,14 @@ public class ItemMaster {
     @UpdateTimestamp
     @Column(nullable = true)
     private Timestamp updated_at;
+
+    // compareTo method to sort in
+    // ascending order
+    public int compareTo(ItemMaster obj)
+    {
+        long res = this.item_m_id - obj.item_m_id;
+        return (int) res;
+    }
 
     public boolean isNull() {
         return this.getItem_m_id() == null;

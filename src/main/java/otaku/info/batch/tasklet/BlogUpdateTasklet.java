@@ -37,11 +37,19 @@ public class BlogUpdateTasklet implements Tasklet {
             blogController.addNextMonthTag(subDomain);
         }
         // 近日発売新商品情報を更新
-        blogController.updateReleaseItems();
+        try {
+            blogController.updateReleaseItems();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("①固定商品ページ完了");
         System.out.println("②固定TV出演情報ページ");
         System.out.println(System.getProperty("user.name"));
-        blogController.updateTvPage();
+        try {
+            blogController.updateTvPage();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("②固定TV出演情報ページ完了");
         System.out.println("--- Blog Update END ---");
         return RepeatStatus.FINISHED;

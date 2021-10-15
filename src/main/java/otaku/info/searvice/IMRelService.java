@@ -31,10 +31,6 @@ public class IMRelService {
         return iMRelRepository.findTeamIdListByItemMId(itemMId);
     }
 
-//    public List<Long> findMemberIdListByItemMId(Long itemMId) {
-//        return  iMRelRepository.findMemberIdListByItemMId(itemMId);
-//    }
-
     public Long getWpIdByItemMId(Long itemMId) {
         return iMRelRepository.getWpIdByItemMId(itemMId);
     }
@@ -53,10 +49,6 @@ public class IMRelService {
         }
         return returnList;
     }
-
-//    public IMRel findByItemIdTeamIdMemberIdNull(Long iMId, Long teamId) {
-//        return iMRelRepository.findByItemIdTeamIdMemberIdNull(iMId, teamId).orElse(new IMRel());
-//    }
 
     public IMRel save(IMRel rel) {
         return iMRelRepository.save(rel);
@@ -80,5 +72,13 @@ public class IMRelService {
 
     public List<IMRel> findByItemIdTeamIdNotNull(Long imId) {
         return iMRelRepository.findByItemIdTeamIdNotNull(imId);
+    }
+
+    public List<IMRel> findAllWpIdNotNull() {
+        return iMRelRepository.findAllWpIdNotNull();
+    }
+
+    public List<IMRel> findbyWpIdTeamId(Long wpId, Long teamId) {
+        return iMRelRepository.findbyWpIdTeamId(wpId, teamId);
     }
 }

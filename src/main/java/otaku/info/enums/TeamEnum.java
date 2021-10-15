@@ -12,22 +12,22 @@ import java.util.stream.Collectors;
 @Getter
 public enum TeamEnum {
 
-    SNOWMAN(6L,null,"","","Snow man","snowmanhayainfo", "snowman.", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
-    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    SEXYZONE(8L,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    TOKIO(9L,null,"トキオ","","TOKIO","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    V6(10L,null,"ブイシックス","","V6","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    ARASHI(11L,null,"アラシ","嵐","ARASHI","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    NEWS(12L,null,"ニュース","","NEWS Johnny's","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KISMYFT2(13L,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    ABCZ(14L,null,"エービーシーズィー","エビ","A.B.C-Z","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince","princehayainfo", "kingandprince.", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
-    SIXTONES(17L,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "sixtones.", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
-    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "naniwadanshi.", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
-    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KATTUN(20L,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINKIKIDS(21L,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "NA", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
+    SNOWMAN(6L,null,"","","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
+    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    SEXYZONE(8L,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    TOKIO(9L,null,"トキオ","","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    V6(10L,null,"ブイシックス","","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    ARASHI(11L,null,"アラシ","嵐","ARASHI","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    NEWS(12L,null,"ニュース","","NEWS Johnny's","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KISMYFT2(13L,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    ABCZ(14L,null,"エービーシーズィー","エビ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
+    SIXTONES(17L,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
+    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
+    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KATTUN(20L,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINKIKIDS(21L,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
     private final Long id;
     private final String anniversary;
     private final String kana;

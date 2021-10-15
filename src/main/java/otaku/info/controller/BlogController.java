@@ -19,6 +19,9 @@ import otaku.info.utils.JsonUtils;
 import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
@@ -92,7 +95,7 @@ public class BlogController {
     public void insertTags(String subDomain) {
         Integer n = 1;
 
-        String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
+        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
 
         // request
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
@@ -265,7 +268,7 @@ public class BlogController {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
-                    String finalUrl = blogDomainGenerator(teamEnum.getSubDomain()) + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamEnum.getId());
+                    String finalUrl = teamEnum.getSubDomain() + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamEnum.getId());
                     String res = request(finalUrl, request, HttpMethod.POST);
                 }
             }
@@ -293,9 +296,6 @@ public class BlogController {
             resultMap.put("", headers);
         } else {
             for (String subDomain : subDomainList) {
-                // TODO: new httpheaderつけるとうまく行かないから既存のヘッダーにうわかき（同じ名前で別ようそ投げ込む）してみてるよ。うまく進むならwould be committed
-//            HttpHeaders newHeaders = new HttpHeaders();
-//            BeanUtils.copyProperties(headers, newHeaders);
                 headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -356,21 +356,23 @@ public class BlogController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
+            System.out.println("Post: " + url);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
-
-            if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {
-                throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
-            } else if (responseEntity.getStatusCode().equals(HttpStatus.BAD_REQUEST)) {
-                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST);
-            }
+            
             try {
-                Thread.sleep(5000);
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             result = responseEntity.getBody();
         } catch (Exception e) {
-            e.printStackTrace();
+            if (e instanceof HttpClientErrorException.Forbidden) {
+                throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
+            } else if (e instanceof HttpClientErrorException.BadRequest) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST);
+            } else {
+                e.printStackTrace();
+            }
             result = "";
         }
 
@@ -465,7 +467,7 @@ public class BlogController {
                     jsonObject.put("content", content);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), entry.getValue());
 
-                    String url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/";
+                    String url = entry.getKey() + setting.getBlogApiPath() + "posts/";
 
                     String res = request(url, request, HttpMethod.POST);
 
@@ -538,9 +540,9 @@ public class BlogController {
                     // wpIdが取得できなかったら、存在しないということなのでそのサブドメインは新規投稿してあげる
                     String url = "";
                     if (wpId.equals("")) {
-                        url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/";
+                        url = entry.getKey() + setting.getBlogApiPath() + "posts/";
                     } else {
-                        url = blogDomainGenerator(entry.getKey()) + setting.getBlogApiPath() + "posts/" + wpId;
+                        url = entry.getKey() + setting.getBlogApiPath() + "posts/" + wpId;
                     }
 
                     // ここで投稿
@@ -588,65 +590,6 @@ public class BlogController {
         return Collections.singletonMap(newItemMasterList, updateItemMasterList);
     }
 
-//    /**
-//     * 画像をWordPressにポストします。
-//     * TODO: 楽天画像の場合、すでにWP投稿済みだったとしても毎回楽天から画像をローカルへ保存してしまう。連番がどんどん増えてしまう。
-//     *
-//     * @param subDomain
-//     * @param wpId
-//     * @param imageUrl
-//     * @return
-//     */
-//    public Map<Integer, String> requestMedia(String subDomain, Long wpId, String imageUrl) {
-//        String finalUrl = "";
-//        if (!StringUtils.hasText(subDomain)) {
-//            finalUrl = setting.getBlogApiUrl() + "media";
-//        } else {
-//            // TODO: propertiesに追加すること
-//            finalUrl = setting.getBlogHttps() + subDomain + setting.getBlogDomain() + "" + "media";
-//        }
-//
-//        imageUrl = imageUrl.replaceAll("\\?.*$", "");
-//
-//        String imagePath = "";
-//
-//        // 楽天の画像の場合は取得しに行く
-//        if (imageUrl.startsWith("https")) {
-//            try (InputStream in = new URL(imageUrl).openStream()) {
-//                String identifier = stringUtilsMine.extractSubstring(imageUrl, "\\?.*$");
-//                // WPブログの個別グループ分割化に伴い、サブドメインを使用して画像生成先を変更
-//                // TODO: setting.getImageItem()を使用する別の場所も対応が必要
-//                imagePath = serverUtils.availablePath(setting.getImageItem() + subDomain.replaceAll("\\.", "/") + wpId.toString() + identifier);
-//                Files.copy(in, Paths.get(imagePath));
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        } else {
-//            imagePath = imageUrl;
-//        }
-//
-//        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), (long) TeamEnum.findIdBySubDomain(subDomain));
-//        headers.add("content-disposition", "attachment; filename=" + wpId.toString() + ".png");
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//
-//        body.add("file", new FileSystemResource(imagePath));
-//        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-//
-//        System.out.println("画像投稿します");
-//        System.out.println(imagePath);
-//
-//        RestTemplate restTemplate = new RestTemplate();
-//        ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
-//        String text = responseEntity.getBody();
-//        System.out.println("request result: " + text);
-//        JSONObject jsonObject = new JSONObject(text);
-//        if (jsonObject.get("id") != null) {
-//            return Collections.singletonMap(jsonObject.getInt("id"), jsonObject.get("source_url").toString().replaceAll("^\"|\\|\"$", ""));
-//        }
-//        return Collections.singletonMap(0, "");
-//    }
-
     /**
      * WpIdからポストの内容を取得します。
      *
@@ -655,7 +598,7 @@ public class BlogController {
      * @return
      */
     public String requestPostData(String wpId, String subDomain) {
-        String finalUrl = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "posts/" + wpId;
+        String finalUrl = subDomain + setting.getBlogApiPath() + "posts/" + wpId;
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
         return request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
@@ -676,113 +619,6 @@ public class BlogController {
         return 0;
     }
 
-//    /**
-//     * 商品画像1をWordpressに登録します。
-//     *
-//     * @param itemMasterList 登録対象
-//     * @param wpChk WPへアイキャッチメディアの設定が既にあるかチェックを投げるかフラグ
-//     */
-//    public void loadMedia(List<ItemMaster> itemMasterList, boolean wpChk) {
-//        for (ItemMaster itemMaster : itemMasterList) {
-//
-//            // wpChkフラグがtrueだったらWPへアイキャッチの設定があるか確認する
-//            Integer mediaId = 0;
-//            if (wpChk) {
-//                // すでに画像がブログ投稿にセットされてるか確認しないといけないのでリクエストを送信し既存のデータを取得する
-//                // TODO: チームによってurlを変更
-//                String url = setting.getBlogApiUrl() + "posts/" + itemMaster.getWp_id() + "?_fields[]=id&_fields[]=featured_media";
-//
-//                HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-//                JSONObject jsonObject = new JSONObject();
-//                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-//                String res = request(url, request, HttpMethod.GET);
-//
-//                try {
-//                    // アイキャッチメディアのIDを取得する
-//                    mediaId = extractMedia(res);
-//                    System.out.println("アイキャッチ：" + mediaId);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            // itemMasterに画像が登録されてない場合、image1がローカルgeneratedの場合、楽天検索して画像をitemMasterに追加して更新
-//            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-//            // itemに画像があればitemMasterに設定
-//            if (itemMaster.getImage1() == null && itemList.stream().anyMatch(e -> StringUtils.hasText(e.getImage1()) || StringUtils.hasText(e.getImage2()) || !StringUtils.hasText(e.getImage3()))) {
-//                itemMaster.fillBlankImage(itemList.stream().filter(e -> StringUtils.hasText(e.getImage1())).findFirst().get().getImage1());
-//            }
-//            // itemMasterの画像がgeneratedの場合、楽天に探しに行く
-//            if (itemMaster.getImage1() == null || itemMaster.getImage1().startsWith(setting.getImageItem())) {
-//                itemMaster = rakutenController.addImage(itemMaster);
-//            }
-//
-//            // 画像をポストする(WPチェックでメディア設定がなかった場合||WPチェックなしで全て対象の場合)
-//            if (!wpChk || mediaId == 0) {
-//                String imageUrl = itemMaster.getImage1();
-//                if (!StringUtils.hasText(imageUrl)) {
-//                    imageUrl = itemService.getImageUrlByItemMIdImage1NotNull(itemMaster.getItem_m_id());
-//                }
-//
-//                // itemにも画像がなかったら生成する
-//                if (!StringUtils.hasText(imageUrl)) {
-//                    List<String> teamNameList = new ArrayList<>();
-//                    List.of(itemMaster.getTeam_id().split(",")).stream().forEach(e -> teamNameList.add(teamService.getTeamName(Long.parseLong(e))));
-//                    String teamName = teamNameList.stream().distinct().collect(Collectors.joining(" "));
-//                    imageUrl = imageController.createImage(itemMaster.getItem_m_id().toString() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
-//                    itemMaster.setImage1(imageUrl);
-//                    itemMasterService.save(itemMaster);
-//                }
-//
-//                // 画像が用意できたら投稿していく
-//                if (StringUtils.hasText(imageUrl)) {
-//                    System.out.println("メディアポスト:" + imageUrl);
-//                    Map<Integer, String> wpMediaIdUrlMap = requestMedia((long) itemMaster.getWp_id(), imageUrl);
-//                    Integer wpMediaId = null;
-//                    String mediaUrl = null;
-//
-//                    if (!wpMediaIdUrlMap.isEmpty()) {
-//                        Map.Entry<Integer, String> entry = wpMediaIdUrlMap.entrySet().stream().findFirst().get();
-//                        wpMediaId = entry.getKey();
-//                        mediaUrl = entry.getValue();
-//                    }
-//
-//                    System.out.println("ポスト完了");
-//                    // なんかアップロードに失敗したら次のマスター商品に飛ばす
-//                    if (wpMediaId == null || wpMediaId == 0) {
-//                        continue;
-//                    }
-//
-//                    // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
-//                    setMedia(itemMaster.getWp_id(), wpMediaId);
-//
-//                    // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね→画像パスで暫定対応
-//                    // WPのアイキャッチ画像に登録した画像のパスを設定する
-//                    itemMaster.setUrl(mediaUrl);
-//                    itemMasterService.save(itemMaster);
-//                }
-//            }
-//        }
-//    }
-
-//    /**
-//     * 投稿にアイキャッチメディアを設定し、更新します。
-//     *
-//     * @param wpId
-//     * @param imageId
-//     */
-//    private void setMedia(Integer wpId, Integer imageId) {
-//        // TODO: チームによってurlを変更
-//        String url = setting.getBlogApiUrl() + "posts/" + wpId;
-//
-//        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("featured_media", imageId);
-//
-//        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-//        request(url, request, HttpMethod.POST);
-//    }
-
     /**
      * 翌月のyyyyMMタグを追加する。
      *
@@ -796,7 +632,7 @@ public class BlogController {
             Integer wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
             boolean existsBlogTag =  (wpTagId!= null) && (wpTagId != 0);
             if (!existsBlogTag) {
-                String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags/";
+                String url = subDomain + setting.getBlogApiPath() + "tags/";
 
                 HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
                 JSONObject jsonObject = new JSONObject();
@@ -815,7 +651,7 @@ public class BlogController {
      */
     public void getBlogTagNotSavedOnInfoDb(String subDomain) {
         // WPにあるタグを取得する
-        String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
+        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
         JSONObject jsonObject = new JSONObject();
@@ -860,7 +696,7 @@ public class BlogController {
 
         String yyyyMM = dateUtils.getYYYYMM(date);
 
-        String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + yyyyMM;
+        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + yyyyMM;
 
         // request
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
@@ -885,7 +721,7 @@ public class BlogController {
                         BlogTag blogTag1 = new BlogTag();
 
                         // WPからDBに登録したいタグのデータを取ってくる
-                        String url1 = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags?slug=" + yyyyMM + "&per_page=1";
+                        String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + yyyyMM + "&per_page=1";
 
                         // request
                         HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), subDomain);
@@ -927,7 +763,7 @@ public class BlogController {
      * @return
      */
     public BlogTag registerTag(Date date, String subDomain) {
-        String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "tags/";
+        String url = subDomain + setting.getBlogApiPath() + "tags/";
 
         HttpHeaders h = generalHeaderSet(new HttpHeaders(), subDomain);
         JSONObject jo = new JSONObject();
@@ -1014,7 +850,7 @@ public class BlogController {
             if (resultMap.size() > 0) {
                 for (Map.Entry<String, String> e : resultMap.entrySet()) {
                     String subDomain = e.getKey();
-                    String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
+                    String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
                     HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
@@ -1029,7 +865,7 @@ public class BlogController {
                 for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                     if (e.getValue().equals(false)) {
                         String subDomain = e.getKey();
-                        String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
+                        String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
                         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
@@ -1044,7 +880,7 @@ public class BlogController {
             TeamEnum.getAllSubDomain().stream().distinct().forEach(e -> postChkMap.put(e, false));
             for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                 String subDomain = e.getKey();
-                String url = blogDomainGenerator(subDomain) + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
+                String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
                 HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
@@ -1056,18 +892,110 @@ public class BlogController {
     }
 
     /**
-     * 引数で受けたサブドメインからリクエストに使用するドメインを作成します。
-     * 引数のサブドメインがnullの場合は、総合ブログ（親）のパスを返します。
-     *
-     * @param subDomain
-     * @return
+     * wpIdがしっかり繋がっているか確認する。繋がっていないかったらwpId抜いてあげる
+     * TODO: wpの投稿全部落として、wpidがdbに保存されてないやつはどうにかしないといけない
      */
-    private String blogDomainGenerator(String subDomain) {
-        // 総合ブログのsubdomain"NA"に合致しない場合とする場合で分けてる
-        if (!subDomain.equals("NA")) {
-            return setting.getBlogHttps() + subDomain + setting.getBlogDomain();
-        } else {
-            return setting.getBlogWebUrl();
+    public void chkWpId() throws InterruptedException {
+        List<IMRel> imRelList = iMRelService.findAllWpIdNotNull();
+        List<IMRel> updateList = new ArrayList<>();
+
+        for (IMRel rel : imRelList) {
+            String subDomain = TeamEnum.findSubDomainById(rel.getTeam_id());
+            if (subDomain != null) {
+                String url = subDomain + setting.getBlogApiPath() + "posts/" + rel.getWp_id();
+                // request
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
+                JSONObject jsonObject = new JSONObject();
+                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+                String res = request(url, request, HttpMethod.GET);
+
+                try {
+                    if (StringUtils.hasText(res)) {
+                        JSONObject jo = jsonUtils.createJsonObject(res);
+                        if (jo.has("data")) {
+                            JSONObject jo1 = jo.getJSONObject("data");
+                            if (jo1.has("status")) {
+                                int status = jo1.getInt("status");
+                                if (status == 404) {
+                                    rel.setWp_id(null);
+                                    updateList.add(rel);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Thread.sleep(500);
+            } else {
+                System.out.println("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getItem_m_id: " + rel.getItem_m_id());
+            }
         }
+        iMRelService.saveAll(updateList);
+        System.out.println("chkWpId() Done");
+    }
+
+    /**
+     * ブログの投稿を全部取ってきて、対応するwpidがdbにあるか確認する。なかったら
+     * TODO: subdomainなしotakuinfoの場合、teamIdが適切なもの取れていないのではないか？
+     */
+    public void chkWpIdByBlog() throws InterruptedException {
+
+        List<String> domainList = Arrays.stream(TeamEnum.values()).map(e -> e.getSubDomain()).distinct().collect(Collectors.toList());
+        for (String subDomain : domainList) {
+            List<String> outPut = new ArrayList<>();
+            Long teamId = TeamEnum.findIdBySubDomain(subDomain);
+            int n = 1;
+            boolean nextFlg = true;
+            int errCnt = 0;
+            while (nextFlg) {
+                String url = subDomain + setting.getBlogApiPath() + "posts?_fields[]=id&_fields[]=title&per_page=50&page=" + n;
+                // request
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
+                JSONObject jsonObject = new JSONObject();
+                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+
+                try {
+                    String res = request(url, request, HttpMethod.GET);
+                    if (StringUtils.hasText(res)) {
+                        if (JsonUtils.isJsonArray(res)) {
+                            JSONArray ja = new JSONArray(res);
+                            for (int i=0;i<ja.length();i++) {
+                                Integer wpId = ja.getJSONObject(i).getInt("id");
+                                List<IMRel> relList = iMRelService.findbyWpIdTeamId((long) wpId, teamId);
+                                if (relList.size() == 0) {
+                                    String title = ja.getJSONObject(i).getJSONObject("title").getString("rendered");
+                                    outPut.add(subDomain + ":" + wpId + ":" + title);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    if (e instanceof HttpClientErrorException.BadRequest) {
+                        nextFlg = false;
+                    }
+                    ++errCnt;
+                }
+                if (errCnt > 5) {
+                    nextFlg = false;
+                }
+                Thread.sleep(50);
+                ++n;
+            }
+            try{
+                if (outPut.size() > 0) {
+                    File file = new File("/root/outfile_" +subDomain + "txt");
+                    FileWriter filewriter = new FileWriter(file);
+                    for (String msg : outPut) {
+                        filewriter.write(msg + "\n");
+                    }
+                    filewriter.close();
+                }
+            }catch(IOException e){
+                System.out.println(e);
+            }
+        }
+        System.out.println("chkWpIdByBlog() Done");
     }
 }

@@ -41,4 +41,10 @@ public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
 
     @Query("select t from im_rel t where item_m_id = ?1 and team_id is not null")
     List<IMRel> findByItemIdTeamIdNotNull(Long imId);
+
+    @Query("select t from im_rel t where wp_id is not null")
+    List<IMRel> findAllWpIdNotNull();
+
+    @Query("select t from im_rel t where wp_id = ?1 and team_id = ?2")
+    List<IMRel> findbyWpIdTeamId(Long wpId, Long teamId);
 }

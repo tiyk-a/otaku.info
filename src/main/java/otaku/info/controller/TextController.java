@@ -363,7 +363,7 @@ public class TextController {
      */
     public String createBlogTitle(Date publicationDate, String title) {
         if (publicationDate == null) {
-            return "";
+            return "2021年XX月XX日" + title;
         }
         return  sdf1.format(publicationDate) + " " + title;
     }

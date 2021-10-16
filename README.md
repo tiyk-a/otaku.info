@@ -62,6 +62,11 @@ import de.danielbechler.diff.node.DiffNode;
 
 ###### Github
 🐛Bug fix
+
+# TODO
+https://npnl.hatenablog.jp/entry/20070724/1185294796
+https://aoking.hatenablog.jp/entry/20110917/1316242496
+
 ```
 // Method2
 Item a = itemService.findByItemId(1L).orElse(new Item());

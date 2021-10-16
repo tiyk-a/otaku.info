@@ -68,7 +68,7 @@ public class PythonController {
             lineList.add(text + " ■teamId=" + teamId);
         } else {
             if (teamId != null && StringUtils.hasText(text)) {
-                System.out.println("これをTweetします: " + text);
+                System.out.println("🕊 " + text);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);

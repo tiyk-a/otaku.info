@@ -477,25 +477,27 @@ public class SampleController {
      * @return
      * @throws JSONException
      */
-    public String searchItem(Long teamId, String artist, Long memberId) throws JSONException, ParseException, InterruptedException {
+    public String searchItem(Long teamId, String artist, Long memberId, Long siteId) throws JSONException, ParseException, InterruptedException {
         boolean isTeam = memberId == 0L;
         List<String> list = controller.affiliSearchWord(artist);
-
-        // 楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
-        List<String> itemCodeList = rakutenController.search(list);
-
-        itemCodeList = itemService.findNewItemList(itemCodeList);
-
         List<Item> newItemList = new ArrayList<>();
-        if (itemCodeList.size() > 0) {
-            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
-        }
-
-        // Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
-        newItemList.addAll(yahooController.search(list));
-
         // 検索の誤引っ掛かりした商品をストアするリスト
         List<Item> removeList = new ArrayList<>();
+
+        // siteIdで処理切り替え
+        if (siteId == 1) {
+            // ■■■■■　①楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
+            List<String> itemCodeList = rakutenController.search(list);
+
+            itemCodeList = itemService.findNewItemList(itemCodeList);
+
+            if (itemCodeList.size() > 0) {
+                newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
+            }
+        } else if (siteId == 2) {
+            // ■■■■■　Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
+            newItemList.addAll(yahooController.search(list));
+        }
 
         if (newItemList.size() > 0) {
             for (Item item : newItemList) {

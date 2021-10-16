@@ -21,6 +21,7 @@ class BatchConfig {
 
     private final ItemSearchTasklet itemSearchTasklet;
     private final FutureItemReminderTasklet futureItemReminderTasklet;
+    private final YahooItemSearchTasklet yahooItemSearchTasklet;
     private final PublishAnnounceTasklet publishAnnounceTasklet;
     private final ItemSearchMemberTasklet itemSearchMemberTasklet;
     private final TvPostTasklet tvPostTasklet;
@@ -55,6 +56,19 @@ class BatchConfig {
     Job futureItemReminderJob() {
         return this.jobBuilderFactory.get("futureItemReminderJob").incrementer(new RunIdIncrementer())
             .start(futureItemReminderStep()).build();
+    }
+
+    @Bean
+    Step yahooItemSearchStep() {
+        return stepBuilderFactory.get("yahooItemSearchStep") //Step名を指定
+                .tasklet(yahooItemSearchTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job yahooItemSearchJob() {
+        return this.jobBuilderFactory.get("yahooItemSearchJob").incrementer(new RunIdIncrementer())
+                .start(yahooItemSearchStep()).build();
     }
 
     @Bean

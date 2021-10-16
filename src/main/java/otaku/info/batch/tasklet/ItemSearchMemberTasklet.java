@@ -41,7 +41,7 @@ public class ItemSearchMemberTasklet implements Tasklet {
         memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
         for (MemberSearchDto dto : dtoList) {
             System.out.println("***** SEARCH: " + dto.getMember_name() + "*****");
-            sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id());
+            sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id(), 1L);
             System.out.println("***** END: " + dto.getMember_name() + "*****");
             try{
                 Thread.sleep(1000);

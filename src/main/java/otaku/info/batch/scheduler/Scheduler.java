@@ -31,6 +31,10 @@ public class Scheduler {
     private Job futureItemReminderJob;
 
     @Autowired
+    @Qualifier("yahooItemSearchJob")
+    private Job yahooItemSearchJob;
+
+    @Autowired
     @Qualifier("publishAnnouncementJob")
     private Job publishAnnouncementJob;
 
@@ -93,7 +97,24 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run2: " + diff);
+    }
+
+    @Scheduled(cron = "${cron.yahooItemSearch}")
+    public void run3(){
+        Long startTime = System.currentTimeMillis();
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run3", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(yahooItemSearchJob, jobParameters);
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
+            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
+        }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        System.out.println("run3: " + diff);
     }
 
     @Scheduled(cron = "${cron.publishAnnounce}")
@@ -110,7 +131,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run4: " + diff);
     }
 
     @Scheduled(cron = "${cron.itemSearchMember}")
@@ -127,7 +148,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run5: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvSearch}")
@@ -144,7 +165,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run6: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvPost}")
@@ -161,7 +182,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run7: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvAlert}")
@@ -178,7 +199,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run9: " + diff);
     }
 
     @Scheduled(cron = "${cron.updateUrl}")
@@ -195,7 +216,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run10: " + diff);
     }
 
     // 固定ページの更新
@@ -213,7 +234,7 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        System.out.println("run11: " + diff);
     }
 
     @Scheduled(cron = "${cron.blogMedia}")

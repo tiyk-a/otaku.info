@@ -27,9 +27,7 @@ public class ItemSearchTasklet implements Tasklet {
     TeamService teamService;
 
     /**
-     * 新商品を検索します。
-     * ①楽天
-     * ②Yahoo
+     * 楽天新商品を検索します。
      *
      * @param contribution
      * @param chunkContext
@@ -38,13 +36,13 @@ public class ItemSearchTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 新商品検索 START ---");
+        System.out.println("--- 楽天新商品検索 START ---");
         List<Team> teamList = teamService.findAllTeam();
         Map<Long, String> artistMap = new HashMap<Long, String>();
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
             System.out.println("***** START: " + artist.getValue() + "*****");
-            sampleController.searchItem(artist.getKey(), artist.getValue(), 0L);
+            sampleController.searchItem(artist.getKey(), artist.getValue(), 0L, 1L);
             System.out.println("***** END: " + artist + "*****");
             try{
                 Thread.sleep(1000);
@@ -52,7 +50,7 @@ public class ItemSearchTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("--- 新商品検索 END ---");
+        System.out.println("--- 楽天新商品検索 END ---");
         return RepeatStatus.FINISHED;
     }
 }

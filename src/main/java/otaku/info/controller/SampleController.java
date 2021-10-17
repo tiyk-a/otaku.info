@@ -562,62 +562,81 @@ public class SampleController {
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
             // 既存の登録済みrel情報を取得する
             List<IMRel> IMRelList = iMRelService.findByItemMId(e.getKey().getItem_m_id());
-            List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
-            for (IMRel rel :IMRelList) {
-                List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
-                if (imRelMemList.size() > 0) {
-                    for (IMRelMem f : imRelMemList) {
-                        ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), f.getMember_id(), rel.getWp_id());
-                        itemMasterRelElemsList.add(elem);
-                    }
-                } else {
-                    ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), null, rel.getWp_id());
-                    itemMasterRelElemsList.add(elem);
-                }
+            List<Long> teamIdList = IMRelList.stream().map(IMRel::getTeam_id).collect(Collectors.toList());
+
+            // imrelの登録
+            if (!teamIdList.contains(teamId)) {
+                IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null, null);
+                iMRelService.save(newRel);
             }
 
-            List<IRel> iRelList = iRelService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
-            List<ItemRelElems> itemRelElemsList = new ArrayList<>();
-            final Long tmp = memberId;
-            if (memberId != null && memberId != 0L) {
-                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), tmp, null)));
-            } else {
-                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), null, null)));
-            }
-            List<ItemRelElems> itemRelElemsDataList = itemRelElemsList.stream().distinct().collect(Collectors.toList());
-            if (itemRelElemsDataList.size() > 0 && itemMasterRelElemsList.size() > 0 && itemRelElemsDataList.size() > itemMasterRelElemsList.size()) {
-                List<ItemRelElems> sameElemsList = new ArrayList<>();
+            // TODO: relMemの登録できてない
+//            List<Long> memIdList = IMRelList.stream().map(IMRel::getMember_id).collect(Collectors.toList());
+//            List<Long> itemMemIdList = iRelMemService.findMemIdListByItemIdList(e.getValue().stream().map(Item::getItem_id)).stream().distinct().collect(Collectors.toList());
+            // imrelmemの登録
+//            for (Long memId : itemMemIdList) {
+//                if (memIdList.contains(memId)) {
+//                    IMRelMem relmem = new IMRelMem(null, );
+//                }
+//            }
 
-                for (ItemRelElems item : itemRelElemsDataList) {
-                    for (ItemRelElems itemMaster : itemMasterRelElemsList) {
-                        if (item.getTeam_id().equals(itemMaster.getTeam_id()) && item.getMember_id().equals(itemMaster.getMember_id())) {
-                            sameElemsList.add(item);
-                            break;
-                        }
-                    }
-                }
-
-                if (sameElemsList.size() > 0) {
-                    itemRelElemsDataList.removeAll(sameElemsList);
-                }
-                // TODO: 復活すること
-                if (itemRelElemsDataList.size() > 0) {
-                    List<IMRel> toSaveIMRelList = new ArrayList<>();
-                    for (ItemRelElems f : itemRelElemsDataList) {
-                        IMRel rel = new IMRel(null, e.getKey().getItem_m_id(), f.getTeam_id(), f.getWp_id(),  null, null);
-                        if (f.getMember_id() != null) {
-                            IMRel savedRel = iMRelService.save(rel);
-                            IMRelMem relMem = new IMRelMem(null, savedRel.getIm_rel_id(), f.getMember_id(), null, null);
-                            imRelMemService.save(relMem);
-                        } else {
-                            toSaveIMRelList.add(rel);
-                        }
-                    }
-                    if (toSaveIMRelList.size() > 0) {
-                        iMRelService.saveAll(toSaveIMRelList);
-                    }
-                }
-            }
+//            List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
+//            logger.debug("IMRel登録に入ります:" + IMRelList.size());
+//            for (IMRel rel :IMRelList) {
+//                List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+//                if (imRelMemList.size() > 0) {
+//                    for (IMRelMem f : imRelMemList) {
+//                        ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), f.getMember_id(), rel.getWp_id());
+//                        itemMasterRelElemsList.add(elem);
+//                    }
+//                } else {
+//                    ItemRelElems elem = new ItemRelElems(null, rel.getItem_m_id(), rel.getTeam_id(), null, rel.getWp_id());
+//                    itemMasterRelElemsList.add(elem);
+//                }
+//            }
+//
+//            List<IRel> iRelList = iRelService.findByItemIdList(e.getValue().stream().map(Item::getItem_id).collect(Collectors.toList()));
+//            List<ItemRelElems> itemRelElemsList = new ArrayList<>();
+//            final Long tmp = memberId;
+//            if (memberId != null && memberId != 0L) {
+//                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), tmp, null)));
+//            } else {
+//                iRelList.forEach(f -> itemRelElemsList.add(new ItemRelElems(f.getItem_id(), null, f.getTeam_id(), null, null)));
+//            }
+//            List<ItemRelElems> itemRelElemsDataList = itemRelElemsList.stream().distinct().collect(Collectors.toList());
+//            if (itemRelElemsDataList.size() > 0 && itemMasterRelElemsList.size() > 0 && itemRelElemsDataList.size() > itemMasterRelElemsList.size()) {
+//                List<ItemRelElems> sameElemsList = new ArrayList<>();
+//
+//                for (ItemRelElems item : itemRelElemsDataList) {
+//                    for (ItemRelElems itemMaster : itemMasterRelElemsList) {
+//                        if (item.getTeam_id().equals(itemMaster.getTeam_id()) && item.getMember_id().equals(itemMaster.getMember_id())) {
+//                            sameElemsList.add(item);
+//                            break;
+//                        }
+//                    }
+//                }
+//
+//                if (sameElemsList.size() > 0) {
+//                    itemRelElemsDataList.removeAll(sameElemsList);
+//                }
+//                // TODO: 復活すること
+//                if (itemRelElemsDataList.size() > 0) {
+//                    List<IMRel> toSaveIMRelList = new ArrayList<>();
+//                    for (ItemRelElems f : itemRelElemsDataList) {
+//                        IMRel rel = new IMRel(null, e.getKey().getItem_m_id(), f.getTeam_id(), null, f.getWp_id(),  null, null);
+//                        if (f.getMember_id() != null) {
+//                            IMRel savedRel = iMRelService.save(rel);
+//                            IMRelMem relMem = new IMRelMem(null, savedRel.getIm_rel_id(), f.getMember_id(), null, null);
+//                            imRelMemService.save(relMem);
+//                        } else {
+//                            toSaveIMRelList.add(rel);
+//                        }
+//                    }
+//                    if (toSaveIMRelList.size() > 0) {
+//                        iMRelService.saveAll(toSaveIMRelList);
+//                    }
+//                }
+//            }
         }
 
         // ブログ投稿（新規/更新）を行う

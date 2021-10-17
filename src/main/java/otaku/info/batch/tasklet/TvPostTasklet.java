@@ -69,7 +69,7 @@ public class TvPostTasklet implements Tasklet {
                 }
                 // Twitter post指示
                 if (StringUtils.hasText(text)) {
-                    pythonController.post(ele.getKey().intValue(), text);
+                    pythonController.post((long) ele.getKey().intValue(), text);
                 }
             }
         }

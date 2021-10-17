@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 import otaku.info.utils.ItemUtils;
@@ -37,6 +39,8 @@ import otaku.info.utils.StringUtilsMine;
 @RestController
 @RequestMapping("/")
 public class SampleController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     private RakutenController rakutenController;
@@ -120,21 +124,21 @@ public class SampleController {
         // Method1
 //        // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
 //        Map<Integer, Integer> wpIdFeaturedMediaMap = tmpController.getPublishedWpIdFeaturedMediaList();
-//        System.out.println("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
+//        logger.debug("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
 //        List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
-//        System.out.println("wpIdList.size(): " + wpIdList.size());
+//        logger.debug("wpIdList.size(): " + wpIdList.size());
 //
 //        // featured_media IDからメディアURLを取得する
 //        Map<Integer, String> mediaIdMediaUrlMap = tmpController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
-//        System.out.println("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
+//        logger.debug("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
 //
 //        // 画像パス(itemMaster.url)がnullのitemMasterを集める
 //        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
-//        System.out.println("itemMasterList.size(): " + itemMasterList.size());
+//        logger.debug("itemMasterList.size(): " + itemMasterList.size());
 //
 //        itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
 //        itemMasterService.saveAll(itemMasterList);
-//        System.out.println("itemMasterList.size(): " + itemMasterList.size());
+//        logger.debug("itemMasterList.size(): " + itemMasterList.size());
 
         // Method3全てのitemタイトルを分析して、出版社・雑誌名などを取得したい。そしてitemMasterのtitle作成につなげたいYahoo APIを使用したい
 //        String result = "";
@@ -150,7 +154,7 @@ public class SampleController {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-        System.out.println(setting.getTest());
+        logger.debug(setting.getTest());
         return "done";
     }
 
@@ -182,11 +186,11 @@ public class SampleController {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
 
-        System.out.println("１２：楽天APIから受信したItemのリストをDB保存します");
+        logger.debug("１２：楽天APIから受信したItemのリストをDB保存します");
         List<Item> savedItemList = itemService.saveAll(newItemList);
-        System.out.println(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+        logger.debug(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
         List<Item> itemList = itemService.findAll();
-        System.out.println(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+        logger.debug(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
         return itemList.toString();
     }
 
@@ -195,38 +199,38 @@ public class SampleController {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
-                System.out.println("---run1楽天新商品検索 START---");
+                logger.debug("---run1楽天新商品検索 START---");
                 scheduler.run1();
-                System.out.println("---run1楽天新商品検索 END---");
+                logger.debug("---run1楽天新商品検索 END---");
                 break;
             case 2:
-                System.out.println("---run2未発売商品リマインダー START---");
+                logger.debug("---run2未発売商品リマインダー START---");
                 scheduler.run2();
-                System.out.println("---run2未発売商品リマインダー END---");
+                logger.debug("---run2未発売商品リマインダー END---");
                 break;
             case 3:
                 blogController.chkWpId();
                 blogController.chkWpIdByBlog();
                 break;
             case 4:
-                System.out.println("---run4商品発売日アナウンス START---");
+                logger.debug("---run4商品発売日アナウンス START---");
                 scheduler.run4();
-                System.out.println("---run4商品発売日アナウンス END---");
+                logger.debug("---run4商品発売日アナウンス END---");
                 break;
             case 5:
-                System.out.println("---run5楽天新商品検索（個人） START---");
+                logger.debug("---run5楽天新商品検索（個人） START---");
                 scheduler.run5();
-                System.out.println("---run5楽天新商品検索（個人） END---");
+                logger.debug("---run5楽天新商品検索（個人） END---");
                 break;
             case 6:
-                System.out.println("---run6TV検索 START---");
+                logger.debug("---run6TV検索 START---");
                 scheduler.run6();
-                System.out.println("---run6TV検索 END---");
+                logger.debug("---run6TV検索 END---");
                 break;
             case 7:
-                System.out.println("---run7TV番組投稿処理 START---");
+                logger.debug("---run7TV番組投稿処理 START---");
                 scheduler.run7();
-                System.out.println("---run7TV番組投稿処理 END---");
+                logger.debug("---run7TV番組投稿処理 END---");
                 break;
             case 8:
                 List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
@@ -241,18 +245,18 @@ public class SampleController {
                 }
                 break;
             case 9:
-                System.out.println("---run9TVアラート START---");
+                logger.debug("---run9TVアラート START---");
                 scheduler.run9();
-                System.out.println("---run9TVアラート END---");
+                logger.debug("---run9TVアラート END---");
                 break;
             case 10:
-                System.out.println("---run10DB商品アフェリリンク更新 START---");
+                logger.debug("---run10DB商品アフェリリンク更新 START---");
                 scheduler.run10();
-                System.out.println("---run10DB商品アフェリリンク更新 END---");
+                logger.debug("---run10DB商品アフェリリンク更新 END---");
                 break;
             case 11:
                 // 固定ページ「新商品情報」を更新する
-                System.out.println("---run11Blog Update START---");
+                logger.debug("---run11Blog Update START---");
                 scheduler.run11();
                 System.out.println("---run11Blog Update END---");
                 break;
@@ -278,6 +282,8 @@ public class SampleController {
 //                orderM2();
 //                orderM3();
                 break;
+            case 17:
+                logger.debug("world4");
         }
             return "Done";
     }

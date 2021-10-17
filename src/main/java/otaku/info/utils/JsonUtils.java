@@ -1,22 +1,26 @@
 package otaku.info.utils;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
+import otaku.info.setting.Log4jUtils;
 
 @Component
 public class JsonUtils extends JSONObject {
 
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+
     public JSONObject createJsonObject(String source) {
         String str = formatJsonString(source);
-        System.out.println(str);
+        logger.debug(str);
 
         JSONObject jo = null;
         try {
             jo = new JSONObject(str);
         } catch (Exception e) {
             // TODO: jsonにエラーが見つかったらどうするかの対処を考えたい。ファイルに書き出すか？同じの取りに行かないようにしたいな？
-            System.out.println(e.getMessage());
+            logger.debug(e.getMessage());
         }
 
         if (jo == null) {

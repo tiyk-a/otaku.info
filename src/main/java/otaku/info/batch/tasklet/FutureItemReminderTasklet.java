@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -14,12 +15,15 @@ import otaku.info.entity.ItemMaster;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Log4jUtils;
 
 import java.util.List;
 
 @Component
 @StepScope
 public class FutureItemReminderTasklet implements Tasklet {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     PythonController pythonController;
@@ -43,19 +47,19 @@ public class FutureItemReminderTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 未発売商品リマインダー START ---");
+        logger.debug("--- 未発売商品リマインダー START ---");
 
         for (TeamEnum e : TeamEnum.values()) {
             // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
             List<ItemMaster> imList = itemMasterService.findNearFutureIMByTeamId(e.getId());
-            System.out.println(e.getName() + "imList size: " + imList.size());
+            logger.debug(e.getName() + "imList size: " + imList.size());
 
             post(imList, e);
-            System.out.println("--- 未発売商品リマインダー END ---");
-//        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
+            logger.debug("--- 未発売商品リマインダー END ---");
+//        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
 //        List<Item> tmpList = itemService.findNotDeleted();
 //        blogController.tmpItemPost(tmpList);
-//        System.out.println("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
+//        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
         }
         return RepeatStatus.FINISHED;
     }
@@ -65,7 +69,7 @@ public class FutureItemReminderTasklet implements Tasklet {
         // TODO: 未来商品が全くないチームについての処理
         if (imList.isEmpty()) {
 //            pythonController.post(teamEnum.getId(), teamEnum.getName() + "の新商品情報は");
-            System.out.println(teamEnum.getName() + "imList empty");
+            logger.debug(teamEnum.getName() + "imList empty");
         }
 
         Integer postCount = 0;
@@ -84,6 +88,6 @@ public class FutureItemReminderTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("postCount: " + postCount);
+        logger.debug("postCount: " + postCount);
     }
 }

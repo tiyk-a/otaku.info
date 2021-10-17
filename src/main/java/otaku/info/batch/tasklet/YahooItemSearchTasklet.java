@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -12,6 +13,7 @@ import otaku.info.dto.MemberSearchDto;
 import otaku.info.entity.Team;
 import otaku.info.searvice.MemberService;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Log4jUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,8 @@ import java.util.Map;
 @Component
 @StepScope
 public class YahooItemSearchTasklet implements Tasklet {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     SampleController sampleController;
@@ -41,15 +45,15 @@ public class YahooItemSearchTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- Yahoo新商品検索 START ---");
+        logger.debug("--- Yahoo新商品検索 START ---");
         try {
             List<Team> teamList = teamService.findAllTeam();
             Map<Long, String> artistMap = new HashMap<Long, String>();
             teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
             for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
-                System.out.println("***** START: " + artist.getValue() + "*****");
+                logger.debug("***** START: " + artist.getValue() + "*****");
                 sampleController.searchItem(artist.getKey(), artist.getValue(), 0L, 2L);
-                System.out.println("***** END: " + artist + "*****");
+                logger.debug("***** END: " + artist + "*****");
                 try{
                     Thread.sleep(1000);
                 }catch(InterruptedException e){
@@ -59,16 +63,16 @@ public class YahooItemSearchTasklet implements Tasklet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("--- Yahoo新商品検索 END ---");
+        logger.debug("--- Yahoo新商品検索 END ---");
 
-        System.out.println("--- 新商品検索（個人） START ---");
+        logger.debug("--- 新商品検索（個人） START ---");
         try {
             List<MemberSearchDto> dtoList = new ArrayList<>();
             memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
             for (MemberSearchDto dto : dtoList) {
-                System.out.println("***** SEARCH: " + dto.getMember_name() + "*****");
+                logger.debug("***** SEARCH: " + dto.getMember_name() + "*****");
                 sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id(), 1L);
-                System.out.println("***** END: " + dto.getMember_name() + "*****");
+                logger.debug("***** END: " + dto.getMember_name() + "*****");
                 try{
                     Thread.sleep(1000);
                 }catch(InterruptedException e){
@@ -78,7 +82,7 @@ public class YahooItemSearchTasklet implements Tasklet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("--- 新商品検索（個人） END ---");
+        logger.debug("--- 新商品検索（個人） END ---");
         return RepeatStatus.FINISHED;
     }
 }

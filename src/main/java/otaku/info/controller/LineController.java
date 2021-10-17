@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.searvice.ItemService;
 import otaku.info.searvice.ProgramService;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.JsonUtils;
 
@@ -31,6 +33,8 @@ import java.util.*;
 @Controller
 @AllArgsConstructor
 public class LineController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     ItemService itemService;
@@ -72,7 +76,7 @@ public class LineController {
                 outline = msg.substring(0,30);
             }
 
-            System.out.println("💬 " + outline);
+            logger.debug("💬 " + outline);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -82,7 +86,7 @@ public class LineController {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
-            System.out.println(outline + ":" + response);
+            logger.debug(outline + ":" + response);
         }
         return "done";
     }
@@ -96,7 +100,7 @@ public class LineController {
     public String post(String message) {
 
             String outline = message.substring(0,30);
-            System.out.println("💬 " + message);
+            logger.debug("💬 " + message);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
@@ -107,7 +111,7 @@ public class LineController {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
             ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
 
-            System.out.println("Request Successful: " + outline);
+            logger.debug("Request Successful: " + outline);
         return "done";
     }
 

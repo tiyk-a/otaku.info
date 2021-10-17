@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -16,12 +17,15 @@ import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.IMRelService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Log4jUtils;
 
 import java.util.*;
 
 @Component
 @StepScope
 public class PublishAnnounceTasklet implements Tasklet {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     PythonController pythonController;
@@ -48,9 +52,9 @@ public class PublishAnnounceTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- 商品発売日アナウンス START ---");
+        logger.debug("--- 商品発売日アナウンス START ---");
         List<ItemMaster> itemMasterList = itemMasterService.findReleasedItemList();
-        System.out.println("itemMasterList size: " + itemMasterList.size());
+        logger.debug("itemMasterList size: " + itemMasterList.size());
         Integer postCount = 0;
 
         for (ItemMaster itemMaster : itemMasterList) {
@@ -101,8 +105,8 @@ public class PublishAnnounceTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("postCount: " + postCount);
-        System.out.println("--- 商品発売日アナウンス END ---");
+        logger.debug("postCount: " + postCount);
+        logger.debug("--- 商品発売日アナウンス END ---");
         return RepeatStatus.FINISHED;
     }
 }

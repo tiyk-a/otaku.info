@@ -2,6 +2,7 @@ package otaku.info.batch.scheduler;
 
 import java.util.*;
 
+import org.apache.log4j.Logger;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +11,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
 import otaku.info.controller.LineController;
+import otaku.info.setting.Log4jUtils;
 
 import java.util.HashMap;
 
 @Component
 public class Scheduler {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     LineController lineController;
@@ -71,12 +75,12 @@ public class Scheduler {
         try {
             jobLauncher.run(itemSearchJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run1: " + diff);
+        logger.debug("run1: " + diff);
     }
 
     @Scheduled(cron = "${cron.futureItemReminder}")
@@ -88,12 +92,12 @@ public class Scheduler {
         try {
             jobLauncher.run(futureItemReminderJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run2: " + diff);
+        logger.debug("run2: " + diff);
     }
 
     @Scheduled(cron = "${cron.yahooItemSearch}")
@@ -105,12 +109,12 @@ public class Scheduler {
         try {
             jobLauncher.run(yahooItemSearchJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run3: " + diff);
+        logger.debug("run3: " + diff);
     }
 
     @Scheduled(cron = "${cron.publishAnnounce}")
@@ -122,12 +126,12 @@ public class Scheduler {
         try {
             jobLauncher.run(publishAnnouncementJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run4: " + diff);
+        logger.debug("run4: " + diff);
     }
 
     @Scheduled(cron = "${cron.itemSearchMember}")
@@ -139,12 +143,12 @@ public class Scheduler {
         try {
             jobLauncher.run(itemSearchMemberJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run5: " + diff);
+        logger.debug("run5: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvSearch}")
@@ -156,12 +160,12 @@ public class Scheduler {
         try {
             jobLauncher.run(tvJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run6: " + diff);
+        logger.debug("run6: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvPost}")
@@ -173,12 +177,12 @@ public class Scheduler {
         try {
             jobLauncher.run(tvPostJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run7: " + diff);
+        logger.debug("run7: " + diff);
     }
 
     @Scheduled(cron = "${cron.tvAlert}")
@@ -190,7 +194,7 @@ public class Scheduler {
         try {
             jobLauncher.run(tvAlertJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();

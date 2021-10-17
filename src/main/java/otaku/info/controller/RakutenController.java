@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +21,7 @@ import otaku.info.searvice.AffeliUrlService;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.IRelService;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.*;
 
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Controller
 public class RakutenController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     ItemUtils itemUtils;
@@ -77,7 +81,7 @@ public class RakutenController {
         try {
             RestTemplate restTemplate = new RestTemplate();
             String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
-            System.out.println("RAKUTEN SEARCH URL: " + finalUrl);
+            logger.debug("RAKUTEN SEARCH URL: " + finalUrl);
             String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtils.hasText(res)) {
@@ -86,10 +90,10 @@ public class RakutenController {
             serverUtils.sleep();
         } catch (Exception e) {
             if (e instanceof HttpClientErrorException) {
-                System.out.println("Too many request. sleep");
+                logger.debug("Too many request. sleep");
                 Thread.sleep(60000);
             } else if (e instanceof HttpServerErrorException) {
-                System.out.println("Server error");
+                logger.debug("Server error");
                 Thread.sleep(60000);
             } else {
                 e.printStackTrace();

@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.*;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 @RequestMapping("blog")
 @AllArgsConstructor
 public class BlogController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     TextController textController;
@@ -354,7 +358,7 @@ public class BlogController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            System.out.println("Post: " + url);
+            logger.debug("Post: " + url);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
             
             try {
@@ -374,7 +378,7 @@ public class BlogController {
             result = "";
         }
 
-        System.out.println("Request result: " + result);
+        logger.debug("Request result: " + result);
         return result;
     }
 
@@ -460,7 +464,7 @@ public class BlogController {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
                         rel.setWp_id(blogId);
                         iMRelService.save(rel);
-                        System.out.println("Blog posted: " + url + "\n" + content + "\n" + blogId);
+                        logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
                         resMap.put(itemMaster.getItem_m_id(), blogId);
                     }
                 } catch (Exception ex) {
@@ -508,7 +512,7 @@ public class BlogController {
     public void addNextMonthTag(String subDomain) {
         // どの月でも存在する27・28日の場合、チェックに通す
         if (dateUtils.getDate() == 27 || dateUtils.getDate() == 28) {
-            System.out.println("月末につき月タグ確認処理");
+            logger.debug("月末につき月タグ確認処理");
             // info DBのblogTagテーブルに翌月のyyyyMMタグが存在するか？
             Long teamId = TeamEnum.findIdBySubDomain(subDomain);
             Integer wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
@@ -522,7 +526,7 @@ public class BlogController {
 
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
                 request(url, request, HttpMethod.POST);
-                System.out.println(subDomain + ":次の月タグ追加");
+                logger.debug(subDomain + ":次の月タグ追加");
             }
         }
     }
@@ -813,11 +817,11 @@ public class BlogController {
                 }
                 Thread.sleep(500);
             } else {
-                System.out.println("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getItem_m_id: " + rel.getItem_m_id());
+                logger.debug("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getItem_m_id: " + rel.getItem_m_id());
             }
         }
         iMRelService.saveAll(updateList);
-        System.out.println("chkWpId() Done");
+        logger.debug("chkWpId() Done");
     }
 
     /**
@@ -878,9 +882,9 @@ public class BlogController {
                     filewriter.close();
                 }
             }catch(IOException e){
-                System.out.println(e);
+                logger.debug(e);
             }
         }
-        System.out.println("chkWpIdByBlog() Done");
+        logger.debug("chkWpIdByBlog() Done");
     }
 }

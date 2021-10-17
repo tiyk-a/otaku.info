@@ -40,7 +40,7 @@ import otaku.info.utils.StringUtilsMine;
 @RequestMapping("/")
 public class SampleController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("SampleController");
 
     @Autowired
     private RakutenController rakutenController;
@@ -544,6 +544,7 @@ public class SampleController {
                         logger.debug("RelMem登録あり");
                         List<IRelMem> memList = new ArrayList<>();
                         for (IRel rel : savedList) {
+                            logger.debug(rel.getI_rel_id() + "<-これnullにならないよね？");
                             IRelMem relMem = new IRelMem(null, rel.getI_rel_id(), memberId, null, null);
                             memList.add(relMem);
                         }

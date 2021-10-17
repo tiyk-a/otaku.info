@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("RestTemplateResponseErrorHandler");
 
     @Autowired
     LineController lineController;

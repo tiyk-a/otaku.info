@@ -9,7 +9,7 @@ import otaku.info.setting.Log4jUtils;
 @Component
 public class JsonUtils extends JSONObject {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("JsonUtils");
 
     public JSONObject createJsonObject(String source) {
         String str = formatJsonString(source);

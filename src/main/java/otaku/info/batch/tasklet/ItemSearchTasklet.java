@@ -22,7 +22,7 @@ import java.util.List;
 @StepScope
 public class ItemSearchTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("ItemSearchTasklet");
 
     @Autowired
     SampleController sampleController;

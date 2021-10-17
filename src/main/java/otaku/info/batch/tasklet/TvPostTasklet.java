@@ -21,7 +21,7 @@ import java.util.*;
 @StepScope
 public class TvPostTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvPostTasklet");
 
     @Autowired
     TvController tvController;

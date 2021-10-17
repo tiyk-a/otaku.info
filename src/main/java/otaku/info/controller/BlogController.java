@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class BlogController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("BlogController");
 
     @Autowired
     TextController textController;
@@ -368,6 +368,7 @@ public class BlogController {
             }
             result = responseEntity.getBody();
         } catch (Exception e) {
+            logger.debug("Request result: " + result);
             if (e instanceof HttpClientErrorException.Forbidden) {
                 throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
             } else if (e instanceof HttpClientErrorException.BadRequest) {
@@ -377,8 +378,6 @@ public class BlogController {
             }
             result = "";
         }
-
-        logger.debug("Request result: " + result);
         return result;
     }
 

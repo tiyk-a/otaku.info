@@ -20,7 +20,7 @@ import java.util.List;
 @StepScope
 public class ItemSearchMemberTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("ItemSearchMemberTasklet");
 
     @Autowired
     SampleController sampleController;

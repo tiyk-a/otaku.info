@@ -26,7 +26,7 @@ import otaku.info.setting.Setting;
 @StepScope
 public class TvTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvTasklet");
 
     @Autowired
     TvController tvController;

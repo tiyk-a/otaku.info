@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Controller
 public class RakutenController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("RakutenController");
 
     @Autowired
     ItemUtils itemUtils;

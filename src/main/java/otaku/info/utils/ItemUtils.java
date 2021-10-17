@@ -20,7 +20,7 @@ import java.util.*;
 @Component
 public class ItemUtils {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("ItemUtils");
 
     @Autowired
     private DateUtils dateUtils;

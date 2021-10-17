@@ -18,7 +18,7 @@ import java.util.HashMap;
 @Component
 public class Scheduler {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("Scheduler");
 
     @Autowired
     LineController lineController;

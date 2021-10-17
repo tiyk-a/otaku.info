@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Controller
 public class TmpController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TmpController");
 
     @Autowired
     Setting setting;

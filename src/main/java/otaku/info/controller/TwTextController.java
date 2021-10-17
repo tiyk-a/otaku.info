@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Controller
 public class TwTextController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TwTextController");
 
     @Autowired
     private DateUtils dateUtils;

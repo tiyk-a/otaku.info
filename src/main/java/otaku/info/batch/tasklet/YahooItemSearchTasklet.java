@@ -24,7 +24,7 @@ import java.util.Map;
 @StepScope
 public class YahooItemSearchTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("YahooItemSearchTasklet");
 
     @Autowired
     SampleController sampleController;

@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 @AllArgsConstructor
 public class TvController  {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvController");
 
     @Autowired
     private final ProgramService programService;

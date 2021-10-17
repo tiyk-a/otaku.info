@@ -25,7 +25,7 @@ import java.util.*;
 @StepScope
 public class PublishAnnounceTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("PublishAnnounceTasklet");
 
     @Autowired
     PythonController pythonController;

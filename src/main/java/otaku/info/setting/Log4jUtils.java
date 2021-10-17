@@ -39,8 +39,8 @@ public class Log4jUtils {
      *
      * @return
      */
-    public static Logger newConsoleCsvAllLogger() {
-        return newConsolePatternAllLogger("name", "%d{yyyy/MM/dd HH:mm},%F:%L,%x,%r,%t,%-5p,%m%n");
+    public static Logger newConsoleCsvAllLogger(String name) {
+        return newConsolePatternAllLogger(name, "%d{yyyy/MM/dd HH:mm},%F:%L,%x,%r,%t,%-5p,%m%n");
     }
 
     /**

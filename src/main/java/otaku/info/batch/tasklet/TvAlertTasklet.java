@@ -23,7 +23,7 @@ import java.util.Map;
 @StepScope
 public class TvAlertTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvAlertTasklet");
 
     @Autowired
     PythonController pythonController;

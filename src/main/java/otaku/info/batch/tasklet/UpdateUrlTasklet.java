@@ -15,7 +15,7 @@ import otaku.info.setting.Log4jUtils;
 @StepScope
 public class UpdateUrlTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("UpdateUrlTasklet");
 
     @Autowired
     RakutenController rakutenController;

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Controller
 public class YahooController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("YahooController");
 
     @Autowired
     AnalyzeController analyzeController;

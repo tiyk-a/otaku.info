@@ -29,7 +29,7 @@ import java.util.*;
 @AllArgsConstructor
 public class PythonController {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("PythonController");
 
     @Autowired
     LineController lineController;

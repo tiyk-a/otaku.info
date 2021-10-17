@@ -559,45 +559,45 @@ public class TmpController {
     /**
      * [From] BlogController
      */
-    public void postAllItemMaster() {
-        Integer year = 2001;
-
-        Map<ItemMaster, List<Item>> itemMasterListMap = new HashMap<>();
-        while (year < 2022) {
-            System.out.println("*** year: " + year);
-            // itemMasterを集める
-            List<ItemMaster> itemMasterList = itemMasterService.findByPublicationYearWpIdNull(year);
-            System.out.println("itemMasterList.size: " + itemMasterList.size());
-            // ひもづくitemを集める
-            itemMasterList.forEach(e -> itemMasterListMap.put(e, itemService.gatherItems(e.getItem_m_id())));
-            // itemMasterを投稿する
-            if (itemMasterListMap.size() > 0) {
-                itemMasterListMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getPublication_date()));
-                for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
-                    System.out.println("item_m_id: " + e.getKey().getItem_m_id() + " itemList size: " + e.getValue().size());
-                    blogController.postMasterItem(e.getKey(), e.getValue());
-                }
-            }
-            ++year;
-        }
-    }
+//    public void postAllItemMaster() {
+//        Integer year = 2001;
+//
+//        Map<ItemMaster, List<Item>> itemMasterListMap = new HashMap<>();
+//        while (year < 2022) {
+//            System.out.println("*** year: " + year);
+//            // itemMasterを集める
+//            List<ItemMaster> itemMasterList = itemMasterService.findByPublicationYearWpIdNull(year);
+//            System.out.println("itemMasterList.size: " + itemMasterList.size());
+//            // ひもづくitemを集める
+//            itemMasterList.forEach(e -> itemMasterListMap.put(e, itemService.gatherItems(e.getItem_m_id())));
+//            // itemMasterを投稿する
+//            if (itemMasterListMap.size() > 0) {
+//                itemMasterListMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getPublication_date()));
+//                for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
+//                    System.out.println("item_m_id: " + e.getKey().getItem_m_id() + " itemList size: " + e.getValue().size());
+//                    blogController.postMasterItem(e.getKey(), e.getValue());
+//                }
+//            }
+//            ++year;
+//        }
+//    }
 
     /**
      * [From] BlogController
      * Tmpブログ新商品投稿メソッド(商品マスターごとに投稿するように修正)
      *
      */
-    public void tmpItemPost(List<Item> itemList) {
-        Map<ItemMaster, List<Item>> map = itemUtils.groupItem(itemList);
-        // 対象はwp_idがnullのマスター商品
-        Map<ItemMaster, List<Item>> targetMap = map.entrySet().stream()
-                .filter(e -> IMRelService.getWpIdByItemMId(e.getKey().getItem_m_id()) == null || IMRelService.getWpIdByItemMId(e.getKey().getItem_m_id()).equals(0))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-        // targetMapのマスタ商品をブログに投稿していく
-        for (Map.Entry<ItemMaster, List<Item>> e : targetMap.entrySet()) {
-            blogController.postMasterItem(e.getKey(), e.getValue());
-        }
-    }
+//    public void tmpItemPost(List<Item> itemList) {
+//        Map<ItemMaster, List<Item>> map = itemUtils.groupItem(itemList);
+//        // 対象はwp_idがnullのマスター商品
+//        Map<ItemMaster, List<Item>> targetMap = map.entrySet().stream()
+//                .filter(e -> IMRelService.getWpIdByItemMId(e.getKey().getItem_m_id()) == null || IMRelService.getWpIdByItemMId(e.getKey().getItem_m_id()).equals(0))
+//                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+//        // targetMapのマスタ商品をブログに投稿していく
+//        for (Map.Entry<ItemMaster, List<Item>> e : targetMap.entrySet()) {
+//            blogController.postMasterItem(e.getKey(), e.getValue());
+//        }
+//    }
 
     /**
      * [From] BlogController

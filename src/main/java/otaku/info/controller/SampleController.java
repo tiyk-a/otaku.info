@@ -229,14 +229,14 @@ public class SampleController {
                 System.out.println("---run7TV番組投稿処理 END---");
                 break;
             case 8:
-                List<String> list = TeamEnum.getAllSubDomain();
-                List<String> deleted = new ArrayList<>();
-                for (String l : list) {
+                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
+                List<TeamEnum> deleted = new ArrayList<>();
+                for (TeamEnum l : list) {
                     if (!deleted.contains(l)) {
                         deleted.add(l);
                     }
                 }
-                for (String s : deleted) {
+                for (TeamEnum s : deleted) {
                     blogController.insertTags(s);
                 }
                 break;
@@ -460,12 +460,12 @@ public class SampleController {
      *
      * @throws InterruptedException
      */
-    private void insertIM() throws InterruptedException {
-        // 対象IM（wpIdがnull）を取得
-        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
-        Map<List<ItemMaster>, List<ItemMaster>> result = blogController.postOrUpdate(imList);
-        System.out.println(result.size());
-    }
+//    private void insertIM() throws InterruptedException {
+//        // 対象IM（wpIdがnull）を取得
+//        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
+//        Map<List<ItemMaster>, List<ItemMaster>> result = blogController.postOrUpdate(imList);
+//        System.out.println(result.size());
+//    }
 
     /**
      * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド
@@ -619,49 +619,33 @@ public class SampleController {
 
         // ブログ投稿（新規/更新）を行う
         // Map<新規登録ItemMaster/update ItemMaster>
-        Map<List<ItemMaster>, List<ItemMaster>> itemMasterMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()));
+//        Map<List<ItemMaster>, List<ItemMaster>> itemMasterMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
+        // Map<imId, wpId>
+        Map<Long, Long> imWpMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
 
-        List<ItemMaster> newItemMasterList = new ArrayList<>();
-        List<ItemMaster> updatedItemMasterList = new ArrayList<>();
-        for (Map.Entry<List<ItemMaster>, List<ItemMaster>> e : itemMasterMap.entrySet()) {
-            newItemMasterList = e.getKey();
-            updatedItemMasterList = e.getValue();
-        }
+//        List<ItemMaster> newItemMasterList = new ArrayList<>();
+//        List<ItemMaster> updatedItemMasterList = new ArrayList<>();
+//        for (Map.Entry<List<ItemMaster>, List<ItemMaster>> e : itemMasterMap.entrySet()) {
+//            newItemMasterList = e.getKey();
+//            updatedItemMasterList = e.getValue();
+//        }
 
-        // 新規登録したitemMasterがある場合
-        if (newItemMasterList.size() > 0) {
-            System.out.println("🕊保存したItemMaster ");
-            for (ItemMaster itemMaster: newItemMasterList) {
-
+        // 更新したブログ投稿がある場合
+        if (imWpMap.size() > 0) {
+            System.out.println("🕊ブログ更新のお知らせ");
+            for (Map.Entry<Long, Long> e : imWpMap.entrySet()) {
+                ItemMaster itemMaster = itemMasterService.findById(e.getKey());
                 // 楽天リンクなどで必要なためリストの一番目のitemを取得
                 Item item = itemMasterListMap.get(itemMaster).get(0);
 
                 if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                     System.out.println(itemMaster.getTitle());
-                    List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-                    if (teamIdList.size() > 0) {
-                        Map<Long, String> twIdMap = teamService.getTeamIdTwIdMapByTeamIdList(teamIdList);
-                        for (Map.Entry<Long, String> e : twIdMap.entrySet()) {
-                            TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, e.getKey());
-                            String result;
-
-                            // TODO: text作成、memberを抜いてる
-//                            List<Long> memberIdList = IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-//                            if (memberIdList != null && !memberIdList.isEmpty()) {
-//                                if (memberIdList.size() == 1) {
-//                                    String memberName = memberService.getMemberName(memberIdList.get(0));
-//                                    result = textController.twitterPerson(twiDto, memberName);
-//                                } else {
-//                                    List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-//                                    result = textController.twitterPerson(twiDto, memberNameList.get(memberNameList.size() -1));
-//                                }
-//                            } else {
-                                result = twTextController.twitter(twiDto);
-//                            }
-                            // Twitter投稿
-                            pythonController.post(Math.toIntExact(e.getKey()), result);
-                        }
-                    }
+                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, teamId);
+                    String result;
+                    // TODO: text作成、memberを抜いてるので追加したほうがいい
+                    result = twTextController.twitter(twiDto);
+                    // Twitter投稿
+                    pythonController.post(teamId, result);
                 } else {
                     System.out.println("❌🕊未来商品ではない");
                     System.out.println(item.getTitle());

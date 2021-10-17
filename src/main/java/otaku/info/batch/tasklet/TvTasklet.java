@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.batch.core.StepContribution;
@@ -18,11 +19,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.TvController;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
 @Component
 @StepScope
 public class TvTasklet implements Tasklet {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     TvController tvController;
@@ -35,7 +39,6 @@ public class TvTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        System.out.println("--- TV検索 START ---");
 
         List<String> teamNameList = teamService.findAllTeamName();
 
@@ -51,7 +54,7 @@ public class TvTasklet implements Tasklet {
 
             urlWithParam += param;
 
-            System.out.println(artist + "の番組を検索します");
+            logger.debug(artist + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
                 param = jsopConnect(urlWithParam, artist);
@@ -67,7 +70,6 @@ public class TvTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        System.out.println("--- TV検索 END ---");
         return RepeatStatus.FINISHED;
     }
 

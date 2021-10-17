@@ -68,6 +68,7 @@ public class Scheduler {
 
     @Scheduled(cron = "${cron.itemSearch}")
     public void run1(){
+        logger.debug("--- run1: 楽天新商品検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
         confMap.put("run1", new JobParameter(System.currentTimeMillis()));
@@ -81,10 +82,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run1: " + diff);
+        logger.debug("--- run1: 楽天新商品検索 END ---");
     }
 
     @Scheduled(cron = "${cron.futureItemReminder}")
     public void run2(){
+        logger.debug("--- run2: 未発売商品リマインダー START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run2", new JobParameter(System.currentTimeMillis()));
@@ -98,10 +101,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run2: " + diff);
+        logger.debug("--- run2: 未発売商品リマインダー END ---");
     }
 
     @Scheduled(cron = "${cron.yahooItemSearch}")
     public void run3(){
+        logger.debug("--- run3: Yahoo新商品検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run3", new JobParameter(System.currentTimeMillis()));
@@ -115,10 +120,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run3: " + diff);
+        logger.debug("--- run3: Yahoo新商品検索 END ---");
     }
 
     @Scheduled(cron = "${cron.publishAnnounce}")
     public void run4(){
+        logger.debug("--- run4: 商品発売日アナウンス START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run4", new JobParameter(System.currentTimeMillis()));
@@ -132,10 +139,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run4: " + diff);
+        logger.debug("--- run4: 商品発売日アナウンス END ---");
     }
 
     @Scheduled(cron = "${cron.itemSearchMember}")
     public void run5(){
+        logger.debug("--- run5: 新商品検索（個人） START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run5", new JobParameter(System.currentTimeMillis()));
@@ -149,10 +158,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run5: " + diff);
+        logger.debug("--- run5: 新商品検索（個人） END ---");
     }
 
     @Scheduled(cron = "${cron.tvSearch}")
     public void run6(){
+        logger.debug("--- run6: TV検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run6", new JobParameter(System.currentTimeMillis()));
@@ -166,10 +177,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run6: " + diff);
+        logger.debug("--- run6: TV検索 END ---");
     }
 
     @Scheduled(cron = "${cron.tvPost}")
     public void run7(){
+        logger.debug("--- run7: TV番組投稿処理 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run7", new JobParameter(System.currentTimeMillis()));
@@ -183,10 +196,12 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         logger.debug("run7: " + diff);
+        logger.debug("--- run17: TV番組投稿処理 END ---");
     }
 
     @Scheduled(cron = "${cron.tvAlert}")
     public void run9(){
+        logger.debug("--- run9: TVアラート START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run9", new JobParameter(System.currentTimeMillis()));
@@ -199,11 +214,13 @@ public class Scheduler {
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run9: " + diff);
+        logger.debug("run9: " + diff);
+        logger.debug("--- run9: TVアラート END ---");
     }
 
     @Scheduled(cron = "${cron.updateUrl}")
     public void run10(){
+        logger.debug("--- run10: DB商品アフェリリンク更新 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run10", new JobParameter(System.currentTimeMillis()));
@@ -211,17 +228,19 @@ public class Scheduler {
         try {
             jobLauncher.run(updateUrlJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run10: " + diff);
+        logger.debug("run10: " + diff);
+        logger.debug("--- run10: DB商品アフェリリンク更新 END ---");
     }
 
     // 固定ページの更新
     @Scheduled(cron = "${cron.blogUpdate}")
     public void run11(){
+        logger.debug("--- run11: Blog Update START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
         confMap.put("run11", new JobParameter(System.currentTimeMillis()));
@@ -229,11 +248,12 @@ public class Scheduler {
         try {
             jobLauncher.run(blogUpdateJob, jobParameters);
         }catch (Exception ex){
-            System.out.println(ex.getMessage());
+            logger.debug(ex.getMessage());
             lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
-        System.out.println("run11: " + diff);
+        logger.debug("run11: " + diff);
+        logger.debug("--- run11: Blog Update END ---");
     }
 }

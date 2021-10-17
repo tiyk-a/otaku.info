@@ -186,11 +186,17 @@ public class SampleController {
             newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
         }
 
+        List<Item> savedItemList = new ArrayList<>();
+        List<Item> itemList = new ArrayList<>();
         logger.debug("１２：楽天APIから受信したItemのリストをDB保存します");
-        List<Item> savedItemList = itemService.saveAll(newItemList);
-        logger.debug(ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
-        List<Item> itemList = itemService.findAll();
-        logger.debug(ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+        try {
+            savedItemList = itemService.saveAll(newItemList);
+            itemList = itemService.findAll();
+        } catch (Exception e) {
+            logger.debug("savedItemList: " + ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+            logger.debug("itemList: " + ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+            e.printStackTrace();
+        }
         return itemList.toString();
     }
 
@@ -199,38 +205,26 @@ public class SampleController {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
-                logger.debug("---run1楽天新商品検索 START---");
                 scheduler.run1();
-                logger.debug("---run1楽天新商品検索 END---");
                 break;
             case 2:
-                logger.debug("---run2未発売商品リマインダー START---");
                 scheduler.run2();
-                logger.debug("---run2未発売商品リマインダー END---");
                 break;
             case 3:
                 blogController.chkWpId();
                 blogController.chkWpIdByBlog();
                 break;
             case 4:
-                logger.debug("---run4商品発売日アナウンス START---");
                 scheduler.run4();
-                logger.debug("---run4商品発売日アナウンス END---");
                 break;
             case 5:
-                logger.debug("---run5楽天新商品検索（個人） START---");
                 scheduler.run5();
-                logger.debug("---run5楽天新商品検索（個人） END---");
                 break;
             case 6:
-                logger.debug("---run6TV検索 START---");
                 scheduler.run6();
-                logger.debug("---run6TV検索 END---");
                 break;
             case 7:
-                logger.debug("---run7TV番組投稿処理 START---");
                 scheduler.run7();
-                logger.debug("---run7TV番組投稿処理 END---");
                 break;
             case 8:
                 List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
@@ -245,20 +239,13 @@ public class SampleController {
                 }
                 break;
             case 9:
-                logger.debug("---run9TVアラート START---");
                 scheduler.run9();
-                logger.debug("---run9TVアラート END---");
                 break;
             case 10:
-                logger.debug("---run10DB商品アフェリリンク更新 START---");
                 scheduler.run10();
-                logger.debug("---run10DB商品アフェリリンク更新 END---");
                 break;
             case 11:
-                // 固定ページ「新商品情報」を更新する
-                logger.debug("---run11Blog Update START---");
                 scheduler.run11();
-                System.out.println("---run11Blog Update END---");
                 break;
             case 13: // tmpメソッド
                 // ショートコードが反映できるか
@@ -266,10 +253,10 @@ public class SampleController {
                 break;
             case 14:
                 // 商品の情報を投稿する
-                System.out.println("---Tmpブログ新商品投稿メソッドSTART---");
+                logger.debug("---Tmpブログ新商品投稿メソッドSTART---");
 //                List<Item> itemList = itemService.findNotDeleted();
 //                blogController.tmpItemPost(itemList);
-                System.out.println("---Tmpブログ新商品投稿メソッドEND---");
+                logger.debug("---Tmpブログ新商品投稿メソッドEND---");
                 break;
             case 15:
                 // irelの重複を解消
@@ -282,8 +269,6 @@ public class SampleController {
 //                orderM2();
 //                orderM3();
                 break;
-            case 17:
-                logger.debug("world4");
         }
             return "Done";
     }
@@ -470,7 +455,7 @@ public class SampleController {
 //        // 対象IM（wpIdがnull）を取得
 //        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
 //        Map<List<ItemMaster>, List<ItemMaster>> result = blogController.postOrUpdate(imList);
-//        System.out.println(result.size());
+//        logger.debug(result.size());
 //    }
 
     /**
@@ -505,6 +490,7 @@ public class SampleController {
             newItemList.addAll(yahooController.search(list));
         }
 
+        logger.debug("新商品候補数：" + newItemList.size());
         if (newItemList.size() > 0) {
             for (Item item : newItemList) {
                 item.setPublication_date(analyzeController.generatePublicationDate(item));
@@ -518,12 +504,15 @@ public class SampleController {
             }
         }
 
+        logger.debug("削除新商品候補数：" + removeList.size());
         // 保存する商品リストから不要な商品リストを削除する
         newItemList.removeAll(removeList);
+        logger.debug("削除商品除いた後の新商品候補数：" + newItemList.size());
 
         // 不要商品リストに入った商品を商品テーブルに格納する
         if (removeList.size() > 0) {
-            System.out.println("違う商品を保存します");
+            logger.debug("違う商品を保存します: " + removeList.size() + "件");
+            removeList.forEach(e -> logger.debug(e.getTitle()));
             removeList.forEach(e -> e.setDel_flg(true));
             itemService.saveAll(removeList);
         }
@@ -531,39 +520,47 @@ public class SampleController {
         // 正常商品を登録する
         List<Item> savedItemList = new ArrayList<>();
         if (newItemList.size() > 0) {
-            System.out.println("商品を保存します");
-            newItemList.forEach(e -> System.out.println(e.getTitle()));
+            logger.debug("商品を保存します: " + newItemList.size() + "件");
+            newItemList.forEach(e -> logger.debug(e.getTitle()));
             savedItemList = itemService.saveAll(newItemList);
 
+            logger.debug("保存に成功した商品数: " + savedItemList.size() + "件");
             if (savedItemList.size() > 0) {
                 List<IRel> iRelList = new ArrayList<>();
                 for (Item item : savedItemList) {
                     if (memberId!= null && memberId.equals(0L)) {
                         memberId = null;
                     }
-                    iRelList.add(new IRel(null, item.getItem_id(), teamId, null, null));
+                    iRelList.add(new IRel(null, item.getItem_id(), teamId, null, null, null));
                 }
+                logger.debug("Relの登録に入ります。新規rel数:" + iRelList.size());
 
                 // すでに登録されてるrelレコードがあったら重複嫌なので抜く
                 iRelList = iRelService.removeExistRecord(iRelList);
+                logger.debug("登録ずみrel削除後残り新規rel数:" + iRelList.size());
                 if (iRelList.size() > 0) {
                     List<IRel> savedList = iRelService.saveAll(iRelList);
                     if (memberId != null && memberId != 0L) {
+                        logger.debug("RelMem登録あり");
                         List<IRelMem> memList = new ArrayList<>();
                         for (IRel rel : savedList) {
                             IRelMem relMem = new IRelMem(null, rel.getI_rel_id(), memberId, null, null);
                             memList.add(relMem);
                         }
                         iRelMemService.saveAll(memList);
+                    } else {
+                        logger.debug("RelMem登録なし");
                     }
                 }
             }
         }
 
         // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
+        logger.debug("IM登録に入ります");
         Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
         // itemMasterRelも更新する
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
+            // 既存の登録済みrel情報を取得する
             List<IMRel> IMRelList = iMRelService.findByItemMId(e.getKey().getItem_m_id());
             List<ItemRelElems> itemMasterRelElemsList = new ArrayList<>();
             for (IMRel rel :IMRelList) {
@@ -638,14 +635,14 @@ public class SampleController {
 
         // 更新したブログ投稿がある場合
         if (imWpMap.size() > 0) {
-            System.out.println("🕊ブログ更新のお知らせ");
+            logger.debug("🕊ブログ更新のお知らせ");
             for (Map.Entry<Long, Long> e : imWpMap.entrySet()) {
                 ItemMaster itemMaster = itemMasterService.findById(e.getKey());
                 // 楽天リンクなどで必要なためリストの一番目のitemを取得
                 Item item = itemMasterListMap.get(itemMaster).get(0);
 
                 if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    System.out.println(itemMaster.getTitle());
+                    logger.debug(itemMaster.getTitle());
                     TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, teamId);
                     String result;
                     // TODO: text作成、memberを抜いてるので追加したほうがいい
@@ -653,8 +650,8 @@ public class SampleController {
                     // Twitter投稿
                     pythonController.post(teamId, result);
                 } else {
-                    System.out.println("❌🕊未来商品ではない");
-                    System.out.println(item.getTitle());
+                    logger.debug("❌🕊未来商品ではないので投稿なし");
+                    logger.debug(item.getTitle() + "発売日：" + itemMaster.getPublication_date());
                 }
             }
         }

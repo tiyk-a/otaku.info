@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -12,6 +13,7 @@ import otaku.info.searvice.MemberService;
 import otaku.info.searvice.ProgramService;
 import otaku.info.searvice.StationService;
 import otaku.info.searvice.TeamService;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
@@ -26,6 +28,8 @@ import java.util.*;
 @RestController("/python")
 @AllArgsConstructor
 public class PythonController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     LineController lineController;
@@ -63,12 +67,12 @@ public class PythonController {
         List<String> lineList = new ArrayList<>();
 
         // 開発環境の場合Twitterに投稿しない
-        System.out.println("Env: " + setting.getTest());
+        logger.debug("Env: " + setting.getTest());
         if (setting.getTest() != null && setting.getTest().equals("dev")) {
             lineList.add(text + " ■teamId=" + teamId);
         } else {
             if (teamId != null && StringUtils.hasText(text)) {
-                System.out.println("🕊 " + text);
+                logger.debug("🕊 " + text);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -84,7 +88,7 @@ public class PythonController {
                 ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
 
                 lineList.add(text + " ■teamId=" + teamId);
-                System.out.println("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
+                logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
             }
         }
         // LINEに投稿完了通知を送る

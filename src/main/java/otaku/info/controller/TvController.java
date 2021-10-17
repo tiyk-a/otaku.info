@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,6 +14,7 @@ import otaku.info.entity.PRel;
 import otaku.info.entity.Station;
 import otaku.info.enums.MemberEnum;
 import otaku.info.searvice.*;
+import otaku.info.setting.Log4jUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -26,6 +28,8 @@ import java.util.regex.Pattern;
 @Controller
 @AllArgsConstructor
 public class TvController  {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     private final ProgramService programService;
@@ -241,7 +245,7 @@ public class TvController  {
                 // 既存登録がなければ新規登録します。
                 Program savedP = programService.save(program);
                 relList.forEach(f -> f.setTeam_id(savedP.getProgram_id()));
-                System.out.println("TV番組を登録：" + program.toString());
+                logger.debug("TV番組を登録：" + program.toString());
             }
             pRelService.saveAll(relList);
         }

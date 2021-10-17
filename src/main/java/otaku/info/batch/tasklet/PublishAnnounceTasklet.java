@@ -52,7 +52,6 @@ public class PublishAnnounceTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.debug("--- 商品発売日アナウンス START ---");
         List<ItemMaster> itemMasterList = itemMasterService.findReleasedItemList();
         logger.debug("itemMasterList size: " + itemMasterList.size());
         Integer postCount = 0;
@@ -106,7 +105,6 @@ public class PublishAnnounceTasklet implements Tasklet {
             }
         }
         logger.debug("postCount: " + postCount);
-        logger.debug("--- 商品発売日アナウンス END ---");
         return RepeatStatus.FINISHED;
     }
 }

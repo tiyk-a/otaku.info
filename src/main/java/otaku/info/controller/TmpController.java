@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 import otaku.info.utils.ItemUtils;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 
 @Controller
 public class TmpController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     Setting setting;
@@ -109,7 +113,7 @@ public class TmpController {
 //
 //        // memberのあるitemだけ処理入る
 //        List<Item> memberItemList = itemList.stream().filter(e -> e.getMember_id() != null).collect(Collectors.toList());
-//        System.out.println("memberItemList size: " + memberItemList.size());
+//        logger.debug("memberItemList size: " + memberItemList.size());
 //        List<ItemRel> memberSaveList = new ArrayList<>();
 //
 //        for (Item i : memberItemList) {
@@ -236,7 +240,7 @@ public class TmpController {
 //            List<IMRel> wpAddRelList = imRelService.findByItemMId(im.getItem_m_id());
 //            for (IMRel rel : wpAddRelList) {
 //
-//                System.out.println(rel.getTeam_id() + " " + rel.getItem_m_id());
+//                logger.debug(rel.getTeam_id() + " " + rel.getItem_m_id());
 //                if (rel.getTeam_id() == 0) {
 //                    continue;
 //                }
@@ -330,11 +334,11 @@ public class TmpController {
         if (teamIdStr != null) {
             String[] strList = teamIdStr.split(",");
             for (String s : strList) {
-                System.out.println(s);
+                logger.debug(s);
                 try {
                     resultList.add(Long.valueOf(s));
                 } catch (Exception e) {
-                    System.out.println("Error");
+                    logger.debug("Error");
                 }
             }
         }
@@ -475,7 +479,7 @@ public class TmpController {
         String result = "[toc depth='5']";
         result = result + "<br /><h2>test from java</h2>\n<h2>h22</h2><h2>h23</h2><h3>h31</h3><h6>h6</h6>";
 
-        System.out.println(result);
+        logger.debug(result);
 
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
@@ -487,7 +491,7 @@ public class TmpController {
 
         String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/";
         String res = blogController.request(url, request, HttpMethod.POST);
-        System.out.println(res);
+        logger.debug(res);
     }
 
     /**
@@ -528,7 +532,7 @@ public class TmpController {
                             resultList.add(item);
                         }
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        logger.debug(e.getMessage());
                     }
                 }
             }
@@ -564,17 +568,17 @@ public class TmpController {
 //
 //        Map<ItemMaster, List<Item>> itemMasterListMap = new HashMap<>();
 //        while (year < 2022) {
-//            System.out.println("*** year: " + year);
+//            logger.debug("*** year: " + year);
 //            // itemMasterを集める
 //            List<ItemMaster> itemMasterList = itemMasterService.findByPublicationYearWpIdNull(year);
-//            System.out.println("itemMasterList.size: " + itemMasterList.size());
+//            logger.debug("itemMasterList.size: " + itemMasterList.size());
 //            // ひもづくitemを集める
 //            itemMasterList.forEach(e -> itemMasterListMap.put(e, itemService.gatherItems(e.getItem_m_id())));
 //            // itemMasterを投稿する
 //            if (itemMasterListMap.size() > 0) {
 //                itemMasterListMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey().getPublication_date()));
 //                for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
-//                    System.out.println("item_m_id: " + e.getKey().getItem_m_id() + " itemList size: " + e.getValue().size());
+//                    logger.debug("item_m_id: " + e.getKey().getItem_m_id() + " itemList size: " + e.getValue().size());
 //                    blogController.postMasterItem(e.getKey(), e.getValue());
 //                }
 //            }
@@ -646,7 +650,7 @@ public class TmpController {
         int n = 1;
         boolean flg = true;
         while (flg) {
-            System.out.println(n);
+            logger.debug(n);
             String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&per_page=40&page=" + n;
 
             HttpHeaders headers = generalHeaderSet(new HttpHeaders());
@@ -664,7 +668,7 @@ public class TmpController {
                     Integer wpId = ja.getJSONObject(i).getInt("id");
                     Integer media = ja.getJSONObject(i).getInt("featured_media");
                     if (media > 0) {
-                        System.out.println(wpId + ":" + media);
+                        logger.debug(wpId + ":" + media);
                     }
                 }
             } catch (Exception e) {
@@ -709,7 +713,7 @@ public class TmpController {
                             jsonObject1.put("content", text);
                             HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
                             String r = blogController.request(url, request1, HttpMethod.POST);
-                            System.out.println(r);
+                            logger.debug(r);
                         }
                     }
                 }
@@ -848,7 +852,7 @@ public class TmpController {
             }
         }
 
-        System.out.println("mediaIrListStrList.size(): " + mediaIrListStrList.size());
+        logger.debug("mediaIrListStrList.size(): " + mediaIrListStrList.size());
         for (String mediaIdStr : mediaIrListStrList) {
             String res = getMediaUrl(mediaIdStr);
             // レスポンスを成形

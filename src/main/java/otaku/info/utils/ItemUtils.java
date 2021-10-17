@@ -1,6 +1,7 @@
 package otaku.info.utils;
 
 import com.atilika.kuromoji.ipadic.Tokenizer;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.TextController;
@@ -8,6 +9,7 @@ import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.searvice.ItemMasterService;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Log4jUtils;
 
 import java.util.*;
 
@@ -17,6 +19,8 @@ import java.util.*;
  */
 @Component
 public class ItemUtils {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     private DateUtils dateUtils;
@@ -81,6 +85,7 @@ public class ItemUtils {
                 // まずすでにマスターが出現してるか確認
                 if (masterIdList.size() > 0 && masterIdList.contains(item.getItem_m_id())) {
                     // すでにマスターを取得していたら
+                    Long masterId = null;
                     for (ItemMaster itemMaster : itemMasterList) {
                         if (itemMaster.getItem_m_id().equals(item.getItem_m_id())) {
                             List<Item> tmpList = resultMap.get(itemMaster);
@@ -88,31 +93,38 @@ public class ItemUtils {
                             item.setItem_m_id(itemMaster.getItem_m_id());
                             itemService.saveItem(item);
                             resultMap.put(itemMaster, tmpList);
+                            masterId = itemMaster.getItem_m_id();
                         }
                     }
+                    logger.debug("IM登録済みです:" + masterId);
                 } else {
                     // まだマスターが見つからなかったらサービス使って取りに行く
                     ItemMaster itemMaster = itemMasterService.getMasterById(item.getItem_m_id());
+                    Long masterId = itemMaster.getItem_m_id();
 
                     // マスターが見つからなかった場合
                     if (itemMaster.isNull() || itemMaster.getItem_m_id() == null) {
                         // 新規マスター登録が必要か判定する
-                        Long masterId = judgeNewMaster(item);
 
                         // マスター登録が必要な場合は登録
                         if (masterId.equals(0L)) {
+                            logger.debug("IM新規登録です");
                             String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
                             Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                             for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
                                 item = e.getValue();
                                 itemMaster = e.getKey();
                             }
+                            logger.debug("IM新規登録完了:" + itemMaster.getItem_m_id());
                         } else {
                             // マスター登録が不要な場合はitemにマスターIDを設定する
+                            logger.debug("IM登録済みです:" + masterId);
                             item.setItem_m_id(masterId);
                             itemService.saveItem(item);
                             itemMaster = itemMasterService.findById(masterId);
                         }
+                    } else {
+                        logger.debug("IM登録済みです:" + masterId);
                     }
                     // マスターが見つかった場合orマスターが見つからなかった→新規登録して変数を上書きした後
                     List<Item> tmpList = new ArrayList<>();
@@ -138,14 +150,17 @@ public class ItemUtils {
 
                 // マスター登録が必要な場合は登録
                 if (masterId.equals(0L)) {
+                    logger.debug("IM新規登録です");
                     String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
                     Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
                     for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
                         item = e.getValue();
                         itemMaster = e.getKey();
                     }
+                    logger.debug("IM新規登録完了:" + itemMaster.getItem_m_id());
                 } else {
                     // マスター登録が不要な場合はitemにマスターIDを設定する
+                    logger.debug("IM登録済みです:" + masterId);
                     item.setItem_m_id(masterId);
                     itemService.saveItem(item);
                     itemMaster = itemMasterService.findById(masterId);

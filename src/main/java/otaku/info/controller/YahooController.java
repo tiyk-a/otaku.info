@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.Item;
 import otaku.info.searvice.ItemService;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 import otaku.info.utils.JsonUtils;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 
 @Controller
 public class YahooController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     AnalyzeController analyzeController;
@@ -53,7 +57,7 @@ public class YahooController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            System.out.println("YAHOO SEARCH URL: " + url);
+            logger.debug("YAHOO SEARCH URL: " + url);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
 
             if (responseEntity.getStatusCode().equals(HttpStatus.FORBIDDEN)) {

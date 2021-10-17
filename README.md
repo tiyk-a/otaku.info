@@ -56,7 +56,7 @@ import de.danielbechler.diff.node.DiffNode;
 
 #### 絵文字の使用
 文字数削減のために絵文字使うことにしました
-###### System.out.println
+###### logger.debug
 🕊Twitter投稿
 💬LINE通知
 

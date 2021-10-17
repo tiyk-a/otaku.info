@@ -1,11 +1,11 @@
 package otaku.info.controller;
 
+import org.apache.log4j.Logger;
 import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.MagazineEnum;
@@ -13,6 +13,7 @@ import otaku.info.enums.MemberEnum;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
+import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
@@ -28,6 +29,8 @@ import java.util.stream.Collectors;
  */
 @Controller
 public class TextController {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger();
 
     @Autowired
     private DateUtils dateUtils;
@@ -488,7 +491,6 @@ public class TextController {
         }
         // 全てのItemからデータを抜いたので、これから返却するタイトルを作成する
         String res = "";
-        System.out.println("textController:568 publicationDate=" + publicationDate);
         if (publicationDate != null) {
             res = sdf1.format(publicationDate);
         }

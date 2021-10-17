@@ -47,15 +47,12 @@ public class FutureItemReminderTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.debug("--- 未発売商品リマインダー START ---");
-
         for (TeamEnum e : TeamEnum.values()) {
             // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
             List<ItemMaster> imList = itemMasterService.findNearFutureIMByTeamId(e.getId());
             logger.debug(e.getName() + "imList size: " + imList.size());
 
             post(imList, e);
-            logger.debug("--- 未発売商品リマインダー END ---");
 //        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
 //        List<Item> tmpList = itemService.findNotDeleted();
 //        blogController.tmpItemPost(tmpList);

@@ -45,7 +45,6 @@ public class YahooItemSearchTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.debug("--- Yahoo新商品検索 START ---");
         try {
             List<Team> teamList = teamService.findAllTeam();
             Map<Long, String> artistMap = new HashMap<Long, String>();
@@ -63,7 +62,6 @@ public class YahooItemSearchTasklet implements Tasklet {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        logger.debug("--- Yahoo新商品検索 END ---");
 
         logger.debug("--- 新商品検索（個人） START ---");
         try {

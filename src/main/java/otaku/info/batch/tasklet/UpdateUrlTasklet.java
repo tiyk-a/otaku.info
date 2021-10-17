@@ -22,14 +22,12 @@ public class UpdateUrlTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        logger.debug("--- DB商品アフェリリンク更新 START ---");
         boolean result = rakutenController.updateUrl();
         if (result) {
             logger.debug("SUCCESS");
         } else {
             logger.debug("FAILED");
         }
-        logger.debug("--- DB商品アフェリリンク更新 END ---");
         return RepeatStatus.FINISHED;
     }
 }

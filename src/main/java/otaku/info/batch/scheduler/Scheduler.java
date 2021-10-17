@@ -62,10 +62,6 @@ public class Scheduler {
     @Qualifier("blogUpdateJob")
     private Job blogUpdateJob;
 
-    @Autowired
-    @Qualifier("blogMediaJob")
-    private Job blogMediaJob;
-
     @Scheduled(cron = "${cron.itemSearch}")
     public void run1(){
         Long startTime = System.currentTimeMillis();
@@ -235,18 +231,5 @@ public class Scheduler {
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
         System.out.println("run11: " + diff);
-    }
-
-    @Scheduled(cron = "${cron.blogMedia}")
-    public void run12(){
-        Map<String, JobParameter> confMap = new HashMap<>();
-        confMap.put("run12", new JobParameter(System.currentTimeMillis()));
-        JobParameters jobParameters = new JobParameters(confMap);
-        try {
-            jobLauncher.run(blogMediaJob, jobParameters);
-        }catch (Exception ex){
-            System.out.println(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
-        }
     }
 }

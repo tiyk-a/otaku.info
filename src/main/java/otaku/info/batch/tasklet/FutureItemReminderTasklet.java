@@ -72,7 +72,11 @@ public class FutureItemReminderTasklet implements Tasklet {
         Integer postCount = 0;
         for (ItemMaster im : imList) {
             // TODO: メンバー名を取得していない
-            Item item = itemService.findByMasterId(im.getItem_m_id()).get(0);
+            Item item = null;
+            List<Item> itemList = itemService.findByMasterId(im.getItem_m_id());
+            if (itemList != null && itemList.size() > 0) {
+                item = itemList.get(0);
+            }
             String text = "";
             if (item != null) {
                 text = twTextController.futureItemReminder(im, teamEnum.getId(), item);

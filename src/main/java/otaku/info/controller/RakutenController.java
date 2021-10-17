@@ -76,7 +76,7 @@ public class RakutenController {
      * @return
      */
     public JSONObject request(String param) throws InterruptedException {
-        JSONObject jsonObject = null;
+        JSONObject jsonObject = new JSONObject();
 
         try {
             RestTemplate restTemplate = new RestTemplate();

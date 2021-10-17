@@ -78,7 +78,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                         if (item != null) {
                             text = twTextController.releasedItemAnnounce(itemMaster, e.getKey(), item);
                         }
-                        pythonController.post(Math.toIntExact(e.getKey()), text);
+                        pythonController.post(e.getKey(), text);
                         ++postCount;
                     }
                 }
@@ -90,7 +90,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                     if (item != null) {
                         text = twTextController.releasedItemAnnounce(itemMaster,7L, item);
                     }
-                    pythonController.post(0, text);
+                    pythonController.post(TeamEnum.ABCZ.getId(), text);
                     ++postCount;
                 }
             }

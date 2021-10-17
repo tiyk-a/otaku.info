@@ -76,7 +76,7 @@ public class FutureItemReminderTasklet implements Tasklet {
             if (item != null) {
                 text = twTextController.futureItemReminder(im, teamEnum.getId(), item);
             }
-            pythonController.post(Math.toIntExact(teamEnum.getId()), text);
+            pythonController.post(teamEnum.getId(), text);
             ++postCount;
             try {
                 Thread.sleep(1000);

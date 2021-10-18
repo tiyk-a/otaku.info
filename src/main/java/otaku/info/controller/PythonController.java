@@ -30,6 +30,7 @@ import java.util.*;
 public class PythonController {
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("PythonController");
+    final Logger twLog = Log4jUtils.newFileLogger("PythonControllerTw", "Twitter.log");
 
     @Autowired
     LineController lineController;
@@ -70,6 +71,7 @@ public class PythonController {
         logger.debug("Env: " + setting.getTest());
         if (setting.getTest() != null && setting.getTest().equals("dev")) {
             lineList.add(text + " ■teamId=" + teamId);
+            twLog.debug("teamId:" + teamId + "■" + text);
         } else {
             if (teamId != null && StringUtils.hasText(text)) {
                 logger.debug("🕊 " + text);
@@ -89,6 +91,7 @@ public class PythonController {
 
                 lineList.add(text + " ■teamId=" + teamId);
                 logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
+                twLog.debug("teamId:" + teamId + "■" + text);
             }
         }
         // LINEに投稿完了通知を送る

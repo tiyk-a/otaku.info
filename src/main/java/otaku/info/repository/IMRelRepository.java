@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.IMRel;
 import otaku.info.entity.IMRelKey;
 
+import java.util.Date;
 import java.util.List;
 
 public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
@@ -47,4 +48,7 @@ public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
 
     @Query("select t from im_rel t where wp_id = ?1 and team_id = ?2")
     List<IMRel> findbyWpIdTeamId(Long wpId, Long teamId);
+
+    @Query(nativeQuery = true, value = "select a.* from im_rel a inner join item_master b on a.item_m_id = b.item_m_id where a.wp_id is null and b.publication_date >= ?1")
+    List<IMRel> findByWpIdNullPublicationDateFuture(Date today);
 }

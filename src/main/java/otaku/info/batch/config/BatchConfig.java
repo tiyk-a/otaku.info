@@ -28,7 +28,7 @@ class BatchConfig {
     private final TvAlertTasklet tvAlertTasklet;
     private final UpdateUrlTasklet updateUrlTasklet;
     private final BlogUpdateTasklet blogUpdateTasklet;
-
+    private final BlogCatchupTasklet blogCatchupTasklet;
     private final TvTasklet tvTasklet;
 
     @Bean
@@ -179,5 +179,18 @@ class BatchConfig {
     Job blogUpdateJob() {
         return this.jobBuilderFactory.get("blogUpdateJob").incrementer(new RunIdIncrementer())
                 .start(blogUpdateStep()).build();
+    }
+
+    @Bean
+    Step blogCatchupStep() {
+        return stepBuilderFactory.get("blogCatchupStep") //Step名を指定
+                .tasklet(blogCatchupTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job blogCatchupJob() {
+        return this.jobBuilderFactory.get("blogCatchupJob").incrementer(new RunIdIncrementer())
+                .start(blogCatchupStep()).build();
     }
 }

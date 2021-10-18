@@ -391,10 +391,13 @@ public class BlogController {
         Long wpId = null;
 
         for (ItemMaster itemMaster : itemMasterList) {
-            // 各teamIdにおいてブログを投稿する
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
-            String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList)).get(0);
+            List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList));
+            String content = null;
+            if (!contentList.isEmpty()) {
+                content = contentList.get(0);
+            }
             List<Long> teamIdList = new ArrayList<>();
             teamIdList.add(teamId);
             List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
@@ -408,9 +411,8 @@ public class BlogController {
             }
 
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
-            List<IMRel> newIMRelList = new ArrayList<>();
 
-            if (headers != null) {
+            if (headers != null && content != null) {
                 wpId = rel.getWp_id();
 
                 JSONObject jsonObject = new JSONObject();
@@ -457,6 +459,7 @@ public class BlogController {
 
                 // ここで投稿
                 try {
+                    logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getItem_m_id());
                     String res = request(url, request, HttpMethod.POST);
                     JSONObject jo = jsonUtils.createJsonObject(res);
                     if (jo.get("id") != null) {

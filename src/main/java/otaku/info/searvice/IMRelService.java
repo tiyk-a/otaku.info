@@ -8,6 +8,7 @@ import otaku.info.repository.IMRelRepository;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -80,5 +81,9 @@ public class IMRelService {
 
     public List<IMRel> findbyWpIdTeamId(Long wpId, Long teamId) {
         return iMRelRepository.findbyWpIdTeamId(wpId, teamId);
+    }
+
+    public List<IMRel> findByWpIdNullPublicationDateFuture(Date today) {
+        return iMRelRepository.findByWpIdNullPublicationDateFuture(today);
     }
 }

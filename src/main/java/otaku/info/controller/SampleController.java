@@ -227,16 +227,17 @@ public class SampleController {
                 scheduler.run7();
                 break;
             case 8:
-                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
-                List<TeamEnum> deleted = new ArrayList<>();
-                for (TeamEnum l : list) {
-                    if (!deleted.contains(l)) {
-                        deleted.add(l);
-                    }
-                }
-                for (TeamEnum s : deleted) {
-                    blogController.insertTags(s);
-                }
+//                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
+//                List<TeamEnum> deleted = new ArrayList<>();
+//                for (TeamEnum l : list) {
+//                    if (!deleted.contains(l)) {
+//                        deleted.add(l);
+//                    }
+//                }
+//                for (TeamEnum s : deleted) {
+//                    blogController.insertTags(s);
+//                }
+                scheduler.run8();
                 break;
             case 9:
                 scheduler.run9();

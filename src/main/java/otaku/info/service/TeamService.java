@@ -1,4 +1,4 @@
-package otaku.info.searvice;
+package otaku.info.service;
 
 import java.util.*;
 import java.util.stream.Collectors;

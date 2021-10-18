@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.Item;
-import otaku.info.searvice.ItemService;
+import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;

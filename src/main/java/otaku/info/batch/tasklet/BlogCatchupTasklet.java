@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
 import otaku.info.entity.IMRel;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.IMRelService;
-import otaku.info.searvice.ItemMasterService;
+import otaku.info.service.IMRelService;
+import otaku.info.service.ItemMasterService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
 

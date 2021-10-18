@@ -1,9 +1,8 @@
-package otaku.info.searvice;
+package otaku.info.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import otaku.info.entity.IMRel;
 import otaku.info.entity.IMRelMem;
 import otaku.info.repository.IMRelMemRepository;
 

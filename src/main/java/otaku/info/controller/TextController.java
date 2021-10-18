@@ -12,7 +12,7 @@ import otaku.info.enums.MagazineEnum;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.enums.TeamEnum;
-import otaku.info.searvice.*;
+import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;

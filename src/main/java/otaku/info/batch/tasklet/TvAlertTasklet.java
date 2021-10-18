@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.Program;
-import otaku.info.searvice.ProgramService;
+import otaku.info.service.ProgramService;
 import otaku.info.setting.Log4jUtils;
 
 import java.time.LocalDateTime;

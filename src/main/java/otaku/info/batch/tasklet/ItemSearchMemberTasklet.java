@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.SampleController;
 import otaku.info.dto.MemberSearchDto;
-import otaku.info.searvice.MemberService;
+import otaku.info.service.MemberService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.ArrayList;

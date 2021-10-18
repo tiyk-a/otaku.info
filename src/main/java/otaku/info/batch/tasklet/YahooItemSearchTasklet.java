@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.SampleController;
 import otaku.info.dto.MemberSearchDto;
 import otaku.info.entity.Team;
-import otaku.info.searvice.MemberService;
-import otaku.info.searvice.TeamService;
+import otaku.info.service.MemberService;
+import otaku.info.service.TeamService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.ArrayList;

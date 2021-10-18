@@ -18,7 +18,7 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.TvController;
-import otaku.info.searvice.TeamService;
+import otaku.info.service.TeamService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 

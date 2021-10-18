@@ -14,9 +14,9 @@ import otaku.info.entity.IMRel;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.enums.TeamEnum;
-import otaku.info.searvice.IMRelService;
-import otaku.info.searvice.ItemMasterService;
-import otaku.info.searvice.ItemService;
+import otaku.info.service.IMRelService;
+import otaku.info.service.ItemMasterService;
+import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.*;

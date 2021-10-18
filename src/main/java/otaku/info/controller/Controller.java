@@ -3,7 +3,7 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
-import otaku.info.searvice.TeamService;
+import otaku.info.service.TeamService;
 
 import java.util.ArrayList;
 import java.util.Arrays;

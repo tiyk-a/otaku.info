@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
-import otaku.info.searvice.*;
+import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;

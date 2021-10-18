@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.TextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
-import otaku.info.searvice.ItemMasterService;
-import otaku.info.searvice.ItemService;
+import otaku.info.service.ItemMasterService;
+import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.*;

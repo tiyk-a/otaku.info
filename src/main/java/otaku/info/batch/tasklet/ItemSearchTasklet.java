@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.SampleController;
 import otaku.info.entity.Team;
-import otaku.info.searvice.TeamService;
+import otaku.info.service.TeamService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.HashMap;

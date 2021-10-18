@@ -40,14 +40,12 @@ public class TvAlertTasklet implements Tasklet {
         List<Program> programList = programService.findByOnAirDateTimeTeamId(LocalDateTime.now(), 1);
         if (programList.size() > 0) {
             // Postする番組の投稿文を作る Map<ProgramId-TeamId, text>
-            Map<String, String> postMap = new HashMap<>();
+            Map<Long, String> postMap = new HashMap<>();
             programList.forEach(e -> postMap.putAll(twTextController.tvAlert(e)));
             // Post
             if (postMap.size() > 0) {
-                for (Map.Entry<String, String> post : postMap.entrySet()) {
-                    String num = post.getKey();
-                    num = num.replaceAll("^.*-", "");
-                    pythonController.post(Long.parseLong(num), post.getValue());
+                for (Map.Entry<Long, String> post : postMap.entrySet()) {
+                    pythonController.post(post.getKey(), post.getValue());
                 }
             }
         }

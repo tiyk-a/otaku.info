@@ -85,7 +85,7 @@ public class TextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getName();
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 

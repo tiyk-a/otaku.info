@@ -6,16 +6,9 @@ import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.dto.TwiDto;
-import otaku.info.entity.IMRel;
-import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
-import otaku.info.entity.Program;
-import otaku.info.enums.MagazineEnum;
-import otaku.info.enums.MemberEnum;
-import otaku.info.enums.PublisherEnum;
-import otaku.info.enums.TeamEnum;
+import otaku.info.entity.*;
+import otaku.info.enums.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -36,13 +29,7 @@ public class TwTextController {
     private DateUtils dateUtils;
 
     @Autowired
-    AnalyzeController analyzeController;
-
-    @Autowired
     LineController lineController;
-
-    @Autowired
-    private ItemService itemService;
 
     @Autowired
     private TeamService teamService;
@@ -52,9 +39,6 @@ public class TwTextController {
 
     @Autowired
     private StationService stationService;
-
-    @Autowired
-    private TagService tagService;
 
     @Autowired
     private ItemMasterService itemMasterService;
@@ -67,6 +51,9 @@ public class TwTextController {
 
     @Autowired
     private PRelService pRelService;
+
+    @Autowired
+    private PRelMemService pRelMemService;
 
     @Autowired
     private Setting setting;
@@ -85,14 +72,13 @@ public class TwTextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getName();
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String futureItemReminder(ItemMaster im, Long teamId, Item item) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
-        String tags = "";
-        tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        String tags = "#" + TeamEnum.get(teamId).getName();
         String title = "";
         String url = "";
         IMRel rel = iMRelService.findByImIdTeamId(im.getItem_m_id(), teamId);
@@ -162,7 +148,7 @@ public class TwTextController {
      */
     public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-        String tags = tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
+        String tags = "#" + TeamEnum.get(teamId).getName();
 //        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(itemMaster.getTitle())) {
@@ -207,7 +193,7 @@ public class TwTextController {
         if (result.length() + memberName.length() < 135) {
             result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
         }
-        String tags = tagService.getTagByTeam(twiDto.getTeam_id()).stream().collect(Collectors.joining(" #","#",""));
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getName();
         return result + "%0A%0A" + tags;
     }
 
@@ -240,78 +226,61 @@ public class TwTextController {
     }
 
     /**
-     * 直近のTV番組のアラート文章を作ります。
+     * 直近のTV番組1件のアラート文章を作ります。
      *
      * @param program
-     * @return Map<ProgramId-TeamId, text>
+     * @return Map<TeamId, text>
      */
-    public Map<String, String> tvAlert(Program program) {
-        String stationName = stationService.getStationName(program.getStation_id());
+    public Map<Long, String> tvAlert(Program program) {
+        String stationName = StationEnum.get(program.getStation_id()).getName();
         List<Long> teamIdList = pRelService.getTeamIdList(program.getProgram_id());
 
-        Map<String, String> resultMap = new HashMap<>();
+        // teamId, null
+        Map<Long, String> resultMap = new HashMap<>();
         // 返却するMapにKey(ProgramId)のみ詰め込みます。
         if (teamIdList.size() > 0) {
             // Mapのkeyを作り格納
-            teamIdList.forEach(e -> resultMap.put(program.getProgram_id() + "-" + e, null));
-        }
+            teamIdList.forEach(e -> resultMap.put(e, null));
+            for (Long teamId : teamIdList) {
+                List<String> tagList = new ArrayList<>();
+                String teamName = TeamEnum.get(teamId).getName();
+                tagList.add(teamName);
+                List<PRelMem> pRelMemList = pRelMemService.findByPRelId(teamId);
 
-        // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
-        List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
-        List<Long> memberIdList = pRelService.getMemberIdList(program.getProgram_id());
-        for (Long mId : memberIdList) {
-            TeamIdMemberNameDto dto = memberService.getMapTeamIdMemberName(mId);
-            if (dto != null && dto.getMember_name() != null) {
-                teamIdMemberNameDtoList.add(dto);
-            }
-        }
+                String result = "";
 
-        // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>
-        Map<Long, String> keyMemberMap = new HashMap<>();
-        if (teamIdMemberNameDtoList.size() > 0) {
-            for (TeamIdMemberNameDto dto : teamIdMemberNameDtoList) {
-                if (keyMemberMap.containsKey(dto.getTeam_id())) {
-                    String v = keyMemberMap.get(dto.getTeam_id());
-                    keyMemberMap.put(dto.getTeam_id(), v + "・" + dto.getMember_name());
+                // Format LocalDateTime
+                String formattedDateTime = program.getOn_air_date().format(dtf2);
+
+                // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
+                if (pRelMemList.size() > 0) {
+                    List<String> memNameList = MemberEnum.findMNameListByIdList(pRelMemList.stream().map(PRelMem::getMember_id).collect(Collectors.toList()));
+                    String memberName = String.join("・", memNameList);
+                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + memberName + "が出演します。ぜひご覧ください！";
+
+                    tagList.addAll(memNameList);
+                    if (tagList.size() > 0) {
+                        for (String tag : tagList) {
+                            if (tag.contains(" ")) {
+                                String removedSpaceName = tag.replaceAll(" ", "");
+                                tagList.remove(tag);
+                                tagList.add(removedSpaceName);
+                            }
+                        }
+                        result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
+                    }
                 } else {
-                    keyMemberMap.put(dto.getTeam_id(), dto.getMember_name());
+                    if (!teamName.equals("")) {
+                        if (teamName.contains(" ")) {
+                            teamName = teamName.replaceAll(" ", "");
+                        }
+                        result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" +teamName  + "が出演します。ぜひご覧ください！\n#" + teamName;
+                    } else {
+                        result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に出演情報があります。ぜひご確認ください！";
+                    }
                 }
+                resultMap.put(teamId, result);
             }
-        }
-
-        // 返却リストにはKey(ProgramId)しか入っていないので、valueを入れます。
-        for (Map.Entry<String, String> entry : resultMap.entrySet()) {
-            String num = entry.getKey();
-            num = num.replaceAll("^.*-", "");
-            Long teamId = Long.valueOf(num);
-            String result = "";
-
-            // Format LocalDateTime
-            String formattedDateTime = program.getOn_air_date().format(dtf2);
-
-            // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
-            if (keyMemberMap.containsKey(teamId)) {
-                result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
-
-                // TODO: ここのDB使用なくなればtagテーブルなくすことができる
-                List<String> tagList = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・")));
-                if (tagList.size() > 0) {
-                    result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
-                }
-            } else {
-                String teamName = teamService.getTeamName(teamId);
-                if (!teamName.equals("")) {
-                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" +teamName  + "が出演します。ぜひご覧ください！";
-                } else {
-                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に出演情報があります。ぜひご確認ください！";
-                }
-
-                List<String> tagList = tagService.getTagByTeam(teamId);
-                if (tagList.size() > 0) {
-                    result = result + "%0A%0A" + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-                }
-            }
-            resultMap.put(entry.getKey(), result);
         }
         return resultMap;
     }

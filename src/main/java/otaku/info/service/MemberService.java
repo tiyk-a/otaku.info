@@ -1,10 +1,8 @@
 package otaku.info.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import otaku.info.dto.TeamIdMemberNameDto;
 import otaku.info.entity.Member;
 import otaku.info.enums.MemberEnum;
 
@@ -49,22 +47,6 @@ public class MemberService {
         }
         List<String> memberNameList = findAllMemberName();
         return memberNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> MemberEnum.get(e).getId()).collect(Collectors.toList());
-    }
-
-    /**
-     * TeamIdとMemberNameだけのDTOリストを返却します。
-     *
-     * @param memberId
-     * @return
-     */
-    public TeamIdMemberNameDto getMapTeamIdMemberName(Long memberId) {
-        TeamIdMemberNameDto dto = new TeamIdMemberNameDto();
-        MemberEnum e = MemberEnum.get(memberId);
-        if (e != null) {
-            Member member = e.convertToEntity();
-            BeanUtils.copyProperties(member, dto);
-        }
-        return dto;
     }
 
     /**

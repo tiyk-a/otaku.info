@@ -2,6 +2,7 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
@@ -25,6 +27,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,10 +44,13 @@ public class BlogController {
     TextController textController;
 
     @Autowired
-    ImageController imageController;
+    RakutenController rakutenController;
 
     @Autowired
-    RakutenController rakutenController;
+    TwTextController twTextController;
+
+    @Autowired
+    PythonController pythonController;
 
     @Autowired
     ItemService itemService;
@@ -386,7 +393,7 @@ public class BlogController {
      * imId, wpIdのマップを返します。
      *
      */
-    public Map<Long, Long> postOrUpdate(List<ItemMaster> itemMasterList, Long teamId) throws InterruptedException {
+    public Map<Long, Long> postOrUpdate(List<ItemMaster> itemMasterList, Long teamId) throws InterruptedException, JSONException {
         Map<Long, Long> resMap = new TreeMap<>();
         Long wpId = null;
 
@@ -471,6 +478,21 @@ public class BlogController {
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                }
+                // 更新したブログ投稿がある場合
+                logger.debug("🕊ブログ更新のお知らせ");
+                if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                    logger.debug(itemMaster.getTitle());
+                    url = e.getSubDomain() + "blog/" + rel.getWp_id();
+                    TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId);
+                    String result;
+                    // TODO: text作成、memberを抜いてるので追加したほうがいい
+                    result = twTextController.twitter(twiDto);
+                    // Twitter投稿
+                    pythonController.post(teamId, result);
+                } else {
+                    logger.debug("❌🕊未来商品ではないので投稿なし");
+                    logger.debug(itemMaster.getTitle() + "発売日：" + itemMaster.getPublication_date());
                 }
             }
             Thread.sleep(500);

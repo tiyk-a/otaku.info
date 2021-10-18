@@ -2,8 +2,6 @@ package otaku.info.controller;
 
 import java.io.*;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
@@ -19,11 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
-import otaku.info.dto.ItemRelElems;
-import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
-import otaku.info.enums.TeamEnum;
 import otaku.info.searvice.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -57,13 +52,7 @@ public class SampleController {
     private AnalyzeController analyzeController;
 
     @Autowired
-    private PythonController pythonController;
-
-    @Autowired
     private BlogController blogController;
-
-    @Autowired
-    private ImageController imageController;
 
     @Autowired
     private TmpController tmpController;
@@ -605,7 +594,7 @@ public class SampleController {
             }
         }
 
-        // ブログ投稿（新規/更新）を行う
+        // ブログ投稿（新規/更新）を行う(twitter投稿まで）
         // Map<新規登録ItemMaster/update ItemMaster>
 //        Map<List<ItemMaster>, List<ItemMaster>> itemMasterMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
         // Map<imId, wpId>
@@ -617,29 +606,6 @@ public class SampleController {
 //            newItemMasterList = e.getKey();
 //            updatedItemMasterList = e.getValue();
 //        }
-
-        // 更新したブログ投稿がある場合
-        if (imWpMap.size() > 0) {
-            logger.debug("🕊ブログ更新のお知らせ");
-            for (Map.Entry<Long, Long> e : imWpMap.entrySet()) {
-                ItemMaster itemMaster = itemMasterService.findById(e.getKey());
-                // 楽天リンクなどで必要なためリストの一番目のitemを取得
-                Item item = itemMasterListMap.get(itemMaster).get(0);
-
-                if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    logger.debug(itemMaster.getTitle());
-                    TwiDto twiDto = new TwiDto(item.getTitle(), item.getUrl(), itemMaster.getPublication_date(), null, teamId);
-                    String result;
-                    // TODO: text作成、memberを抜いてるので追加したほうがいい
-                    result = twTextController.twitter(twiDto);
-                    // Twitter投稿
-                    pythonController.post(teamId, result);
-                } else {
-                    logger.debug("❌🕊未来商品ではないので投稿なし");
-                    logger.debug(item.getTitle() + "発売日：" + itemMaster.getPublication_date());
-                }
-            }
-        }
         return "Ok";
     }
 

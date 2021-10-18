@@ -67,12 +67,14 @@ public class BlogCatchupTasklet implements Tasklet {
         for (Map.Entry<Long, List<ItemMaster>> e : imTeamIdMap.entrySet()) {
             // TODO: teamid=0Lはあってはいけないはずだがまだいるので処理分割してる
             if (e.getKey() != 0L) {
-                blogController.postOrUpdate(e.getValue(), e.getKey());
+                Map<Long, Long> imWpMap = blogController.postOrUpdate(e.getValue(), e.getKey());
                 logger.debug("teamId:" + e.getKey() + " itemMaster数:" + e.getValue().size());
             } else {
                 logger.debug("teamId=0L:" + e.getValue().size());
             }
         }
+
+        //
         return RepeatStatus.FINISHED;
     }
 }

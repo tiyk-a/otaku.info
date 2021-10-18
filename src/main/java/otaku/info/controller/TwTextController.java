@@ -235,7 +235,7 @@ public class TwTextController {
         }
 
         // blogへの誘導
-        String blog = "一覧はこちら%0Ahttps://otakuinfo.fun/pages/" + TeamEnum.getTvPageId(teamId);
+        String blog = "一覧はこちら%0A" + TeamEnum.findSubDomainById(teamId) + "pages/" + TeamEnum.getTvPageId(teamId);
         return result + info + blog;
     }
 
@@ -292,6 +292,8 @@ public class TwTextController {
             // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
             if (keyMemberMap.containsKey(teamId)) {
                 result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
+
+                // TODO: ここのDB使用なくなればtagテーブルなくすことができる
                 List<String> tagList = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・")));
                 if (tagList.size() > 0) {
                     result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));

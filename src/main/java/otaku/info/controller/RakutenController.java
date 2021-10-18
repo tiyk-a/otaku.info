@@ -195,7 +195,7 @@ public class RakutenController {
                     String affiliateUrl = jsonObject.getJSONArray("Items").getJSONObject(0).getJSONObject("Item").getString("affiliateUrl").replaceAll("^\"|\"$", "");
 
                     // 新しいアフィリURLを見つけられた場合はアフィリURLテーブルに古いURLを登録したいのでリストに追加しておく
-                    affeliUrlList.add(new AffeliUrl(item.getItem_m_id(), item.getUrl()));
+                    affeliUrlList.add(new AffeliUrl(null, item.getItem_m_id(), item.getUrl(), null, null));
 
                     item.setUrl(affiliateUrl);
                     updateList.add(item);

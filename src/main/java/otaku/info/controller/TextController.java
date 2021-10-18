@@ -140,7 +140,7 @@ public class TextController {
         }
 
         // blogへの誘導
-        String blog = "一覧はこちら%0Ahttps://otakuinfo.fun/pages/" + TeamEnum.getTvPageId(teamId);
+        String blog = "一覧はこちら%0A" + TeamEnum.findSubDomainById(teamId) + "pages/" + TeamEnum.getTvPageId(teamId);
         return result + info + blog;
     }
 

@@ -95,6 +95,16 @@ public class RakutenController {
             } else if (e instanceof HttpServerErrorException) {
                 logger.debug("Server error");
                 Thread.sleep(60000);
+            } else if (e instanceof IllegalArgumentException) {
+                RestTemplate restTemplate = new RestTemplate();
+                String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
+                finalUrl = finalUrl.replaceAll("https", "http");
+                logger.debug("RAKUTEN SEARCH URL: " + finalUrl);
+                String res = restTemplate.getForObject(finalUrl, String.class);
+
+                if (StringUtils.hasText(res)) {
+                    jsonObject = jsonUtils.createJsonObject(res);
+                }
             } else {
                 e.printStackTrace();
             }

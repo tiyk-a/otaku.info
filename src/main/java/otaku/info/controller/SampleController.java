@@ -269,6 +269,9 @@ public class SampleController {
 //                orderM2();
 //                orderM3();
                 break;
+            case 17:
+                logger.debug("testdesu");
+                break;
         }
             return "Done";
     }
@@ -560,35 +563,44 @@ public class SampleController {
         logger.debug("IM登録に入ります");
         Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
         // itemMasterRelも更新する
+        logger.debug("IMRel登録に入ります");
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
             // 既存の登録済みrel情報を取得する
             List<IMRel> IMRelList = iMRelService.findByItemMId(e.getKey().getItem_m_id());
             IMRel imrel = null;
             if (IMRelList.size() > 0) {
-                imrel = IMRelList.get(0);
+                try {
+                    imrel = IMRelList.get(0);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
 
             // imrelの登録
             if (imrel == null) {
+                logger.debug("新規IMRel登録します");
                 IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null, null);
                 iMRelService.save(newRel);
                 imrel = newRel;
+                logger.debug("新規IMRel登録しました:" + imrel);
             }
 
             // TODO: relMemの登録できてない
             List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(imrel.getIm_rel_id());
-            final long finalMemId = memberId;
-            IMRelMem imRelMem = null;
-            try {
-                imRelMem = imRelMemList.stream().filter(f -> f.getMember_id().equals(finalMemId)).collect(Collectors.toList()).get(0);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            if (memberId != null) {
+                final long finalMemId = memberId;
+                IMRelMem imRelMem = null;
+                try {
+                    imRelMem = imRelMemList.stream().filter(f -> f.getMember_id().equals(finalMemId)).collect(Collectors.toList()).get(0);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
 
-            if (imRelMem == null) {
-                IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
-                imRelMemService.save(relmem);
-                logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
+                if (imRelMem == null) {
+                    IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
+                    imRelMemService.save(relmem);
+                    logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
+                }
             }
         }
 

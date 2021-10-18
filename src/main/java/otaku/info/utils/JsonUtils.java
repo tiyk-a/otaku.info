@@ -13,7 +13,6 @@ public class JsonUtils extends JSONObject {
 
     public JSONObject createJsonObject(String source) {
         String str = formatJsonString(source);
-        logger.debug(str);
 
         JSONObject jo = null;
         try {
@@ -21,6 +20,7 @@ public class JsonUtils extends JSONObject {
         } catch (Exception e) {
             // TODO: jsonにエラーが見つかったらどうするかの対処を考えたい。ファイルに書き出すか？同じの取りに行かないようにしたいな？
             logger.debug(e.getMessage());
+            logger.debug(str);
         }
 
         if (jo == null) {

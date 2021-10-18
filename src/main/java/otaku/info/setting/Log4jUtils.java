@@ -36,11 +36,28 @@ public class Log4jUtils {
      * 今これ使ってます
      * PatternLayout（CSV）でログを標準出力するLoggerを作るメソッド
      * TODO: %F:%Lは負荷が高いらしいので落ち着いたら削除しましょう。対処法としては、引数にstringを入れて各ファイルでクラスメイを渡してあげて、出力にその引数の値を入れてあげれば良いのでは
+     * %c	カテゴリー名。 %c{1} と記述した場合、一番「下の」 レベルのみ出力できる。
+     * 「sample.pg.LoggerSample」の場合、「LoggerSample」となる。
+     * %C	ログを生成したクラス名。カテゴリ名では無くクラス名。
+     * %C{1} と記述した場合、一番「下の」 レベルのみ出力できる。
+     * 「sample.pg.LoggerSample」の場合、「LoggerSample」となる。
+     * %d	日付。 %d{yyyy-MMM-dd HH:mm:ss,SSS} の様に詳細に指定できる。
+     * %l	%F、%L、%Mを纏めた情報。※性能に問題あり。
+     * %F	ログを生成したソースファイル名。※性能に問題あり
+     * %L	ログを生成した箇所のソースの行番号。※性能に問題あり
+     * %M	ログを生成したメソッドの名前。※性能に問題あり
+     * %m	ログメッセージ
+     * %x	NDC でpushした値
+     * %X{key}	MDC に保存された key の値
+     * %n	改行コードを生成する。
+     * %p	ログレベル（FATALやINFOなど）
+     * %r	アプリケーションが開始してからの通算時間（ミリ秒）
+     * %t	ログを生成したスレッド名
      *
      * @return
      */
     public static Logger newConsoleCsvAllLogger(String name) {
-        return newConsolePatternAllLogger(name, "%d{yyyy/MM/dd HH:mm},%F:%L,%x,%r,%t,%-5p,%m%n");
+        return newConsolePatternAllLogger(name, "%d{yyyy/MM/dd HH:mm:ss.SSS},%l,%r,%t,%-5p,%m%n");
     }
 
     /**

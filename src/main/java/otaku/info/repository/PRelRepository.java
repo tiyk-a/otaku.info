@@ -3,11 +3,12 @@ package otaku.info.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.PRel;
+import otaku.info.entity.PRelKey;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PRelRepository extends JpaRepository<PRel, Long> {
+public interface PRelRepository extends JpaRepository<PRel, PRelKey> {
 
     @Query("select t from p_rel t where program_id = ?1")
     List<PRel> findAllByProgramId(Long programId);

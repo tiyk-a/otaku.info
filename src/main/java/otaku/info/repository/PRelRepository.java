@@ -27,4 +27,7 @@ public interface PRelRepository extends JpaRepository<PRel, PRelKey> {
 
     @Query("select t from p_rel t where program_id = ?1 and team_id = ?2 and member_id is null")
     Optional<PRel> findByItemIdTeamIdMemberIdNull(Long programId, Long teamId);
+
+    @Query("select t from p_rel t where member_id is not null")
+    List<PRel> findAllMemNotNull();
 }

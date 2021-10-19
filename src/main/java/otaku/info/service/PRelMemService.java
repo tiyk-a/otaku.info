@@ -20,4 +20,8 @@ public class PRelMemService {
     public List<PRelMem> findByPRelId(Long relId) {
         return pRelMemRepository.findByPRelId(relId);
     }
+
+    public void save(PRelMem relMem) {
+        pRelMemRepository.save(relMem);
+    }
 }

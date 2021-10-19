@@ -88,6 +88,12 @@ public class SampleController {
     private IMRelMemService imRelMemService;
 
     @Autowired
+    private PRelService pRelService;
+
+    @Autowired
+    private PRelMemService pRelMemService;
+
+    @Autowired
     Scheduler scheduler;
 
     @Autowired
@@ -261,6 +267,8 @@ public class SampleController {
                 break;
             case 17:
                 logger.debug("testdesu");
+            case 18:
+                managePRel();
                 break;
         }
             return "Done";
@@ -627,6 +635,25 @@ public class SampleController {
             }
         }
         return false;
+    }
+
+    /**
+     * PRelに入ってるmemberをPRelMemに移行します
+     * このメソッドが安全に完了したらprelのmemberidは削除可能
+     *
+     */
+    private void managePRel() {
+        // memberの入っているprelを全て取得
+        List<PRel> pRelList = pRelService.findAllMemNotNull();
+        for (PRel rel : pRelList) {
+            logger.debug("prelId:" + rel.getP_rel_id() + " memId:" + rel.getMember_id());
+            PRelMem relMem = new PRelMem(null, rel.getP_rel_id(), rel.getMember_id(), null, null);
+            try {
+                pRelMemService.save(relMem);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 

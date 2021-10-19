@@ -30,25 +30,6 @@ public class TeamService {
     }
 
     /**
-     * 全チームデータのチーム名のみを返します。
-     *
-     * @return
-     */
-    public List<String> findAllTeamName() {
-        return Arrays.stream(TeamEnum.values()).map(TeamEnum::getName).collect(Collectors.toList());
-    }
-
-    /**
-     * チーム名からmnemonicを返します。
-     *
-     * @param teamName
-     * @return
-     */
-    public String getMnemonic(String teamName) {
-        return TeamEnum.get(teamName).getMnemonic();
-    }
-
-    /**
      * 引数のStringに含まれるTeamIDをリストにして返却します。
      *
      * @param text
@@ -58,17 +39,8 @@ public class TeamService {
         if (!StringUtils.hasText(text)) {
             return new ArrayList<>();
         }
-        List<String> teamNameList = findAllTeamName();
+        List<String> teamNameList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getName).collect(Collectors.toList());
         return teamNameList.stream().filter(e -> text.contains(e) || text.contains(e.replace(" ", ""))).map(e -> TeamEnum.get(e).getId()).collect(Collectors.toList());
-    }
-
-    /**
-     * 全てのチームのIDを返します。
-     *
-     * @return
-     */
-    public List<Long> getAllId() {
-        return Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
     }
 
     /**

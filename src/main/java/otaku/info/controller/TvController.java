@@ -82,7 +82,7 @@ public class TvController  {
         Map<Long, List<Program>> tvListMapByGroup = new HashMap<>();
 
         // 全グループIDを取得して、それぞれを空プログラムリストを値としてMapに入れる。Mapサイズはここで完成。
-        teamService.getAllId().forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
+        Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
 
         // マップのvalueに情報を追加していく
         for (Program p : programList) {

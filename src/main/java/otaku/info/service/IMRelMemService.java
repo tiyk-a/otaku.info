@@ -38,4 +38,8 @@ public class IMRelMemService {
     int count(Long relId, Long memId) {
         return imRelMemRepository.countByIDS(relId, memId);
     }
+
+    public IMRelMem findByImRelIdMemId(Long relId, Long memId) {
+        return imRelMemRepository.findByImRelIdMemId(relId, memId);
+    }
 }

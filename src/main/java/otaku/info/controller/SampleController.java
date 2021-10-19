@@ -515,6 +515,7 @@ public class SampleController {
             logger.debug("違う商品を保存します: " + removeList.size() + "件");
             removeList.forEach(e -> logger.debug(e.getTitle()));
             removeList.forEach(e -> e.setDel_flg(true));
+            // 不要商品はrelの登録などなし
             itemService.saveAll(removeList);
         }
 
@@ -564,15 +565,7 @@ public class SampleController {
         logger.debug("IMRel登録に入ります");
         for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
             // 既存の登録済みrel情報を取得する
-            List<IMRel> IMRelList = iMRelService.findByItemMId(e.getKey().getItem_m_id());
-            IMRel imrel = null;
-            if (IMRelList.size() > 0) {
-                try {
-                    imrel = IMRelList.get(0);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
+            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getItem_m_id(), teamId);
 
             // imrelの登録
             if (imrel == null) {
@@ -583,37 +576,16 @@ public class SampleController {
                 logger.debug("新規IMRel登録しました:" + imrel);
             }
 
-            // TODO: relMemの登録できてない
-            List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(imrel.getIm_rel_id());
-            if (memberId != null) {
-                final long finalMemId = memberId;
-                IMRelMem imRelMem = null;
-                try {
-                    imRelMem = imRelMemList.stream().filter(f -> f.getMember_id().equals(finalMemId)).collect(Collectors.toList()).get(0);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-
-                if (imRelMem == null) {
-                    IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
-                    imRelMemService.save(relmem);
-                    logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
-                }
+            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(imrel.getIm_rel_id(), memberId);
+            if (imRelMem == null) {
+                IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
+                imRelMemService.save(relmem);
+                logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
             }
         }
 
         // ブログ投稿（新規/更新）を行う(twitter投稿まで）
-        // Map<新規登録ItemMaster/update ItemMaster>
-//        Map<List<ItemMaster>, List<ItemMaster>> itemMasterMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
-        // Map<imId, wpId>
         Map<Long, Long> imWpMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
-
-//        List<ItemMaster> newItemMasterList = new ArrayList<>();
-//        List<ItemMaster> updatedItemMasterList = new ArrayList<>();
-//        for (Map.Entry<List<ItemMaster>, List<ItemMaster>> e : itemMasterMap.entrySet()) {
-//            newItemMasterList = e.getKey();
-//            updatedItemMasterList = e.getValue();
-//        }
         return "Ok";
     }
 

@@ -86,4 +86,8 @@ public class IMRelService {
     public List<IMRel> findByWpIdNullPublicationDateFuture(Date today) {
         return iMRelRepository.findByWpIdNullPublicationDateFuture(today);
     }
+
+    public IMRel findByItemMIdTeamId(Long imId, Long teamId) {
+        return iMRelRepository.findByItemMIdTeamId(imId, teamId);
+    }
 }

@@ -14,4 +14,7 @@ public interface IMRelMemRepository extends JpaRepository<IMRelMem, IMRelMemKey>
 
     @Query(nativeQuery = true, value = "select count(*) from im_rel_mem where im_rel_id = ?1 and member_id = ?2")
     int countByIDS(Long relId, Long memId);
+
+    @Query("select t from im_rel_mem t where im_rel_id = ?1 and member_id = ?2")
+    IMRelMem findByImRelIdMemId(Long relId, Long memId);
 }

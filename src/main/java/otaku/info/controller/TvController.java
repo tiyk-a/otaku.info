@@ -8,11 +8,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
+import otaku.info.entity.PRelMem;
 import otaku.info.entity.Program;
 import otaku.info.entity.PRel;
 import otaku.info.entity.Station;
-import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 
@@ -51,6 +51,9 @@ public class TvController  {
 
     @Autowired
     private final PRelService pRelService;
+
+    @Autowired
+    private PRelMemService pRelMemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -105,8 +108,8 @@ public class TvController  {
      *
      * @param detailTitleMap
      */
-    public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName) throws IOException {
-        List<PRel> relList = new ArrayList<>();
+    public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName, Long memId) throws IOException {
+        Long teamId = TeamEnum.get(teamName).getId();
 
         for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
             String[] valueArr = e.getValue();
@@ -119,78 +122,6 @@ public class TvController  {
             Matcher m = datePattern.matcher(e.getKey());
             if (m.find()) {
                 program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
-            }
-
-            // 取得テキスト（TV情報・タイトル）からチーム名を抽出する
-            List<Long> teamIdList = teamService.findTeamIdListByText(valueArr[0]);
-
-            // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細）からとる
-            if (teamIdList.size() == 0) {
-                teamIdList.addAll(teamService.findTeamIdListByText(e.getKey()));
-            }
-
-            // 取得テキスト（TV情報・タイトル）からチーム名を取れなかったら（TV情報・詳細画面）からとる
-            if (teamIdList.size() == 0 && StringUtils.hasText(valueArr[1])) {
-                String[] detail = getDetails(valueArr[1]);
-
-                // 番組概要からチーム名を取得
-                teamIdList.addAll(teamService.findTeamIdListByText(detail[0]));
-
-                // 番組概要からチーム名を取得
-                if (teamIdList.size() == 0 && StringUtils.hasText(detail[1])) {
-                    teamIdList.addAll(teamService.findTeamIdListByText(detail[1]));
-                }
-            }
-
-            // 取得テキスト（TV情報・タイトルと詳細と詳細情報画面）からチーム名取れなかったら引数からとる
-            if (teamIdList.size() == 0) {
-                teamIdList.addAll(teamService.findTeamIdListByText(teamName));
-            }
-
-            for (Long teamId : teamIdList) {
-                PRel rel = new PRel();
-                rel.setTeam_id(teamId);
-                relList.add(rel);
-            }
-
-            // 取得テキスト（TV情報・タイトル）からメンバー名を抽出する
-            List<Long> memberIdList = memberService.findMemberIdByText(valueArr[0]);
-
-            // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細）からとる
-            if (memberIdList.size() == 0) {
-                memberIdList.addAll(memberService.findMemberIdByText(e.getKey()));
-            }
-
-            // 取得テキスト（TV情報・タイトル）からメンバー名を取れなかったら（TV情報・詳細画面）からとる
-            if (memberIdList.size() == 0 && StringUtils.hasText(valueArr[1])) {
-                String[] detail = getDetails(valueArr[1]);
-
-                // 番組概要からメンバー名を取得
-                memberIdList.addAll(memberService.findMemberIdByText(detail[0]));
-
-                // 番組概要からメンバー名を取得
-                if (memberIdList.size() == 0 && StringUtils.hasText(detail[1])) {
-                    memberIdList.addAll(memberService.findMemberIdByText(detail[1]));
-                }
-            }
-
-//             Memberがある場合
-            if (memberIdList.size() > 0) {
-                for (Long memberId : memberIdList) {
-                    Long teamId = MemberEnum.getTeamIdById(memberId);
-                    if (relList.stream().anyMatch(f -> f.getTeam_id().equals(teamId) && f.getMember_id() == null)) {
-                        for (PRel rel : relList) {
-                            if (rel.getTeam_id().equals(teamId) && rel.getMember_id() == null) {
-                                rel.setMember_id(memberId);
-                            }
-                        }
-                    } else {
-                        PRel rel = new PRel();
-                        rel.setTeam_id(teamId);
-                        rel.setMember_id(memberId);
-                        relList.add(rel);
-                    }
-                }
             }
 
             String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
@@ -227,27 +158,31 @@ public class TvController  {
 
             // 登録or更新処理
             if (isExisting) {
-                // TODO: ここ入るとrelListせっかく作ったのに使わず終わる。無駄
                 // 内容が同じProgramを取得
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-                // チームとメンバーとdescriptionが同じか確認する
-                boolean isTotallySame = isTotallySame(existingP, program.getDescription(), teamIdList, memberIdList);
-
-                if (!isTotallySame) {
-                    // チームとメンバーの更新をする
-                    programService.overwrite(existingP.getProgram_id(), teamIdList, memberIdList);
+                PRel rel = pRelService.findByProgramIdTeamId(existingP.getProgram_id(), teamId);
+                if (rel == null) {
+                    PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null, null);
+                    rel = pRelService.save(newRel);
                 }
-//
-//                if (relList.size() > 0) {
-//                    relList.forEach(f -> f.setTeam_id(existingP.getProgram_id()));
-//                }
+
+                if (memId != null) {
+                    List<PRelMem> relMemList = pRelMemService.findByPRelId(rel.getP_rel_id());
+                    boolean existsMem = relMemList.stream().anyMatch(f -> f.getMember_id().equals(memId));
+                    if (!existsMem) {
+                        PRelMem newMem = new PRelMem(null, rel.getP_rel_id(), memId, null, null);
+                        pRelMemService.save(newMem);
+                    }
+                }
             } else {
                 // 既存登録がなければ新規登録します。
                 Program savedP = programService.save(program);
-                relList.forEach(f -> f.setTeam_id(savedP.getProgram_id()));
+                PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null, null);
+                PRel savedRel = pRelService.save(rel);
+                PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
+                pRelMemService.save(relMem);
                 logger.debug("TV番組を登録：" + program.toString());
             }
-            pRelService.saveAll(relList);
         }
     }
 

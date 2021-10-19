@@ -90,4 +90,8 @@ public class PRelService {
     public List<PRel> findAllMemNotNull() {
         return pRelRepository.findAllMemNotNull();
     }
+
+    public PRel findByProgramIdTeamId(Long pId, Long teamId) {
+        return pRelRepository.findByProgramIdTeamId(pId, teamId);
+    }
 }

@@ -30,4 +30,7 @@ public interface PRelRepository extends JpaRepository<PRel, PRelKey> {
 
     @Query("select t from p_rel t where member_id is not null")
     List<PRel> findAllMemNotNull();
+
+    @Query("select t from p_rel t where program_id = ?1 and team_id = ?2")
+    PRel findByProgramIdTeamId(Long pId, Long teamId);
 }

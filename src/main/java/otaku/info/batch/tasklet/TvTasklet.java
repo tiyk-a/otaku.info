@@ -97,7 +97,8 @@ public class TvTasklet implements Tasklet {
                 tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
             }
         }
-        tvController.tvKingdomSave(tvMap, teamName);
+        // TODO: 今memidは必ずnullでやってるからメンバー情報のTVを拾えない。memも入れるようにjob変更しないとね
+        tvController.tvKingdomSave(tvMap, teamName, null);
 
         // 次のページがあるか確認する
         Element nextBtn = document.select("div.listIndexNum").first();

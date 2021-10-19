@@ -38,17 +38,10 @@ public class IRelService {
     public List<IRel> removeExistRecord(List<IRel> iRelList) {
         List<IRel> returnList = new ArrayList<>();
         for (IRel ir : iRelList) {
-//            if (ir.getMember_id() == null) {
-                boolean exists = iRelRepository.existsByElem(ir.getItem_id(), ir.getTeam_id()) > 0;
-                if (!exists) {
-                    returnList.add(ir);
-                }
-//            } else {
-//                boolean exists = iRelRepository.existsByElem(ir.getItem_id(), ir.getTeam_id(), ir.getMember_id()) > 0;
-//                if (!exists) {
-//                    returnList.add(ir);
-//                }
-//            }
+            boolean exists = iRelRepository.existsByElem(ir.getItem_id(), ir.getTeam_id()) > 0;
+            if (!exists) {
+                returnList.add(ir);
+            }
         }
         return returnList;
     }
@@ -59,10 +52,6 @@ public class IRelService {
 
     public List<IRel> findAll() {
         return iRelRepository.findAll();
-    }
-
-    public IRel findByItemIdTeamIdMemberIdNull(Long itemId, Long teamId) {
-        return iRelRepository.findByItemIdTeamIdMemberIdNull(itemId, teamId).orElse(new IRel());
     }
 
     public void removeAll(List<IRel> relList) {

@@ -6,7 +6,6 @@ import otaku.info.entity.PRel;
 import otaku.info.entity.PRelKey;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface PRelRepository extends JpaRepository<PRel, PRelKey> {
 
@@ -16,20 +15,8 @@ public interface PRelRepository extends JpaRepository<PRel, PRelKey> {
     @Query("select team_id from p_rel where program_id = ?1")
     List<Long> findTeamIdListByProgramId(Long programId);
 
-    @Query("select member_id from p_rel where program_id = ?1")
-    List<Long> findMemberIdListByProgramId(Long programId);
-
     @Query("select count(t) from p_rel t where program_id = ?1 and team_id = ?2")
     int existsByElem(Long programId, Long teamId);
-
-    @Query("select count(t) from p_rel t where program_id = ?1 and team_id = ?2 and member_id = ?3")
-    int existsByElem(Long programId, Long teamId, Long memberId);
-
-    @Query("select t from p_rel t where program_id = ?1 and team_id = ?2 and member_id is null")
-    Optional<PRel> findByItemIdTeamIdMemberIdNull(Long programId, Long teamId);
-
-    @Query("select t from p_rel t where member_id is not null")
-    List<PRel> findAllMemNotNull();
 
     @Query("select t from p_rel t where program_id = ?1 and team_id = ?2")
     PRel findByProgramIdTeamId(Long pId, Long teamId);

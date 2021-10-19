@@ -59,16 +59,8 @@ public class IMRelService {
         return iMRelRepository.findByImIdTeamId(imId, teamId);
     }
 
-    public List<IMRel> findAllMemberIdNotNull() {
-        return iMRelRepository.findAllMemberIdNotNull();
-    }
-
     public void removeAll(List<IMRel> relList) {
         iMRelRepository.deleteAll(relList);
-    }
-
-    public List<IMRel> findAllMemberNull() {
-        return iMRelRepository.findAllMemberNull();
     }
 
     public List<IMRel> findByItemIdTeamIdNotNull(Long imId) {

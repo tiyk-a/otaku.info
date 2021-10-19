@@ -162,7 +162,7 @@ public class TvController  {
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
                 PRel rel = pRelService.findByProgramIdTeamId(existingP.getProgram_id(), teamId);
                 if (rel == null) {
-                    PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null, null);
+                    PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null);
                     rel = pRelService.save(newRel);
                 }
 
@@ -177,7 +177,7 @@ public class TvController  {
             } else {
                 // 既存登録がなければ新規登録します。
                 Program savedP = programService.save(program);
-                PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null, null);
+                PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null);
                 PRel savedRel = pRelService.save(rel);
                 PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
                 pRelMemService.save(relMem);

@@ -36,8 +36,8 @@ public class ItemMaster implements Comparable<ItemMaster> {
     @Column(nullable = true)
     private String title;
 
-    @Column(nullable = true)
-    private Long team_id;
+//    @Column(nullable = true)
+//    private Long team_id;
 
     @Column(nullable = true)
     private Long wp_id;

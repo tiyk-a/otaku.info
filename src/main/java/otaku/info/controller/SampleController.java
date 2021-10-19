@@ -533,7 +533,7 @@ public class SampleController {
                     if (memberId!= null && memberId.equals(0L)) {
                         memberId = null;
                     }
-                    iRelList.add(new IRel(null, item.getItem_id(), teamId, null, null, null));
+                    iRelList.add(new IRel(null, item.getItem_id(), teamId, null, null));
                 }
                 logger.debug("Relの登録に入ります。新規rel数:" + iRelList.size());
 
@@ -570,7 +570,7 @@ public class SampleController {
             // imrelの登録
             if (imrel == null) {
                 logger.debug("新規IMRel登録します");
-                IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null, null);
+                IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null);
                 iMRelService.save(newRel);
                 imrel = newRel;
                 logger.debug("新規IMRel登録しました:" + imrel);

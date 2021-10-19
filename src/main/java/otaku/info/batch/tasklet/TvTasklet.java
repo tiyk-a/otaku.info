@@ -11,14 +11,17 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.TvController;
-import otaku.info.service.TeamService;
+import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
@@ -32,24 +35,38 @@ public class TvTasklet implements Tasklet {
     TvController tvController;
 
     @Autowired
-    TeamService teamService;
-
-    @Autowired
     Setting setting;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-        List<String> teamNameList = teamService.findAllTeamName();
+        logger.debug("グループごとの検索 START");
+        List<String> teamNameList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getName).collect(Collectors.toList());
+        mainTransaction(teamNameList, false);
+        logger.debug("グループごとの検索 END");
 
-        for (String artist : teamNameList) {
+        logger.debug("個人検索 START");
+        List<String> memNameList = Arrays.stream(MemberEnum.values()).map(MemberEnum::getName).collect(Collectors.toList());
+        mainTransaction(memNameList, true);
+        logger.debug("個人検索 END");
+        return RepeatStatus.FINISHED;
+    }
+
+    /**
+     * グループ・個人どちらも検索できるこのクラスのメイン処理
+     *
+     * @param argList
+     * @param memFlg
+     */
+    private void mainTransaction(List<String> argList, boolean memFlg) throws IOException {
+        for (String artist : argList) {
             boolean nextFlg = true;
             String urlWithParam = setting.getTvKingdom();
 
             if (artist.equals("ARASHI")) {
                 artist = "嵐";
             }
-            
+
             String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
 
             urlWithParam += param;
@@ -57,7 +74,11 @@ public class TvTasklet implements Tasklet {
             logger.debug(artist + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
-                param = jsopConnect(urlWithParam, artist);
+                if (memFlg) {
+                    param = jsopConnect(urlWithParam, artist, MemberEnum.get(artist).getId());
+                } else {
+                    param = jsopConnect(urlWithParam, artist, null);
+                }
 
                 if (param.equals("")) {
                     nextFlg = false;
@@ -70,7 +91,6 @@ public class TvTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        return RepeatStatus.FINISHED;
     }
 
     /**
@@ -81,7 +101,7 @@ public class TvTasklet implements Tasklet {
      * @return
      * @throws IOException
      */
-    private String jsopConnect(String url, String teamName) throws IOException {
+    private String jsopConnect(String url, String teamName, Long memId) throws IOException {
         // URLにアクセスして要素を取ってくる
         Document document = Jsoup.connect(url).get();
 
@@ -97,8 +117,11 @@ public class TvTasklet implements Tasklet {
                 tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
             }
         }
-        // TODO: 今memidは必ずnullでやってるからメンバー情報のTVを拾えない。memも入れるようにjob変更しないとね
-        tvController.tvKingdomSave(tvMap, teamName, null);
+        if (memId != null) {
+            tvController.tvKingdomSave(tvMap, teamName, memId);
+        } else {
+            tvController.tvKingdomSave(tvMap, teamName, null);
+        }
 
         // 次のページがあるか確認する
         Element nextBtn = document.select("div.listIndexNum").first();

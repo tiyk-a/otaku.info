@@ -54,9 +54,6 @@ public class TextController {
     private StationService stationService;
 
     @Autowired
-    private TagService tagService;
-
-    @Autowired
     private ItemMasterService itemMasterService;
 
     @Autowired

@@ -65,9 +65,6 @@ public class BlogController {
     BlogTagService blogTagService;
 
     @Autowired
-    TagService tagService;
-
-    @Autowired
     TeamService teamService;
 
     @Autowired

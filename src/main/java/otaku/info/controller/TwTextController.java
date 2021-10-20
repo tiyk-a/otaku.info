@@ -72,13 +72,13 @@ public class TwTextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getName();
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
     public String futureItemReminder(ItemMaster im, Long teamId, Item item) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
-        String tags = "#" + TeamEnum.get(teamId).getName();
+        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
         String title = "";
         String url = "";
         IMRel rel = iMRelService.findByImIdTeamId(im.getItem_m_id(), teamId);
@@ -148,7 +148,7 @@ public class TwTextController {
      */
     public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-        String tags = "#" + TeamEnum.get(teamId).getName();
+        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 //        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(itemMaster.getTitle())) {
@@ -184,7 +184,7 @@ public class TwTextController {
         String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + item.getUrl() + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getItem_m_id());
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
+        String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
     }
 
@@ -193,7 +193,7 @@ public class TwTextController {
         if (result.length() + memberName.length() < 135) {
             result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
         }
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getName();
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
         return result + "%0A%0A" + tags;
     }
 

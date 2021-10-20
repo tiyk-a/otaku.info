@@ -12,25 +12,26 @@ import java.util.stream.Collectors;
 @Getter
 public enum TeamEnum {
 
-    SNOWMAN(6L,null,"","","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
+    SNOWMAN(6L,null,"","SnowMan","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
     KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    SEXYZONE(8L,null,"セクシーゾーン","セクゾ","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    TOKIO(9L,null,"トキオ","","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    V6(10L,null,"ブイシックス","","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    SEXYZONE(8L,null,"セクシーゾーン","SexyZone","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    TOKIO(9L,null,"トキオ","TOKIO","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    V6(10L,null,"ブイシックス","V6","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
     ARASHI(11L,null,"アラシ","嵐","ARASHI","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    NEWS(12L,null,"ニュース","","NEWS Johnny's","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KISMYFT2(13L,null,"キスマイフットツー","キスマイ","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    ABCZ(14L,null,"エービーシーズィー","エビ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニスト ","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINGPRINCE(16L,null,"キングアンドプリンス ","キンプリ ","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
-    SIXTONES(17L,null,"ストーンズ ","ストンズ ","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
-    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ ","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
-    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","JUMP ","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KATTUN(20L,null,"カトゥーン ","KAT-TUN ","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINKIKIDS(21L,null,"キンキキッズ ","キンキ ","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
+    NEWS(12L,null,"ニュース","NEWS","NEWS Johnny's","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KISMYFT2(13L,null,"キスマイフットツー","KisMyFt2","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    ABCZ(14L,null,"エービーシーズィー","ABCZ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニーズWEST","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINGPRINCE(16L,null,"キングアンドプリンス ","KingandPrince","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
+    SIXTONES(17L,null,"ストーンズ ","SixTONES","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
+    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ男子","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
+    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KATTUN(20L,null,"カトゥーン ","KATTUN","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
+    KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
     private final Long id;
     private final String anniversary;
     private final String kana;
+    // tagNameに利用
     private final String mnemonic;
     private final String name;
     private final String tw_id;
@@ -164,6 +165,32 @@ public enum TeamEnum {
                 }
                 if (e.getId().equals(teamId)) {
                     resultList.add(e.getName());
+                    break;
+                }
+            }
+        }
+        return resultList;
+    }
+
+    /**
+     * 引数のTeamIdListからチーム名リストを返却します。
+     *
+     * @param teamIdList
+     * @return
+     */
+    public static List<String> findMnemonicListByTeamIdList(List<Long> teamIdList) {
+        if (teamIdList == null || teamIdList.get(0) == null) {
+            return new ArrayList<>();
+        }
+        List<String> resultList = new ArrayList<>();
+
+        for (Long teamId : teamIdList) {
+            for (TeamEnum e : TeamEnum.values()) {
+                if (teamId == null || teamId.equals(0L)) {
+                    continue;
+                }
+                if (e.getId().equals(teamId)) {
+                    resultList.add(e.getMnemonic());
                     break;
                 }
             }

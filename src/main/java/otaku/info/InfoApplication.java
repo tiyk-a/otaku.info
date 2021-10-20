@@ -8,6 +8,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextListener;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import otaku.info.error.RestTemplateResponseErrorHandler;
 
 @EnableBatchProcessing
@@ -28,5 +30,15 @@ public class InfoApplication {
 	@Bean
 	public RequestContextListener requestContextListener() {
 		return new RequestContextListener();
+	}
+
+	@Bean
+	public WebMvcConfigurer corsConfigurer() {
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/api/**").allowedOrigins("http://localhost:3000");
+			}
+		};
 	}
 }

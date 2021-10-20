@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.beans.BeanUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
+import otaku.info.form.IMForm;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -141,5 +142,10 @@ public class ItemMaster implements Comparable<ItemMaster> {
         newItemMaster.setCreated_at(null);
         newItemMaster.setUpdated_at(null);
         return newItemMaster;
+    }
+
+    public ItemMaster absorb(IMForm imForm) {
+        this.setTitle(imForm.getTitle());
+        return this;
     }
 }

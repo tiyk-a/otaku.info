@@ -21,6 +21,10 @@ public class ItemMasterService {
     @Autowired
     private final ItemMasterRepository itemMasterRepository;
 
+    public List<ItemMaster> findAll() {
+        return itemMasterRepository.findAll();
+    }
+
     public ItemMaster getMasterById(Long itemMasterId) {
         return itemMasterRepository.findById(itemMasterId).orElse(new ItemMaster());
     }

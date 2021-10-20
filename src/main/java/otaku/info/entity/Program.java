@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import otaku.info.form.PForm;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -46,4 +47,9 @@ public class Program {
     @UpdateTimestamp
     @Column(nullable = true)
     private Timestamp updated_at;
+
+    public Program absorb(PForm form) {
+        this.setTitle(form.getTitle());
+        return this;
+    }
 }

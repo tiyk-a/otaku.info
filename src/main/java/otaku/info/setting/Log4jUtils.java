@@ -2,8 +2,6 @@ package otaku.info.setting;
 
 import org.apache.log4j.*;
 
-import java.io.IOException;
-
 /**
  * https://kght6123.page/posts/Java/Log4j/%E8%A8%AD%E5%AE%9A%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E4%B8%8D%E8%A6%81%E3%81%A7%E6%A8%99%E6%BA%96%E5%87%BA%E5%8A%9B%E3%81%ABLog4j%E3%82%92%E4%BD%BF%E3%81%84%E3%81%9F%E3%81%84/
  * https://takadayuichi.hatenablog.com/entry/20121202/1354449787

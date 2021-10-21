@@ -51,6 +51,9 @@ public class ItemMaster implements Comparable<ItemMaster> {
     private Date publication_date;
 
     @Column(nullable = true)
+    private Integer price;
+
+    @Column(nullable = true)
     private String image1;
 
     @Column(nullable = true)
@@ -144,8 +147,29 @@ public class ItemMaster implements Comparable<ItemMaster> {
         return newItemMaster;
     }
 
+    /**
+     * formに値があればそれを取り込む
+     * TODO: fct_chk, del_flgは未対応
+     *
+     * @param imForm
+     * @return
+     */
     public ItemMaster absorb(IMForm imForm) {
-        this.setTitle(imForm.getTitle());
+        if (!imForm.getTitle().isEmpty()) {
+            this.setTitle(imForm.getTitle());
+        }
+        if (!imForm.getItem_caption().isEmpty()) {
+            this.setItem_caption(imForm.getItem_caption());
+        }
+        if (imForm.getPrice() != null && imForm.getPrice() != 0) {
+            this.setPrice(imForm.getPrice());
+        }
+        if (imForm.getPublication_date() != null) {
+            this.setPublication_date(imForm.getPublication_date());
+        }
+        if (!imForm.getUrl().isEmpty()) {
+            this.setUrl(imForm.getUrl());
+        }
         return this;
     }
 }

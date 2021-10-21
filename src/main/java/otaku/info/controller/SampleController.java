@@ -269,6 +269,8 @@ public class SampleController {
                 logger.debug("testdesu");
             case 18:
                 managePRel();
+            case 19:
+                insertPrice();
                 break;
         }
             return "Done";
@@ -624,6 +626,32 @@ public class SampleController {
                 pRelMemService.save(relMem);
             } catch (Exception e) {
                 e.printStackTrace();
+    /**
+     * 商品の金額（多分これが正しい）を返す
+     *
+     * @param itemList
+     * @return
+     */
+    private Integer getPrice(List<Item> itemList) {
+        List<Integer> priceList = itemList.stream().map(Item::getPrice).distinct().collect(Collectors.toList());
+        if (priceList.size() == 1) {
+            return priceList.get(0);
+        } else {
+            return priceList.stream().max(Integer::compare).orElse(0);
+        }
+    }
+
+    /**
+     * ItemMaster.priceに値を入れます。
+     */
+    private void insertPrice() {
+        List<ItemMaster> itemMasterList = itemMasterService.findAll();
+        for (ItemMaster im : itemMasterList) {
+            List<Item> itemList = itemService.findByMasterId(im.getItem_m_id());
+            if (!itemList.isEmpty()) {
+                Integer price = getPrice(itemList);
+                im.setPrice(price);
+                itemMasterService.save(im);
             }
         }
     }

@@ -292,13 +292,11 @@ public class TextController {
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
 
-            Integer estPrice = noRakutenFlg ? getPrice(entry.getValue()) : getPrice(itemList);
-
             String headItem = "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
 
             String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
 
-            String price = "<h6>価格</h6>" + "<p>" + estPrice + "円</p>";
+            String price = "<h6>価格</h6>" + "<p>" + itemMaster.getPrice() + "円</p>";
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
@@ -308,21 +306,6 @@ public class TextController {
             resultList.add(text);
         }
         return resultList;
-    }
-
-    /**
-     * 商品の金額（多分これが正しい）を返す
-     *
-     * @param itemList
-     * @return
-     */
-    private Integer getPrice(List<Item> itemList) {
-        List<Integer> priceList = itemList.stream().map(e -> e.getPrice()).distinct().collect(Collectors.toList());
-        if (priceList.size() == 1) {
-            return priceList.get(0);
-        } else {
-            return priceList.stream().max(Integer::compare).orElse(0);
-        }
     }
 
     /**

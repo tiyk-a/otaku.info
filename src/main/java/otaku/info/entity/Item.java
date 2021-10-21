@@ -39,7 +39,7 @@ public class Item {
     private String url;
 
     @Column(nullable = true)
-    private int price;
+    private Integer price;
 
     @Column(nullable = true)
     private String title;

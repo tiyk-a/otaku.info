@@ -20,7 +20,7 @@ public class PageTvService {
     PageTvRepository pageTvRepository;
 
     public Page<Program> findAll(Integer page, Integer pageSize) {
-        return pageTvRepository.findAll(PageRequest.of(page, pageSize, Sort.by("program_id").descending()));
+        return pageTvRepository.findAll(PageRequest.of(page, pageSize, Sort.by("on_air_date").descending()));
     }
 
     public Program findById(Long pId) {

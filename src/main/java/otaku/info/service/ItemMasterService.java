@@ -96,4 +96,8 @@ public class ItemMasterService {
     public List<ItemMaster> findNearFutureIMByTeamId(Long teamId) {
         return itemMasterRepository.findNearFutureIMByTeamId(teamId);
     }
+
+    public List<ItemMaster> findByTeamId(Long teamId, Long limit) {
+        return itemMasterRepository.findByTeamId(teamId, limit);
+    }
 }

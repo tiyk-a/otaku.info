@@ -8,6 +8,6 @@ import otaku.info.entity.Program;
 
 public interface PageTvRepository extends PagingAndSortingRepository<Program, Long> {
 
-    @Query("select t from program t")
+    @Query("select t from program t order by on_air_date desc")
     Page<Program> findAll(PageRequest req);
 }

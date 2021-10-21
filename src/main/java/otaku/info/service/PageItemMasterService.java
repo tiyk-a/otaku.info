@@ -20,7 +20,7 @@ public class PageItemMasterService {
     PageItemMasterRepository pageItemMasterRepository;
 
     public Page<ItemMaster> findAll(Integer page, Integer pageSize) {
-        return pageItemMasterRepository.findAll(PageRequest.of(page, pageSize, Sort.by("item_m_id").descending()));
+        return pageItemMasterRepository.findAll(PageRequest.of(page, pageSize, Sort.by("publication_date").descending()));
     }
 
     public ItemMaster findById(Long imId) {
@@ -29,5 +29,9 @@ public class PageItemMasterService {
 
     public ItemMaster save(ItemMaster im) {
         return pageItemMasterRepository.save(im);
+    }
+
+    public Page<ItemMaster> findByTeamId(Integer page, Integer pageSize, Long teamId) {
+        return pageItemMasterRepository.findByTeamId(PageRequest.of(page, pageSize, Sort.by("publication_date").descending()), teamId);
     }
 }

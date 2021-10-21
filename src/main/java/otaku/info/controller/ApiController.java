@@ -1,15 +1,19 @@
 package otaku.info.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+//import javax.management.Query;
 import javax.validation.Valid;
 
+import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+//import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
@@ -17,6 +21,7 @@ import otaku.info.entity.ItemMaster;
 import otaku.info.entity.Program;
 import otaku.info.form.IMForm;
 import otaku.info.form.PForm;
+import otaku.info.service.ItemMasterService;
 import otaku.info.service.PageItemMasterService;
 import otaku.info.service.PageTvService;
 
@@ -26,10 +31,28 @@ import otaku.info.service.PageTvService;
 public class ApiController {
 
     @Autowired
+    BlogController blogController;
+
+    @Autowired
+    ItemMasterService itemMasterService;
+
+    @Autowired
     PageItemMasterService pageItemMasterService;
 
     @Autowired
     PageTvService pageTvService;
+
+//    @Autowired
+//    JdbcTemplate jdbcTemplate;
+//
+//    @PutMapping
+//    public ResponseEntity<String> acceptSql(@RequestBody String sql) {
+//        if (sql.startsWith("select")) {
+//            jdbcTemplate.query(sql);
+//        } else {
+//            jdbcTemplate.update(sql);
+//        }
+//    }
 
     /**
      * 商品一覧を返す
@@ -61,13 +84,26 @@ public class ApiController {
     }
 
     /**
+     * 指定Teamidの商品を未来発売日順に取得し返す
+     *
+     * @param id 取得するTeamId
+     * @return Item
+     */
+    @GetMapping("/im/team/{id}")
+    public ResponseEntity<List<ItemMaster>> getTeam(@PathVariable Long id, @RequestParam("limit") Optional<Integer> limit){
+        Long l = (long) limit.orElse(50);
+        List<ItemMaster> imList = itemMasterService.findByTeamId(id, l);
+        return ResponseEntity.ok(imList);
+    }
+
+    /**
      * 商品のデータを更新する（画像以外）
      *
      * @param id データ更新をする商品のID
      * @param imForm 更新される新しいデータ
      * @return Item
      */
-    @PutMapping("/im/{id}")
+    @PostMapping("/im/{id}")
     public ResponseEntity<ItemMaster> upIm(@PathVariable Long id, @Valid @RequestBody IMForm imForm){
         ItemMaster im = pageItemMasterService.findById(id);
         im.absorb(imForm);
@@ -86,6 +122,19 @@ public class ApiController {
         ItemMaster im = pageItemMasterService.findById(id);
         im.setDel_flg(true);
         pageItemMasterService.save(im);
+    }
+
+    @PostMapping("/im/blog/{id}")
+    public ResponseEntity<Boolean> upImBlog(@PathVariable Long id, @PathVariable Long team) throws JSONException, InterruptedException {
+        ItemMaster im = pageItemMasterService.findById(id);
+        List<ItemMaster> list = new ArrayList<>();
+        list.add(im);
+        if (im != null) {
+            blogController.postOrUpdate(list, team);
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
     }
 
     /**
@@ -124,7 +173,7 @@ public class ApiController {
      * @param pForm 更新される新しいデータ
      * @return Item
      */
-    @PutMapping("/tv/{id}")
+    @PostMapping("/tv/{id}")
     public ResponseEntity<Program> upTv(@PathVariable Long id, @Valid @RequestBody PForm pForm){
         Program p = pageTvService.findById(id);
         p.absorb(pForm);

@@ -30,8 +30,4 @@ public class PageItemMasterService {
     public ItemMaster save(ItemMaster im) {
         return pageItemMasterRepository.save(im);
     }
-
-    public Page<ItemMaster> findByTeamId(Integer page, Integer pageSize, Long teamId) {
-        return pageItemMasterRepository.findByTeamId(PageRequest.of(page, pageSize, Sort.by("publication_date").descending()), teamId);
-    }
 }

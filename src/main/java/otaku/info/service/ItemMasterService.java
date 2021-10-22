@@ -100,4 +100,8 @@ public class ItemMasterService {
     public List<ItemMaster> findByTeamId(Long teamId, Long limit) {
         return itemMasterRepository.findByTeamId(teamId, limit);
     }
+
+    public boolean exists(Long imId) {
+        return itemMasterRepository.existsById(imId);
+    }
 }

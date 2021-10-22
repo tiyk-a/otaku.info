@@ -27,4 +27,7 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query("SELECT t FROM program t WHERE title = ?1 and station_id = ?2 and on_air_date = ?3")
     Program findByIdentity(String title, Long stationId, LocalDateTime onAirDate);
+
+    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 order by a.on_air_date desc limit ?2")
+    List<Program> findbyTeamId(Long teamId, Long limit);
 }

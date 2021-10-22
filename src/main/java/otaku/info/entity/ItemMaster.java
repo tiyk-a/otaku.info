@@ -37,9 +37,6 @@ public class ItemMaster implements Comparable<ItemMaster> {
     @Column(nullable = true)
     private String title;
 
-//    @Column(nullable = true)
-//    private Long team_id;
-
     @Column(nullable = true)
     private Long wp_id;
 
@@ -67,6 +64,10 @@ public class ItemMaster implements Comparable<ItemMaster> {
 
     @Column(nullable = false)
     private boolean del_flg;
+
+    /** IMマージした場合のマージ先IMId。マージしたらdel_flgはtrueにしてね */
+    @Column(nullable = false)
+    private Long merge_im_id;
 
     @CreationTimestamp
     @Column(nullable = true)
@@ -155,10 +156,10 @@ public class ItemMaster implements Comparable<ItemMaster> {
      * @return
      */
     public ItemMaster absorb(IMForm imForm) {
-        if (!imForm.getTitle().isEmpty()) {
+        if (imForm.getTitle() != null && !imForm.getTitle().isEmpty()) {
             this.setTitle(imForm.getTitle());
         }
-        if (!imForm.getItem_caption().isEmpty()) {
+        if (imForm.getItem_caption() != null && !imForm.getItem_caption().isEmpty()) {
             this.setItem_caption(imForm.getItem_caption());
         }
         if (imForm.getPrice() != null && imForm.getPrice() != 0) {
@@ -167,9 +168,9 @@ public class ItemMaster implements Comparable<ItemMaster> {
         if (imForm.getPublication_date() != null) {
             this.setPublication_date(imForm.getPublication_date());
         }
-        if (!imForm.getUrl().isEmpty()) {
-            this.setUrl(imForm.getUrl());
-        }
+//        if (imForm.getUrl() != null && !imForm.getUrl().isEmpty()) {
+//            this.setUrl(imForm.getUrl());
+//        }
         return this;
     }
 }

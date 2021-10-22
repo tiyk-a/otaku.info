@@ -45,4 +45,8 @@ public class ProgramService  {
     public Program findByIdentity(String title, Long stationId, LocalDateTime onAirDate) {
         return programRepository.findByIdentity(title, stationId, onAirDate);
     }
+
+    public List<Program> findbyTeamId(Long teamId, Long limit) {
+        return programRepository.findbyTeamId(teamId, limit);
+    }
 }

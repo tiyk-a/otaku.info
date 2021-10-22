@@ -30,9 +30,6 @@ public class PRel implements Serializable {
     @Column(nullable = false)
     private Long team_id;
 
-//    @Column(nullable = true)
-//    private Long member_id;
-
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

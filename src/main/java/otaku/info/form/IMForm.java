@@ -1,13 +1,6 @@
 package otaku.info.form;
 
-import javax.persistence.Column;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.util.Date;
 
 /**

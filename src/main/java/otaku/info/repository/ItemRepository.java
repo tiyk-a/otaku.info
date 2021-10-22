@@ -59,4 +59,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("select count(*) from Item where item_code = ?1 and site_id = ?2")
     int isRegistered(String code, Integer siteId);
+
+    @Query("select t from Item t where item_m_id is null and publication_date >= CURRENT_DATE")
+    List<Item> findByMIdNullFuture();
 }

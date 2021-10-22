@@ -47,18 +47,6 @@ public class ApiController {
     @Autowired
     PageTvService pageTvService;
 
-//    @Autowired
-//    JdbcTemplate jdbcTemplate;
-//
-//    @PutMapping
-//    public ResponseEntity<String> acceptSql(@RequestBody String sql) {
-//        if (sql.startsWith("select")) {
-//            jdbcTemplate.query(sql);
-//        } else {
-//            jdbcTemplate.update(sql);
-//        }
-//    }
-
     /**
      * 商品一覧を返す
      *

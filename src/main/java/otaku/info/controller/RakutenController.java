@@ -269,32 +269,32 @@ public class RakutenController {
      * @param itemMaster
      * @return
      */
-    public ItemMaster addImage(ItemMaster itemMaster) throws InterruptedException {
-        List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-
-        for (Item item : itemList) {
-            String parameter = "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
-            JSONObject jsonObject = request(parameter);
-            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
-                JSONArray itemArray = jsonObject.getJSONArray("Items");
-                if (itemArray.get(0) != null && itemArray.getJSONObject(0).has("mediumImageUrls") && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
-                    JSONArray imageArray = itemArray.getJSONObject(0).getJSONArray("mediumImageUrls");
-                    if (imageArray.length() > 0) {
-                        item = setImages(item, imageArray);
-                        itemService.saveItem(item);
-                        itemMaster = setImagesItemMaster(itemMaster, imageArray);
-                        itemMasterService.save(itemMaster);
-                    }
-                }
-
-                // もうマスター商品の画像３枚目まで埋まっていたら処理終了
-                if (StringUtils.hasText(itemMaster.getImage3())) {
-                    break;
-                }
-            }
-        }
-        return itemMaster;
-    }
+//    public ItemMaster addImage(ItemMaster itemMaster) throws InterruptedException {
+//        List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+//
+//        for (Item item : itemList) {
+//            String parameter = "&itemCode=" + item.getItem_code() + "&elements=mediumImageUrls&" + setting.getRakutenAffiliId();
+//            JSONObject jsonObject = request(parameter);
+//            if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+//                JSONArray itemArray = jsonObject.getJSONArray("Items");
+//                if (itemArray.get(0) != null && itemArray.getJSONObject(0).has("mediumImageUrls") && JsonUtils.isJsonArray(itemArray.getJSONObject(0).get("mediumImageUrls"))) {
+//                    JSONArray imageArray = itemArray.getJSONObject(0).getJSONArray("mediumImageUrls");
+//                    if (imageArray.length() > 0) {
+//                        item = setImages(item, imageArray);
+//                        itemService.saveItem(item);
+//                        itemMaster = setImagesItemMaster(itemMaster, imageArray);
+//                        itemMasterService.save(itemMaster);
+//                    }
+//                }
+//
+//                // もうマスター商品の画像３枚目まで埋まっていたら処理終了
+//                if (StringUtils.hasText(itemMaster.getImage3())) {
+//                    break;
+//                }
+//            }
+//        }
+//        return itemMaster;
+//    }
 
     /**
      * ItemとmediumImageUrlsのリストを引数にと李、画像があればItemにセットし、返却する

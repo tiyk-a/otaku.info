@@ -128,5 +128,9 @@ public class ItemService {
     public boolean isRegistered(String code, Integer siteId) {
         return itemRepository.isRegistered(code, siteId) > 0;
     }
+
+    public List<Item> findByMIdNullFuture() {
+        return itemRepository.findByMIdNullFuture();
+    }
 }
 

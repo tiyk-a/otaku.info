@@ -179,8 +179,10 @@ public class TvController  {
                 Program savedP = programService.save(program);
                 PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null);
                 PRel savedRel = pRelService.save(rel);
-                PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
-                pRelMemService.save(relMem);
+                if (memId != null) {
+                    PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
+                    pRelMemService.save(relMem);
+                }
                 logger.debug("TV番組を登録：" + program.toString());
             }
         }

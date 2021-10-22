@@ -154,8 +154,7 @@ public class TwTextController {
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
         } else {
-            title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
-            itemMaster.setTitle(title);
+            itemMaster.setTitle(item.getTitle());
             // ついでに登録（更新）する
             itemMasterService.save(itemMaster);
         }

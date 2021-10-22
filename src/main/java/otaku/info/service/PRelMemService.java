@@ -21,7 +21,7 @@ public class PRelMemService {
         return pRelMemRepository.findByPRelId(relId);
     }
 
-    public void save(PRelMem relMem) {
-        pRelMemRepository.save(relMem);
+    public PRelMem save(PRelMem relMem) {
+        return pRelMemRepository.save(relMem);
     }
 }

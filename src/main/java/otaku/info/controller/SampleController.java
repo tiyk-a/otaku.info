@@ -58,6 +58,9 @@ public class SampleController {
     private TmpController tmpController;
 
     @Autowired
+    PythonController pythonController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -196,7 +199,7 @@ public class SampleController {
     }
 
     @GetMapping("/batch/{id}")
-    public String batch(@PathVariable String id) throws InterruptedException {
+    public String batch(@PathVariable String id) throws InterruptedException, JSONException {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
@@ -266,11 +269,16 @@ public class SampleController {
 //                orderM3();
                 break;
             case 17:
-                logger.debug("testdesu");
+                pythonController.post(6L,"testdesu");
+                break;
             case 18:
-                managePRel();
+//                managePRel();
+                break;
             case 19:
                 insertPrice();
+                break;
+            case 20:
+                organizeIm();
                 break;
         }
             return "Done";
@@ -418,36 +426,36 @@ public class SampleController {
      *
      * @return String
      */
-    @GetMapping("/moveToDelItem/{itemIdListStr}")
-    public String moveToDelItem(@PathVariable String itemIdListStr) {
-        List<Long> itemIdList = new ArrayList<>();
-        List.of(itemIdListStr.split("-")).forEach(e -> itemIdList.add(Long.valueOf(e)));
-
-        if (itemIdList.size() == 0) return "No Id provided";
-
-        List<Long> notFoundIdList = new ArrayList<>();
-        int successCount = 0;
-        String result = "";
-        for (Long itemId : itemIdList) {
-            Item item = itemService.findByItemId(itemId).orElse(new Item());
-            if (item.getItem_id() == null) {
-                notFoundIdList.add(itemId);
-            } else {
-                successCount ++;
-                item.setDel_flg(true);
-                itemService.saveItem(item);
-                result = result + "【" + successCount + "】itemId:" + item.getItem_id() + "Title: " + item.getTitle() + "-------------------";
-            }
-
-            if (notFoundIdList.size() > 0) {
-                result = result + "Not found item";
-                for (Long id : notFoundIdList) {
-                    result = result + " item_id=" + id;
-                }
-            }
-        }
-        return result;
-    }
+//    @GetMapping("/moveToDelItem/{itemIdListStr}")
+//    public String moveToDelItem(@PathVariable String itemIdListStr) {
+//        List<Long> itemIdList = new ArrayList<>();
+//        List.of(itemIdListStr.split("-")).forEach(e -> itemIdList.add(Long.valueOf(e)));
+//
+//        if (itemIdList.size() == 0) return "No Id provided";
+//
+//        List<Long> notFoundIdList = new ArrayList<>();
+//        int successCount = 0;
+//        String result = "";
+//        for (Long itemId : itemIdList) {
+//            Item item = itemService.findByItemId(itemId).orElse(new Item());
+//            if (item.getItem_id() == null) {
+//                notFoundIdList.add(itemId);
+//            } else {
+//                successCount ++;
+//                item.setDel_flg(true);
+//                itemService.saveItem(item);
+//                result = result + "【" + successCount + "】itemId:" + item.getItem_id() + "Title: " + item.getTitle() + "-------------------";
+//            }
+//
+//            if (notFoundIdList.size() > 0) {
+//                result = result + "Not found item";
+//                for (Long id : notFoundIdList) {
+//                    result = result + " item_id=" + id;
+//                }
+//            }
+//        }
+//        return result;
+//    }
 
     /**
      * wpidの入っていないIMをポストする
@@ -573,8 +581,8 @@ public class SampleController {
             if (imrel == null) {
                 logger.debug("新規IMRel登録します");
                 IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null);
-                iMRelService.save(newRel);
-                imrel = newRel;
+                IMRel savedRel = iMRelService.save(newRel);
+                imrel = savedRel;
                 logger.debug("新規IMRel登録しました:" + imrel);
             }
 
@@ -616,16 +624,19 @@ public class SampleController {
      * このメソッドが安全に完了したらprelのmemberidは削除可能
      *
      */
-    private void managePRel() {
-        // memberの入っているprelを全て取得
-        List<PRel> pRelList = pRelService.findAllMemNotNull();
-        for (PRel rel : pRelList) {
-            logger.debug("prelId:" + rel.getP_rel_id() + " memId:" + rel.getMember_id());
-            PRelMem relMem = new PRelMem(null, rel.getP_rel_id(), rel.getMember_id(), null, null);
-            try {
-                pRelMemService.save(relMem);
-            } catch (Exception e) {
-                e.printStackTrace();
+//    private void managePRel() {
+//        // memberの入っているprelを全て取得
+//        List<PRel> pRelList = pRelService.findAllMemNotNull();
+//        for (PRel rel : pRelList) {
+//            logger.debug("prelId:" + rel.getP_rel_id() + " memId:" + rel.getMember_id());
+//            PRelMem relMem = new PRelMem(null, rel.getP_rel_id(), rel.getMember_id(), null, null);
+//            try {
+//                pRelMemService.save(relMem);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
     /**
      * 商品の金額（多分これが正しい）を返す
      *
@@ -654,6 +665,30 @@ public class SampleController {
                 itemMasterService.save(im);
             }
         }
+    }
+
+    /**
+     * ポストされてなくてitemの紐付きもないimは削除する
+     * その後、imidのないitemに関してはimを作成し、ブログポストする
+     *
+     */
+    private void organizeIm() {
+        // itemのないimはdelflg=trueにする
+        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
+        for (ItemMaster im : imList) {
+            List<Item> iList = itemService.findByMasterId(im.getItem_m_id());
+            if (iList == null || iList.size() == 0) {
+                im.setDel_flg(true);
+                itemMasterService.save(im);
+            }
+        }
+
+        // ここからimのないitemで未来のものはim作ってあげる
+        List<Item> itemList = itemService.findByMIdNullFuture();
+        for (Item i : itemList) {
+            itemMasterService.addByItem(i, i.getTitle());
+        }
+        // blog投稿はバッチがしてくれるかな？
     }
 }
 

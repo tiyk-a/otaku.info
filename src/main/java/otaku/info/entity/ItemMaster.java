@@ -66,7 +66,7 @@ public class ItemMaster implements Comparable<ItemMaster> {
     private boolean del_flg;
 
     /** IMマージした場合のマージ先IMId。マージしたらdel_flgはtrueにしてね */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long merge_im_id;
 
     @CreationTimestamp

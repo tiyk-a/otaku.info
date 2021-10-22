@@ -1,11 +1,13 @@
 package otaku.info.service;
 
 import lombok.AllArgsConstructor;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.repository.ItemMasterRepository;
+import otaku.info.setting.Log4jUtils;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -14,6 +16,8 @@ import java.util.*;
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor
 public class ItemMasterService {
+
+    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("ItemMasterService");
 
     @Autowired
     private final ItemService itemService;
@@ -44,8 +48,10 @@ public class ItemMasterService {
         ItemMaster itemMaster = item.convertToItemMaster(requestTitle);
 
         ItemMaster savedItemMaster = itemMasterRepository.save(itemMaster);
+        logger.debug("IM新規登録：imId=" + savedItemMaster.getItem_m_id());
         item.setItem_m_id(savedItemMaster.getItem_m_id());
         Item savedItem = itemService.saveItem(item);
+        logger.debug("Itemのitem_m_id=" + savedItem.getItem_m_id());
         return Collections.singletonMap(savedItemMaster, savedItem);
     }
 
@@ -54,7 +60,10 @@ public class ItemMasterService {
     }
 
     public ItemMaster save(ItemMaster itemMaster) {
-        return itemMasterRepository.save(itemMaster);
+        ItemMaster im = itemMasterRepository.save(itemMaster);
+        logger.debug("IM登録:" + im.getItem_m_id());
+        logger.debug("ここではitem.item_m_idの登録は行いません");
+        return im;
     }
 
     public List<ItemMaster> findReleasedItemList() {
@@ -66,7 +75,10 @@ public class ItemMasterService {
     }
 
     public List<ItemMaster> saveAll(List<ItemMaster> itemMasterList) {
-        return itemMasterRepository.saveAll(itemMasterList);
+        List<ItemMaster> imList = itemMasterRepository.saveAll(itemMasterList);
+        logger.debug("IMリスト登録しました");
+        logger.debug("ここではitem.item_m_idの登録は行いません");
+        return imList;
     }
 
     public ItemMaster findByWpId(Integer wpId) {

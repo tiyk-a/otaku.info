@@ -17,13 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
+import otaku.info.entity.Item;
 import otaku.info.entity.ItemMaster;
 import otaku.info.entity.Program;
 import otaku.info.form.IMForm;
 import otaku.info.form.PForm;
-import otaku.info.service.ItemMasterService;
-import otaku.info.service.PageItemMasterService;
-import otaku.info.service.PageTvService;
+import otaku.info.service.*;
 
 @RestController
 @RequestMapping("/api")
@@ -32,6 +31,12 @@ public class ApiController {
 
     @Autowired
     BlogController blogController;
+
+    @Autowired
+    ItemService itemService;
+
+    @Autowired
+    ProgramService programService;
 
     @Autowired
     ItemMasterService itemMasterService;
@@ -124,15 +129,38 @@ public class ApiController {
         pageItemMasterService.save(im);
     }
 
-    @PostMapping("/im/blog/{id}")
-    public ResponseEntity<Boolean> upImBlog(@PathVariable Long id, @PathVariable Long team) throws JSONException, InterruptedException {
-        ItemMaster im = pageItemMasterService.findById(id);
+    @GetMapping("/im/blog")
+    public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Integer imId, @RequestParam("team") Integer team) throws JSONException, InterruptedException {
+        ItemMaster im = pageItemMasterService.findById((long) imId);
         List<ItemMaster> list = new ArrayList<>();
         list.add(im);
         if (im != null) {
-            blogController.postOrUpdate(list, team);
+            blogController.postOrUpdate(list, (long) team);
             return ResponseEntity.ok(true);
         } else {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    @GetMapping("/im/merge")
+    public ResponseEntity<Boolean> mergeIm(@RequestParam("ord") Integer ord, @RequestParam("into") Integer into) throws JSONException, InterruptedException {
+        try {
+            boolean existsIntoIm = itemMasterService.exists((long) into);
+            if (existsIntoIm) {
+                ItemMaster im = pageItemMasterService.findById((long) ord);
+                im.setDel_flg(true);
+                im.setMerge_im_id((long) into);
+                itemMasterService.save(im);
+
+                List<Item> itemList = itemService.findByMasterId(im.getItem_m_id());
+                if (itemList.size() > 0) {
+                    itemList.forEach(e -> e.setItem_m_id((long) into));
+                    itemService.saveAll(itemList);
+                }
+            }
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.ok(false);
         }
     }
@@ -152,6 +180,13 @@ public class ApiController {
         int evalPage = (page.orElse(0) < 1) ? 50 : page.get() - 1;
         Page<Program> imPage = pageTvService.findAll(evalPage, evalPageSize);
         return ResponseEntity.ok(imPage.stream().collect(Collectors.toList()));
+    }
+
+    @GetMapping("/tv/team/{id}")
+    public ResponseEntity<List<Program>> getTvTeam(@PathVariable Long id, @RequestParam("limit") Optional<Integer> limit){
+        Long l = (long) limit.orElse(50);
+        List<Program> pList = programService.findbyTeamId(id, l);
+        return ResponseEntity.ok(pList);
     }
 
     /**

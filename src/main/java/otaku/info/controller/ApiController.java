@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-//import javax.management.Query;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
@@ -52,29 +50,7 @@ public class ApiController {
     IMRelService imRelService;
 
     @Autowired
-    PageItemMasterService pageItemMasterService;
-
-    @Autowired
     PageTvService pageTvService;
-
-    /**
-     * 商品一覧を返す
-     *
-     * @return リスト
-     */
-    @GetMapping("/im")
-    public ResponseEntity<List> imAll(@RequestParam("pageSize") Optional<Integer> pageSize, @RequestParam("page") Optional<Integer> page){
-        logger.debug("accepted");
-        // page size
-        int evalPageSize = pageSize.orElse(50);
-        // Evaluate page. If requested parameter is null or less than 0 (to
-        // prevent exception), return initial size. Otherwise, return value of
-        // param. decreased by 1.
-        int evalPage = (page.orElse(0) < 1) ? 50 : page.get() - 1;
-        Page<ItemMaster> imPage = pageItemMasterService.findAll(evalPage, evalPageSize);
-        logger.debug("fin");
-        return ResponseEntity.ok(imPage.stream().collect(Collectors.toList()));
-    }
 
     /**
      * IDから商品を取得し返す
@@ -85,7 +61,7 @@ public class ApiController {
     @GetMapping("/im/{id}")
     public ResponseEntity<FIMDto> getIm(@PathVariable Long teamId, @PathVariable Long id){
         logger.debug("accepted");
-        ItemMaster im = pageItemMasterService.findById(id);
+        ItemMaster im = itemMasterService.findById(id);
         IMRel rel = imRelService.findByImIdTeamId(im.getItem_m_id(), teamId);
         FIMDto dto = new FIMDto();
         BeanUtils.copyProperties(im, dto);
@@ -151,16 +127,16 @@ public class ApiController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delIm(@PathVariable Long id){
         logger.debug("accepted");
-        ItemMaster im = pageItemMasterService.findById(id);
+        ItemMaster im = itemMasterService.findById(id);
         im.setDel_flg(true);
         logger.debug("fin");
-        pageItemMasterService.save(im);
+        itemMasterService.save(im);
     }
 
     @GetMapping("/im/blog")
     public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Integer imId, @RequestParam("team") Integer team) throws JSONException, InterruptedException {
         logger.debug("accepted");
-        ItemMaster im = pageItemMasterService.findById((long) imId);
+        ItemMaster im = itemMasterService.findById((long) imId);
         List<ItemMaster> list = new ArrayList<>();
         list.add(im);
         logger.debug("fin");
@@ -178,7 +154,7 @@ public class ApiController {
         try {
             boolean existsIntoIm = itemMasterService.exists((long) into);
             if (existsIntoIm) {
-                ItemMaster im = pageItemMasterService.findById((long) ord);
+                ItemMaster im = itemMasterService.findById((long) ord);
                 im.setDel_flg(true);
                 im.setMerge_im_id((long) into);
                 itemMasterService.save(im);

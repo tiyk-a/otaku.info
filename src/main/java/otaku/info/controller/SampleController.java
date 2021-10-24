@@ -579,15 +579,19 @@ public class SampleController {
 
             // imrelの登録
             if (imrel == null) {
-                logger.debug("新規IMRel登録します");
+                logger.debug("imrelがnullなので新規IMRel登録します");
                 IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null);
                 IMRel savedRel = iMRelService.save(newRel);
+                logger.debug("saveしましたよ" + savedRel.toString());
                 imrel = savedRel;
-                logger.debug("新規IMRel登録しました:" + imrel);
+                logger.debug("新規IMRel登録しました:" + imrel.toString());
+            } else {
+                logger.debug("imrelはこう" + imrel.toString());
             }
 
             IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(imrel.getIm_rel_id(), memberId);
             if (imRelMem == null) {
+                logger.debug("imrel.im_rel_idはこちらです：" + imrel.getIm_rel_id());
                 IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
                 imRelMemService.save(relmem);
                 logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());

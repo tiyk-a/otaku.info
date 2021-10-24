@@ -38,9 +38,6 @@ public class ItemMaster implements Comparable<ItemMaster> {
     private String title;
 
     @Column(nullable = true)
-    private Long wp_id;
-
-    @Column(nullable = true)
     private String item_caption;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")

@@ -390,16 +390,20 @@ public class BlogController {
      * imId, wpIdのマップを返します。
      *
      */
-    public Map<Long, Long> postOrUpdate(List<ItemMaster> itemMasterList, Long teamId) throws InterruptedException, JSONException {
+    public Map<Long, Long> postOrUpdate(List<ItemMaster> itemMasterList, Long teamId) throws InterruptedException {
         Map<Long, Long> resMap = new TreeMap<>();
         Long wpId = null;
 
+        logger.debug("postOrUpdateです。IMListサイズは：" + itemMasterList.size());
+        logger.debug("teamId=" + teamId);
         for (ItemMaster itemMaster : itemMasterList) {
             List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
             List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList));
             String content = null;
+            logger.debug("contentがないのではcontentlist.size()=" + contentList.size());
             if (!contentList.isEmpty()) {
+                logger.debug("koko hairu? " + contentList.get(0));
                 content = contentList.get(0);
             }
             List<Long> teamIdList = new ArrayList<>();
@@ -416,7 +420,10 @@ public class BlogController {
 
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
 
+            logger.debug("header is not null ! " + headers.toString());
+            logger.debug("contentがnullなのでは？" + content);
             if (headers != null && content != null) {
+                logger.debug("headerあり");
                 wpId = rel.getWp_id();
 
                 JSONObject jsonObject = new JSONObject();
@@ -455,9 +462,11 @@ public class BlogController {
                 // wpIdが取得できなかったら、存在しないということなのでそのサブドメインは新規投稿してあげる
                 String url = "";
                 TeamEnum e = TeamEnum.get(teamId);
+                boolean newPostFlg = true;
                 if (wpId == null) {
                     url = e.getSubDomain() + setting.getBlogApiPath() + "posts/";
                 } else {
+                    newPostFlg = false;
                     url = e.getSubDomain() + setting.getBlogApiPath() + "posts/" + wpId;
                 }
 
@@ -473,25 +482,33 @@ public class BlogController {
                         logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
                         resMap.put(itemMaster.getItem_m_id(), blogId);
                     }
+
+                    // 新規ブログ投稿の場合はTwitterポストします
+                    if (newPostFlg) {
+                        logger.debug("🕊ブログ投稿のお知らせ");
+                        if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                            logger.debug(itemMaster.getTitle());
+                            url = e.getSubDomain() + "blog/" + rel.getWp_id();
+                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId);
+                            String result;
+                            // TODO: text作成、memberを抜いてるので追加したほうがいい
+                            result = twTextController.twitter(twiDto);
+                            // Twitter投稿
+                            pythonController.post(teamId, result);
+                        } else {
+                            logger.debug("❌🕊未来商品ではないので投稿なし");
+                            logger.debug(itemMaster.getTitle() + "発売日：" + itemMaster.getPublication_date());
+                        }
+                    } else {
+                        logger.debug("❌🕊ブログ更新なのでTweetはありません");
+                    }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                // 更新したブログ投稿がある場合
-                logger.debug("🕊ブログ更新のお知らせ");
-                if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                    logger.debug(itemMaster.getTitle());
-                    url = e.getSubDomain() + "blog/" + rel.getWp_id();
-                    TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId);
-                    String result;
-                    // TODO: text作成、memberを抜いてるので追加したほうがいい
-                    result = twTextController.twitter(twiDto);
-                    // Twitter投稿
-                    pythonController.post(teamId, result);
-                } else {
-                    logger.debug("❌🕊未来商品ではないので投稿なし");
-                    logger.debug(itemMaster.getTitle() + "発売日：" + itemMaster.getPublication_date());
-                }
+            } else {
+                logger.debug("headerがエラーみたいです");
             }
+            logger.debug("postOrUpdate終わり");
             Thread.sleep(500);
         }
         return resMap;

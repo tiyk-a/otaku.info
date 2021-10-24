@@ -109,8 +109,8 @@ public class ItemMasterService {
         return itemMasterRepository.findNearFutureIMByTeamId(teamId);
     }
 
-    public List<ItemMaster> findByTeamId(Long teamId, Long limit) {
-        return itemMasterRepository.findByTeamId(teamId, limit);
+    public List<ItemMaster> findByTeamIdNotDeleted(Long teamId) {
+        return itemMasterRepository.findByTeamIdNotDeleted(teamId);
     }
 
     public boolean exists(Long imId) {

@@ -31,10 +31,8 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
     @Query("select t from item_master t where YEAR(publication_date) = ?1")
     List<ItemMaster> findByPublicationYear(Integer year);
 
-    @Query("select t from item_master t where wp_id in ?1")
-    List<ItemMaster> findByWpIdList(List<Integer> wpIdList);
-
-    @Query("select t from item_master t where wp_id in ?1 and url is null")
+    // TODO: これ別teamとかでもヒットして返却するけど大丈夫？
+    @Query(nativeQuery = true, value = "select t from item_master t inner join im_rel b on t.item_m_id = b.item_m_id where b.wp_id in ?1 and url is null")
     List<ItemMaster> findByWpIdUrlNullList(List<Integer> wpIdList);
 
     @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where YEAR(publication_date) = ?1 and b.wp_id is null")
@@ -49,6 +47,6 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
     @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where b.team_id = ?1 and publication_date > CURRENT_DATE order by publication_date limit 5")
     List<ItemMaster> findNearFutureIMByTeamId(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE order by publication_date desc")
-    List<ItemMaster> findByTeamId(Long teamId, Long limit);
+    @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.del_flg = 0 order by publication_date desc")
+    List<ItemMaster> findByTeamIdNotDeleted(Long teamId);
 }

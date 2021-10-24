@@ -258,11 +258,11 @@ public class TextController {
     public List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
         List<String> resultList = new ArrayList<>();
 
+        logger.debug("blogReleaseItemsTextの中です");
+        logger.debug("itemMasterListMap.size=" + itemMasterListMap.size());
         // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
-        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet().stream().filter(e -> e.getValue().size() > 0).sorted(Comparator.comparing(e -> e.getKey().getTitle())).collect(Collectors.toList())) {
+        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet()) {
             ItemMaster itemMaster = entry.getKey();
-            List<Item> itemList = entry.getValue().stream().filter(e -> StringUtils.hasText(e.getItem_code())).collect(Collectors.toList());
-            boolean noRakutenFlg = itemList.size() == 0;
 
             String date = dateUtils.getDay(itemMaster.getPublication_date());
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
@@ -305,6 +305,7 @@ public class TextController {
             // 返却リストに追加する
             resultList.add(text);
         }
+        logger.debug("resultList.size=" + resultList.size());
         return resultList;
     }
 

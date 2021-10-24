@@ -2,7 +2,6 @@ package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,22 +99,37 @@ public class BlogController {
     @Autowired
     Setting setting;
 
+    /**
+     * 引数TeamEnumのブログにあるタグがDBになかったらDBにデータを入れます
+     *
+     * @param e
+     */
     public void insertTags(TeamEnum e) {
         Integer n = 1;
+        boolean nextFlg = true;
 
-        String url = e.getSubDomain() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
+        while (nextFlg) {
+            String url = e.getSubDomain() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
 
-        // request
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getId());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.GET);
+            // request
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getId());
+            JSONObject jsonObject = new JSONObject();
+            HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+            String res = request(url, request, HttpMethod.GET);
 
 
-        try {
-            if (JsonUtils.isJsonArray(res)) {
-                JSONArray ja = new JSONArray(res);
-                List<BlogTag> blogTagList = new ArrayList<>();
+            try {
+                if (JsonUtils.isJsonArray(res)) {
+                    JSONArray ja = new JSONArray(res);
+
+                    // レスポンスがリクエスト通りのarray sizeだったら次があるかもしれない。なかったらもう次はないのでflgをoffにする
+                    if (ja.length() == 40) {
+                        ++n;
+                    } else {
+                        nextFlg = false;
+                    }
+
+                    List<BlogTag> blogTagList = new ArrayList<>();
 
                     for (int i=0;i<ja.length();i++) {
                         Integer wpId = ja.getJSONObject(i).getInt("id");
@@ -123,6 +137,9 @@ public class BlogController {
                         String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
 
                         Long teamId = e.getId();
+                        if (e.getSubDomain().equals("https://snowman.otakuinfo.fun/")) {
+                            teamId = 7L;
+                        }
 
                         if (blogTagService.findBlogTagIdByTagName(tagName, teamId) == 0) {
                             BlogTag blogTag = new BlogTag();
@@ -135,8 +152,9 @@ public class BlogController {
                     }
                     blogTagService.saveAll(blogTagList);
                 }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 

@@ -116,4 +116,8 @@ public class ItemMasterService {
     public boolean exists(Long imId) {
         return itemMasterRepository.existsById(imId);
     }
+
+    public List<Long> findImIdFutureNotDeleted() {
+        return itemMasterRepository.findImIdFutureNotDeleted();
+    }
 }

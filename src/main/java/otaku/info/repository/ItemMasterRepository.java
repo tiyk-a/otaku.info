@@ -49,4 +49,7 @@ public interface ItemMasterRepository extends JpaRepository<ItemMaster, Long> {
 
     @Query(nativeQuery = true, value = "select a.* from item_master a inner join im_rel b on a.item_m_id = b.item_m_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.del_flg = 0 order by publication_date desc")
     List<ItemMaster> findByTeamIdNotDeleted(Long teamId);
+
+    @Query(nativeQuery = true, value = "select item_m_id from item_master where publication_date >= CURRENT_DATE and del_flg = 0")
+    List<Long> findImIdFutureNotDeleted();
 }

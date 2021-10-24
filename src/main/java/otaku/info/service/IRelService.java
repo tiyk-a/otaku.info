@@ -61,4 +61,8 @@ public class IRelService {
     public List<IRel> findByItemIdTeamIdNotNull(Long itemId) {
         return iRelRepository.findByItemIdTeamIdNotNull(itemId);
     }
+
+    public List<Long> findDistinctTeamIdByMasterId(Long masterId) {
+        return iRelRepository.findDistinctTeamIdByMasterId(masterId);
+    }
 }

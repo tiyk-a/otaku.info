@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -225,16 +226,6 @@ public class SampleController {
                 scheduler.run7();
                 break;
             case 8:
-//                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
-//                List<TeamEnum> deleted = new ArrayList<>();
-//                for (TeamEnum l : list) {
-//                    if (!deleted.contains(l)) {
-//                        deleted.add(l);
-//                    }
-//                }
-//                for (TeamEnum s : deleted) {
-//                    blogController.insertTags(s);
-//                }
                 scheduler.run8();
                 break;
             case 9:
@@ -279,6 +270,21 @@ public class SampleController {
                 break;
             case 20:
                 organizeIm();
+                break;
+            case 21:
+                insertImRel();
+                break;
+            case 22:
+                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
+                Map<String, TeamEnum> map = new HashMap<>();
+                for (TeamEnum l : list) {
+                    if (!map.containsKey(l.getSubDomain())) {
+                        map.put(l.getSubDomain(), l);
+                    }
+                }
+                for (TeamEnum s : map.values()) {
+                    blogController.insertTags(s);
+                }
                 break;
         }
             return "Done";
@@ -599,7 +605,8 @@ public class SampleController {
         }
 
         // ブログ投稿（新規/更新）を行う(twitter投稿まで）
-        Map<Long, Long> imWpMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
+        // TODO: ブログ投稿は手動にしたほうがいいのでは？誤検知がありすぎる。IM登録の時点で確認したほうが簡単なのでは？
+//        Map<Long, Long> imWpMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
         return "Ok";
     }
 
@@ -693,6 +700,43 @@ public class SampleController {
             itemMasterService.addByItem(i, i.getTitle());
         }
         // blog投稿はバッチがしてくれるかな？
+    }
+
+    /**
+     * publication_date > today &̴&̴ del_flg = 0のitem_m_idのim_relがなかったら作る。で、ブログ投稿までしてあげる。twitterはしなくていいと思う
+     *
+     */
+    private void insertImRel() throws InterruptedException {
+        // publication_date > today &̴&̴ del_flg = 0のitem_m_idのim_relリスト
+        List<Long> imIdList = itemMasterService.findImIdFutureNotDeleted();
+        logger.debug("対象imId数:" + imIdList.size());
+        for (Long imId : imIdList) {
+            logger.debug("imId=" + imId);
+            List<IMRel> relList = iMRelService.findByItemMId(imId);
+            logger.debug("relList size:" + relList.size());
+            if (relList.size() == 0) {
+                ItemMaster im = itemMasterService.findById(imId);
+                logger.debug("新規rel登録です. teamIdはitemから取得します");
+                List<Long> teamIdList = iRelService.findDistinctTeamIdByMasterId(imId);
+                if (teamIdList.size() == 0) {
+                    logger.debug("itemが1件もありませんでした。imのdel_flgをonにします");
+                    im.setDel_flg(true);
+                    itemMasterService.save(im);
+                } else {
+                    for (Long teamId : teamIdList) {
+                        logger.debug("teamId=" + teamId);
+                        IMRel rel = new IMRel(null, imId, teamId, null, null, null);
+                        IMRel savedRel = iMRelService.save(rel);
+                        logger.debug("relがsaveされました:" + savedRel.getIm_rel_id());
+
+                        List<ItemMaster> imList = new ArrayList<>();
+                        imList.add(im);
+                        blogController.postOrUpdate(imList, teamId);
+                        logger.debug("ブログも投稿しました. teamId=" + teamId + " imId=：" + imId);
+                    }
+                }
+            }
+        }
     }
 }
 

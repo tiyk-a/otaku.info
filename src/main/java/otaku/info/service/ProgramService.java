@@ -49,4 +49,12 @@ public class ProgramService  {
     public List<Program> findbyTeamId(Long teamId) {
         return programRepository.findbyTeamId(teamId);
     }
+
+    public List<Program> findbyStationId(Long sId) {
+        return programRepository.findbyStationId(sId);
+    }
+
+    public List<Program> saveAll(List<Program> pList) {
+        return programRepository.saveAll(pList);
+    }
 }

@@ -132,5 +132,9 @@ public class ItemService {
     public List<Item> findByMIdNullFuture() {
         return itemRepository.findByMIdNullFuture();
     }
+
+    public List<Item> findByTeamIdNotDeleted(Long teamId) {
+        return itemRepository.findByTeamIdNotDeleted(teamId);
+    }
 }
 

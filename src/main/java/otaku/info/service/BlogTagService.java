@@ -50,6 +50,7 @@ public class BlogTagService {
 
     public List<Integer> findBlogTagIdListByTagNameList(List<String> tagNameList) {
         List<Integer> list = blogTagRepository.findBlogTagIdListByTagNameList(tagNameList);
+        // TODO: 名前渡したのにタグが見つからなかった場合、WPブログに登録したり引っ張ってきてDBに保存したりしてあげないといけない
         if(list.isEmpty()) {
             list = new ArrayList<>();
         }

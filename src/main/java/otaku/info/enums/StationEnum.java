@@ -137,4 +137,14 @@ public enum StationEnum {
         // defはNHKにしてみる
         return StationEnum.NHK;
     }
+
+    public static StationEnum get(String name) {
+        for (StationEnum e : StationEnum.values()) {
+            if (e.getName().equals(name)) {
+                return e;
+            }
+        }
+        // defはNHKにしてみる
+        return StationEnum.NHK;
+    }
 }

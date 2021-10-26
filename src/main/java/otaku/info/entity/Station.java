@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 @Entity(name = "station")
 @Data
@@ -23,6 +23,9 @@ public class Station {
 
     @Column(nullable = false)
     public String keyword;
+
+    @Column(nullable = false)
+    private Boolean del_flg;
 
     @Column(nullable = true)
     public Timestamp created_at;

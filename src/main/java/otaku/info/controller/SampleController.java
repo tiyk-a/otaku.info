@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
+import otaku.info.enums.StationEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -71,10 +72,10 @@ public class SampleController {
     private MemberService memberService;
 
     @Autowired
-    private ProgramService programService;
+    private StationService stationService;
 
     @Autowired
-    private BlogTagService blogTagService;
+    private ProgramService programService;
 
     @Autowired
     private ItemMasterService itemMasterService;
@@ -285,6 +286,11 @@ public class SampleController {
                 for (TeamEnum s : map.values()) {
                     blogController.insertTags(s);
                 }
+                break;
+            case 23:
+                modifyStation();
+                logger.debug("残ったstationをdelします");
+                deleteUnusedStation();
                 break;
         }
             return "Done";
@@ -738,5 +744,67 @@ public class SampleController {
             }
         }
     }
-}
 
+    /**
+     * 同じ名前で重複してしまっているstationレコードをどうにかします
+     *
+     */
+    private void modifyStation() {
+        List<Station> sList = stationService.findAll().stream().filter(e -> !e.getDel_flg()).collect(Collectors.toList());
+        logger.debug("All list size:" + sList.size());
+        int count = 1;
+        for (Station s : sList) {
+            logger.debug("station_id=" + s.getStation_id());
+            logger.debug("■■■■■■■count:" + count);
+            StationEnum sEnum = StationEnum.get(s.getStation_name());
+
+            // Enumになってないstationの場合、処理に進む
+            if (sEnum.equals(StationEnum.NHK)) {
+                logger.debug("NHK");
+                // 同じ名前のstationができていないか、名前でリストを取得する
+                List<Station> dbList = stationService.findByName(s.getStation_name());
+                logger.debug("dbList.size=" + dbList.size());
+                // 同じ名前のstationが作られていたら、ID一番若いやつにprogramのstation_idを寄せていく
+                if (dbList.size() > 1) {
+                    Station fstS = dbList.get(0);
+                    for (Station ele : dbList) {
+                        if (!ele.equals(fstS)) {
+                            List<Program> pList = programService.findbyStationId(ele.getStation_id());
+                            if (pList.size() > 0) {
+                                pList.forEach(e -> e.setStation_id(fstS.getStation_id()));
+                                programService.saveAll(pList);
+                                logger.debug("program list saved");
+                            }
+                            ele.setDel_flg(true);
+                            stationService.save(ele);
+                            logger.debug("station saved");
+                        }
+                    }
+                }
+            } else {
+                List<Program> pList = programService.findbyStationId(s.getStation_id());
+                pList.forEach(e -> e.setStation_id(sEnum.getId()));
+                programService.saveAll(pList);
+                s.setDel_flg(true);
+                stationService.save(s);
+            }
+            ++ count;
+        }
+    }
+
+    /**
+     * programで一度も使用されていないstationはdelにセットします
+     *
+     */
+    private void deleteUnusedStation() {
+        List<Station> sList = stationService.findAll();
+        for (Station s : sList) {
+            List<Program> programList = programService.findbyStationId(s.getStation_id());
+            if (programList.size() == 0) {
+                s.setDel_flg(true);
+                stationService.save(s);
+                logger.debug("使われたないstationをdel登録します:" + s.getStation_id());
+            }
+        }
+    }
+}

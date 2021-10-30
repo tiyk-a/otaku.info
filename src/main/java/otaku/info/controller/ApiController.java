@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -77,10 +76,14 @@ public class ApiController {
             // TODO: modify
             IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id);
             FIMDto imDto = new FIMDto();
-            BeanUtils.copyProperties(im, dto);
+            BeanUtils.copyProperties(im, imDto);
             if (rel != null && rel.getWp_id() != null) {
                 imDto.setWp_id(rel.getWp_id());
             }
+
+            // verも追加
+            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+            imDto.setVerList(verList);
             fimDtoList.add(imDto);
         }
 
@@ -186,32 +189,6 @@ public class ApiController {
             return ResponseEntity.ok(false);
         }
     }
-
-//    @GetMapping("/im/merge")
-//    public ResponseEntity<Boolean> mergeIm(@RequestParam("ord") Integer ord, @RequestParam("into") Integer into) throws JSONException, InterruptedException {
-//        logger.debug("accepted");
-//        try {
-//            boolean existsIntoIm = imService.exists((long) into);
-//            if (existsIntoIm) {
-//                IM im = imService.findById((long) ord);
-//                im.setDel_flg(true);
-//                im.setMerge_im_id((long) into);
-//                imService.save(im);
-//
-//                List<Item> itemList = itemService.findByMasterId(im.getIm_id());
-//                if (itemList.size() > 0) {
-//                    itemList.forEach(e -> e.setIm_id((long) into));
-//                    itemService.saveAll(itemList);
-//                }
-//            }
-//            logger.debug("fin");
-//            return ResponseEntity.ok(true);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            logger.debug("fin");
-//            return ResponseEntity.ok(false);
-//        }
-//    }
 
     /**
      * TV一覧を返す
@@ -337,30 +314,142 @@ public class ApiController {
     /**
      * IM+verを登録します
      *
-     * @return IM
+     * @return Boolean true: success / false: failed
      */
     @PostMapping("/im")
-    public ResponseEntity<IM> newIMyVer(@Valid @RequestBody IMVerForm imVerForm) {
+    public ResponseEntity<Boolean> newIMyVer(@Valid @RequestBody IMVerForm imVerForm) {
         logger.debug("accepted");
-        IM im = new IM();
 
-        // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
-        BeanUtils.copyProperties(imVerForm, im);
-        IM savedIm = imService.save(im);
+        try {
+            IM im = null;
+            Item item = itemService.findByItemId(imVerForm.getItem_id()).orElse(null);
 
-        if (imVerForm.getVerArr().length > 0) {
-            for (int i=0;i<imVerForm.getVerArr().length;i++) {
-                boolean verExists = imVerService.existtVerNameImId(imVerForm.getVerArr()[i], savedIm.getIm_id());
-                if (!verExists) {
-                    ImVer ver = new ImVer();
-                    ver.setVer_name(imVerForm.getVerArr()[i]);
-                    ver.setIm_id(savedIm.getIm_id());
-                    imVerService.save(ver);
+            if (item == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            // im_idが入っていたらverだけ追加処理処理、入っていなかったらim新規登録とあればver追加処理、と判断（ここではimのタイトル変更などはできない）
+            if (imVerForm.getIm_id() == null || imVerForm.getIm_id() == 0) {
+
+                // 対象のItemが見つからなかったら処理しません。見つかったら処理する。
+                im = new IM();
+
+                // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
+                BeanUtils.copyProperties(imVerForm, im);
+                IM savedIm = imService.save(im);
+
+                // im_relの登録を行います
+                // TODO: 万一、すでに該当のrelがある場合存在チェックしてないから被って問題になるけど、多分大丈夫。
+                if (savedIm != null) {
+                    IMRel rel = new IMRel();
+                    rel.setTeam_id(imVerForm.getTeamId());
+                    rel.setIm_id(savedIm.getIm_id());
+                    imRelService.save(rel);
+                }
+                im = savedIm;
+            } else {
+                im = imService.findById(imVerForm.getIm_id());
+            }
+
+            // itemのim_idを登録します
+            item.setIm_id(im.getIm_id());
+            item.setFct_chk(true);
+            itemService.save(item);
+
+            // verがあれば登録します
+            if (imVerForm.getVerArr().size() > 0) {
+                for (int i=0;i<imVerForm.getVerArr().size();i++) {
+                    boolean verExists = imVerService.existtVerNameImId(imVerForm.getVerArr().get(i).getVer_name(), im.getIm_id());
+                    if (!verExists) {
+                        ImVer ver = new ImVer();
+                        ver.setVer_name(imVerForm.getVerArr().get(i).getVer_name());
+                        ver.setIm_id(im.getIm_id());
+                        imVerService.save(ver);
+                    }
                 }
             }
-        }
 
-        logger.debug("fin");
-        return ResponseEntity.ok(savedIm);
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    /**
+     * IM+verを更新します
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/im/{imId}")
+    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
+        logger.debug("accepted");
+
+        try {
+            IM im = imService.findById(imId);
+            if (im == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            // imの更新
+            if (!imVerForm.getTitle().equals(im.getTitle())) {
+                im.setTitle(imVerForm.getTitle());
+                imService.save(im);
+            }
+
+            // verの更新
+            if (imVerForm.getVerArr().size() > 0) {
+                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+                for (ImVer ver : imVerForm.getVerArr()) {
+                    ImVer originVer = verList.stream().filter(e -> e.getIm_v_id().equals(ver.getIm_v_id())).findFirst().orElse(null);
+                    if (originVer != null) {
+                        if (!originVer.getVer_name().equals(ver.getVer_name())) {
+                            originVer.setVer_name(ver.getVer_name());
+                            imVerService.save(originVer);
+                        }
+                    } else {
+                        ImVer newVer = new ImVer();
+                        newVer.setVer_name(ver.getVer_name());
+                        newVer.setIm_id(imVerForm.getIm_id());
+                        imVerService.save(newVer);
+                    }
+                }
+            }
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    /**
+     * Itemにim_idを追加してfct_chkを更新します（既存imある場合ですね）
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @GetMapping("/im/chk/{itemId}/{imId}")
+    public ResponseEntity<Boolean> chkItem(@PathVariable Long itemId, @PathVariable Long imId) {
+        logger.debug("accepted");
+
+        try {
+            Item item = itemService.findByItemId(itemId).orElse(null);
+            IM im = imService.findById(imId);
+
+            if (item == null || im == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            item.setIm_id(imId);
+            item.setFct_chk(true);
+            itemService.save(item);
+
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
     }
 }

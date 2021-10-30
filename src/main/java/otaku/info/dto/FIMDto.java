@@ -2,9 +2,12 @@ package otaku.info.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import otaku.info.entity.ImVer;
+import otaku.info.form.IMVerForm;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Front Item Master Dto
@@ -31,6 +34,8 @@ public class FIMDto {
     private boolean fct_chk;
 
     private boolean del_flg;
+
+    private List<ImVer> verList;
 
     private Long merge_im_id;
 

@@ -7,6 +7,7 @@ import otaku.info.entity.ImVer;
 import otaku.info.repository.ImVerRepository;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -22,5 +23,9 @@ public class ImVerService {
 
     public boolean existtVerNameImId(String verName, Long teamId) {
         return imVerRepository.existtVerNameImId(verName, teamId) > 0;
+    }
+
+    public List<ImVer> findByImId(Long imId) {
+        return imVerRepository.findByImId(imId);
     }
 }

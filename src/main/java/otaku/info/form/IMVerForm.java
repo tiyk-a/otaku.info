@@ -1,11 +1,15 @@
 package otaku.info.form;
 
 import lombok.Data;
+import otaku.info.entity.ImVer;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class IMVerForm {
+
+    private Long item_id;
 
     private Long im_id;
 
@@ -19,5 +23,5 @@ public class IMVerForm {
 
     private boolean del_flg;
 
-    private String[] verArr;
+    private List<ImVer> verArr;
 }

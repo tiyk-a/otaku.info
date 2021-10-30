@@ -31,7 +31,7 @@ public class ItemService {
         return itemRepository.tmpMethod();
     }
 
-    public Item saveItem(Item item) {
+    public Item save(Item item) {
         if (!hasData(item.getItem_code())) {
             return itemRepository.saveAndFlush(item);
         }
@@ -135,6 +135,14 @@ public class ItemService {
 
     public List<Item> findByTeamIdNotDeleted(Long teamId) {
         return itemRepository.findByTeamIdNotDeleted(teamId);
+    }
+
+    public List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId) {
+        return itemRepository.findByTeamIdFutureNotDeletedNoIM(teamId);
+    }
+
+    public List<Item> findByTeamIdFutureNotDeletedWIM(Long teamId) {
+        return itemRepository.findByTeamIdFutureNotDeletedWIM(teamId);
     }
 }
 

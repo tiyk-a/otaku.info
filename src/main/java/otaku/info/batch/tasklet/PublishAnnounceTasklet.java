@@ -12,10 +12,10 @@ import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.IMRel;
 import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
+import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.IMRelService;
-import otaku.info.service.ItemMasterService;
+import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
@@ -37,7 +37,7 @@ public class PublishAnnounceTasklet implements Tasklet {
     ItemService itemService;
 
     @Autowired
-    ItemMasterService itemMasterService;
+    IMService imService;
 
     @Autowired
     IMRelService IMRelService;
@@ -52,12 +52,12 @@ public class PublishAnnounceTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        List<ItemMaster> itemMasterList = itemMasterService.findReleasedItemList();
+        List<IM> itemMasterList = imService.findReleasedItemList();
         logger.debug("itemMasterList size: " + itemMasterList.size());
         Integer postCount = 0;
 
-        for (ItemMaster itemMaster : itemMasterList) {
-            List<IMRel> relList = IMRelService.findByItemMId(itemMaster.getItem_m_id());
+        for (IM itemMaster : itemMasterList) {
+            List<IMRel> relList = IMRelService.findByItemMId(itemMaster.getIm_id());
             if (relList.size() > 0) {
                 // member違いのrelもあるのでチームごとにrelListをまとめる
                 Map<Long, List<IMRel>> teamMemberMap = new TreeMap<>();
@@ -76,7 +76,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                     if (TeamEnum.get(e.getKey()).getTw_id().equals("")) {
                         noTwMap.put(e.getKey(), e.getValue());
                     } else {
-                        Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
+                        Item item = itemService.findByMasterId(itemMaster.getIm_id()).get(0);
                         String text = "";
                         if (item != null) {
                             text = twTextController.releasedItemAnnounce(itemMaster, e.getKey(), item);
@@ -88,7 +88,7 @@ public class PublishAnnounceTasklet implements Tasklet {
 
                 // 個別TWないチームのデータがあったら
                 if (noTwMap.size() > 0) {
-                    Item item = itemService.findByMasterId(itemMaster.getItem_m_id()).get(0);
+                    Item item = itemService.findByMasterId(itemMaster.getIm_id()).get(0);
                     String text = "";
                     if (item != null) {
                         text = twTextController.releasedItemAnnounce(itemMaster,7L, item);

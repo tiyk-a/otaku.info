@@ -67,7 +67,7 @@ public class Item {
     private boolean del_flg;
 
     @Column(nullable = true)
-    private Long item_m_id;
+    private Long im_id;
 
     @CreationTimestamp
     @Column(nullable = true)
@@ -76,24 +76,6 @@ public class Item {
     @UpdateTimestamp
     @Column(nullable = true)
     private Timestamp updated_at;
-
-    /**
-     * マスター商品に変換します。特殊処理話に単純に同じ名称のカラムへ値を受け渡し。
-     * チェックカラムなどはfalseを入れます。
-     * @param title textController.createItemMasterTitle(itemList, itemMaster.getPublication_date())を使用してitemMaster.titleに設定するStringを作成して渡すこと。
-     *
-     * @return
-     */
-    public ItemMaster convertToItemMaster(String title) {
-        ItemMaster itemMaster = new ItemMaster();
-        BeanUtils.copyProperties(this, itemMaster);
-        itemMaster.setTitle(title);
-        itemMaster.setFct_chk(false);
-        itemMaster.setDel_flg(false);
-        itemMaster.setItem_m_id(null);
-        itemMaster.setUrl(null);
-        return itemMaster;
-    }
 
     /**
      * Itemに空のImageカラムがあるか確認し、一番初めの空のカラムに引数の画像パスを設定します。
@@ -136,5 +118,21 @@ public class Item {
         List<Item> itemList = new ArrayList<>();
         itemList.add(this);
         return itemList;
+    }
+
+    public Item absorb(Item preyItem) {
+        if (preyItem.getTitle() != null && !preyItem.getTitle().isEmpty()) {
+            this.setTitle(preyItem.getTitle());
+        }
+        if (preyItem.getItem_caption() != null && !preyItem.getItem_caption().isEmpty()) {
+            this.setItem_caption(preyItem.getItem_caption());
+        }
+        if (preyItem.getPrice() != null && preyItem.getPrice() != 0) {
+            this.setPrice(preyItem.getPrice());
+        }
+        if (preyItem.getPublication_date() != null) {
+            this.setPublication_date(preyItem.getPublication_date());
+        }
+        return this;
     }
 }

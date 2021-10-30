@@ -54,7 +54,7 @@ public class TextController {
     private StationService stationService;
 
     @Autowired
-    private ItemMasterService itemMasterService;
+    private IMService imService;
 
     @Autowired
     private IMRelService IMRelService;
@@ -223,7 +223,7 @@ public class TextController {
      * @param futureMap
      * @return
      */
-    public String blogUpdateReleaseItems(Map<ItemMaster, List<Item>> todayMap, Map<ItemMaster, List<Item>> futureMap) {
+    public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap) {
         String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
@@ -255,24 +255,24 @@ public class TextController {
      * @param itemMasterListMap
      * @return
      */
-    public List<String> blogReleaseItemsText(Map<ItemMaster, List<Item>> itemMasterListMap) {
+    public List<String> blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap) {
         List<String> resultList = new ArrayList<>();
 
         logger.debug("blogReleaseItemsTextの中です");
         logger.debug("itemMasterListMap.size=" + itemMasterListMap.size());
         // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
-        for (Map.Entry<ItemMaster, List<Item>> entry : itemMasterListMap.entrySet()) {
-            ItemMaster itemMaster = entry.getKey();
+        for (Map.Entry<IM, List<Item>> entry : itemMasterListMap.entrySet()) {
+            IM itemMaster = entry.getKey();
 
             String date = dateUtils.getDay(itemMaster.getPublication_date());
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
 
             // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id()) == null) {
+            if (IMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()) == null) {
                 continue;
             }
 
-            List<String> teamNameList = teamService.findTeamNameByIdList(IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id()));
+            List<String> teamNameList = teamService.findTeamNameByIdList(IMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()));
             String teamNameUnited = String.join(" ", teamNameList);
 
             // h2で表示したい商品のタイトルを生成
@@ -290,18 +290,14 @@ public class TextController {
 //            }
 
             // htmlタグ付与
-            h2 = "<h2 id=id_" + itemMaster.getItem_m_id() + ">" + h2 + "</h2>";
+            h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
 
             String headItem = "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
-
-            String description = "<h6>概要</h6>" + "<p>" + itemMaster.getItem_caption() + "</p>";
-
-            String price = "<h6>価格</h6>" + "<p>" + itemMaster.getPrice() + "円</p>";
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
 
-            String text = String.join("\n", h2, headItem, description, price, publicationDateStr);
+            String text = String.join("\n", h2, headItem, publicationDateStr);
             // 返却リストに追加する
             resultList.add(text);
         }

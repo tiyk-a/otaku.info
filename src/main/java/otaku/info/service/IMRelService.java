@@ -43,7 +43,7 @@ public class IMRelService {
     public List<IMRel> removeExistRecord(List<IMRel> imRelList) {
         List<IMRel> returnList = new ArrayList<>();
         for (IMRel rel : imRelList) {
-            boolean exists = iMRelRepository.existsByElem(rel.getItem_m_id(), rel.getTeam_id()) > 0;
+            boolean exists = iMRelRepository.existsByElem(rel.getIm_id(), rel.getTeam_id()) > 0;
             if (!exists) {
                 returnList.add(rel);
             }

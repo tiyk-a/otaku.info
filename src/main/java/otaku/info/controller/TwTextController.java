@@ -41,7 +41,7 @@ public class TwTextController {
     private StationService stationService;
 
     @Autowired
-    private ItemMasterService itemMasterService;
+    private IMService imService;
 
     @Autowired
     private IMRelService iMRelService;
@@ -76,12 +76,12 @@ public class TwTextController {
         return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
     }
 
-    public String futureItemReminder(ItemMaster im, Long teamId, Item item) {
+    public String futureItemReminder(IM im, Long teamId, Item item) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
         String title = "";
         String url = "";
-        IMRel rel = iMRelService.findByImIdTeamId(im.getItem_m_id(), teamId);
+        IMRel rel = iMRelService.findByImIdTeamId(im.getIm_id(), teamId);
         if (item.getUrl() == null || item.getUrl().isEmpty() && rel.getWp_id() != null) {
             url = TeamEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
         } else if (item.getUrl() != null || !item.getUrl().isEmpty()) {
@@ -146,7 +146,7 @@ public class TwTextController {
      * @param teamId
      * @return
      */
-    public String futureItemReminder(ItemMaster itemMaster, Item item, Long teamId) {
+    public String futureItemReminder(IM itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 //        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
@@ -156,7 +156,7 @@ public class TwTextController {
         } else {
             itemMaster.setTitle(item.getTitle());
             // ついでに登録（更新）する
-            itemMasterService.save(itemMaster);
+            imService.save(itemMaster);
         }
         return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
@@ -177,12 +177,12 @@ public class TwTextController {
 //        return str1 + "%0A" + tags;
 //    }
 
-    public String releasedItemAnnounce(ItemMaster itemMaster, Long teamId, Item item) {
+    public String releasedItemAnnounce(IM itemMaster, Long teamId, Item item) {
         String url = TeamEnum.get(teamId).getSubDomain();
 
-        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + item.getUrl() + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getItem_m_id());
+        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + item.getUrl() + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
         // TODO: twitterタグ、DB使わないで取れてる
-        List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
+        List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id());
         String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
     }

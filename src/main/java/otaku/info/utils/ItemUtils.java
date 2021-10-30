@@ -5,9 +5,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.TextController;
+import otaku.info.entity.IM;
 import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
-import otaku.info.service.ItemMasterService;
+import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
@@ -29,7 +29,7 @@ public class ItemUtils {
     private ItemService itemService;
 
     @Autowired
-    private ItemMasterService itemMasterService;
+    private IMService imService;
 
     @Autowired
     private TextController textController;
@@ -69,105 +69,72 @@ public class ItemUtils {
 
     /**
      * 引数で受けた商品リストをマスター商品ごとにまとめる。
-     * マスター商品がない場合は新しくレコードを作る。
+     * TODO: マスター商品がない場合は返却しないよ
+     * マスター商品がない場合は返却しない。
      *
      * @param itemList
      * @return
      */
-    public Map<ItemMaster, List<Item>> groupItem(List<Item> itemList) {
-        Map<ItemMaster, List<Item>> resultMap = new HashMap<>();
+    public Map<IM, List<Item>> groupItem(List<Item> itemList) {
+        Map<IM, List<Item>> resultMap = new HashMap<>();
         List<Long> masterIdList = new ArrayList<>();
-        List<ItemMaster> itemMasterList = new ArrayList<>();
+        List<IM> itemMasterList = new ArrayList<>();
 
         for (Item item : itemList) {
             // マスターがすでに商品に登録されている場合
-            if (item.getItem_m_id() != null) {
+            if (item.getIm_id() != null) {
                 // まずすでにマスターが出現してるか確認
-                if (masterIdList.size() > 0 && masterIdList.contains(item.getItem_m_id())) {
+                if (masterIdList.size() > 0 && masterIdList.contains(item.getIm_id())) {
                     // すでにマスターを取得していたら
                     Long masterId = null;
-                    for (ItemMaster itemMaster : itemMasterList) {
-                        if (itemMaster.getItem_m_id().equals(item.getItem_m_id())) {
+                    for (IM itemMaster : itemMasterList) {
+                        if (itemMaster.getIm_id().equals(item.getIm_id())) {
                             List<Item> tmpList = resultMap.get(itemMaster);
                             tmpList.add(item);
-                            item.setItem_m_id(itemMaster.getItem_m_id());
-                            itemService.saveItem(item);
+                            item.setIm_id(itemMaster.getIm_id());
+                            itemService.save(item);
                             resultMap.put(itemMaster, tmpList);
-                            masterId = itemMaster.getItem_m_id();
+                            masterId = itemMaster.getIm_id();
                         }
                     }
                     logger.debug("IM登録済みです:" + masterId);
                 } else {
                     // まだマスターが見つからなかったらサービス使って取りに行く
-                    ItemMaster itemMaster = itemMasterService.getMasterById(item.getItem_m_id());
-                    Long masterId = itemMaster.getItem_m_id();
+                    IM itemMaster = imService.findById(item.getIm_id());
+                    Long masterId = itemMaster.getIm_id();
 
                     // マスターが見つからなかった場合
-                    if (itemMaster.isNull() || itemMaster.getItem_m_id() == null) {
-                        // 新規マスター登録が必要か判定する
+                    if (masterId != null) {
+                        List<Item> tmpList = new ArrayList<>();
+                        tmpList.add(item);
+                        item.setIm_id(masterId);
+                        itemService.save(item);
+                        resultMap.put(itemMaster, tmpList);
 
-                        // マスター登録が必要な場合は登録
-                        if (masterId.equals(0L)) {
-                            logger.debug("IM新規登録です");
-                            String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
-                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
-                            for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
-                                item = e.getValue();
-                                itemMaster = e.getKey();
-                            }
-                            logger.debug("IM新規登録完了:" + itemMaster.getItem_m_id());
-                        } else {
-                            // マスター登録が不要な場合はitemにマスターIDを設定する
-                            logger.debug("IM登録済みです:" + masterId);
-                            item.setItem_m_id(masterId);
-                            itemService.saveItem(item);
-                            itemMaster = itemMasterService.findById(masterId);
+                        // サービス使ってマスターを取りに行ってきたのでtmpリストに追加する
+                        if (!masterIdList.contains(masterId)) {
+                            masterIdList.add(masterId);
                         }
-                    } else {
-                        logger.debug("IM登録済みです:" + masterId);
-                    }
-                    // マスターが見つかった場合orマスターが見つからなかった→新規登録して変数を上書きした後
-                    List<Item> tmpList = new ArrayList<>();
-                    tmpList.add(item);
-                    item.setItem_m_id(itemMaster.getItem_m_id());
-                    itemService.saveItem(item);
-                    resultMap.put(itemMaster, tmpList);
-
-                    // サービス使ってマスターを取りに行ってきたのでtmpリストに追加する
-                    if (!masterIdList.contains(itemMaster.getItem_m_id())) {
-                        masterIdList.add(itemMaster.getItem_m_id());
-                    }
-                    if (!itemMasterList.contains(itemMaster)) {
-                        itemMasterList.add(itemMaster);
+                        if (!itemMasterList.contains(itemMaster)) {
+                            itemMasterList.add(itemMaster);
+                        }
                     }
                 }
-
-
             } else {
                 // 新規マスター登録が必要か判定する
                 Long masterId = judgeNewMaster(item);
-                ItemMaster itemMaster = new ItemMaster();
+                IM itemMaster = new IM();
 
-                // マスター登録が必要な場合は登録
-                if (masterId.equals(0L)) {
-                    logger.debug("IM新規登録です");
-                    String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
-                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
-                    for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
-                        item = e.getValue();
-                        itemMaster = e.getKey();
-                    }
-                    logger.debug("IM新規登録完了:" + itemMaster.getItem_m_id());
-                } else {
+                // マスター登録がある場合
+                if (!masterId.equals(0L)) {
                     // マスター登録が不要な場合はitemにマスターIDを設定する
-                    logger.debug("IM登録済みです:" + masterId);
-                    item.setItem_m_id(masterId);
-                    itemService.saveItem(item);
-                    itemMaster = itemMasterService.findById(masterId);
+                    item.setIm_id(masterId);
+                    itemService.save(item);
+                    itemMaster = imService.findById(masterId);
+                    List<Item> tmpList = new ArrayList<>();
+                    tmpList.add(item);
+                    resultMap.put(itemMaster, tmpList);
                 }
-                List<Item> tmpList = new ArrayList<>();
-                tmpList.add(item);
-                resultMap.put(itemMaster, tmpList);
             }
         }
         return resultMap;
@@ -187,13 +154,13 @@ public class ItemUtils {
         Map<Long, List<Item>> masterItemMap = new HashMap<>();
         for (Item item : itemList) {
 
-            if (item.getItem_m_id() != null) {
+            if (item.getIm_id() != null) {
                 List<Item> tmpList = new ArrayList<>();
-                if (masterItemMap.size() > 0 && masterItemMap.containsKey(item.getItem_m_id())) {
-                    tmpList = masterItemMap.get(item.getItem_m_id());
+                if (masterItemMap.size() > 0 && masterItemMap.containsKey(item.getIm_id())) {
+                    tmpList = masterItemMap.get(item.getIm_id());
                 }
                 tmpList.add(item);
-                masterItemMap.put(item.getItem_m_id(), tmpList);
+                masterItemMap.put(item.getIm_id(), tmpList);
             }
         }
 
@@ -297,57 +264,57 @@ public class ItemUtils {
      * @param itemList
      * @return
      */
-    public List<ItemMaster> returnItemMaster(List<Item> itemList) {
-        List<ItemMaster> itemMasterList = new ArrayList<>();
-
-        for (Item item : itemList) {
-            // マスターがすでに商品に登録されている場合
-            if (item.getItem_m_id() != null) {
-                // まずすでにマスターが出現してるか確認
-                Item finalItem = item;
-                if (itemMasterList.stream().noneMatch(e -> e.getItem_m_id().equals(finalItem.getItem_m_id()))) {
-                    ItemMaster itemMaster = itemMasterService.getMasterById(item.getItem_m_id());
-                    if (itemMaster.isNull() || itemMaster.getItem_m_id() == null) {
-                        // 新規マスター登録が必要か判定する
-                        Long masterId = judgeNewMaster(item);
-
-                        // マスター登録が必要な場合は登録
-                        if (masterId.equals(0L)) {
-                            String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
-                            Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
-                            // TODO: fragile
-                            itemMaster = savedMap.keySet().stream().findFirst().get();
-                        } else {
-                            // マスター登録が不要な場合はitemにマスターIDを設定する
-                            item.setItem_m_id(masterId);
-                            itemService.saveItem(item);
-                            itemMaster = itemMasterService.findById(masterId);
-                        }
-                    }
-                    itemMasterList.add(itemMaster);
-                }
-            } else {
-                // 新規マスター登録が必要か判定する
-                Long masterId = judgeNewMaster(item);
-                ItemMaster itemMaster = new ItemMaster();
-
-                // マスター登録が必要な場合は登録
-                if (masterId.equals(0L)) {
-                    String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
-                    Map<ItemMaster, Item> savedMap = itemMasterService.addByItem(item, title);
-                    for (Map.Entry<ItemMaster, Item> e : savedMap.entrySet()) {
-                        item = e.getValue();
-                        itemMaster = e.getKey();
-                    }
-                } else {
-                    // マスター登録が不要な場合はitemにマスターIDを設定する
-                    item.setItem_m_id(masterId);
-                    itemService.saveItem(item);
-                    itemMaster = itemMasterService.findById(masterId);
-                }
-                itemMasterList.add(itemMaster);
-            }
-        }
-        return itemMasterList;
-    }
+//    public List<IM> returnItemMaster(List<Item> itemList) {
+//        List<IM> itemMasterList = new ArrayList<>();
+//
+//        for (Item item : itemList) {
+//            // マスターがすでに商品に登録されている場合
+//            if (item.getIm_id() != null) {
+//                // まずすでにマスターが出現してるか確認
+//                Item finalItem = item;
+//                if (itemMasterList.stream().noneMatch(e -> e.getIm_id().equals(finalItem.getIm_id()))) {
+//                    IM itemMaster = imService.findById(item.getIm_id());
+//                    if (itemMaster.getIm_id() == null) {
+//                        // 新規マスター登録が必要か判定する
+//                        Long masterId = judgeNewMaster(item);
+//
+//                        // マスター登録が必要な場合は登録
+//                        if (masterId.equals(0L)) {
+//                            String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+//                            Map<IM, Item> savedMap = imService.addByItem(item, title);
+//                            // TODO: fragile
+//                            itemMaster = savedMap.keySet().stream().findFirst().get();
+//                        } else {
+//                            // マスター登録が不要な場合はitemにマスターIDを設定する
+//                            item.setIm_id(masterId);
+//                            itemService.save(item);
+//                            itemMaster = imService.findById(masterId);
+//                        }
+//                    }
+//                    itemMasterList.add(itemMaster);
+//                }
+//            } else {
+//                // 新規マスター登録が必要か判定する
+//                Long masterId = judgeNewMaster(item);
+//                IM itemMaster = new IM();
+//
+//                // マスター登録が必要な場合は登録
+//                if (masterId.equals(0L)) {
+//                    String title = textController.createItemMasterTitle(item.toList(), item.getPublication_date());
+//                    Map<IM, Item> savedMap = imService.addByItem(item, title);
+//                    for (Map.Entry<IM, Item> e : savedMap.entrySet()) {
+//                        item = e.getValue();
+//                        itemMaster = e.getKey();
+//                    }
+//                } else {
+//                    // マスター登録が不要な場合はitemにマスターIDを設定する
+//                    item.setIm_id(masterId);
+//                    itemService.save(item);
+//                    itemMaster = imService.findById(masterId);
+//                }
+//                itemMasterList.add(itemMaster);
+//            }
+//        }
+//        return itemMasterList;
+//    }
 }

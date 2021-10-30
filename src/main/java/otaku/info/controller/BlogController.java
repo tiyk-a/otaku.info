@@ -58,7 +58,7 @@ public class BlogController {
     ProgramService programService;
 
     @Autowired
-    ItemMasterService itemMasterService;
+    IMService imService;
 
     @Autowired
     BlogTagService blogTagService;
@@ -173,23 +173,23 @@ public class BlogController {
         Date to = dateUtils.daysAfterToday(1);
 
         // 今日発売マスター商品(teamIdがNullのマスターは削除)
-        List<ItemMaster> itemMasterList = itemMasterService.findItemsBetweenDelFlg(today, to, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getItem_m_id()).size() > 0).collect(Collectors.toList());
+        List<IM> itemMasterList = imService.findBetweenDelFlg(today, to, false).stream().filter(e -> iMRelService.findTeamIdListByItemMId(e.getIm_id()).size() > 0).collect(Collectors.toList());
 
         // subDomainごとにまとめる
-        Map<String, Map<ItemMaster, List<Item>>> teamIdItemMasterItemMap = new TreeMap<>();
+        Map<String, Map<IM, List<Item>>> teamIdItemMasterItemMap = new TreeMap<>();
         List<String> subDomainList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getSubDomain).distinct().collect(Collectors.toList());
         for (String s : subDomainList) {
             teamIdItemMasterItemMap.put(s, new TreeMap<>());
         }
 
-        for (ItemMaster itemMaster : itemMasterList) {
+        for (IM itemMaster : itemMasterList) {
             // itemMasterとitemListは用意できた
-            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
             List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
-                Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemMap.get(subDomain);
+                Map<IM, List<Item>> tmpMap1 = teamIdItemMasterItemMap.get(subDomain);
                 if (tmpMap1.containsKey(itemMaster)) {
                     List<Item> tmpList = tmpMap1.get(itemMaster);
                     // itemListからdiffを見つけてそれだけを追加してあげる
@@ -212,26 +212,26 @@ public class BlogController {
         }
 
         // 明日以降発売マスター商品(クエリがうまくできなくてチームごとに取りに行ってる😭
-        List<ItemMaster> tmpList = new ArrayList<>();
+        List<IM> tmpList = new ArrayList<>();
         for (TeamEnum e : TeamEnum.values()) {
-            tmpList.addAll(itemMasterService.findDateAfterTeamIdLimit(to, e.getId(), 10L));
+            tmpList.addAll(imService.findDateAfterTeamIdLimit(to, e.getId(), 10L));
         }
-        List<ItemMaster> futureItemMasterList = tmpList.stream().distinct().collect(Collectors.toList());
+        List<IM> futureItemMasterList = tmpList.stream().distinct().collect(Collectors.toList());
 
         // subDomainごとにまとめる
-        Map<String, Map<ItemMaster, List<Item>>> teamIdItemMasterItemFutureMap = new TreeMap<>();
+        Map<String, Map<IM, List<Item>>> teamIdItemMasterItemFutureMap = new TreeMap<>();
         for (String s : subDomainList) {
             teamIdItemMasterItemFutureMap.put(s, new TreeMap<>());
         }
 
-        for (ItemMaster itemMaster : futureItemMasterList) {
+        for (IM itemMaster : futureItemMasterList) {
             // itemMasterとitemListは用意できた
-            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
             List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
-                Map<ItemMaster, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
+                Map<IM, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
                 if (tmpMap1.containsKey(itemMaster)) {
                     List<Item> tmpList1 = tmpMap1.get(itemMaster);
                     // itemListからdiffを見つけてそれだけを追加してあげる
@@ -266,7 +266,7 @@ public class BlogController {
         String blogText = "";
         if (teamIdItemMasterItemMap.size() > 0) {
             // <teamId, blogText>
-            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
+            for (Map.Entry<String, Map<IM, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
                 // 明日のリストはあるが未来のリストがそもそもない→明日のだけでテキスト作る
                 if (teamIdItemMasterItemFutureMap.size() == 0) {
                     blogText = textController.blogUpdateReleaseItems(e.getValue(), null);
@@ -278,7 +278,7 @@ public class BlogController {
             }
         } else if (teamIdItemMasterItemFutureMap.size() > 0) {
             // 明日の発売商品がないがその先１週間はある場合
-            for (Map.Entry<String, Map<ItemMaster, List<Item>>> e : teamIdItemMasterItemFutureMap.entrySet()) {
+            for (Map.Entry<String, Map<IM, List<Item>>> e : teamIdItemMasterItemFutureMap.entrySet()) {
                 blogText = textController.blogUpdateReleaseItems(null, e.getValue());
                 requestMap.put(e.getKey(), blogText);
             }
@@ -408,14 +408,14 @@ public class BlogController {
      * imId, wpIdのマップを返します。
      *
      */
-    public Map<Long, Long> postOrUpdate(List<ItemMaster> itemMasterList, Long teamId) throws InterruptedException {
+    public Map<Long, Long> postOrUpdate(List<IM> itemMasterList, Long teamId) throws InterruptedException {
         Map<Long, Long> resMap = new TreeMap<>();
         Long wpId = null;
 
         logger.debug("postOrUpdateです。IMListサイズは：" + itemMasterList.size());
         logger.debug("teamId=" + teamId);
-        for (ItemMaster itemMaster : itemMasterList) {
-            List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
+        for (IM itemMaster : itemMasterList) {
+            List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
             List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList));
             String content = null;
@@ -427,7 +427,7 @@ public class BlogController {
             List<Long> teamIdList = new ArrayList<>();
             teamIdList.add(teamId);
             List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
-            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getItem_m_id(), teamId);
+            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getIm_id(), teamId);
 
             // TODO: memberListどこで使う
             List<Long> memberIdList = new ArrayList<>();
@@ -490,7 +490,7 @@ public class BlogController {
 
                 // ここで投稿
                 try {
-                    logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getItem_m_id());
+                    logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getIm_id());
                     String res = request(url, request, HttpMethod.POST);
                     JSONObject jo = jsonUtils.createJsonObject(res);
                     if (jo.get("id") != null) {
@@ -498,7 +498,7 @@ public class BlogController {
                         rel.setWp_id(blogId);
                         iMRelService.save(rel);
                         logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
-                        resMap.put(itemMaster.getItem_m_id(), blogId);
+                        resMap.put(itemMaster.getIm_id(), blogId);
                     }
 
                     // 新規ブログ投稿の場合はTwitterポストします
@@ -873,7 +873,7 @@ public class BlogController {
                 }
                 Thread.sleep(500);
             } else {
-                logger.debug("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getItem_m_id: " + rel.getItem_m_id());
+                logger.debug("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getIm_id: " + rel.getIm_id());
             }
         }
         iMRelService.saveAll(updateList);

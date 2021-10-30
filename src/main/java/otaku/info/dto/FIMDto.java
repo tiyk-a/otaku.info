@@ -15,7 +15,7 @@ import java.util.Date;
 @Setter
 public class FIMDto {
 
-    private Long item_m_id;
+    private Long im_id;
 
     private String title;
 

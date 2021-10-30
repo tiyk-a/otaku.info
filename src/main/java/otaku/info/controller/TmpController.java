@@ -56,8 +56,8 @@ public class TmpController {
     @Autowired
     PRelService pRelService;
 
-    @Autowired
-    ItemMasterService itemMasterService;
+//    @Autowired
+//    ItemMasterService itemMasterService;
 
     @Autowired
     BlogTagService blogTagService;
@@ -518,19 +518,7 @@ public class TmpController {
                         item.setItem_code(key);
                         item.setItem_caption(StringUtilsMine.compressString(items.getJSONObject(i).getString("itemCaption").replaceAll("^\"|\"$", ""), 200));
                         item.setTitle(items.getJSONObject(i).getString("itemName").replaceAll("^\"|\"$", ""));
-                        if (items.getJSONObject(i).has("mediumImageUrls") && JsonUtils.isJsonArray(items.getJSONObject(i).getString("mediumImageUrls"))) {
-                            JSONArray imageArray = items.getJSONObject(i).getJSONArray("mediumImageUrls");
-                            if (imageArray.length() > 0) {
-                                item.setImage1(imageArray.getJSONObject(0).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                                if (imageArray.length() > 1) {
-                                    item.setImage2(imageArray.getJSONObject(1).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                                }
-                                if (imageArray.length() > 2) {
-                                    item.setImage3(imageArray.getJSONObject(2).getString("imageUrl").replaceAll("^\"|\"$", ""));
-                                }
-                            }
-                            resultList.add(item);
-                        }
+                        resultList.add(item);
                     } catch (Exception e) {
                         logger.debug(e.getMessage());
                     }
@@ -684,45 +672,45 @@ public class TmpController {
      * 公開中のブログポストのcontentを上書きする（楽天リンクをカードにした）
      *
      */
-    public void updateContent() {
-        int n = 1;
-        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&per_page=40&page=" + n;
-
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = blogController.request(url, request, HttpMethod.GET);
-
-        try {
-            if (JsonUtils.isJsonArray(res)) {
-                JSONArray ja = new JSONArray(res);
-                for (int i=0;i<ja.length();i++) {
-                    Integer wpId = ja.getJSONObject(i).getInt("id");
-                    url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
-
-                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
-                    JSONObject jsonObject1 = new JSONObject();
-                    ItemMaster itemMaster = itemMasterService.findByWpId(wpId);
-
-                    if (itemMaster != null && itemMaster.getItem_m_id() != null) {
-                        List<Item> itemList = itemService.findByMasterId(itemMaster.getItem_m_id());
-
-                        if (itemList.size() > 0) {
-                            Map<ItemMaster, List<Item>> itemMasterListMap = Collections.singletonMap(itemMaster, itemList);
-                            String text = textController.blogReleaseItemsText(itemMasterListMap).get(0);
-                            jsonObject1.put("content", text);
-                            HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                            String r = blogController.request(url, request1, HttpMethod.POST);
-                            logger.debug(r);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        ++n;
-    }
+//    public void updateContent() {
+//        int n = 1;
+//        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&per_page=40&page=" + n;
+//
+//        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
+//        JSONObject jsonObject = new JSONObject();
+//        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+//        String res = blogController.request(url, request, HttpMethod.GET);
+//
+//        try {
+//            if (JsonUtils.isJsonArray(res)) {
+//                JSONArray ja = new JSONArray(res);
+//                for (int i=0;i<ja.length();i++) {
+//                    Integer wpId = ja.getJSONObject(i).getInt("id");
+//                    url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
+//
+//                    HttpHeaders headers1 = generalHeaderSet(new HttpHeaders());
+//                    JSONObject jsonObject1 = new JSONObject();
+//                    ItemMaster itemMaster = itemMasterService.findByWpId(wpId);
+//
+//                    if (itemMaster != null && itemMaster.getIm_id() != null) {
+//                        List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
+//
+//                        if (itemList.size() > 0) {
+//                            Map<ItemMaster, List<Item>> itemMasterListMap = Collections.singletonMap(itemMaster, itemList);
+//                            String text = textController.blogReleaseItemsText(itemMasterListMap).get(0);
+//                            jsonObject1.put("content", text);
+//                            HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
+//                            String r = blogController.request(url, request1, HttpMethod.POST);
+//                            logger.debug(r);
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        ++n;
+//    }
 
     /**
      * [From] BlogController

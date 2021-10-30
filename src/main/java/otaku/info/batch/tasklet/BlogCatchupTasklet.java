@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
 import otaku.info.entity.IMRel;
-import otaku.info.entity.ItemMaster;
+import otaku.info.entity.IM;
 import otaku.info.service.IMRelService;
-import otaku.info.service.ItemMasterService;
+import otaku.info.service.IMService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
 
@@ -35,7 +35,7 @@ public class BlogCatchupTasklet implements Tasklet {
     BlogController blogController;
 
     @Autowired
-    ItemMasterService itemMasterService;
+    IMService imService;
 
     @Autowired
     IMRelService imRelService;
@@ -49,13 +49,13 @@ public class BlogCatchupTasklet implements Tasklet {
         List<IMRel> imRelList = imRelService.findByWpIdNullPublicationDateFuture(dateUtils.getToday());
         logger.debug("対象imrel:" + imRelList.size());
         // teamId, list<Itemmaster>
-        Map<Long, List<ItemMaster>> imTeamIdMap = new TreeMap<>();
+        Map<Long, List<IM>> imTeamIdMap = new TreeMap<>();
         for (IMRel imRel : imRelList) {
-            List<ItemMaster> tmpList = new ArrayList<>();
+            List<IM> tmpList = new ArrayList<>();
             if (imTeamIdMap.containsKey(imRel.getTeam_id())) {
                 tmpList = imTeamIdMap.get(imRel.getTeam_id());
             }
-            ItemMaster im = itemMasterService.findById(imRel.getItem_m_id());
+            IM im = imService.findById(imRel.getIm_id());
             if (im != null) {
                 tmpList.add(im);
             }
@@ -64,7 +64,7 @@ public class BlogCatchupTasklet implements Tasklet {
 
         logger.debug("ポストありteam数:" + imTeamIdMap.size());
         // List<Itemmaster>, teamId
-        for (Map.Entry<Long, List<ItemMaster>> e : imTeamIdMap.entrySet()) {
+        for (Map.Entry<Long, List<IM>> e : imTeamIdMap.entrySet()) {
             // TODO: teamid=0Lはあってはいけないはずだがまだいるので処理分割してる
             if (e.getKey() != 0L) {
                 Map<Long, Long> imWpMap = blogController.postOrUpdate(e.getValue(), e.getKey());

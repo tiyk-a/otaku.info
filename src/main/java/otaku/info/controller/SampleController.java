@@ -78,7 +78,7 @@ public class SampleController {
     private ProgramService programService;
 
     @Autowired
-    private ItemMasterService itemMasterService;
+    private IMService imService;
 
     @Autowired
     private IRelService iRelService;
@@ -171,7 +171,7 @@ public class SampleController {
         tmp.setSite_id(1);
         tmp.setItem_code("adcfvgbhnaa");
         IRel ir = new IRel();
-        Item savedItem = itemService.saveItem(tmp);
+        Item savedItem = itemService.save(tmp);
         ir.setItem_id(savedItem.getItem_id());
         ir.setTeam_id(1L);
         iRelService.save(ir);
@@ -267,13 +267,13 @@ public class SampleController {
 //                managePRel();
                 break;
             case 19:
-                insertPrice();
+//                insertPrice();
                 break;
             case 20:
-                organizeIm();
+//                organizeIm();
                 break;
             case 21:
-                insertImRel();
+//                insertImRel();
                 break;
             case 22:
                 List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
@@ -375,7 +375,7 @@ public class SampleController {
         for (IMRel rel : iRelList) {
             // もしteamIdがなかったら同じitemIdを持つレコードとってくる
             if (rel.getTeam_id() == 0) {
-                List<IMRel> groupList = iMRelService.findByItemIdTeamIdNotNull(rel.getItem_m_id());
+                List<IMRel> groupList = iMRelService.findByItemIdTeamIdNotNull(rel.getIm_id());
                 if (groupList.size() > 0) {
                     IMRel subRel = groupList.get(0);
                     rel.setTeam_id(subRel.getTeam_id());
@@ -400,7 +400,7 @@ public class SampleController {
 //        for (IMRel rel : iRelList) {
 //            for (IMRel ope : opeList) {
 //                // 一致するレコードがあったら
-//                if (rel.getIm_rel_id() != ope.getIm_rel_id() && rel.getItem_m_id() == ope.getItem_m_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
+//                if (rel.getIm_rel_id() != ope.getIm_rel_id() && rel.getIm_id() == ope.getIm_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
 //                    if (rel.getIm_rel_id() > ope.getIm_rel_id()) {
 //                        if (!removeList.contains(rel)) {
 //                            removeList.add(rel);
@@ -582,17 +582,17 @@ public class SampleController {
 
         // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
         logger.debug("IM登録に入ります");
-        Map<ItemMaster, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
+        Map<IM, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
         // itemMasterRelも更新する
         logger.debug("IMRel登録に入ります");
-        for (Map.Entry<ItemMaster, List<Item>> e : itemMasterListMap.entrySet()) {
+        for (Map.Entry<IM, List<Item>> e : itemMasterListMap.entrySet()) {
             // 既存の登録済みrel情報を取得する
-            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getItem_m_id(), teamId);
+            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getIm_id(), teamId);
 
             // imrelの登録
             if (imrel == null) {
                 logger.debug("imrelがnullなので新規IMRel登録します");
-                IMRel newRel = new IMRel(null, e.getKey().getItem_m_id(), teamId, null, null, null);
+                IMRel newRel = new IMRel(null, e.getKey().getIm_id(), teamId, null, null, null);
                 IMRel savedRel = iMRelService.save(newRel);
                 logger.debug("saveしましたよ" + savedRel.toString());
                 imrel = savedRel;
@@ -666,82 +666,6 @@ public class SampleController {
             return priceList.get(0);
         } else {
             return priceList.stream().max(Integer::compare).orElse(0);
-        }
-    }
-
-    /**
-     * ItemMaster.priceに値を入れます。
-     */
-    private void insertPrice() {
-        List<ItemMaster> itemMasterList = itemMasterService.findAll();
-        for (ItemMaster im : itemMasterList) {
-            List<Item> itemList = itemService.findByMasterId(im.getItem_m_id());
-            if (!itemList.isEmpty()) {
-                Integer price = getPrice(itemList);
-                im.setPrice(price);
-                itemMasterService.save(im);
-            }
-        }
-    }
-
-    /**
-     * ポストされてなくてitemの紐付きもないimは削除する
-     * その後、imidのないitemに関してはimを作成し、ブログポストする
-     *
-     */
-    private void organizeIm() {
-        // itemのないimはdelflg=trueにする
-        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
-        for (ItemMaster im : imList) {
-            List<Item> iList = itemService.findByMasterId(im.getItem_m_id());
-            if (iList == null || iList.size() == 0) {
-                im.setDel_flg(true);
-                itemMasterService.save(im);
-            }
-        }
-
-        // ここからimのないitemで未来のものはim作ってあげる
-        List<Item> itemList = itemService.findByMIdNullFuture();
-        for (Item i : itemList) {
-            itemMasterService.addByItem(i, i.getTitle());
-        }
-        // blog投稿はバッチがしてくれるかな？
-    }
-
-    /**
-     * publication_date > today &̴&̴ del_flg = 0のitem_m_idのim_relがなかったら作る。で、ブログ投稿までしてあげる。twitterはしなくていいと思う
-     *
-     */
-    private void insertImRel() throws InterruptedException {
-        // publication_date > today &̴&̴ del_flg = 0のitem_m_idのim_relリスト
-        List<Long> imIdList = itemMasterService.findImIdFutureNotDeleted();
-        logger.debug("対象imId数:" + imIdList.size());
-        for (Long imId : imIdList) {
-            logger.debug("imId=" + imId);
-            List<IMRel> relList = iMRelService.findByItemMId(imId);
-            logger.debug("relList size:" + relList.size());
-            if (relList.size() == 0) {
-                ItemMaster im = itemMasterService.findById(imId);
-                logger.debug("新規rel登録です. teamIdはitemから取得します");
-                List<Long> teamIdList = iRelService.findDistinctTeamIdByMasterId(imId);
-                if (teamIdList.size() == 0) {
-                    logger.debug("itemが1件もありませんでした。imのdel_flgをonにします");
-                    im.setDel_flg(true);
-                    itemMasterService.save(im);
-                } else {
-                    for (Long teamId : teamIdList) {
-                        logger.debug("teamId=" + teamId);
-                        IMRel rel = new IMRel(null, imId, teamId, null, null, null);
-                        IMRel savedRel = iMRelService.save(rel);
-                        logger.debug("relがsaveされました:" + savedRel.getIm_rel_id());
-
-                        List<ItemMaster> imList = new ArrayList<>();
-                        imList.add(im);
-                        blogController.postOrUpdate(imList, teamId);
-                        logger.debug("ブログも投稿しました. teamId=" + teamId + " imId=：" + imId);
-                    }
-                }
-            }
         }
     }
 

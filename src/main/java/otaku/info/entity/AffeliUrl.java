@@ -21,7 +21,7 @@ public class AffeliUrl {
 
     @Column(nullable = false)
     @NonNull
-    private Long item_m_id;
+    private Long im_id;
 
     @Column(nullable = false)
     @NonNull

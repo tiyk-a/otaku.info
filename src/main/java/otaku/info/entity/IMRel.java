@@ -24,7 +24,7 @@ public class IMRel implements Serializable {
 
     @Id
     @Column(nullable = false)
-    private Long item_m_id;
+    private Long im_id;
 
     @Id
     @Column(nullable = false)

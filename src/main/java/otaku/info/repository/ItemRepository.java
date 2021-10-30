@@ -42,24 +42,33 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("SELECT t FROM Item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
 
-    @Query("SELECT t FROM Item t WHERE del_flg = ?1 and image1 is null and publication_date > '2021-09-01' and publication_date < '2021-09-10'")
+    @Query("SELECT t FROM Item t WHERE del_flg = ?1 and publication_date > '2021-09-01' and publication_date < '2021-09-10'")
     List<Item> findByDelFlg(boolean delFlg);
 
-    @Query("select t from Item t where wp_id is not null and updated_at >= ?1 and image1 is not null")
+    @Query("select t from Item t where wp_id is not null and updated_at >= ?1")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and item_m_id is not null")
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and im_id is not null")
     List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
-    @Query("select t from Item t where item_m_id = ?1")
+    @Query("select t from Item t where im_id = ?1")
     List<Item> findByMasterId(Long itemMasterId);
 
-    @Query("select t from Item t where item_m_id = ?1")
+    @Query("select t from Item t where im_id = ?1")
     List<Item> gatherItems(Long itemMId);
 
     @Query("select count(*) from Item where item_code = ?1 and site_id = ?2")
     int isRegistered(String code, Integer siteId);
 
-    @Query("select t from Item t where item_m_id is null and publication_date >= CURRENT_DATE")
+    @Query("select t from Item t where im_id is null and publication_date >= CURRENT_DATE")
     List<Item> findByMIdNullFuture();
+
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0")
+    List<Item> findByTeamIdNotDeleted(Long teamId);
+
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is null")
+    List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId);
+
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")
+    List<Item> findByTeamIdFutureNotDeletedWIM(Long teamId);
 }

@@ -10,22 +10,22 @@ import java.util.List;
 
 public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
 
-    @Query("select t from im_rel t where item_m_id = ?1")
+    @Query("select t from im_rel t where im_id = ?1")
     List<IMRel> findByItemMId(Long itemMId);
 
-    @Query("select team_id from im_rel where item_m_id = ?1")
+    @Query("select team_id from im_rel where im_id = ?1")
     List<Long> findTeamIdListByItemMId(Long itemMId);
 
-    @Query("select wp_id from im_rel where item_m_id = ?1")
+    @Query("select wp_id from im_rel where im_id = ?1")
     Long getWpIdByItemMId(Long itemMId);
 
-    @Query("select count(t) from im_rel t where item_m_id = ?1 and team_id = ?2")
+    @Query("select count(t) from im_rel t where im_id = ?1 and team_id = ?2")
     int existsByElem(Long imId, Long teamId);
 
-    @Query("select t from im_rel t where item_m_id = ?1 and team_id = ?2")
+    @Query("select t from im_rel t where im_id = ?1 and team_id = ?2")
     IMRel findByImIdTeamId(Long imId, Long teamId);
 
-    @Query("select t from im_rel t where item_m_id = ?1 and team_id is not null")
+    @Query("select t from im_rel t where im_id = ?1 and team_id is not null")
     List<IMRel> findByItemIdTeamIdNotNull(Long imId);
 
     @Query("select t from im_rel t where wp_id is not null")
@@ -34,9 +34,9 @@ public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
     @Query("select t from im_rel t where wp_id = ?1 and team_id = ?2")
     List<IMRel> findbyWpIdTeamId(Long wpId, Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from im_rel a inner join item_master b on a.item_m_id = b.item_m_id where a.wp_id is null and b.publication_date >= ?1")
+    @Query(nativeQuery = true, value = "select a.* from im_rel a inner join item_master b on a.im_id = b.im_id where a.wp_id is null and b.publication_date >= ?1")
     List<IMRel> findByWpIdNullPublicationDateFuture(Date today);
 
-    @Query("select t from im_rel t where item_m_id  = ?1 and team_id = ?2")
+    @Query("select t from im_rel t where im_id  = ?1 and team_id = ?2")
     IMRel findByItemMIdTeamId(Long imId, Long teamId);
 }

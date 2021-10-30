@@ -23,6 +23,6 @@ public interface IRelRepository extends JpaRepository<IRel, Long> {
     @Query("select t from i_rel t where item_id = ?1 and team_id is not null")
     List<IRel> findByItemIdTeamIdNotNull(Long itemId);
 
-    @Query(nativeQuery = true, value = "select distinct team_id from i_rel a inner join item b on a.item_id = b.item_id where b.item_m_id = ?1")
+    @Query(nativeQuery = true, value = "select distinct team_id from i_rel a inner join item b on a.item_id = b.item_id where b.im_id = ?1")
     List<Long> findDistinctTeamIdByMasterId(Long masterId);
 }

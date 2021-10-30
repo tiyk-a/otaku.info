@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.Item;
-import otaku.info.entity.ItemMaster;
+import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
-import otaku.info.service.ItemMasterService;
+import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
@@ -35,7 +35,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     ItemService itemService;
 
     @Autowired
-    ItemMasterService itemMasterService;
+    IMService imService;
 
     /**
      * TODO: 日数ではなくteamごとに件数指定で取得、全チームの情報を流すように変更します。
@@ -49,7 +49,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         for (TeamEnum e : TeamEnum.values()) {
             // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
-            List<ItemMaster> imList = itemMasterService.findNearFutureIMByTeamId(e.getId());
+            List<IM> imList = imService.findNearFutureIMByTeamId(e.getId());
             logger.debug(e.getName() + "imList size: " + imList.size());
 
             post(imList, e);
@@ -61,7 +61,7 @@ public class FutureItemReminderTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private void post(List<ItemMaster> imList, TeamEnum teamEnum) throws Exception {
+    private void post(List<IM> imList, TeamEnum teamEnum) throws Exception {
 
         // TODO: 未来商品が全くないチームについての処理
         if (imList.isEmpty()) {
@@ -70,10 +70,10 @@ public class FutureItemReminderTasklet implements Tasklet {
         }
 
         Integer postCount = 0;
-        for (ItemMaster im : imList) {
+        for (IM im : imList) {
             // TODO: メンバー名を取得していない
             Item item = null;
-            List<Item> itemList = itemService.findByMasterId(im.getItem_m_id());
+            List<Item> itemList = itemService.findByMasterId(im.getIm_id());
             if (itemList != null && itemList.size() > 0) {
                 item = itemList.get(0);
             }

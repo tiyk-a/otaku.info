@@ -23,12 +23,6 @@ public class IMForm {
 
     private Integer price;
 
-//    private String image1;
-//
-//    private String image2;
-//
-//    private String image3;
-
     private boolean fct_chk;
 
     private boolean del_flg;

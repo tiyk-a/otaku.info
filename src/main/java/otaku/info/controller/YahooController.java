@@ -105,7 +105,6 @@ public class YahooController {
                                 Item item = new Item();
                                 item.setTitle(jsonObject1.getString("name").replaceAll("^\"|\"$", ""));
                                 item.setItem_caption(jsonObject1.getString("description").replaceAll("^\"|\"$", ""));
-                                item.setImage1(jsonObject1.getJSONObject("image").getString("medium").replaceAll("^\"|\"$", ""));
                                 item.setPrice(jsonObject1.getInt("price"));
                                 item.setItem_code(jsonObject1.getString("code").replaceAll("^\"|\"$", ""));
                                 if (jsonObject1.has("releaseDate") && !jsonObject1.isNull("releaseDate")) {

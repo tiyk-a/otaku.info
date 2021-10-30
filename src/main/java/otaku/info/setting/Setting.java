@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 public class Setting {
 
     private String test;
-    private String imageItem;
     private String blogWebUrl;
     private String blogApiPath;
     private String blogHttps;
@@ -28,8 +27,6 @@ public class Setting {
     private String rakutenAffiliId;
     private String rakutenApiDefParam;
     private String blogPw;
-    private String blogNoImage;
-    private String generatedImage;
 //    private String blogCardPre;
 //    private String blogCardPos;
     private String yahooShoppingApi;

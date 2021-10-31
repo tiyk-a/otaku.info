@@ -175,15 +175,19 @@ public class ApiController {
         imService.save(im);
     }
 
+    /**
+     * 指定のIMをブログ投稿します
+     *
+     */
     @GetMapping("/im/blog")
-    public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Integer imId, @RequestParam("team") Integer team) throws InterruptedException {
+    public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Long imId, @RequestParam("team") Long team) throws InterruptedException {
         logger.debug("accepted");
-        IM im = imService.findById((long) imId);
+        IM im = imService.findById(imId);
         List<IM> list = new ArrayList<>();
         list.add(im);
         logger.debug("fin");
         if (im != null) {
-            blogController.postOrUpdate(list, (long) team);
+            blogController.postOrUpdate(list, team);
             return ResponseEntity.ok(true);
         } else {
             return ResponseEntity.ok(false);
@@ -357,12 +361,13 @@ public class ApiController {
             itemService.save(item);
 
             // verがあれば登録します
-            if (imVerForm.getVerArr().size() > 0) {
-                for (int i=0;i<imVerForm.getVerArr().size();i++) {
-                    boolean verExists = imVerService.existtVerNameImId(imVerForm.getVerArr().get(i).getVer_name(), im.getIm_id());
+            if (imVerForm.getVerArr().length > 0) {
+                for (int i=0;i<imVerForm.getVerArr().length;i++) {
+                    String verName = imVerForm.getVerArr()[i];
+                    boolean verExists = imVerService.existtVerNameImId(verName, im.getIm_id());
                     if (!verExists) {
                         ImVer ver = new ImVer();
-                        ver.setVer_name(imVerForm.getVerArr().get(i).getVer_name());
+                        ver.setVer_name(verName);
                         ver.setIm_id(im.getIm_id());
                         imVerService.save(ver);
                     }
@@ -378,51 +383,51 @@ public class ApiController {
     }
 
     /**
-     * IM+verを更新します
+     * TODO:IM+verを更新します。画面から、verのver_name & ver_idをセットにして渡せれば実現可能
      *
      * @return Boolean true: success / false: failed
      */
     @PostMapping("/im/{imId}")
-    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
-        logger.debug("accepted");
-
-        try {
-            IM im = imService.findById(imId);
-            if (im == null) {
-                return ResponseEntity.ok(false);
-            }
-
-            // imの更新
-            if (!imVerForm.getTitle().equals(im.getTitle())) {
-                im.setTitle(imVerForm.getTitle());
-                imService.save(im);
-            }
-
-            // verの更新
-            if (imVerForm.getVerArr().size() > 0) {
-                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
-                for (ImVer ver : imVerForm.getVerArr()) {
-                    ImVer originVer = verList.stream().filter(e -> e.getIm_v_id().equals(ver.getIm_v_id())).findFirst().orElse(null);
-                    if (originVer != null) {
-                        if (!originVer.getVer_name().equals(ver.getVer_name())) {
-                            originVer.setVer_name(ver.getVer_name());
-                            imVerService.save(originVer);
-                        }
-                    } else {
-                        ImVer newVer = new ImVer();
-                        newVer.setVer_name(ver.getVer_name());
-                        newVer.setIm_id(imVerForm.getIm_id());
-                        imVerService.save(newVer);
-                    }
-                }
-            }
-            logger.debug("fin");
-            return ResponseEntity.ok(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.ok(false);
-        }
-    }
+//    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
+//        logger.debug("accepted");
+//
+//        try {
+//            IM im = imService.findById(imId);
+//            if (im == null) {
+//                return ResponseEntity.ok(false);
+//            }
+//
+//            // imの更新
+//            if (!imVerForm.getTitle().equals(im.getTitle())) {
+//                im.setTitle(imVerForm.getTitle());
+//                imService.save(im);
+//            }
+//
+//            // verの更新
+//            if (imVerForm.getVerArr().length > 0) {
+//                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+//                for (String ver : imVerForm.getVerArr()) {
+//                    ImVer originVer = verList.stream().filter(e -> e.getVer_name().equals(ver)).findFirst().orElse(null);
+//                    if (originVer != null) {
+//                        if (!originVer.getVer_name().equals(ver.getVer_name())) {
+//                            originVer.setVer_name(ver.getVer_name());
+//                            imVerService.save(originVer);
+//                        }
+//                    } else {
+//                        ImVer newVer = new ImVer();
+//                        newVer.setVer_name(ver.getVer_name());
+//                        newVer.setIm_id(imVerForm.getIm_id());
+//                        imVerService.save(newVer);
+//                    }
+//                }
+//            }
+//            logger.debug("fin");
+//            return ResponseEntity.ok(true);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.ok(false);
+//        }
+//    }
 
     /**
      * Itemにim_idを追加してfct_chkを更新します（既存imある場合ですね）

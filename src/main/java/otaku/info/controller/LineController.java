@@ -79,8 +79,12 @@ public class LineController {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-            ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
-            logger.debug(outline + ":" + response);
+            if (setting.getTest() != null && setting.getTest().equals("dev")) {
+                logger.debug("🕊: " + msg);
+            } else {
+                ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
+                logger.debug(outline + ":" + response);
+            }
         }
         return "done";
     }
@@ -103,9 +107,12 @@ public class LineController {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-            ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
-
-            logger.debug("Request Successful: " + outline);
+            if (setting.getTest() != null && setting.getTest().equals("dev")) {
+                logger.debug("🕊: " + message);
+            } else {
+                ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
+                logger.debug("Request Successful: " + outline);
+            }
         return "done";
     }
 

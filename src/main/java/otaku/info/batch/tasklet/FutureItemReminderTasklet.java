@@ -65,7 +65,6 @@ public class FutureItemReminderTasklet implements Tasklet {
 
         // TODO: 未来商品が全くないチームについての処理
         if (imList.isEmpty()) {
-//            pythonController.post(teamEnum.getId(), teamEnum.getName() + "の新商品情報は");
             logger.debug(teamEnum.getName() + "imList empty");
         }
 

@@ -581,34 +581,34 @@ public class SampleController {
         }
 
         // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
-        logger.debug("IM登録に入ります");
-        Map<IM, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
-        // itemMasterRelも更新する
-        logger.debug("IMRel登録に入ります");
-        for (Map.Entry<IM, List<Item>> e : itemMasterListMap.entrySet()) {
-            // 既存の登録済みrel情報を取得する
-            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getIm_id(), teamId);
+//        logger.debug("IM登録に入ります");
+//        Map<IM, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
+//        // itemMasterRelも更新する
+//        logger.debug("IMRel登録に入ります");
+//        for (Map.Entry<IM, List<Item>> e : itemMasterListMap.entrySet()) {
+//            // 既存の登録済みrel情報を取得する
+//            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getIm_id(), teamId);
+//
+//            // imrelの登録
+//            if (imrel == null) {
+//                logger.debug("imrelがnullなので新規IMRel登録します");
+//                IMRel newRel = new IMRel(null, e.getKey().getIm_id(), teamId, null, null, null);
+//                IMRel savedRel = iMRelService.save(newRel);
+//                logger.debug("saveしましたよ" + savedRel.toString());
+//                imrel = savedRel;
+//                logger.debug("新規IMRel登録しました:" + imrel.toString());
+//            } else {
+//                logger.debug("imrelはこう" + imrel.toString());
+//            }
 
-            // imrelの登録
-            if (imrel == null) {
-                logger.debug("imrelがnullなので新規IMRel登録します");
-                IMRel newRel = new IMRel(null, e.getKey().getIm_id(), teamId, null, null, null);
-                IMRel savedRel = iMRelService.save(newRel);
-                logger.debug("saveしましたよ" + savedRel.toString());
-                imrel = savedRel;
-                logger.debug("新規IMRel登録しました:" + imrel.toString());
-            } else {
-                logger.debug("imrelはこう" + imrel.toString());
-            }
-
-            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(imrel.getIm_rel_id(), memberId);
-            if (imRelMem == null) {
-                logger.debug("imrel.im_rel_idはこちらです：" + imrel.getIm_rel_id());
-                IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
-                imRelMemService.save(relmem);
-                logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
-            }
-        }
+//            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(imrel.getIm_rel_id(), memberId);
+//            if (imRelMem == null) {
+//                logger.debug("imrel.im_rel_idはこちらです：" + imrel.getIm_rel_id());
+//                IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
+//                imRelMemService.save(relmem);
+//                logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
+//            }
+//        }
 
         // ブログ投稿（新規/更新）を行う(twitter投稿まで）
         // TODO: ブログ投稿は手動にしたほうがいいのでは？誤検知がありすぎる。IM登録の時点で確認したほうが簡単なのでは？

@@ -57,7 +57,10 @@ public class TextController {
     private IMService imService;
 
     @Autowired
-    private IMRelService IMRelService;
+    private IMRelService iMRelService;
+
+    @Autowired
+    private ImVerService imVerService;
 
     @Autowired
     private IMRelMemService imRelMemService;
@@ -267,12 +270,14 @@ public class TextController {
             String date = dateUtils.getDay(itemMaster.getPublication_date());
             String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
 
+            List<ImVer> verList = imVerService.findByImId(itemMaster.getIm_id());
+
             // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (IMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()) == null) {
+            if (iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()) == null) {
                 continue;
             }
 
-            List<String> teamNameList = teamService.findTeamNameByIdList(IMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()));
+            List<String> teamNameList = teamService.findTeamNameByIdList(iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()));
             String teamNameUnited = String.join(" ", teamNameList);
 
             // h2で表示したい商品のタイトルを生成
@@ -292,12 +297,16 @@ public class TextController {
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
 
-            String headItem = "[rakuten search=" + itemMaster.getTitle() + " kw=" + itemMaster.getTitle() + " amazon=1 rakuten=1 yahoo=1]";
+            List<String> verTxtList = new ArrayList<>();
+            for (ImVer ver : verList) {
+                String txt = ver.getVer_name() + "\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
+                verTxtList.add(txt);
+            }
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
 
-            String text = String.join("\n", h2, headItem, publicationDateStr);
+            String text = String.join("\n", h2, publicationDateStr, String.join("\n", verTxtList));
             // 返却リストに追加する
             resultList.add(text);
         }

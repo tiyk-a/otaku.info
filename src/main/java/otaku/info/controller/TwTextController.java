@@ -97,19 +97,6 @@ public class TwTextController {
         return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  url + "%0A" + tags;
     }
 
-//    public String futureItemReminder(ItemMaster itemMaster, Item item, String teamIdStr) {
-//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-//        String tags = "";
-//        tags = tags + " " + tagService.getTagByTeam(Long.parseLong(teamIdStr)).stream().collect(Collectors.joining(" #","#",""));
-//        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
-//        String title = "";
-//        if (StringUtils.hasText(itemMaster.getTitle())) {
-//            title = itemMaster.getTitle();
-//        }
-//
-//        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
-//    }
-
     /**
      * 未来発売の商品のリマインダー文章を作成します。
      * Twitter用

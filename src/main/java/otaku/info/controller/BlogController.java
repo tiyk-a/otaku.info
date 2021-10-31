@@ -419,9 +419,7 @@ public class BlogController {
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
             List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList));
             String content = null;
-            logger.debug("contentがないのではcontentlist.size()=" + contentList.size());
             if (!contentList.isEmpty()) {
-                logger.debug("koko hairu? " + contentList.get(0));
                 content = contentList.get(0);
             }
             List<Long> teamIdList = new ArrayList<>();
@@ -438,10 +436,7 @@ public class BlogController {
 
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
 
-            logger.debug("header is not null ! " + headers.toString());
-            logger.debug("contentがnullなのでは？" + content);
             if (headers != null && content != null) {
-                logger.debug("headerあり");
                 wpId = rel.getWp_id();
 
                 JSONObject jsonObject = new JSONObject();

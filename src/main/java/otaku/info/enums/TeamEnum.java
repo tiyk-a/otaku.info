@@ -12,22 +12,22 @@ import java.util.stream.Collectors;
 @Getter
 public enum TeamEnum {
 
-    SNOWMAN(6L,null,"","SnowMan","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L),
-    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    SEXYZONE(8L,null,"セクシーゾーン","SexyZone","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    TOKIO(9L,null,"トキオ","TOKIO","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    V6(10L,null,"ブイシックス","V6","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    ARASHI(11L,null,"アラシ","嵐","ARASHI","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    NEWS(12L,null,"ニュース","NEWS","NEWS Johnny's","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KISMYFT2(13L,null,"キスマイフットツー","KisMyFt2","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    ABCZ(14L,null,"エービーシーズィー","ABCZ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニーズWEST","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINGPRINCE(16L,null,"キングアンドプリンス ","KingandPrince","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L),
-    SIXTONES(17L,null,"ストーンズ ","SixTONES","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L),
-    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ男子","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L),
-    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KATTUN(20L,null,"カトゥーン ","KATTUN","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L),
-    KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",33L,1707L);
+    SNOWMAN(6L,null,"","SnowMan","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",18L,20L, 39L),
+    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    SEXYZONE(8L,null,"セクシーゾーン","SexyZone","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    TOKIO(9L,null,"トキオ","TOKIO","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    V6(10L,null,"ブイシックス","V6","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    ARASHI(11L,null,"アラシ","嵐","ARASHI","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    NEWS(12L,null,"ニュース","NEWS","NEWS Johnny's","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    KISMYFT2(13L,null,"キスマイフットツー","KisMyFt2","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    ABCZ(14L,null,"エービーシーズィー","ABCZ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニーズWEST","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    KINGPRINCE(16L,null,"キングアンドプリンス ","KingandPrince","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",18L,20L, 35L),
+    SIXTONES(17L,null,"ストーンズ ","SixTONES","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",20L,22L, 52L),
+    NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ男子","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",18L,20L, 27L),
+    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    KATTUN(20L,null,"カトゥーン ","KATTUN","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L),
+    KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",43L,1707L, 176L);
     private final Long id;
     private final String anniversary;
     private final String kana;
@@ -41,8 +41,9 @@ public enum TeamEnum {
     private final String blogPw;
     private final Long itemPageId;
     private final Long tvPageId;
+    private final Long dailyScheCategoryId;
 
-    TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain, String blogPw, Long itemPageId, Long tvPageId) {
+    TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain, String blogPw, Long itemPageId, Long tvPageId, Long dailyScheCategoryId) {
         this.id = id;
         this.anniversary = anniversary;
         this.kana = kana;
@@ -53,6 +54,7 @@ public enum TeamEnum {
         this.blogPw = blogPw;
         this.itemPageId = itemPageId;
         this.tvPageId = tvPageId;
+        this.dailyScheCategoryId = dailyScheCategoryId;
     }
 
     public Team convertToEntity() {
@@ -143,7 +145,7 @@ public enum TeamEnum {
      * @return
      */
     public static List<String> getAllSubDomain() {
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain() != null).map(TeamEnum::getSubDomain).collect(Collectors.toList());
+        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain() != null).map(TeamEnum::getSubDomain).distinct().collect(Collectors.toList());
     }
 
     /**

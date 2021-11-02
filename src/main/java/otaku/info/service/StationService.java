@@ -47,4 +47,8 @@ public class StationService {
     public List<Station> findByName(String name) {
         return stationRepository.findByName(name);
     }
+
+    public Station findById(Long stationId) {
+        return stationRepository.findById(stationId).orElse(null);
+    }
 }

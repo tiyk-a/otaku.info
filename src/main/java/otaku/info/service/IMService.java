@@ -1,7 +1,6 @@
 package otaku.info.service;
 
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.IM;
@@ -53,5 +52,9 @@ public class IMService {
 
     public List<IM> findDateAfterTeamIdLimit(Date from, Long teamId, Long limit) {
         return imRepository.findDateAfterTeamIdLimit(from, teamId, limit);
+    }
+
+    public List<IM> findByTeamIdDate(Long teamId, Date date) {
+        return imRepository.findByTeamIdDate(teamId, date);
     }
 }

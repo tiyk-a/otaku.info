@@ -54,6 +54,15 @@ public class BlogUpdateTasklet implements Tasklet {
             e.printStackTrace();
         }
         logger.debug("②固定TV出演情報ページ完了");
+        logger.debug("③明日の1日の予定投稿");
+        try {
+            for (String subDomain : domainList) {
+                blogController.createDailySchedulePost(subDomain);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        logger.debug("③明日の1日の予定投稿完了");
         return RepeatStatus.FINISHED;
     }
 }

@@ -8,10 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
-import otaku.info.enums.MagazineEnum;
-import otaku.info.enums.MemberEnum;
-import otaku.info.enums.PublisherEnum;
-import otaku.info.enums.TeamEnum;
+import otaku.info.enums.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -298,9 +295,14 @@ public class TextController {
             h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
 
             List<String> verTxtList = new ArrayList<>();
-            for (ImVer ver : verList) {
-                String txt = ver.getVer_name() + "\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
-                verTxtList.add(txt);
+            String txt = "";
+            if (verList.size() > 0) {
+                for (ImVer ver : verList) {
+                    txt = ver.getVer_name() + "\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
+                    verTxtList.add(txt);
+                }
+            } else {
+                txt = itemMaster.getTitle() + "\n" + "[rakuten search='" + itemMaster.getTitle() + "' kw='" + itemMaster.getTitle() + "' amazon=1 rakuten=1 yahoo=1]";
             }
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
@@ -626,5 +628,76 @@ public class TextController {
             result = String.join("\n", result, String.join("\n", htmlList));
         }
         return result;
+    }
+
+    public String createDailyScheduleTitle(Date tmrw) {
+        return sdf3.format(tmrw) + "の予定";
+    }
+
+    /**
+     *
+     * @param teamId
+     * @param tmrw
+     * @param imMap
+     * @param plist
+     * @return content/ コンテンツ有無フラグ
+     */
+    public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<Program> plist) {
+        boolean tvContentFlg = true;
+        boolean imContentFlg = true;
+
+        String result = "";
+        String date = "<h3>" + TeamEnum.get(teamId).getName() + "</h3>";
+
+        // TV
+        List<String> pTextList = new ArrayList<>();
+        for (Program p : plist) {
+            StationEnum e = StationEnum.get(p.getStation_id());
+            String stationName = "";
+            if (e.equals(StationEnum.NHK)) {
+                Station s = stationService.findById(p.getStation_id());
+                if (s != null) {
+                    stationName = s.getStation_name();
+                }
+            } else {
+                stationName = e.getName();
+            }
+            String tmp = dtf1.format(p.getOn_air_date()) + "~ " + p.getTitle() + "(" + stationName + ")";
+            pTextList.add(tmp);
+        }
+
+        if (pTextList.size() == 0) {
+            tvContentFlg = false;
+            pTextList.add("本日の出演情報はありません。確認次第追記します！");
+        }
+
+        // IM
+        List<String> imTextList = new ArrayList<>();
+        for (Map.Entry<IM, List<ImVer>> e : imMap.entrySet()) {
+            String tmp = "<h4>" + e.getKey().getTitle() + "</h4>";
+            String link = "";
+            if (e.getValue().size() > 0) {
+                List<String> tmpList = new ArrayList<>();
+                for (ImVer ver : e.getValue()) {
+                    String tmp1 = ver.getVer_name() + "\n[rakuten search='" + e.getKey().getTitle() + " " + ver.getVer_name() + "' kw='" + e.getKey().getTitle() + " " + ver.getVer_name() + "']";
+                    tmpList.add(tmp1);
+                }
+                link = String.join("\n", sdf3.format(tmrw), String.join("\n", tmpList));
+            } else {
+                link = e.getKey().getTitle() + "\n[rakuten search='" + e.getKey().getTitle() + "' kw='" + e.getKey().getTitle() + "']";
+            }
+            imTextList.add(String.join("\n", tmp, link));
+        }
+
+        if (imTextList.size() == 0) {
+            imContentFlg = false;
+            imTextList.add("本日発売予定は未確認です。確認次第追記します！");
+        }
+
+        boolean contentFlg = false;
+        if (tvContentFlg || tvContentFlg) {
+            contentFlg = true;
+        }
+        return Collections.singletonMap(String.join("\n", date, "<h2>TV</h2>" , String.join("\n", pTextList), "<h2>発売</h2>", String.join("\n", imTextList)), contentFlg);
     }
 }

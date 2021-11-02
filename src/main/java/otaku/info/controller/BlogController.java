@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.batch.item.validator.SpringValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -59,6 +60,9 @@ public class BlogController {
 
     @Autowired
     IMService imService;
+
+    @Autowired
+    ImVerService imVerService;
 
     @Autowired
     BlogTagService blogTagService;
@@ -782,7 +786,7 @@ public class BlogController {
             // テキストを用意できた時だけページを更新する
             // 各サブドメインがpostされたかチェックつけるMap<Subdomain, T/F>
             Map<String, Boolean> postChkMap = new TreeMap<>();
-            TeamEnum.getAllSubDomain().stream().distinct().forEach(e -> postChkMap.put(e, false));
+            TeamEnum.getAllSubDomain().forEach(e -> postChkMap.put(e, false));
 
             if (resultMap.size() > 0) {
                 for (Map.Entry<String, String> e : resultMap.entrySet()) {
@@ -816,7 +820,7 @@ public class BlogController {
             }
         } else {
             Map<String, Boolean> postChkMap = new TreeMap<>();
-            TeamEnum.getAllSubDomain().stream().distinct().forEach(e -> postChkMap.put(e, false));
+            TeamEnum.getAllSubDomain().forEach(e -> postChkMap.put(e, false));
             for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                 String subDomain = e.getKey();
                 String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
@@ -937,5 +941,100 @@ public class BlogController {
             }
         }
         logger.debug("chkWpIdByBlog() Done");
+    }
+
+    /**
+     * 明日の1日の予定の投稿をポストします
+     *
+     */
+    public void createDailySchedulePost(String subDomain) {
+
+        Date today = dateUtils.getToday();
+        Calendar c = Calendar.getInstance();
+        c.setTime(today);
+        c.add(Calendar.DATE, 1);
+        Date tmrw = c.getTime();
+
+        String title = textController.createDailyScheduleTitle(tmrw);
+
+        // チームIDリスト
+        List<Long> teamIdList = Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(subDomain)).map(TeamEnum::getId).collect(Collectors.toList());
+
+        Boolean contentFlg = true;
+
+        // コンテンツ文章の作成
+        List<String> tmpList = new ArrayList<>();
+        for (Long teamId : teamIdList) {
+            // 明日の日付で、一覧画面を作る
+            List<Program> plist = programService.findByOnAirDateTeamId(tmrw, teamId);
+
+            List<IM> imList = imService.findByTeamIdDate(teamId, tmrw);
+            Map<IM, List<ImVer>> imMap = new TreeMap<>();
+            for (IM im : imList) {
+                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+                imMap.put(im, verList);
+            }
+
+            Map<String, Boolean> tmpMap = textController.createDailySchedulePost(teamId, tmrw, imMap, plist);
+            for (Map.Entry<String, Boolean> e : tmpMap.entrySet()) {
+                tmpList.add(e.getKey());
+                contentFlg = e.getValue();
+            }
+        }
+
+        String content = String.join("\n", tmpList);
+
+        // post
+        String url = subDomain + setting.getBlogApiPath() + "posts/";
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamIdList.get(0));
+
+        JSONObject jsonObject = new JSONObject();
+
+        if (setting.getTest()!= null && setting.getTest().equals("dev")) {
+            jsonObject.put("title", "[dev]" + title);
+        } else {
+            jsonObject.put("title", title);
+        }
+        jsonObject.put("author", 1);
+
+        Integer[] category = new Integer[(Math.toIntExact(TeamEnum.get(teamIdList.get(0)).getDailyScheCategoryId()))];
+
+        // dailyScheduleCategoryIdをカテゴリに入れてあげる
+        jsonObject.put("categories", category);
+
+        // 年月
+//            BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));
+//            tagList.add(yyyyMMTag.getTag_name());
+
+        // TODO: チームメイトメンバー名が登録されrてるか、新規追加必要か確認執拗
+        // BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey()); for all
+//            List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagList);
+//            int[] tags = new int[0];
+//            if (!list.isEmpty()) {
+//                tags = list.stream().mapToInt(i->i).toArray();
+//            }
+
+//            if (tags.length > 0) {
+//                jsonObject.put("tags", tags);
+//            }
+        if (setting.getTest()!= null && setting.getTest().equals("dev")) {
+            jsonObject.put("status", "draft");
+        } else {
+            jsonObject.put("status", "publish");
+        }
+
+        jsonObject.put("content", content);
+
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        String res = request(url, request, HttpMethod.POST);
+
+        JSONObject jo = jsonUtils.createJsonObject(res);
+        if (jo.get("id") != null) {
+            Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
+            logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
+            if (contentFlg) {
+                // コンテンツがある場合はブログポストできるのでは
+            }
+        }
     }
 }

@@ -57,4 +57,8 @@ public class ProgramService  {
     public List<Program> saveAll(List<Program> pList) {
         return programRepository.saveAll(pList);
     }
+
+    public List<Program> findByOnAirDateTeamId(Date date, Long teamId) {
+        return programRepository.findByOnAirDateTeamId(date, teamId);
+    }
 }

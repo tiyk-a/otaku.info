@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.batch.core.Job;
-import otaku.info.controller.LineController;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.HashMap;
@@ -19,9 +18,6 @@ import java.util.HashMap;
 public class Scheduler {
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("Scheduler");
-
-    @Autowired
-    LineController lineController;
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -81,7 +77,6 @@ public class Scheduler {
             jobLauncher.run(itemSearchJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -100,7 +95,6 @@ public class Scheduler {
             jobLauncher.run(futureItemReminderJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -119,7 +113,6 @@ public class Scheduler {
             jobLauncher.run(yahooItemSearchJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -138,7 +131,6 @@ public class Scheduler {
             jobLauncher.run(publishAnnouncementJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -157,7 +149,6 @@ public class Scheduler {
             jobLauncher.run(itemSearchMemberJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -176,7 +167,6 @@ public class Scheduler {
             jobLauncher.run(tvJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -195,7 +185,6 @@ public class Scheduler {
             jobLauncher.run(tvPostJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -214,7 +203,6 @@ public class Scheduler {
             jobLauncher.run(blogCatchupJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -233,7 +221,6 @@ public class Scheduler {
             jobLauncher.run(tvAlertJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -252,7 +239,6 @@ public class Scheduler {
             jobLauncher.run(updateUrlJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;
@@ -272,7 +258,6 @@ public class Scheduler {
             jobLauncher.run(blogUpdateJob, jobParameters);
         }catch (Exception ex){
             logger.debug(ex.getMessage());
-            lineController.post(System.currentTimeMillis() + ": " + ex.getMessage());
         }
         Long endTime = System.currentTimeMillis();
         Long diff = endTime - startTime;

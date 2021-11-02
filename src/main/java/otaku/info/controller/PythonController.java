@@ -33,9 +33,6 @@ public class PythonController {
     final Logger twLog = Log4jUtils.newFileLogger("PythonControllerTw", "Twitter.log");
 
     @Autowired
-    LineController lineController;
-
-    @Autowired
     private final ProgramService programService;
 
     @Autowired
@@ -94,8 +91,6 @@ public class PythonController {
                 twLog.debug("teamId:" + teamId + "■" + text);
             }
         }
-        // LINEに投稿完了通知を送る
-        lineController.postAll(lineList);
         return "done";
     }
 }

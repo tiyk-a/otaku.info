@@ -387,7 +387,7 @@ public class ApiController {
      *
      * @return Boolean true: success / false: failed
      */
-    @PostMapping("/im/{imId}")
+//    @PostMapping("/im/{imId}")
 //    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
 //        logger.debug("accepted");
 //
@@ -434,8 +434,8 @@ public class ApiController {
      *
      * @return Boolean true: success / false: failed
      */
-    @GetMapping("/im/chk/{itemId}/{imId}")
-    public ResponseEntity<Boolean> chkItem(@PathVariable Long itemId, @PathVariable Long imId) {
+    @GetMapping("/im/chk")
+    public ResponseEntity<Boolean> chkItem(@RequestParam("itemId") Long itemId, @RequestParam("imId") Long imId) {
         logger.debug("accepted");
 
         try {

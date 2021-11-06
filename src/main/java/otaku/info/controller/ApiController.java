@@ -74,7 +74,7 @@ public class ApiController {
 
         for (IM im : imList) {
             // TODO: modify
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id);
+            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
             FIMDto imDto = new FIMDto();
             BeanUtils.copyProperties(im, imDto);
             if (rel != null && rel.getWp_id() != null) {
@@ -104,7 +104,7 @@ public class ApiController {
     public ResponseEntity<FIMDto> getIm(@PathVariable Long teamId, @PathVariable Long id){
         logger.debug("accepted");
         IM im = imService.findById(id);
-        IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), teamId);
+        IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
         FIMDto dto = new FIMDto();
         BeanUtils.copyProperties(im, dto);
         if (rel != null && rel.getWp_id() != null) {
@@ -129,7 +129,7 @@ public class ApiController {
         for (IM im : imList) {
             FIMDto dto = new FIMDto();
             BeanUtils.copyProperties(im, dto);
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id);
+            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
             if (rel != null && rel.getWp_id() != null) {
                 dto.setWp_id(rel.getWp_id());
             }
@@ -152,7 +152,7 @@ public class ApiController {
         IM im = imService.findById(id);
         im.absorb(imForm);
         IM item = imService.save(im);
-        IMRel rel = imRelService.findByImIdTeamId(item.getIm_id(), teamId);
+        IMRel rel = imRelService.findByImIdTeamId(item.getIm_id(), teamId).orElse(null);
         FIMDto dto = new FIMDto();
         BeanUtils.copyProperties(item, dto);
         dto.setWp_id(rel.getWp_id());
@@ -341,18 +341,21 @@ public class ApiController {
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(imVerForm, im);
                 IM savedIm = imService.save(im);
-
-                // im_relの登録を行います
-                // TODO: 万一、すでに該当のrelがある場合存在チェックしてないから被って問題になるけど、多分大丈夫。
-                if (savedIm != null) {
-                    IMRel rel = new IMRel();
-                    rel.setTeam_id(imVerForm.getTeamId());
-                    rel.setIm_id(savedIm.getIm_id());
-                    imRelService.save(rel);
-                }
                 im = savedIm;
             } else {
                 im = imService.findById(imVerForm.getIm_id());
+            }
+
+            // relの登録をします
+            // im_relの登録を行います
+            // TODO: 万一、すでに該当のrelがある場合存在チェックしてないから被って問題になるけど、多分大丈夫。
+            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), imVerForm.getTeamId()).orElse(null);
+            if (rel == null) {
+                IMRel newRel = new IMRel();
+                newRel.setTeam_id(imVerForm.getTeamId());
+                newRel.setIm_id(im.getIm_id());
+                imRelService.save(newRel);
+                rel = newRel;
             }
 
             // itemのim_idを登録します
@@ -435,7 +438,7 @@ public class ApiController {
      * @return Boolean true: success / false: failed
      */
     @GetMapping("/im/chk")
-    public ResponseEntity<Boolean> chkItem(@RequestParam("itemId") Long itemId, @RequestParam("imId") Long imId) {
+    public ResponseEntity<Boolean> chkItem(@RequestParam("itemId") Long itemId, @RequestParam("imId") Long imId, @RequestParam("teamId") Long teamId) {
         logger.debug("accepted");
 
         try {
@@ -450,11 +453,30 @@ public class ApiController {
             item.setFct_chk(true);
             itemService.save(item);
 
+            // imrelがない場合は作成します
+            IMRel rel = imRelService.findByImIdTeamId(imId, teamId).orElse(null);
+            if (rel == null) {
+                IMRel newRel = new IMRel();
+                newRel.setTeam_id(teamId);
+                newRel.setIm_id(imId);
+                imRelService.save(newRel);
+            }
+
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
+    }
+
+    @GetMapping("/im/search")
+    public ResponseEntity<List<IM>> searchOtherTeamIM(@RequestParam("key") String key, @RequestParam("excludeTeamId") Long excludeTeamId) {
+        if (key.equals("") ) {
+            // TODO: excludeTeamIdがnullやundefinedの時の対処がないよ
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+
+        return ResponseEntity.ok(imService.findByKeyExcludeTeamId(key, excludeTeamId));
     }
 }

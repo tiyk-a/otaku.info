@@ -429,7 +429,7 @@ public class BlogController {
             List<Long> teamIdList = new ArrayList<>();
             teamIdList.add(teamId);
             List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
-            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getIm_id(), teamId);
+            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getIm_id(), teamId).orElse(null);
 
             // TODO: memberListどこで使う
             List<Long> memberIdList = new ArrayList<>();

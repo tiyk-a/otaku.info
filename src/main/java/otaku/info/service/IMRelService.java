@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -55,7 +56,7 @@ public class IMRelService {
         return iMRelRepository.save(rel);
     }
 
-    public IMRel findByImIdTeamId(Long imId, Long teamId) {
+    public Optional<IMRel> findByImIdTeamId(Long imId, Long teamId) {
         return iMRelRepository.findByImIdTeamId(imId, teamId);
     }
 

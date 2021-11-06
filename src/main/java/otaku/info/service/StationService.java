@@ -21,7 +21,10 @@ public class StationService {
     public Optional<Long> findStationId(String stationName) {
         Optional<Long> id = Arrays.stream(StationEnum.values()).filter(e -> e.getName().equals(stationName)).map(StationEnum::getId).findFirst();
         if (!id.isPresent()) {
-            id = stationRepository.findStationId(stationName);
+            List<Long> idList = stationRepository.findStationId(stationName);
+            if (idList.size() > 0) {
+                id = Optional.ofNullable(idList.get(0));
+            }
         }
         return id;
     }

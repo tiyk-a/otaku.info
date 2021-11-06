@@ -81,7 +81,7 @@ public class TwTextController {
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
         String title = "";
         String url = "";
-        IMRel rel = iMRelService.findByImIdTeamId(im.getIm_id(), teamId);
+        IMRel rel = iMRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
         if (item.getUrl() == null || item.getUrl().isEmpty() && rel.getWp_id() != null) {
             url = TeamEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
         } else if (item.getUrl() != null || !item.getUrl().isEmpty()) {

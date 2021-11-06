@@ -71,4 +71,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")
     List<Item> findByTeamIdFutureNotDeletedWIM(Long teamId);
+
+    @Query(nativeQuery = true, value = "select a.* from item a where a.publication_date >= CURRENT_DATE and a.del_flg = 0 and a.im_id is null")
+    List<Item> findFutureNotDeletedNoIM();
 }

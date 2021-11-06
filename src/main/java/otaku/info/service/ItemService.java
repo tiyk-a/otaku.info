@@ -144,5 +144,9 @@ public class ItemService {
     public List<Item> findByTeamIdFutureNotDeletedWIM(Long teamId) {
         return itemRepository.findByTeamIdFutureNotDeletedWIM(teamId);
     }
+
+    public List<Item> findFutureNotDeletedNoIM() {
+        return itemRepository.findFutureNotDeletedNoIM();
+    }
 }
 

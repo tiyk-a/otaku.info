@@ -67,30 +67,38 @@ public class ApiController {
         logger.debug("accepted");
         FTopDTO dto = new FTopDTO();
 
-        List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
-        List<IM> imList = imService.findByTeamIdFuture(id);
-        List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
-        List<FIMDto> fimDtoList = new ArrayList<>();
+        // teamId = 5 (All teams' 未確認のItemリストだけを表示する)
+        if (id == 5) {
+            // All teamsのデータ取得依頼（トップページ）の場合、未確認のItemリストだけを集める
+            List<Item> itemList = itemService.findFutureNotDeletedNoIM();
+            dto.setI(itemList);
+            logger.debug("fin");
+        } else {
+            List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
+            List<IM> imList = imService.findByTeamIdFuture(id);
+            List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
+            List<FIMDto> fimDtoList = new ArrayList<>();
 
-        for (IM im : imList) {
-            // TODO: modify
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
-            FIMDto imDto = new FIMDto();
-            BeanUtils.copyProperties(im, imDto);
-            if (rel != null && rel.getWp_id() != null) {
-                imDto.setWp_id(rel.getWp_id());
+            for (IM im : imList) {
+                // TODO: modify
+                IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
+                FIMDto imDto = new FIMDto();
+                BeanUtils.copyProperties(im, imDto);
+                if (rel != null && rel.getWp_id() != null) {
+                    imDto.setWp_id(rel.getWp_id());
+                }
+
+                // verも追加
+                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+                imDto.setVerList(verList);
+                fimDtoList.add(imDto);
             }
 
-            // verも追加
-            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
-            imDto.setVerList(verList);
-            fimDtoList.add(imDto);
+            dto.setI(itemList);
+            dto.setIm(fimDtoList);
+            dto.setIim(itemList1);
+            logger.debug("fin");
         }
-
-        dto.setI(itemList);
-        dto.setIm(fimDtoList);
-        dto.setIim(itemList1);
-        logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
 

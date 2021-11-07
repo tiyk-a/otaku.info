@@ -80,7 +80,7 @@ public class TextController {
      */
     public String twitter(TwiDto twiDto) {
         String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
-        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A%0A" + tags;
+        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A" + tags;
     }
 
     /**

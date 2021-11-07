@@ -18,7 +18,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "im")
-public class IM {
+public class IM implements Comparable<IM> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +42,14 @@ public class IM {
             this.setPublication_date(imForm.getPublication_date());
         }
         return this;
+    }
+
+    @Override
+    public int compareTo(IM target) {
+        if (this.getIm_id() < target.getIm_id()) {
+            return -1;
+        } else {
+            return 1;
+        }
     }
 }

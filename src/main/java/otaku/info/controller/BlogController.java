@@ -997,10 +997,14 @@ public class BlogController {
         }
         jsonObject.put("author", 1);
 
-        Integer[] category = new Integer[(Math.toIntExact(TeamEnum.get(teamIdList.get(0)).getDailyScheCategoryId()))];
+        TeamEnum e = TeamEnum.get(teamIdList.get(0));
+        Long l = e.getDailyScheCategoryId();
+        Integer i = Math.toIntExact(l);
+        Integer[] cat = new Integer[(1)];
+        cat[0] = i;
 
         // dailyScheduleCategoryIdをカテゴリに入れてあげる
-        jsonObject.put("categories", category);
+        jsonObject.put("categories", cat);
 
         // 年月
 //            BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));

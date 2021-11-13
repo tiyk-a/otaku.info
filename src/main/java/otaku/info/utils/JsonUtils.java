@@ -3,11 +3,17 @@ package otaku.info.utils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.entity.ErrorJson;
+import otaku.info.service.ErrorJsonService;
 import otaku.info.setting.Log4jUtils;
 
 @Component
 public class JsonUtils extends JSONObject {
+
+    @Autowired
+    ErrorJsonService errorJsonService;
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("JsonUtils");
 
@@ -18,9 +24,22 @@ public class JsonUtils extends JSONObject {
         try {
             jo = new JSONObject(str);
         } catch (Exception e) {
-            // TODO: jsonにエラーが見つかったらどうするかの対処を考えたい。ファイルに書き出すか？同じの取りに行かないようにしたいな？
-            logger.debug(e.getMessage());
-            logger.debug(str);
+            // エラーになったら、文字列修正なしの元データでjsonにできるか試してみる
+            try {
+                jo = new JSONObject(source);
+            } catch (Exception e2) {
+                // json元データでも作れなかった場合、DB確認してエラーjsonデータなかったら作ってあげる
+                if (!errorJsonService.isExists(source)) {
+                    ErrorJson errj = new ErrorJson();
+                    errj.setJson(source);
+                    errj.set_solved(false);
+                    errorJsonService.save(errj);
+                    logger.debug(e.getMessage());
+                } else {
+                    logger.debug("前にもあったjson parseエラーです");
+                }
+                logger.debug(str);
+            }
         }
 
         if (jo == null) {

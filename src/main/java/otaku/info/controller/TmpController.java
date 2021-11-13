@@ -405,31 +405,31 @@ public class TmpController {
      * @param date
      * @return
      */
-    public BlogTag registerTag(Date date) {
-        // TODO: チームによってurlを変更
-        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags/";
-
-        HttpHeaders h = generalHeaderSet(new HttpHeaders()) ;
-        JSONObject jo = new JSONObject();
-        jo.put("name", dateUtils.getYYYYMM(date));
-
-        HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
-        String res = blogController.request(url, request, HttpMethod.POST);
-
-        JSONObject jsonObject1 = jsonUtils.createJsonObject(res);
-
-        int yyyyMMId;
-        if (jsonObject1.get("id") != null) {
-            yyyyMMId = jsonObject1.getInt("id");
-            String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
-            BlogTag blogTag = new BlogTag();
-            blogTag.setTag_name(dateUtils.getYYYYMM(date));
-            blogTag.setWp_tag_id((long) yyyyMMId);
-            blogTag.setLink(link);
-            return blogTagService.save(blogTag);
-        }
-        return new BlogTag();
-    }
+//    public BlogTag registerTag(Date date) {
+//        // TODO: チームによってurlを変更
+//        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags/";
+//
+//        HttpHeaders h = generalHeaderSet(new HttpHeaders()) ;
+//        JSONObject jo = new JSONObject();
+//        jo.put("name", dateUtils.getYYYYMM(date));
+//
+//        HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
+//        String res = blogController.request(url, request, HttpMethod.POST);
+//
+//        JSONObject jsonObject1 = jsonUtils.createJsonObject(res);
+//
+//        int yyyyMMId;
+//        if (jsonObject1.get("id") != null) {
+//            yyyyMMId = jsonObject1.getInt("id");
+//            String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
+//            BlogTag blogTag = new BlogTag();
+//            blogTag.setTag_name(dateUtils.getYYYYMM(date));
+//            blogTag.setWp_tag_id((long) yyyyMMId);
+//            blogTag.setLink(link);
+//            return blogTagService.save(blogTag);
+//        }
+//        return new BlogTag();
+//    }
 
 //    /**
 //     * WPにあるがDBにないタグを保存する
@@ -499,12 +499,12 @@ public class TmpController {
      * @param searchList
      * @return
      */
-    public List<Item> search1(List<String> searchList) throws InterruptedException {
+    public List<Item> search1(List<String> searchList, Long teamId) throws InterruptedException {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : searchList) {
             String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
-            JSONObject node = rakutenController.request(parameter);
+            JSONObject node = rakutenController.request(parameter, teamId);
             if (node != null) {
 
                 if (node.has("Items") && !JsonUtils.isJsonArray(node.getString("Items"))) {

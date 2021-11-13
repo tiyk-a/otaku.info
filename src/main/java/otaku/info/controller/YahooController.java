@@ -78,7 +78,7 @@ public class YahooController {
     /**
      * Yahoo商品をキーワード検索します。
      */
-    public List<Item> search(List<String> searchList) throws ParseException {
+    public List<Item> search(List<String> searchList, Long teamId) throws ParseException {
         List<Item> itemList = new ArrayList<>();
 
         for (String key : searchList) {
@@ -87,7 +87,7 @@ public class YahooController {
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> request = new HttpEntity<>(jo.toString(), headers);
             String res = request(parameter, request, HttpMethod.GET);
-            JSONObject jsonObject = jsonUtils.createJsonObject(res);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("hits") && JsonUtils.isJsonArray(jsonObject.get("hits"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("hits");
@@ -132,7 +132,7 @@ public class YahooController {
      * @param target
      * @return
      */
-    public List<String> extractKeywords(String target) {
+    public List<String> extractKeywords(String target, Long teamId) {
         List<String> result = null;
 
         if (StringUtils.hasText(target)) {
@@ -151,7 +151,7 @@ public class YahooController {
             if (!StringUtils.hasText(res)) {
                 return new ArrayList<>();
             }
-            JSONObject jsonObject = jsonUtils.createJsonObject(res);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId);
             if (jsonObject.has("result") && jsonObject.getJSONObject("result").has("phrases")) {
                 JSONArray jsonArray = jsonObject.getJSONObject("result").getJSONArray("phrases");
                 if(jsonArray.length() > 0) {

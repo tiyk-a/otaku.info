@@ -491,7 +491,7 @@ public class BlogController {
                 try {
                     logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getIm_id());
                     String res = request(url, request, HttpMethod.POST);
-                    JSONObject jo = jsonUtils.createJsonObject(res);
+                    JSONObject jo = jsonUtils.createJsonObject(res, teamId);
                     if (jo.get("id") != null) {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
                         rel.setWp_id(blogId);
@@ -552,13 +552,13 @@ public class BlogController {
      * @param text
      * @return
      */
-    public Integer extractMedia(String text) {
-        JSONObject jsonObject = jsonUtils.createJsonObject(text);
-        if (jsonObject.get("featured_media") != null) {
-            return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
-        }
-        return 0;
-    }
+//    public Integer extractMedia(String text) {
+//        JSONObject jsonObject = jsonUtils.createJsonObject(text);
+//        if (jsonObject.get("featured_media") != null) {
+//            return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
+//        }
+//        return 0;
+//    }
 
     /**
      * 翌月のyyyyMMタグを追加する。
@@ -714,7 +714,7 @@ public class BlogController {
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
         String res = request(url, request, HttpMethod.POST);
 
-        JSONObject jsonObject1 = jsonUtils.createJsonObject(res);
+        JSONObject jsonObject1 = jsonUtils.createJsonObject(res, teamId);
 
         int yyyyMMId;
         if (jsonObject1.get("id") != null) {
@@ -855,7 +855,7 @@ public class BlogController {
 
                 try {
                     if (StringUtils.hasText(res)) {
-                        JSONObject jo = jsonUtils.createJsonObject(res);
+                        JSONObject jo = jsonUtils.createJsonObject(res, rel.getTeam_id());
                         if (jo.has("data")) {
                             JSONObject jo1 = jo.getJSONObject("data");
                             if (jo1.has("status")) {
@@ -1032,7 +1032,7 @@ public class BlogController {
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
         String res = request(url, request, HttpMethod.POST);
 
-        JSONObject jo = jsonUtils.createJsonObject(res);
+        JSONObject jo = jsonUtils.createJsonObject(res, teamIdList.get(0));
         if (jo.get("id") != null) {
             Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
             logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);

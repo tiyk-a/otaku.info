@@ -16,6 +16,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.entity.AffeliUrl;
 import otaku.info.entity.IM;
+import otaku.info.entity.IRel;
 import otaku.info.entity.Item;
 import otaku.info.service.AffeliUrlService;
 import otaku.info.service.IMService;
@@ -75,7 +76,7 @@ public class RakutenController {
      * @param param Additional params. Will be connected to degault params
      * @return
      */
-    public JSONObject request(String param) throws InterruptedException {
+    public JSONObject request(String param, Long teamId) throws InterruptedException {
         JSONObject jsonObject = new JSONObject();
 
         try {
@@ -85,7 +86,7 @@ public class RakutenController {
             String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtils.hasText(res)) {
-                jsonObject = jsonUtils.createJsonObject(res);
+                jsonObject = jsonUtils.createJsonObject(res, teamId);
             }
             serverUtils.sleep();
         } catch (Exception e) {
@@ -96,6 +97,7 @@ public class RakutenController {
                 logger.debug("Server error");
                 Thread.sleep(60000);
             } else if (e instanceof IllegalArgumentException) {
+                logger.debug("IllegalArgumentExceptionなのでhttps->httpにして再リクエストするよ");
                 RestTemplate restTemplate = new RestTemplate();
                 String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
                 finalUrl = finalUrl.replaceAll("https", "http");
@@ -103,9 +105,10 @@ public class RakutenController {
                 String res = restTemplate.getForObject(finalUrl, String.class);
 
                 if (StringUtils.hasText(res)) {
-                    jsonObject = jsonUtils.createJsonObject(res);
+                    jsonObject = jsonUtils.createJsonObject(res, teamId);
                 }
             } else {
+                logger.debug("想定外のエラーですね");
                 e.printStackTrace();
             }
         }
@@ -116,7 +119,7 @@ public class RakutenController {
      * 楽天商品をキーワード検索します。
      * itemCodeだけを取得してきます。
      */
-    public List<String> search(List<String> searchList) throws InterruptedException {
+    public List<String> search(List<String> searchList, Long teamId) throws InterruptedException {
         List<String> resultList = new ArrayList<>();
 
         if (searchList == null || searchList.isEmpty()) {
@@ -129,7 +132,7 @@ public class RakutenController {
             }
 
             String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&sort=-updateTimestamp&" + setting.getRakutenAffiliId();
-            JSONObject jsonObject = request(parameter);
+            JSONObject jsonObject = request(parameter, teamId);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("Items");
@@ -147,14 +150,15 @@ public class RakutenController {
      * @param itemCodeList
      * @return
      */
-    public List<Item> getDetailsByItemCodeList(List<String> itemCodeList) throws InterruptedException {
+    public List<Item> getDetailsByItemCodeList(List<String> itemCodeList, Long teamId) throws InterruptedException {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : itemCodeList) {
             String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl&sort=-updateTimestamp&" + setting.getRakutenAffiliId();
-            JSONObject jsonObject = request(parameter);
+            JSONObject jsonObject = request(parameter, teamId);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject != null && jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+                logger.debug("詳細が取得できたのでデータを詰めます");
                 JSONArray jsonArray = jsonObject.getJSONArray("Items");
                 for (int i=0; i<jsonArray.length();i++) {
                     Item item = new Item();
@@ -167,6 +171,7 @@ public class RakutenController {
                     resultList.add(item);
                 }
             }
+            logger.debug("詳細データが見つからなかったのでデータを詰めません");
         }
         return resultList;
     }
@@ -197,7 +202,8 @@ public class RakutenController {
         // ターゲットがあれば更新
         for (Item item : targetList) {
             String parameter = "&itemCode=" + item.getItem_code() + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
-            JSONObject jsonObject = request(parameter);
+            List<IRel> rel = iRelService.findByItemId(item.getItem_id());
+            JSONObject jsonObject = request(parameter, rel.get(0).getTeam_id());
             try {
                 if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                     String affiliateUrl = jsonObject.getJSONArray("Items").getJSONObject(0).getJSONObject("Item").getString("affiliateUrl").replaceAll("^\"|\"$", "");

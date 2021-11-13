@@ -21,6 +21,9 @@ public class ErrorJson {
     private Long errj_id;
 
     @Column(nullable = false)
+    private Long team_id;
+
+    @Column(nullable = false)
     private String json;
 
     @Column(nullable = false)

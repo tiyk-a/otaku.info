@@ -17,7 +17,7 @@ public class JsonUtils extends JSONObject {
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("JsonUtils");
 
-    public JSONObject createJsonObject(String source) {
+    public JSONObject createJsonObject(String source, Long teamId) {
         String str = formatJsonString(source);
 
         JSONObject jo = null;
@@ -32,6 +32,7 @@ public class JsonUtils extends JSONObject {
                 if (!errorJsonService.isExists(source)) {
                     ErrorJson errj = new ErrorJson();
                     errj.setJson(source);
+                    errj.setTeam_id(teamId);
                     errj.set_solved(false);
                     errorJsonService.save(errj);
                     logger.debug(e.getMessage());

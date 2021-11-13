@@ -158,47 +158,47 @@ public class SampleController {
         return "done";
     }
 
-    /**
-     * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
-     *
-     * @param artistId
-     * @return
-     * @throws JSONException
-     */
-    @GetMapping("/twi/{artistId}")
-    public String sample1(@PathVariable String artistId) throws InterruptedException {
-        Item tmp = new Item();
-        tmp.setSite_id(1);
-        tmp.setItem_code("adcfvgbhnaa");
-        IRel ir = new IRel();
-        Item savedItem = itemService.save(tmp);
-        ir.setItem_id(savedItem.getItem_id());
-        ir.setTeam_id(1L);
-        iRelService.save(ir);
-
-        List<String> list = controller.affiliSearchWord(artistId);
-        List<String> itemCodeList = rakutenController.search(list);
-
-        itemCodeList = itemService.findNewItemList(itemCodeList);
-
-        List<Item> newItemList = new ArrayList<>();
-        if (itemCodeList.size() > 0) {
-            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
-        }
-
-        List<Item> savedItemList = new ArrayList<>();
-        List<Item> itemList = new ArrayList<>();
-        logger.debug("１２：楽天APIから受信したItemのリストをDB保存します");
-        try {
-            savedItemList = itemService.saveAll(newItemList);
-            itemList = itemService.findAll();
-        } catch (Exception e) {
-            logger.debug("savedItemList: " + ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
-            logger.debug("itemList: " + ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
-            e.printStackTrace();
-        }
-        return itemList.toString();
-    }
+//    /**
+//     * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
+//     *
+//     * @param artistId
+//     * @return
+//     * @throws JSONException
+//     */
+//    @GetMapping("/twi/{artistId}")
+//    public String sample1(@PathVariable String artistId) throws InterruptedException {
+//        Item tmp = new Item();
+//        tmp.setSite_id(1);
+//        tmp.setItem_code("adcfvgbhnaa");
+//        IRel ir = new IRel();
+//        Item savedItem = itemService.save(tmp);
+//        ir.setItem_id(savedItem.getItem_id());
+//        ir.setTeam_id(1L);
+//        iRelService.save(ir);
+//
+//        List<String> list = controller.affiliSearchWord(artistId);
+//        List<String> itemCodeList = rakutenController.search(list, artistId);
+//
+//        itemCodeList = itemService.findNewItemList(itemCodeList);
+//
+//        List<Item> newItemList = new ArrayList<>();
+//        if (itemCodeList.size() > 0) {
+//            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
+//        }
+//
+//        List<Item> savedItemList = new ArrayList<>();
+//        List<Item> itemList = new ArrayList<>();
+//        logger.debug("１２：楽天APIから受信したItemのリストをDB保存します");
+//        try {
+//            savedItemList = itemService.saveAll(newItemList);
+//            itemList = itemService.findAll();
+//        } catch (Exception e) {
+//            logger.debug("savedItemList: " + ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
+//            logger.debug("itemList: " + ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
+//            e.printStackTrace();
+//        }
+//        return itemList.toString();
+//    }
 
     @GetMapping("/batch/{id}")
     public String batch(@PathVariable String id) throws InterruptedException, JSONException {
@@ -501,16 +501,16 @@ public class SampleController {
         // siteIdで処理切り替え
         if (siteId == 1) {
             // ■■■■■　①楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
-            List<String> itemCodeList = rakutenController.search(list);
+            List<String> itemCodeList = rakutenController.search(list, teamId);
 
             itemCodeList = itemService.findNewItemList(itemCodeList);
 
             if (itemCodeList.size() > 0) {
-                newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
+                newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList, teamId);
             }
         } else if (siteId == 2) {
             // ■■■■■　Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
-            newItemList.addAll(yahooController.search(list));
+            newItemList.addAll(yahooController.search(list, teamId));
         }
 
         logger.debug("新商品候補数：" + newItemList.size());

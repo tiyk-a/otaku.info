@@ -128,7 +128,7 @@ public class RakutenController {
                 continue;
             }
 
-            String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&" + setting.getRakutenAffiliId();
+            String parameter = "&keyword=" + key + "&elements=itemCode&hits=5&sort=-updateTimestamp&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
@@ -151,7 +151,7 @@ public class RakutenController {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : itemCodeList) {
-            String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl&" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl&sort=-updateTimestamp&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject != null && jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {

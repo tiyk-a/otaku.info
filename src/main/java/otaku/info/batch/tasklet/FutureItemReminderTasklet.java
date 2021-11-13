@@ -48,7 +48,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         for (TeamEnum e : TeamEnum.values()) {
-            // 10日以内に発売される商品リストを取得(round処理は削除なしそのまま使用)
+            // 7日以内に発売の商品は絶対投稿したい。それ以降のやつは毎日ポストしないでいい。5で割れる日だけでいい
             List<IM> imList = imService.findNearFutureIMByTeamId(e.getId());
             logger.debug(e.getName() + "imList size: " + imList.size());
 

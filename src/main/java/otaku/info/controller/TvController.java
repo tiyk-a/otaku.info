@@ -108,83 +108,90 @@ public class TvController  {
      *
      * @param detailTitleMap
      */
-    public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName, Long memId) throws IOException {
-        Long teamId = TeamEnum.get(teamName).getId();
+    public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName, Long memId) {
+        TeamEnum teamEnum = TeamEnum.get(teamName);
+        Long teamId;
+        logger.debug("teamEnumは" + teamEnum.getName());
+        if (teamEnum != null) {
+            logger.debug("teamEnumがnullではなかったので処理に進みます");
+            teamId = teamEnum.getId();
+            for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
+                String[] valueArr = e.getValue();
 
-        for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
-            String[] valueArr = e.getValue();
+                // 新しいProjectオブジェクトを作ります。
+                Program program = new Program();
+                program.setTitle(valueArr[0]);
+                program.setFct_chk(false);
 
-            // 新しいProjectオブジェクトを作ります。
-            Program program = new Program();
-            program.setTitle(valueArr[0]);
-            program.setFct_chk(false);
+                Matcher m = datePattern.matcher(e.getKey());
+                if (m.find()) {
+                    program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
+                }
 
-            Matcher m = datePattern.matcher(e.getKey());
-            if (m.find()) {
-                program.setOn_air_date(LocalDateTime.parse(m.group(), dateFormatter));
-            }
-
-            String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
-            String station2 = station.replaceAll("\\(Ch.*", "");
-            Long stationId = stationService.findStationId(station2).orElse(null);
-            if (stationId != null) {
-                program.setStation_id(stationId);
-            } else {
-                Station s = new Station();
-                s.setStation_name(station2);
-                if (station2.length() > 8) {
-                    s.setKeyword(station2.substring(0, 9));
+                String station = e.getKey().replaceAll("^.*\\([0-9]*分\\) ", "");
+                String station2 = station.replaceAll("\\(Ch.*", "");
+                Long stationId = stationService.findStationId(station2).orElse(null);
+                if (stationId != null) {
+                    program.setStation_id(stationId);
                 } else {
-                    s.setKeyword(station2);
-                }
-                Station savedStation = stationService.save(s);
-                program.setStation_id(savedStation.getStation_id());
-            }
-            program.setDescription(e.getKey());
-
-            // Programの内容を精査します。
-            // アダルトサイトのデータが引っかかっていた場合、この先の処理は行わず削除してreturn
-            if (program.getStation_id() == 16) {
-                continue;
-            }
-
-            // 空レコードを登録しないようにします。
-            if (program.getTitle().equals("") && program.getDescription().equals("") && program.getOn_air_date() == null) {
-                continue;
-            }
-
-            // 既存データに重複がないか比較する
-            boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-
-            // 登録or更新処理
-            if (isExisting) {
-                // 内容が同じProgramを取得
-                Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-                PRel rel = pRelService.findByProgramIdTeamId(existingP.getProgram_id(), teamId);
-                if (rel == null) {
-                    PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null);
-                    rel = pRelService.save(newRel);
-                }
-
-                if (memId != null) {
-                    List<PRelMem> relMemList = pRelMemService.findByPRelId(rel.getP_rel_id());
-                    boolean existsMem = relMemList.stream().anyMatch(f -> f.getMember_id().equals(memId));
-                    if (!existsMem) {
-                        PRelMem newMem = new PRelMem(null, rel.getP_rel_id(), memId, null, null);
-                        pRelMemService.save(newMem);
+                    Station s = new Station();
+                    s.setStation_name(station2);
+                    if (station2.length() > 8) {
+                        s.setKeyword(station2.substring(0, 9));
+                    } else {
+                        s.setKeyword(station2);
                     }
+                    Station savedStation = stationService.save(s);
+                    program.setStation_id(savedStation.getStation_id());
                 }
-            } else {
-                // 既存登録がなければ新規登録します。
-                Program savedP = programService.save(program);
-                PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null);
-                PRel savedRel = pRelService.save(rel);
-                if (memId != null) {
-                    PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
-                    pRelMemService.save(relMem);
+                program.setDescription(e.getKey());
+
+                // Programの内容を精査します。
+                // アダルトサイトのデータが引っかかっていた場合、この先の処理は行わず削除してreturn
+                if (program.getStation_id() == 16) {
+                    continue;
                 }
-                logger.debug("TV番組を登録：" + program.toString());
+
+                // 空レコードを登録しないようにします。
+                if (program.getTitle().equals("") && program.getDescription().equals("") && program.getOn_air_date() == null) {
+                    continue;
+                }
+
+                // 既存データに重複がないか比較する
+                boolean isExisting = programService.hasProgram(program.getTitle(), program.getStation_id(), program.getOn_air_date());
+
+                // 登録or更新処理
+                if (isExisting) {
+                    // 内容が同じProgramを取得
+                    Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
+                    PRel rel = pRelService.findByProgramIdTeamId(existingP.getProgram_id(), teamId);
+                    if (rel == null) {
+                        PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null);
+                        rel = pRelService.save(newRel);
+                    }
+
+                    if (memId != null) {
+                        List<PRelMem> relMemList = pRelMemService.findByPRelId(rel.getP_rel_id());
+                        boolean existsMem = relMemList.stream().anyMatch(f -> f.getMember_id().equals(memId));
+                        if (!existsMem) {
+                            PRelMem newMem = new PRelMem(null, rel.getP_rel_id(), memId, null, null);
+                            pRelMemService.save(newMem);
+                        }
+                    }
+                } else {
+                    // 既存登録がなければ新規登録します。
+                    Program savedP = programService.save(program);
+                    PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null);
+                    PRel savedRel = pRelService.save(rel);
+                    if (memId != null) {
+                        PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
+                        pRelMemService.save(relMem);
+                    }
+                    logger.debug("TV番組を登録：" + program.toString());
+                }
             }
+        } else {
+            logger.debug("teamEnumがnullでした" + teamEnum.getName() + "teamName=" + teamName);
         }
     }
 

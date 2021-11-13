@@ -66,7 +66,11 @@ public enum TeamEnum {
     }
 
     public static TeamEnum get(String argName) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> e.name.equals(argName)).findFirst().orElse(null);
+        return Arrays.stream(TeamEnum.values()).filter(e -> e.name.equals(argName)).findFirst().orElse(getByMnemonic(argName));
+    }
+
+    public static TeamEnum getByMnemonic(String argName) {
+        return Arrays.stream(TeamEnum.values()).filter(e -> e.mnemonic.equals(argName)).findFirst().orElse(null);
     }
 
     // TODO: メソッドめいと処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる

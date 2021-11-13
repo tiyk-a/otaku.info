@@ -12,7 +12,8 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query("select t from im t inner join im_rel b on t.im_id = b.im_id where b.team_id = ?1 and t.publication_date >= CURRENT_DATE")
     List<IM> findByTeamIdFuture(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from im a inner join im_rel b on a.im_id = b.im_id where b.team_id = ?1 and publication_date > CURRENT_DATE order by publication_date limit 5")
+//    @Query(nativeQuery = true, value = "select a.* from im a inner join im_rel b on a.im_id = b.im_id where b.team_id = ?1 and publication_date > CURRENT_DATE order by publication_date limit 5")
+    @Query(nativeQuery = true, value = "select a.* from im a inner join im_rel b on a.im_id = b.im_id where b.team_id = ?1 and publication_date > CURRENT_DATE AND ((DATEDIFF(publication_date, CURRENT_DATE) <= 8)  OR (DATEDIFF(publication_date, CURRENT_DATE) % 5 = 0)) order by publication_date")
     List<IM> findNearFutureIMByTeamId(Long teamId);
 
     @Query("SELECT t FROM im t WHERE publication_date = CURRENT_DATE and del_flg = 0")

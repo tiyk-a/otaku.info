@@ -32,4 +32,8 @@ public class ErrorJsonService {
     public List<ErrorJson> findByTeamIdNotSolved(Long teamId) {
         return errorJsonRepository.findByTeamIdNotSolved(teamId);
     }
+
+    public ErrorJson findById(Long id) {
+        return errorJsonRepository.findById(id).orElse(null);
+    }
 }

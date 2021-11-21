@@ -19,8 +19,10 @@ import lombok.AllArgsConstructor;
 import otaku.info.dto.FIMDto;
 import otaku.info.dto.FTopDTO;
 import otaku.info.entity.*;
+import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
 import otaku.info.form.IMVerForm;
+import otaku.info.form.ItemByJsonForm;
 import otaku.info.form.PForm;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -294,6 +296,52 @@ public class ApiController {
         List<Item> imList = itemService.findByTeamIdNotDeleted(id);
         logger.debug("fin");
         return ResponseEntity.ok(imList);
+    }
+
+    /**
+     * 指定Teamidの商品を新規登録します。
+     * Itemとi_relを作ります
+     * 無事に登録できた場合はそのteamIdのerrorJsonとItem(未来)リストを取得し直して返却します
+     *
+     * @param id 該当のTeamId
+     * @return Item
+     */
+    @PostMapping("/item/team/{id}")
+    public ResponseEntity<Item> postItemTeam(@PathVariable Long id, @Valid @RequestBody ItemByJsonForm form) throws MyMessageException {
+        logger.debug("postItemTeam teamId=" + id + " errorJsonId=" + form.getJsonId());
+
+        // 該当のErrorJsonがしっかり存在する場合のみ処理を進める
+        ErrorJson j = errorJsonService.findById(form.getJsonId());
+
+        Item savedItem;
+
+        if (j != null) {
+            List<Item> regiItemList = itemService.isRegistered(form.getItem().getItem_code());
+            if (regiItemList.size() == 0) {
+                // item_codeかぶりがない場合、Itemを新規登録
+                savedItem = itemService.save(form.getItem());
+
+                // errorJsonも解決済みにする
+                j.set_solved(true);
+                errorJsonService.save(j);
+
+                // Itemは今新規登録したため、該当のirelは絶対ないはず。基本的には。なのでチェックなしでそのままirelの登録は入ってよし
+                IRel rel = new IRel();
+                rel.setTeam_id(id);
+                rel.setItem_id(savedItem.getItem_id());
+                IRel savedRel = iRelService.save(rel);
+            } else {
+                String siteIdList = regiItemList.stream().map(Item::getItem_code).collect(Collectors.joining(","));
+                // すでにそのitem_codeの商品登録がある場合（楽天かyahooかどっちかにそのitem_codeの商品がある）、本当に登録するかを確認するようにメッセージを返却する
+                throw new MyMessageException("そのitem_codeの商品登録がすでにある", "item_code=" + form.getItem().getItem_code(), "site_id=" + siteIdList);
+            }
+        } else {
+            // リクエストで送られてきたerrorJsonのIDがなんかDBに存在しない場合、jsonそんなのないよって返してあげる
+            throw new MyMessageException("errorJsonのIDがDBにないです", "errorJsonId", form.getJsonId().toString());
+        }
+
+        logger.debug("fin");
+        return ResponseEntity.ok(savedItem);
     }
 
     /**

@@ -136,6 +136,7 @@ public class TvController  {
                 } else {
                     Station s = new Station();
                     s.setStation_name(station2);
+                    s.setDel_flg(false);
                     if (station2.length() > 8) {
                         s.setKeyword(station2.substring(0, 9));
                     } else {

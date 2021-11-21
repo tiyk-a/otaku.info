@@ -56,6 +56,9 @@ public class ApiController {
     @Autowired
     PageTvService pageTvService;
 
+    @Autowired
+    ErrorJsonService errorJsonService;
+
     /**
      * トップ画面用のデータ取得メソッド
      *
@@ -71,12 +74,15 @@ public class ApiController {
         if (id == 5) {
             // All teamsのデータ取得依頼（トップページ）の場合、未確認のItemリストだけを集める
             List<Item> itemList = itemService.findFutureNotDeletedNoIM();
+            List<ErrorJson> errorJsonList = errorJsonService.isNotSolved();
             dto.setI(itemList);
+            dto.setErrJ(errorJsonList);
             logger.debug("fin");
         } else {
             List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
             List<IM> imList = imService.findByTeamIdFuture(id);
             List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
+            List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
             List<FIMDto> fimDtoList = new ArrayList<>();
 
             for (IM im : imList) {
@@ -97,6 +103,7 @@ public class ApiController {
             dto.setI(itemList);
             dto.setIm(fimDtoList);
             dto.setIim(itemList1);
+            dto.setErrJ(errorJsonList);
             logger.debug("fin");
         }
         return ResponseEntity.ok(dto);

@@ -2,6 +2,7 @@ package otaku.info.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import otaku.info.entity.ErrorJson;
 import otaku.info.entity.Item;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public class FTopDTO {
     private List<FIMDto> im;
 
     private List<Item> iim;
+
+    private List<ErrorJson> errJ;
 }

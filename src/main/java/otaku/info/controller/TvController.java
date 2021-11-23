@@ -111,9 +111,8 @@ public class TvController  {
     public void tvKingdomSave(Map<String, String[]> detailTitleMap, String teamName, Long memId) {
         TeamEnum teamEnum = TeamEnum.get(teamName);
         Long teamId;
-        logger.debug("teamEnumは" + teamEnum.getName());
         if (teamEnum != null) {
-            logger.debug("teamEnumがnullではなかったので処理に進みます");
+            logger.debug("teamEnumがnullではなかったので処理に進みます" + teamEnum.getName());
             teamId = teamEnum.getId();
             for (Map.Entry<String, String[]> e : detailTitleMap.entrySet()) {
                 String[] valueArr = e.getValue();
@@ -192,7 +191,7 @@ public class TvController  {
                 }
             }
         } else {
-            logger.debug("teamEnumがnullでした" + teamEnum.getName() + "teamName=" + teamName);
+            logger.debug("teamEnumがnullでした" + "teamName=" + teamName);
         }
     }
 

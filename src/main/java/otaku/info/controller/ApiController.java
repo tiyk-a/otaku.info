@@ -1,8 +1,6 @@
 package otaku.info.controller;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -16,8 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
+import otaku.info.dto.FAllDto;
 import otaku.info.dto.FIMDto;
 import otaku.info.dto.FTopDTO;
+import otaku.info.dto.ItemTeamDto;
 import otaku.info.entity.*;
 import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
@@ -64,6 +64,40 @@ public class ApiController {
     /**
      * トップ画面用のデータ取得メソッド
      *
+     * @return
+     */
+    @GetMapping("/all")
+    public ResponseEntity<FAllDto> getAll(){
+        logger.debug("accepted");
+        FAllDto dto = new FAllDto();
+
+        List<ItemTeamDto> itemTeamDtoList = new ArrayList<>();
+        List<Item> itemList = itemService.findFutureNotDeletedNoIM();
+        for (Item item : itemList) {
+            ItemTeamDto itemTeamDto = new ItemTeamDto();
+            List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
+            List<Long> teamIdList = new ArrayList<>();
+            for (IRel irel : irelList) {
+                if (!teamIdList.contains(irel.getTeam_id())) {
+                    teamIdList.add(irel.getTeam_id());
+                }
+            }
+            itemTeamDto.setItem(item);
+            itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDtoList.add(itemTeamDto);
+        }
+
+        List<ErrorJson> errorJsonList = errorJsonService.isNotSolved();
+        dto.setI(itemTeamDtoList);
+        dto.setErrJ(errorJsonList);
+        dto.setAllFlg(true);
+        logger.debug("fin");
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * 各グループ画面用のデータ取得メソッド
+     *
      * @param id
      * @return
      */
@@ -72,42 +106,32 @@ public class ApiController {
         logger.debug("accepted");
         FTopDTO dto = new FTopDTO();
 
-        // teamId = 5 (All teams' 未確認のItemリストだけを表示する)
-        if (id == 5) {
-            // All teamsのデータ取得依頼（トップページ）の場合、未確認のItemリストだけを集める
-            List<Item> itemList = itemService.findFutureNotDeletedNoIM();
-            List<ErrorJson> errorJsonList = errorJsonService.isNotSolved();
-            dto.setI(itemList);
-            dto.setErrJ(errorJsonList);
-            logger.debug("fin");
-        } else {
-            List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
-            List<IM> imList = imService.findByTeamIdFuture(id);
-            List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
-            List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
-            List<FIMDto> fimDtoList = new ArrayList<>();
+        List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
+        List<IM> imList = imService.findByTeamIdFuture(id);
+        List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
+        List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
+        List<FIMDto> fimDtoList = new ArrayList<>();
 
-            for (IM im : imList) {
-                // TODO: modify
-                IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
-                FIMDto imDto = new FIMDto();
-                BeanUtils.copyProperties(im, imDto);
-                if (rel != null && rel.getWp_id() != null) {
-                    imDto.setWp_id(rel.getWp_id());
-                }
-
-                // verも追加
-                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
-                imDto.setVerList(verList);
-                fimDtoList.add(imDto);
+        for (IM im : imList) {
+            // TODO: modify
+            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
+            FIMDto imDto = new FIMDto();
+            BeanUtils.copyProperties(im, imDto);
+            if (rel != null && rel.getWp_id() != null) {
+                imDto.setWp_id(rel.getWp_id());
             }
 
-            dto.setI(itemList);
-            dto.setIm(fimDtoList);
-            dto.setIim(itemList1);
-            dto.setErrJ(errorJsonList);
-            logger.debug("fin");
+            // verも追加
+            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+            imDto.setVerList(verList);
+            fimDtoList.add(imDto);
         }
+
+        dto.setI(itemList);
+        dto.setIm(fimDtoList);
+        dto.setIim(itemList1);
+        dto.setErrJ(errorJsonList);
+        logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
 

@@ -2,11 +2,11 @@ package otaku.info.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import otaku.info.entity.IM;
+import otaku.info.entity.IMRel;
 import otaku.info.entity.ImVer;
-import otaku.info.form.IMVerForm;
 
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -18,25 +18,13 @@ import java.util.List;
 @Setter
 public class FIMDto {
 
-    private Long im_id;
+    private IM im;
 
-    private String title;
-
-    private String item_caption;
-
-    private Date publication_date;
-
-    private Integer price;
-
-    /** WpIdはimrelから取得。1つのitemmasterでもteamによってここが変わるのよ */
-    private Long wp_id;
-
-    private boolean fct_chk;
-
-    private boolean del_flg;
+    private List<IMRel> relList;
 
     private List<ImVer> verList;
 
+    // TODO: この項目使ってなくない？
     private Long merge_im_id;
 
     private Timestamp created_at;

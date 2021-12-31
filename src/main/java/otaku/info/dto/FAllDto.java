@@ -3,10 +3,8 @@ package otaku.info.dto;
 import lombok.Getter;
 import lombok.Setter;
 import otaku.info.entity.ErrorJson;
-import otaku.info.entity.IMRel;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * トップ画面用のDTO
@@ -20,12 +18,11 @@ public class FAllDto {
     // IMがないItemを詰める
     private List<ItemTeamDto> i;
 
-    private Map<FIMDto, List<IMRel>> im;
+    // IMを集める
+    private List<FIMDto> im;
 
     // IMのあるItemを詰める
     private List<ItemTeamDto> iim;
 
     private List<ErrorJson> errJ;
-
-    private Boolean allFlg;
 }

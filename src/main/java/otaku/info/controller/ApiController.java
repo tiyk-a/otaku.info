@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import otaku.info.dto.FAllDto;
 import otaku.info.dto.FIMDto;
-import otaku.info.dto.FTopDTO;
 import otaku.info.dto.ItemTeamDto;
 import otaku.info.entity.*;
 import otaku.info.error.MyMessageException;
@@ -90,7 +89,6 @@ public class ApiController {
         List<ErrorJson> errorJsonList = errorJsonService.isNotSolved();
         dto.setI(itemTeamDtoList);
         dto.setErrJ(errorJsonList);
-        dto.setAllFlg(true);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
@@ -102,34 +100,70 @@ public class ApiController {
      * @return
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FTopDTO> getTop(@PathVariable Long id){
+    public ResponseEntity<FAllDto> getTop(@PathVariable Long id){
         logger.debug("accepted");
-        FTopDTO dto = new FTopDTO();
 
         List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
         List<IM> imList = imService.findByTeamIdFuture(id);
         List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
         List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
-        List<FIMDto> fimDtoList = new ArrayList<>();
 
+        logger.debug("accepted");
+        FAllDto dto = new FAllDto();
+
+        List<ItemTeamDto> itemTeamDtoList = new ArrayList<>();
+
+        // IMのないItemリスト
+        for (Item item : itemList) {
+            ItemTeamDto itemTeamDto = new ItemTeamDto();
+            List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
+            List<Long> teamIdList = new ArrayList<>();
+            for (IRel irel : irelList) {
+                if (!teamIdList.contains(irel.getTeam_id())) {
+                    teamIdList.add(irel.getTeam_id());
+                }
+            }
+            itemTeamDto.setItem(item);
+            itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDtoList.add(itemTeamDto);
+        }
+
+        // IMリスト
+        List<FIMDto> fimDtoList = new ArrayList<>();
         for (IM im : imList) {
             // TODO: modify
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
             FIMDto imDto = new FIMDto();
-            BeanUtils.copyProperties(im, imDto);
-            if (rel != null && rel.getWp_id() != null) {
-                imDto.setWp_id(rel.getWp_id());
-            }
+            imDto.setIm(im);
 
             // verも追加
             List<ImVer> verList = imVerService.findByImId(im.getIm_id());
             imDto.setVerList(verList);
+
+            // relListも入れる
+            List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
+            imDto.setRelList(imRelList);
             fimDtoList.add(imDto);
         }
 
-        dto.setI(itemList);
+        // IMのあるItemリスト
+        List<ItemTeamDto> itemTeamDtoList1 = new ArrayList<>();
+        for (Item item1 : itemList1) {
+            ItemTeamDto itemTeamDto = new ItemTeamDto();
+            List<IRel> irelList = iRelService.findByItemId(item1.getItem_id());
+            List<Long> teamIdList = new ArrayList<>();
+            for (IRel irel : irelList) {
+                if (!teamIdList.contains(irel.getTeam_id())) {
+                    teamIdList.add(irel.getTeam_id());
+                }
+            }
+            itemTeamDto.setItem(item1);
+            itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDtoList1.add(itemTeamDto);
+        }
+
+        dto.setI(itemTeamDtoList);
         dto.setIm(fimDtoList);
-        dto.setIim(itemList1);
+        dto.setIim(itemTeamDtoList1);
         dto.setErrJ(errorJsonList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
@@ -146,11 +180,15 @@ public class ApiController {
         logger.debug("accepted");
         IM im = imService.findById(id);
         IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
+        List<IMRel> relList = new ArrayList<>();
+        relList.add(rel);
+        List<ImVer> imVerList = imVerService.findByImId(im.getIm_id());
+
         FIMDto dto = new FIMDto();
-        BeanUtils.copyProperties(im, dto);
-        if (rel != null && rel.getWp_id() != null) {
-            dto.setWp_id(rel.getWp_id());
-        }
+
+        dto.setIm(im);
+        dto.setRelList(relList);
+        dto.setVerList(imVerList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
@@ -169,11 +207,13 @@ public class ApiController {
 
         for (IM im : imList) {
             FIMDto dto = new FIMDto();
-            BeanUtils.copyProperties(im, dto);
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), id).orElse(null);
-            if (rel != null && rel.getWp_id() != null) {
-                dto.setWp_id(rel.getWp_id());
-            }
+            dto.setIm(im);
+
+            List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
+            dto.setRelList(imRelList);
+
+            List<ImVer> imVerList = imVerService.findByImId(im.getIm_id());
+            dto.setVerList(imVerList);
             dtoList.add(dto);
         }
         logger.debug("fin");
@@ -182,6 +222,7 @@ public class ApiController {
 
     /**
      * 商品のデータを更新する
+     * IMの更新なので、
      *
      * @param id データ更新をする商品のID
      * @param imForm 更新される新しいデータ
@@ -192,11 +233,19 @@ public class ApiController {
         logger.debug("accepted");
         IM im = imService.findById(id);
         im.absorb(imForm);
-        IM item = imService.save(im);
-        IMRel rel = imRelService.findByImIdTeamId(item.getIm_id(), teamId).orElse(null);
+        IM imUpdated = imService.save(im);
+
+        // im自体の更新であればteamIdは影響ないしこのteamIdのimrelを取得する必要もない
+//        IMRel rel = imRelService.findByImIdTeamId(imUpdated.getIm_id(), teamId).orElse(null);
         FIMDto dto = new FIMDto();
-        BeanUtils.copyProperties(item, dto);
-        dto.setWp_id(rel.getWp_id());
+        dto.setIm(imUpdated);
+
+        List<IMRel> imRelList = imRelService.findByItemMId(imUpdated.getIm_id());
+        dto.setRelList(imRelList);
+
+        List<ImVer> imVerList = imVerService.findByImId(imUpdated.getIm_id());
+        dto.setVerList(imVerList);
+
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }

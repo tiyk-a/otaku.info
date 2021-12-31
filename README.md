@@ -66,6 +66,7 @@ import de.danielbechler.diff.node.DiffNode;
 # TODO
 https://npnl.hatenablog.jp/entry/20070724/1185294796
 https://aoking.hatenablog.jp/entry/20110917/1316242496
+IM mergeする機能があるけどmergeする前のidとかを残すカラムがないよ？
 
 ```
 // Method2

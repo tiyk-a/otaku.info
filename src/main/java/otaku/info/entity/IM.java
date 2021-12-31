@@ -31,6 +31,10 @@ public class IM implements Comparable<IM> {
     @Column(nullable = false)
     private Date publication_date;
 
+    /** htmlで入れる */
+    @Column(nullable = true, columnDefinition="TEXT")
+    private String amazon_image;
+
     @Column(nullable = false)
     private boolean del_flg;
 

@@ -22,6 +22,8 @@ public class IMVerForm {
 
     private Date publication_date;
 
+    private String amazon_image;
+
     private boolean del_flg;
 
     private String[] verArr;

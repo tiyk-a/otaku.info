@@ -474,6 +474,13 @@ public class BlogController {
                 }
 
                 jsonObject.put("content", content);
+
+                if (itemMaster.getAmazon_image() != null) {
+                    JSONObject jsonObjectIn = new JSONObject();
+                    jsonObjectIn.put("amazon_image", itemMaster.getAmazon_image());
+                    jsonObject.put("meta", jsonObjectIn);
+                }
+
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
                 // wpIdが取得できなかったら、存在しないということなのでそのサブドメインは新規投稿してあげる

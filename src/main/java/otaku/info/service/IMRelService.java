@@ -24,6 +24,10 @@ public class IMRelService {
         return iMRelRepository.findByItemMId(itemMId);
     }
 
+    public List<Long> findTeamIdByItemMId(Long itemMId) {
+        return iMRelRepository.findTeamIdByItemMId(itemMId);
+    }
+
     public List<IMRel> saveAll(List<IMRel> iMRelList) {
         List<IMRel> tmpList = removeExistRecord(iMRelList);
         return iMRelRepository.saveAll(tmpList);

@@ -11,6 +11,9 @@ public interface IRelRepository extends JpaRepository<IRel, Long> {
     @Query("select t from i_rel t where item_id = ?1")
     List<IRel> findByItemId(Long itemId);
 
+    @Query("select distinct team_id from i_rel t where item_id = ?1")
+    List<Long> findTeamIdByItemId(Long itemId);
+
     @Query("select team_id from i_rel t where item_id = ?1")
     List<Long> getTeamIdListByItemId(Long itemId);
 

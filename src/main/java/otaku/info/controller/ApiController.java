@@ -71,6 +71,8 @@ public class ApiController {
         FAllDto dto = new FAllDto();
 
         List<ItemTeamDto> itemTeamDtoList = new ArrayList<>();
+
+        // IMがない未来のItemを取得する（どこかのチームで登録されてれば取得しない）
         List<Item> itemList = itemService.findFutureNotDeletedNoIM();
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
@@ -103,7 +105,10 @@ public class ApiController {
     public ResponseEntity<FAllDto> getTop(@PathVariable Long id){
         logger.debug("accepted");
 
+        // IMがない未来のItemを取得する（他チームで登録されてれば取得しない）
         List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
+
+        // 未来のIMを取得する
         List<IM> imList = imService.findByTeamIdFuture(id);
         List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
         List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
@@ -372,7 +377,7 @@ public class ApiController {
     }
 
     /**
-     * 指定Teamidの商品を新規登録します。
+     * 指定商品(Item)を新規登録します。
      * Itemとi_relを作ります
      * 無事に登録できた場合はそのteamIdのerrorJsonとItem(未来)リストを取得し直して返却します
      *
@@ -482,16 +487,18 @@ public class ApiController {
                 im = imService.findById(imVerForm.getIm_id());
             }
 
-            // relの登録をします
-            // im_relの登録を行います
+            // im_relの登録を行います（指示を出したteam以外のteamについても、itemに紐づいてたらim_rel登録します）
             // TODO: 万一、すでに該当のrelがある場合存在チェックしてないから被って問題になるけど、多分大丈夫。
-            IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), imVerForm.getTeamId()).orElse(null);
-            if (rel == null) {
-                IMRel newRel = new IMRel();
-                newRel.setTeam_id(imVerForm.getTeamId());
-                newRel.setIm_id(im.getIm_id());
-                imRelService.save(newRel);
-                rel = newRel;
+            List<Long> teamIdList = iRelService.findTeamIdByItemId(item.getItem_id());
+            List<Long> existTeamIdList = imRelService.findTeamIdByItemMId(im.getIm_id());
+
+            for (Long teamId : teamIdList) {
+                if (!existTeamIdList.contains(teamId)) {
+                    IMRel newRel = new IMRel();
+                    newRel.setTeam_id(teamId);
+                    newRel.setIm_id(im.getIm_id());
+                    imRelService.save(newRel);
+                }
             }
 
             // itemのim_idを登録します

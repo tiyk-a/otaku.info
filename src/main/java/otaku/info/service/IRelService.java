@@ -22,6 +22,10 @@ public class IRelService {
         return iRelRepository.findByItemId(itemId);
     }
 
+    public List<Long> findTeamIdByItemId(Long itemId) {
+        return iRelRepository.findTeamIdByItemId(itemId);
+    }
+
     public List<Long> getTeamIdListByItemId(Long itemId) {
         return iRelRepository.getTeamIdListByItemId(itemId);
     }

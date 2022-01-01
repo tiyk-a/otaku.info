@@ -26,4 +26,6 @@ public class IMForm {
     private boolean fct_chk;
 
     private boolean del_flg;
+
+    private String amazon_image;
 }

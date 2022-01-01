@@ -305,7 +305,7 @@ public class TextController {
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
 
-            String text = String.join("\n", h2, publicationDateStr, String.join("\n", verTxtList));
+            String text = String.join("\n", h2, publicationDateStr, itemMaster.getAmazon_image(), String.join("\n", verTxtList));
             // 返却リストに追加する
             resultList.add(text);
         }

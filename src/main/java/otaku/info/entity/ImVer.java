@@ -30,4 +30,8 @@ public class ImVer {
 
     @Column(nullable = true)
     private Integer sort_order;
+
+    /** 論理抹消 */
+    @Column(columnDefinition = "Boolean default false")
+    private Boolean del_flg;
 }

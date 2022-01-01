@@ -507,16 +507,17 @@ public class ApiController {
             itemService.save(item);
 
             // verがあれば登録します
-            if (imVerForm.getVerArr().length > 0) {
-                for (int i=0;i<imVerForm.getVerArr().length;i++) {
-                    String verName = imVerForm.getVerArr()[i];
-                    boolean verExists = imVerService.existtVerNameImId(verName, im.getIm_id());
-                    if (!verExists) {
-                        ImVer ver = new ImVer();
-                        ver.setVer_name(verName);
-                        ver.setIm_id(im.getIm_id());
-                        imVerService.save(ver);
-                    }
+            List<String[]> verArr = imVerForm.getVers();
+
+            if (verArr.size() > 0) {
+
+                for (String[] ver : verArr) {
+                    String verName = ver[1];
+
+                    ImVer newVer = new ImVer();
+                    newVer.setVer_name(verName);
+                    newVer.setIm_id(im.getIm_id());
+                    imVerService.save(newVer);
                 }
             }
 
@@ -533,47 +534,88 @@ public class ApiController {
      *
      * @return Boolean true: success / false: failed
      */
-//    @PostMapping("/im/{imId}")
-//    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
-//        logger.debug("accepted");
-//
-//        try {
-//            IM im = imService.findById(imId);
-//            if (im == null) {
-//                return ResponseEntity.ok(false);
-//            }
-//
-//            // imの更新
-//            if (!imVerForm.getTitle().equals(im.getTitle())) {
-//                im.setTitle(imVerForm.getTitle());
-//                imService.save(im);
-//            }
-//
-//            // verの更新
-//            if (imVerForm.getVerArr().length > 0) {
-//                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
-//                for (String ver : imVerForm.getVerArr()) {
-//                    ImVer originVer = verList.stream().filter(e -> e.getVer_name().equals(ver)).findFirst().orElse(null);
-//                    if (originVer != null) {
-//                        if (!originVer.getVer_name().equals(ver.getVer_name())) {
-//                            originVer.setVer_name(ver.getVer_name());
-//                            imVerService.save(originVer);
-//                        }
-//                    } else {
-//                        ImVer newVer = new ImVer();
-//                        newVer.setVer_name(ver.getVer_name());
-//                        newVer.setIm_id(imVerForm.getIm_id());
-//                        imVerService.save(newVer);
-//                    }
-//                }
-//            }
-//            logger.debug("fin");
-//            return ResponseEntity.ok(true);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.ok(false);
-//        }
-//    }
+    @PostMapping("/im/{imId}")
+    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
+        logger.debug("accepted");
+
+        try {
+            // IMの更新の場合、更新する（verのみの更新もありえるから）
+            IM im = imService.findById(imId);
+            Boolean updatedFlg = false;
+            if (im == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            // imの更新
+            if (!imVerForm.getTitle().equals(im.getTitle())) {
+                im.setTitle(imVerForm.getTitle());
+                updatedFlg = true;
+            }
+
+            if (!imVerForm.getAmazon_image().equals(im.getAmazon_image())) {
+                im.setAmazon_image(imVerForm.getAmazon_image());
+                updatedFlg = true;
+            }
+
+            // IMの要素が変わってるよフラグがtrueであれば更新してあげます
+            if (updatedFlg) {
+                imService.save(im);
+            }
+
+            // verの更新[[id,name][id,name][id,name][id,name][id,name][id,name][id,name]]
+            // JsonObjectのverを成形し、DBの値と一致してるか確認する
+            // formに入ってきたverオブジェクト
+            List<String[]> verArr = imVerForm.getVers();
+            // DBに保存されてるverたち
+            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+
+            for (String[] ver : verArr) {
+                Long verId = Long.parseLong(ver[0]);
+                String verName = ver[1];
+                Boolean existsFlg = false;
+
+                // フォームのImverを1つずつDBのImVerと比較し、更新が必要であれば更新する
+                for (ImVer imVer : verList) {
+
+                    // verIdは一致するimVerを見つけた
+                    if (verId.equals(imVer.getIm_v_id())) {
+                        existsFlg = true;
+
+                        // verNameが一致しない場合、フォームから来たverNameで上書きし保存
+                        if (!verName.equals(imVer.getVer_name())) {
+
+                            // verNameが空の場合、論理抹消する。空じゃない場合は名前を更新
+                            if (verName.equals("")) {
+                                imVer.setDel_flg(true);
+                            } else {
+                                imVer.setVer_name(verName);
+                            }
+                            imVerService.save(imVer);
+                        }
+                    }
+
+                    // DBのImVerを見つけたらこのforループからは抜けていい
+                    if (existsFlg) {
+                        break;
+                    }
+                }
+
+                // そもそもそのverがDBに存在していなかったら新規登録してあげる
+                if (!existsFlg) {
+                    ImVer newVer = new ImVer();
+                    newVer.setVer_name(verName);
+                    newVer.setIm_id(im.getIm_id());
+                    imVerService.save(newVer);
+                }
+            }
+
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+    }
 
     /**
      * Itemにim_idを追加してfct_chkを更新します（既存imある場合ですね）

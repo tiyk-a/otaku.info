@@ -1,8 +1,6 @@
 package otaku.info.form;
 
 import lombok.Data;
-import org.json.JSONArray;
-import otaku.info.entity.ImVer;
 
 import java.util.Date;
 import java.util.List;
@@ -26,5 +24,6 @@ public class IMVerForm {
 
     private boolean del_flg;
 
-    private String[] verArr;
+    // IM verをオブジェクトで取得してくる
+    private List<String[]> vers;
 }

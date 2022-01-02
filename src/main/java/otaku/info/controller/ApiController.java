@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -280,12 +279,18 @@ public class ApiController {
      */
     @DeleteMapping("/im/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delIm(@PathVariable Long id){
+    public ResponseEntity<Boolean> delIm(@PathVariable Long id){
         logger.debug("accepted");
-        IM im = imService.findById(id);
-        im.setDel_flg(true);
-        logger.debug("fin");
-        imService.save(im);
+        try {
+            IM im = imService.findById(id);
+            im.setDel_flg(true);
+            logger.debug("fin");
+            imService.save(im);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(true);
     }
 
     /**
@@ -372,12 +377,18 @@ public class ApiController {
      */
     @DeleteMapping("/tv/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delTv(@PathVariable Long id){
+    public ResponseEntity<Boolean> delTv(@PathVariable Long id){
         logger.debug("accepted");
-        Program im = pageTvService.findById(id);
-        im.setDel_flg(true);
-        logger.debug("fin");
-        pageTvService.save(im);
+        try {
+            Program im = pageTvService.findById(id);
+            im.setDel_flg(true);
+            logger.debug("fin");
+            pageTvService.save(im);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(true);
     }
 
     /**
@@ -398,6 +409,7 @@ public class ApiController {
      * 指定商品(Item)を新規登録します。
      * Itemとi_relを作ります
      * 無事に登録できた場合はそのteamIdのerrorJsonとItem(未来)リストを取得し直して返却します
+     * errorJsonIdが連携されなかった場合はそのまま登録します
      *
      * @param id 該当のTeamId
      * @return Item
@@ -406,34 +418,40 @@ public class ApiController {
     public ResponseEntity<Item> postItemTeam(@PathVariable Long id, @Valid @RequestBody ItemByJsonForm form) throws MyMessageException {
         logger.debug("postItemTeam teamId=" + id + " errorJsonId=" + form.getJsonId());
 
-        // 該当のErrorJsonがしっかり存在する場合のみ処理を進める
-        ErrorJson j = errorJsonService.findById(form.getJsonId());
+        ErrorJson j = null;
+
+        if (form.getJsonId() != null) {
+            // 該当のErrorJsonがしっかり存在する場合のみ処理を進める
+            j = errorJsonService.findById(form.getJsonId());
+        }
 
         Item savedItem;
 
-        if (j != null) {
-            List<Item> regiItemList = itemService.isRegistered(form.getItem().getItem_code());
-            if (regiItemList.size() == 0) {
-                // item_codeかぶりがない場合、Itemを新規登録
-                savedItem = itemService.save(form.getItem());
+        List<Item> regiItemList = new ArrayList<>();
 
+        if (j != null) {
+            regiItemList = itemService.isRegistered(form.getItem().getItem_code());
+        }
+
+        // item_codeかぶりがない場合、Itemを新規登録
+        if (regiItemList.size() == 0) {
+            savedItem = itemService.save(form.getItem());
+
+            if (j != null) {
                 // errorJsonも解決済みにする
                 j.set_solved(true);
                 errorJsonService.save(j);
-
-                // Itemは今新規登録したため、該当のirelは絶対ないはず。基本的には。なのでチェックなしでそのままirelの登録は入ってよし
-                IRel rel = new IRel();
-                rel.setTeam_id(id);
-                rel.setItem_id(savedItem.getItem_id());
-                IRel savedRel = iRelService.save(rel);
-            } else {
-                String siteIdList = regiItemList.stream().map(Item::getItem_code).collect(Collectors.joining(","));
-                // すでにそのitem_codeの商品登録がある場合（楽天かyahooかどっちかにそのitem_codeの商品がある）、本当に登録するかを確認するようにメッセージを返却する
-                throw new MyMessageException("そのitem_codeの商品登録がすでにある", "item_code=" + form.getItem().getItem_code(), "site_id=" + siteIdList);
             }
+
+            // Itemは今新規登録したため、該当のirelは絶対ないはず。基本的には。なのでチェックなしでそのままirelの登録は入ってよし
+            IRel rel = new IRel();
+            rel.setTeam_id(id);
+            rel.setItem_id(savedItem.getItem_id());
+            IRel savedRel = iRelService.save(rel);
         } else {
-            // リクエストで送られてきたerrorJsonのIDがなんかDBに存在しない場合、jsonそんなのないよって返してあげる
-            throw new MyMessageException("errorJsonのIDがDBにないです", "errorJsonId", form.getJsonId().toString());
+            String siteIdList = regiItemList.stream().map(Item::getItem_code).collect(Collectors.joining(","));
+            // すでにそのitem_codeの商品登録がある場合（楽天かyahooかどっちかにそのitem_codeの商品がある）、本当に登録するかを確認するようにメッセージを返却する
+            throw new MyMessageException("そのitem_codeの商品登録がすでにある", "item_code=" + form.getItem().getItem_code(), "site_id=" + siteIdList);
         }
 
         logger.debug("fin");
@@ -464,14 +482,20 @@ public class ApiController {
      */
     @DeleteMapping("/item/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delItem(@PathVariable Long id) {
+    public ResponseEntity<Boolean> delItem(@PathVariable Long id) {
         logger.debug("accepted");
-        Item item = itemService.findByItemId(id).orElse(null);
-        if (item != null) {
-            item.setDel_flg(true);
-            logger.debug("fin");
-            itemService.save(item);
+        try {
+            Item item = itemService.findByItemId(id).orElse(null);
+            if (item != null) {
+                item.setDel_flg(true);
+                logger.debug("fin");
+                itemService.save(item);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
         }
+        return ResponseEntity.ok(true);
     }
 
     /**

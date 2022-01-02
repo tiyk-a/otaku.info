@@ -11,6 +11,8 @@ import java.util.Date;
 @Data
 public class IMForm {
 
+    private Long im_id;
+
     private String url;
 
     private String title;

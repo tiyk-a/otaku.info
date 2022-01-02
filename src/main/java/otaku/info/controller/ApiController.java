@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -172,6 +173,23 @@ public class ApiController {
         dto.setErrJ(errorJsonList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * まとめて一括IMの登録を行う
+     *
+     * @param forms
+     * @return
+     */
+    @PostMapping("/im/bundle/new")
+    public ResponseEntity<Boolean> newBundleIMyVer(@Valid @RequestBody IMVerForm[] forms) {
+        for (IMVerForm imVerForm : forms) {
+            ResponseEntity<Boolean> responseEntity = newIMyVer(imVerForm);
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                return ResponseEntity.status(500).body(false);
+            }
+        }
+        return ResponseEntity.ok(true);
     }
 
     /**
@@ -517,6 +535,7 @@ public class ApiController {
                     ImVer newVer = new ImVer();
                     newVer.setVer_name(verName);
                     newVer.setIm_id(im.getIm_id());
+                    newVer.setDel_flg(false);
                     imVerService.save(newVer);
                 }
             }
@@ -534,13 +553,13 @@ public class ApiController {
      *
      * @return Boolean true: success / false: failed
      */
-    @PostMapping("/im/{imId}")
-    public ResponseEntity<Boolean> updIMyVer(@PathVariable Long imId, @Valid @RequestBody IMVerForm imVerForm) {
+    @PostMapping("/im/upd")
+    public ResponseEntity<Boolean> updIMyVer(@Valid @RequestBody IMVerForm imVerForm) {
         logger.debug("accepted");
 
         try {
             // IMの更新の場合、更新する（verのみの更新もありえるから）
-            IM im = imService.findById(imId);
+            IM im = imService.findById(imVerForm.getIm_id());
             Boolean updatedFlg = false;
             if (im == null) {
                 return ResponseEntity.ok(false);
@@ -570,33 +589,45 @@ public class ApiController {
             List<ImVer> verList = imVerService.findByImId(im.getIm_id());
 
             for (String[] ver : verArr) {
-                Long verId = Long.parseLong(ver[0]);
+                Boolean existsFlg = true;
+                Long verId;
+                try {
+                    verId = Long.parseLong(ver[0]);
+                } catch (Exception e) {
+                    // この時点でverIdが取得できなかったら新規のVerってことなので一気にver新規登録に飛びます
+                    verId = null;
+                    existsFlg = false;
+                }
+
                 String verName = ver[1];
-                Boolean existsFlg = false;
 
                 // フォームのImverを1つずつDBのImVerと比較し、更新が必要であれば更新する
-                for (ImVer imVer : verList) {
+                if (existsFlg) {
+                    for (ImVer imVer : verList) {
 
-                    // verIdは一致するimVerを見つけた
-                    if (verId.equals(imVer.getIm_v_id())) {
-                        existsFlg = true;
+                        // verIdは一致するimVerを見つけた
+                        if (verId.equals(imVer.getIm_v_id())) {
+                            existsFlg = true;
 
-                        // verNameが一致しない場合、フォームから来たverNameで上書きし保存
-                        if (!verName.equals(imVer.getVer_name())) {
+                            // verNameが一致しない場合、フォームから来たverNameで上書きし保存
+                            if (!verName.equals(imVer.getVer_name())) {
 
-                            // verNameが空の場合、論理抹消する。空じゃない場合は名前を更新
-                            if (verName.equals("")) {
-                                imVer.setDel_flg(true);
-                            } else {
-                                imVer.setVer_name(verName);
+                                // verNameが空の場合、論理抹消する。空じゃない場合は名前を更新
+                                if (verName.equals("")) {
+                                    imVer.setDel_flg(true);
+                                } else {
+                                    imVer.setVer_name(verName);
+                                }
+                                imVerService.save(imVer);
                             }
-                            imVerService.save(imVer);
+                        } else {
+                            existsFlg = false;
                         }
-                    }
 
-                    // DBのImVerを見つけたらこのforループからは抜けていい
-                    if (existsFlg) {
-                        break;
+                        // DBのImVerを見つけたらこのforループからは抜けていい
+                        if (existsFlg) {
+                            break;
+                        }
                     }
                 }
 
@@ -605,6 +636,7 @@ public class ApiController {
                     ImVer newVer = new ImVer();
                     newVer.setVer_name(verName);
                     newVer.setIm_id(im.getIm_id());
+                    newVer.setDel_flg(false);
                     imVerService.save(newVer);
                 }
             }
@@ -615,6 +647,24 @@ public class ApiController {
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
+    }
+
+    /**
+     * TODO:IM+verを更新します。画面から、verのver_name & ver_idをセットにして渡せれば実現可能
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/im/bundle/upd")
+    public ResponseEntity<Boolean> updBundleIMyVer(@Valid @RequestBody IMVerForm[] imVerForms) {
+        logger.debug("accepted");
+
+        for (IMVerForm imVerForm : imVerForms) {
+            ResponseEntity<Boolean> responseEntity = updIMyVer(imVerForm);
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                return ResponseEntity.status(500).body(false);
+            }
+        }
+        return ResponseEntity.ok(true);
     }
 
     /**

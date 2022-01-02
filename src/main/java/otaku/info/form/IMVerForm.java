@@ -24,6 +24,6 @@ public class IMVerForm {
 
     private boolean del_flg;
 
-    // IM verをオブジェクトで取得してくる
+    // IM verを取得してくる[[im_v_id, ver_name, im_id]]
     private List<String[]> vers;
 }

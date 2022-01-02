@@ -142,6 +142,7 @@ public class TwTextController {
             title = itemMaster.getTitle();
         } else {
             itemMaster.setTitle(item.getTitle());
+            itemMaster.setBlogNotUpdated(true);
             // ついでに登録（更新）する
             imService.save(itemMaster);
         }

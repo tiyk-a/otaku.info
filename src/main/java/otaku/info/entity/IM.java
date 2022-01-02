@@ -38,6 +38,10 @@ public class IM implements Comparable<IM> {
     @Column(nullable = false)
     private boolean del_flg;
 
+    /** trueだとブログが更新されていないので更新する必要がある */
+    @Column(columnDefinition = "Boolean default false")
+    private boolean blogNotUpdated;
+
     public IM absorb(IMForm imForm) {
         if (imForm.getTitle() != null && !imForm.getTitle().isEmpty()) {
             this.setTitle(imForm.getTitle());

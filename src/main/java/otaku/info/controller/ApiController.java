@@ -255,6 +255,7 @@ public class ApiController {
         logger.debug("accepted");
         IM im = imService.findById(id);
         im.absorb(imForm);
+        im.setBlogNotUpdated(true);
         IM imUpdated = imService.save(im);
 
         // im自体の更新であればteamIdは影響ないしこのteamIdのimrelを取得する必要もない
@@ -523,6 +524,9 @@ public class ApiController {
 
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(imVerForm, im);
+                if (im.getIm_id() != null) {
+                    im.setBlogNotUpdated(true);
+                }
                 IM savedIm = imService.save(im);
                 im = savedIm;
             } else {
@@ -602,6 +606,7 @@ public class ApiController {
 
             // IMの要素が変わってるよフラグがtrueであれば更新してあげます
             if (updatedFlg) {
+                im.setBlogNotUpdated(true);
                 imService.save(im);
             }
 

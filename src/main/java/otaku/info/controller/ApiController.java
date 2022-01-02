@@ -362,13 +362,18 @@ public class ApiController {
      * @return Item
      */
     @PostMapping("/tv/{teamId}/{id}")
-    public ResponseEntity<Program> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm){
+    public ResponseEntity<Boolean> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm){
         logger.debug("accepted");
-        Program p = pageTvService.findById(id);
-        p.absorb(pForm);
-        Program item = pageTvService.save(p);
+        try {
+            Program p = pageTvService.findById(id);
+            p.absorb(pForm);
+            Program p_saved = pageTvService.save(p);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
         logger.debug("fin");
-        return ResponseEntity.ok(item);
+        return ResponseEntity.ok(true);
     }
 
     /**

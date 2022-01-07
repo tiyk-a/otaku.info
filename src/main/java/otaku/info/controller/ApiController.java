@@ -8,7 +8,6 @@ import javax.validation.Valid;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +16,7 @@ import lombok.AllArgsConstructor;
 import otaku.info.dto.FAllDto;
 import otaku.info.dto.FIMDto;
 import otaku.info.dto.ItemTeamDto;
+import otaku.info.dto.PDto;
 import otaku.info.entity.*;
 import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
@@ -25,6 +25,7 @@ import otaku.info.form.ItemByJsonForm;
 import otaku.info.form.PForm;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
+import otaku.info.utils.DateUtils;
 
 @RestController
 @RequestMapping("/api")
@@ -49,6 +50,9 @@ public class ApiController {
     ProgramService programService;
 
     @Autowired
+    PRelService pRelService;
+
+    @Autowired
     IRelService iRelService;
 
     @Autowired
@@ -59,6 +63,12 @@ public class ApiController {
 
     @Autowired
     ErrorJsonService errorJsonService;
+
+    @Autowired
+    TeamService teamService;
+
+    @Autowired
+    DateUtils dateUtils;
 
     /**
      * トップ画面用のデータ取得メソッド
@@ -318,41 +328,85 @@ public class ApiController {
      *
      * @return リスト
      */
+//    @GetMapping("/tv")
+//    public ResponseEntity<List> tvAll(@RequestParam("pageSize") Optional<Integer> pageSize, @RequestParam("page") Optional<Integer> page){
+//        logger.debug("accepted");
+//        // page size
+//        int evalPageSize = pageSize.orElse(50);
+//        // Evaluate page. If requested parameter is null or less than 0 (to
+//        // prevent exception), return initial size. Otherwise, return value of
+//        // param. decreased by 1.
+//        int evalPage = (page.orElse(0) < 1) ? 50 : page.get() - 1;
+//        Page<Program> imPage = pageTvService.findAll(evalPage, evalPageSize);
+//        logger.debug("fin");
+//        return ResponseEntity.ok(imPage.stream().collect(Collectors.toList()));
+//    }
     @GetMapping("/tv")
-    public ResponseEntity<List> tvAll(@RequestParam("pageSize") Optional<Integer> pageSize, @RequestParam("page") Optional<Integer> page){
+    public ResponseEntity<List<PDto>> tvAll(@RequestParam("teamId") Long teamId){
         logger.debug("accepted");
-        // page size
-        int evalPageSize = pageSize.orElse(50);
-        // Evaluate page. If requested parameter is null or less than 0 (to
-        // prevent exception), return initial size. Otherwise, return value of
-        // param. decreased by 1.
-        int evalPage = (page.orElse(0) < 1) ? 50 : page.get() - 1;
-        Page<Program> imPage = pageTvService.findAll(evalPage, evalPageSize);
+        List<PDto> pDtos = new ArrayList<>();
+        List<Program> pList = new ArrayList<>();
+
+        if (teamId == null) {
+            pList = programService.findByOnAirDate(dateUtils.getToday());
+        } else {
+            pList = programService.findbyTeamId(teamId);
+        }
+
+        List<Long> teamIdList = teamService.findAllTeam().stream().map(e -> e.getTeam_id()).collect(Collectors.toList());
+
+        for (Program p : pList) {
+            PDto pDto = new PDto();
+            List<PRel> pRelList = pRelService.getListByProgramId(p.getProgram_id());
+
+            pDto.setProgram(p);
+            pDto.setPRelList(pRelList);
+            pDto.setTeamIdList(teamIdList);
+            pDtos.add(pDto);
+        }
         logger.debug("fin");
-        return ResponseEntity.ok(imPage.stream().collect(Collectors.toList()));
+        return ResponseEntity.ok(pDtos);
     }
 
-    @GetMapping("/tv/team/{id}")
-    public ResponseEntity<List<Program>> getTvTeam(@PathVariable Long id){
-        logger.debug("accepted");
-        List<Program> pList = programService.findbyTeamId(id);
-        logger.debug("fin");
-        return ResponseEntity.ok(pList);
-    }
+//    /**
+//     * パラメタのチームの未来のTV一覧を返します
+//     *
+//     * @param id
+//     * @return
+//     */
+//    @GetMapping("/tv")
+//    public ResponseEntity<List<PDto>> getTvTeam(@PathVariable Long id){
+//        logger.debug("accepted");
+//        List<Program> pList = programService.findbyTeamId(id);
+//        List<PDto> pDtos = new ArrayList<>();
+//        List<Long> teamIdList = teamService.findAllTeam().stream().map(e -> e.getTeam_id()).collect(Collectors.toList());
+//
+//        for (Program p : pList) {
+//            PDto pDto = new PDto();
+//            List<PRel> pRelList = pRelService.getListByProgramId(p.getProgram_id());
+//
+//            pDto.setProgram(p);
+//            pDto.setPRelList(pRelList);
+//            pDto.setTeamIdList(teamIdList);
+//            pDtos.add(pDto);
+//        }
+//        logger.debug("fin");
+//        return ResponseEntity.ok(pDtos);
+//    }
 
-    /**
-     * IDから商品を取得し返す
-     *
-     * @param id 取得する商品のID
-     * @return Item
-     */
-    @GetMapping("/tv/{id}")
-    public ResponseEntity<Program> getTv(@PathVariable Long id){
-        logger.debug("accepted");
-        Program im = pageTvService.findById(id);
-        logger.debug("fin");
-        return ResponseEntity.ok(im);
-    }
+//    /**
+//     * IDから商品を取得し返す
+//     *
+//     * @param id 取得する商品のID
+//     * @return Item
+//     */
+//    @GetMapping("/tv/{id}")
+//    public ResponseEntity<Program> getTv(@PathVariable Long id){
+//        logger.debug("accepted");
+//        Program im = pageTvService.findById(id);
+//        logger.debug("fin");
+//        return ResponseEntity.ok(im);
+//    }
 
     /**
      * 商品のデータを更新する（画像以外）
@@ -365,9 +419,25 @@ public class ApiController {
     public ResponseEntity<Boolean> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm){
         logger.debug("accepted");
         try {
+            // programの更新
             Program p = pageTvService.findById(id);
             p.absorb(pForm);
             Program p_saved = pageTvService.save(p);
+
+            // prelの更新
+            List<PRel> relList = pRelService.getListByProgramId(id);
+            for (Long[] inner : pForm.getPrel()) {
+                // [p_rel_id, program_id, team_id]の形でデータ入ってる
+                for (PRel rel : relList) {
+                    if (inner[0].equals(rel.getP_rel_id())) {
+                        if (!inner[2].equals(rel.getTeam_id())) {
+                            rel.setTeam_id(inner[2]);
+                            pRelService.save(rel);
+                        }
+                        break;
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(false);
@@ -388,12 +458,12 @@ public class ApiController {
         try {
             Program im = pageTvService.findById(id);
             im.setDel_flg(true);
-            logger.debug("fin");
             pageTvService.save(im);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
+        logger.debug("fin");
         return ResponseEntity.ok(true);
     }
 

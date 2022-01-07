@@ -2,7 +2,8 @@ package otaku.info.form;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.List;
+
 
 @Data
 public class PForm {
@@ -12,8 +13,11 @@ public class PForm {
 
     private String title;
 
-    private LocalDateTime on_air_date;
+    /** 日付の受け取りはString,"yyyy-MM-dd HH:mm"の形で送りたい */
+    private String on_air_date;
 
     /** 説明文 */
     private String description;
+
+    private List<Long[]> prel;
 }

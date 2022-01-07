@@ -22,6 +22,11 @@ public class PRelService {
     @Autowired
     PRelRepository pRelRepository;
 
+    /**
+     * その番組のrel全てを返します
+     * @param programId
+     * @return
+     */
     public List<PRel> getListByProgramId(Long programId) {
         List<PRel> relList = pRelRepository.findAllByProgramId(programId);
         if (relList == null) {

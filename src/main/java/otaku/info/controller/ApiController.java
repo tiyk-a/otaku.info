@@ -328,28 +328,17 @@ public class ApiController {
      *
      * @return リスト
      */
-//    @GetMapping("/tv")
-//    public ResponseEntity<List> tvAll(@RequestParam("pageSize") Optional<Integer> pageSize, @RequestParam("page") Optional<Integer> page){
-//        logger.debug("accepted");
-//        // page size
-//        int evalPageSize = pageSize.orElse(50);
-//        // Evaluate page. If requested parameter is null or less than 0 (to
-//        // prevent exception), return initial size. Otherwise, return value of
-//        // param. decreased by 1.
-//        int evalPage = (page.orElse(0) < 1) ? 50 : page.get() - 1;
-//        Page<Program> imPage = pageTvService.findAll(evalPage, evalPageSize);
-//        logger.debug("fin");
-//        return ResponseEntity.ok(imPage.stream().collect(Collectors.toList()));
-//    }
     @GetMapping("/tv")
     public ResponseEntity<List<PDto>> tvAll(@RequestParam("teamId") Long teamId){
         logger.debug("accepted");
         List<PDto> pDtos = new ArrayList<>();
-        List<Program> pList = new ArrayList<>();
+        List<Program> pList = null;
 
-        if (teamId == null) {
+        // 全チームデータ取得の場合
+        if (teamId == null || teamId == 5) {
             pList = programService.findByOnAirDate(dateUtils.getToday());
         } else {
+            // チーム指定が適切に入っていればそのチームのを返す
             pList = programService.findbyTeamId(teamId);
         }
 
@@ -367,46 +356,6 @@ public class ApiController {
         logger.debug("fin");
         return ResponseEntity.ok(pDtos);
     }
-
-//    /**
-//     * パラメタのチームの未来のTV一覧を返します
-//     *
-//     * @param id
-//     * @return
-//     */
-//    @GetMapping("/tv")
-//    public ResponseEntity<List<PDto>> getTvTeam(@PathVariable Long id){
-//        logger.debug("accepted");
-//        List<Program> pList = programService.findbyTeamId(id);
-//        List<PDto> pDtos = new ArrayList<>();
-//        List<Long> teamIdList = teamService.findAllTeam().stream().map(e -> e.getTeam_id()).collect(Collectors.toList());
-//
-//        for (Program p : pList) {
-//            PDto pDto = new PDto();
-//            List<PRel> pRelList = pRelService.getListByProgramId(p.getProgram_id());
-//
-//            pDto.setProgram(p);
-//            pDto.setPRelList(pRelList);
-//            pDto.setTeamIdList(teamIdList);
-//            pDtos.add(pDto);
-//        }
-//        logger.debug("fin");
-//        return ResponseEntity.ok(pDtos);
-//    }
-
-//    /**
-//     * IDから商品を取得し返す
-//     *
-//     * @param id 取得する商品のID
-//     * @return Item
-//     */
-//    @GetMapping("/tv/{id}")
-//    public ResponseEntity<Program> getTv(@PathVariable Long id){
-//        logger.debug("accepted");
-//        Program im = pageTvService.findById(id);
-//        logger.debug("fin");
-//        return ResponseEntity.ok(im);
-//    }
 
     /**
      * 商品のデータを更新する（画像以外）

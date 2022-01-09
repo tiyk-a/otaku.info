@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -110,6 +111,24 @@ public class StringUtilsMine {
             return matcher.group(1);
         } else {
             return "";
+        }
+    }
+
+    /**
+     * IMのamazon_imageを引数として渡すと、pureなアフィリリンクを返却します
+     * リンク抜き出しに成功した場合、その文字列を
+     * 失敗したらemptyを返します
+     *
+     * @param imAmazonImage
+     * @return
+     */
+    public Optional<String> getAmazonLinkFromCard(String imAmazonImage) {
+        // propertiesに定数は用意したんだけどSettingインポートするとファイル依存ができてしまって困るのでそのまま文字列入れてる
+        String url = imAmazonImage.replace("<a target=\"_blank\"  href=\"", "").replace("\"><img border=\"0\" src=\"//ws-fe.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=JP&ASIN=B09GYY4M9H&ServiceVersion=20070822&ID=AsinImage&WS=1&Format=_SL250_&tag=tiyk8ank-22\" ></a>", "");
+        if (url.startsWith("https://www.amazon.co.jp/") && !url.contains("\"")) {
+            return Optional.of(url);
+        } else {
+            return Optional.empty();
         }
     }
 }

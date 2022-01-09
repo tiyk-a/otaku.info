@@ -32,5 +32,6 @@ public class Setting {
     private String yahooShoppingApi;
     private String yahooShoppingApiPos;
     private String yahooPhraseApi;
-
+    private String amazonCardHead;
+    private String amazonCardPos;
 }

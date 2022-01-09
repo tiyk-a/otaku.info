@@ -514,6 +514,11 @@ public class BlogController {
                             logger.debug(itemMaster.getTitle());
                             url = e.getSubDomain() + "blog/" + rel.getWp_id();
                             TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId);
+                            // TEST:temporaryアマゾンImageがあればそれを入れてあげるようにする
+                            if (itemMaster.getAmazon_image() != null) {
+                                twiDto.setUrl(stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(url));
+                            }
+
                             String result;
                             // TODO: text作成、memberを抜いてるので追加したほうがいい
                             result = twTextController.twitter(twiDto);

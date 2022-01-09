@@ -13,6 +13,7 @@ import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -58,6 +59,9 @@ public class TwTextController {
     @Autowired
     private Setting setting;
 
+    @Autowired
+    private StringUtilsMine stringUtilsMine;
+
     private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
     private final SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
     private final SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
@@ -66,7 +70,7 @@ public class TwTextController {
     private final DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     /**
-     * Twitterポスト用のメッセージを作成します。
+     * 新商品取り込みのTwitterポスト文章
      *
      * @param twiDto
      * @return
@@ -167,8 +171,13 @@ public class TwTextController {
 
     public String releasedItemAnnounce(IM itemMaster, Long teamId, Item item) {
         String url = TeamEnum.get(teamId).getSubDomain();
+        String directUrl = item.getUrl();
 
-        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + item.getUrl() + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
+        if (itemMaster.getAmazon_image() != null) {
+            directUrl = stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(item.getUrl());
+        }
+
+        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + directUrl + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id());
         String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));

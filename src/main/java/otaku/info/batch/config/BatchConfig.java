@@ -35,8 +35,8 @@ class BatchConfig {
 
     @Bean
     Step itemSearchStep() {
-        return stepBuilderFactory.get("itemSearchStep") //Step名を指定
-                .tasklet(itemSearchTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("itemSearchStep")
+                .tasklet(itemSearchTasklet)
                 .build();
     }
 
@@ -48,8 +48,8 @@ class BatchConfig {
 
     @Bean
     Step futureItemReminderStep() {
-        return stepBuilderFactory.get("futureItemReminderStep") //Step名を指定
-                .tasklet(futureItemReminderTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("futureItemReminderStep")
+                .tasklet(futureItemReminderTasklet)
                 .build();
     }
 
@@ -61,8 +61,8 @@ class BatchConfig {
 
     @Bean
     Step yahooItemSearchStep() {
-        return stepBuilderFactory.get("yahooItemSearchStep") //Step名を指定
-                .tasklet(yahooItemSearchTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("yahooItemSearchStep")
+                .tasklet(yahooItemSearchTasklet)
                 .build();
     }
 
@@ -74,8 +74,8 @@ class BatchConfig {
 
     @Bean
     Step publishAnnouncementStep() {
-        return stepBuilderFactory.get("publishAnnouncementStep") //Step名を指定
-                .tasklet(publishAnnounceTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("publishAnnouncementStep")
+                .tasklet(publishAnnounceTasklet)
                 .build();
     }
 
@@ -92,8 +92,8 @@ class BatchConfig {
      */
     @Bean
     Step itemSearchMemberStep() {
-        return stepBuilderFactory.get("itemSearchMemberStep") //Step名を指定
-                .tasklet(itemSearchMemberTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("itemSearchMemberStep")
+                .tasklet(itemSearchMemberTasklet)
                 .build();
     }
 
@@ -110,8 +110,8 @@ class BatchConfig {
      */
     @Bean
     Step tvStep() {
-        return stepBuilderFactory.get("tvStep") //Step名を指定
-                .tasklet(tvTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("tvStep")
+                .tasklet(tvTasklet)
                 .build();
     }
 
@@ -128,8 +128,8 @@ class BatchConfig {
      */
     @Bean
     Step tvPostStep() {
-        return stepBuilderFactory.get("tvPostStep") //Step名を指定
-                .tasklet(tvPostTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("tvPostStep")
+                .tasklet(tvPostTasklet)
                 .build();
     }
 
@@ -146,8 +146,8 @@ class BatchConfig {
      */
     @Bean
     Step tvAlertStep() {
-        return stepBuilderFactory.get("tvAlertStep") //Step名を指定
-                .tasklet(tvAlertTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("tvAlertStep")
+                .tasklet(tvAlertTasklet)
                 .build();
     }
 
@@ -159,8 +159,8 @@ class BatchConfig {
 
     @Bean
     Step updateUrlStep() {
-        return stepBuilderFactory.get("updateUrlStep") //Step名を指定
-                .tasklet(updateUrlTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("updateUrlStep")
+                .tasklet(updateUrlTasklet)
                 .build();
     }
 
@@ -172,8 +172,8 @@ class BatchConfig {
 
     @Bean
     Step blogUpdateStep() {
-        return stepBuilderFactory.get("blogUpdateStep") //Step名を指定
-                .tasklet(blogUpdateTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("blogUpdateStep")
+                .tasklet(blogUpdateTasklet)
                 .build();
     }
 
@@ -185,8 +185,8 @@ class BatchConfig {
 
     @Bean
     Step blogCatchupStep() {
-        return stepBuilderFactory.get("blogCatchupStep") //Step名を指定
-                .tasklet(blogCatchupTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("blogCatchupStep")
+                .tasklet(blogCatchupTasklet)
                 .build();
     }
 
@@ -198,8 +198,8 @@ class BatchConfig {
 
     @Bean
     Step twFavStep() {
-        return stepBuilderFactory.get("twFavStep") //Step名を指定
-                .tasklet(twFavTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("twFavStep")
+                .tasklet(twFavTasklet)
                 .build();
     }
 
@@ -211,8 +211,8 @@ class BatchConfig {
 
     @Bean
     Step twFolBStep() {
-        return stepBuilderFactory.get("twFolBStep") //Step名を指定
-                .tasklet(twFolBTasklet) //実行するTaskletを指定
+        return stepBuilderFactory.get("twFolBStep")
+                .tasklet(twFolBTasklet)
                 .build();
     }
 

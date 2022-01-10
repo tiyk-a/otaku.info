@@ -30,6 +30,8 @@ class BatchConfig {
     private final BlogUpdateTasklet blogUpdateTasklet;
     private final BlogCatchupTasklet blogCatchupTasklet;
     private final TvTasklet tvTasklet;
+    private final TwFavTasklet twFavTasklet;
+    private final TwFolBTasklet twFolBTasklet;
 
     @Bean
     Step itemSearchStep() {
@@ -192,5 +194,31 @@ class BatchConfig {
     Job blogCatchupJob() {
         return this.jobBuilderFactory.get("blogCatchupJob").incrementer(new RunIdIncrementer())
                 .start(blogCatchupStep()).build();
+    }
+
+    @Bean
+    Step twFavStep() {
+        return stepBuilderFactory.get("twFavStep") //Step名を指定
+                .tasklet(twFavTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job twFavJob() {
+        return this.jobBuilderFactory.get("twFavJob").incrementer(new RunIdIncrementer())
+                .start(twFavStep()).build();
+    }
+
+    @Bean
+    Step twFolBStep() {
+        return stepBuilderFactory.get("twFolBStep") //Step名を指定
+                .tasklet(twFolBTasklet) //実行するTaskletを指定
+                .build();
+    }
+
+    @Bean
+    Job twFolBJob() {
+        return this.jobBuilderFactory.get("twFolBJob").incrementer(new RunIdIncrementer())
+                .start(twFolBStep()).build();
     }
 }

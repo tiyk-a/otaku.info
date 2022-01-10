@@ -73,7 +73,7 @@ public enum TeamEnum {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.mnemonic.equals(argName)).findFirst().orElse(null);
     }
 
-    // TODO: メソッドめいと処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる
+    // TODO: メソッド名と処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる
     public static TeamEnum getBySubDomain(String argSubDomain) {
         if (argSubDomain == null) {
             // なんとなくデフォはえびさん

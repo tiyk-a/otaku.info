@@ -84,7 +84,7 @@ public class PythonController {
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-                ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter(), entity, String.class);
+                ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi", entity, String.class);
 
                 lineList.add(text + " ■teamId=" + teamId);
                 logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);

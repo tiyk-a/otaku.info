@@ -66,6 +66,20 @@ public class Scheduler {
     @Qualifier("blogCatchupJob")
     private Job blogCatchupJob;
 
+    /**
+     * Twitterファボ
+     */
+    @Autowired
+    @Qualifier("twFavJob")
+    private Job twFavJob;
+
+    /**
+     * Twitterフォロバ
+     */
+    @Autowired
+    @Qualifier("twFolBJob")
+    private Job twFolBJob;
+
     @Scheduled(cron = "${cron.itemSearch}")
     public void run1(){
         logger.debug("--- run1: 楽天新商品検索 START ---");
@@ -263,5 +277,47 @@ public class Scheduler {
         Long diff = endTime - startTime;
         logger.debug("run11: " + diff);
         logger.debug("--- run11: Blog Update END ---");
+    }
+
+    /**
+     * Twitterファボ
+     */
+    @Scheduled(cron = "${cron.twFav}")
+    public void run12(){
+        logger.debug("--- run12: Twitter Fav START ---");
+        Long startTime = System.currentTimeMillis();
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run12", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(twFavJob, jobParameters);
+        }catch (Exception ex){
+            logger.debug(ex.getMessage());
+        }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        logger.debug("run12: " + diff);
+        logger.debug("--- run12: Twitter Fav END ---");
+    }
+
+    /**
+     * Twitterフォロバ
+     */
+    @Scheduled(cron = "${cron.twFolB}")
+    public void run13(){
+        logger.debug("--- run13: Twitter Follow Back START ---");
+        Long startTime = System.currentTimeMillis();
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run13", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(twFolBJob, jobParameters);
+        }catch (Exception ex){
+            logger.debug(ex.getMessage());
+        }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        logger.debug("run13: " + diff);
+        logger.debug("--- run13: Twitter Follow Back END ---");
     }
 }

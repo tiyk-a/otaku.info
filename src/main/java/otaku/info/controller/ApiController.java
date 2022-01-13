@@ -18,6 +18,8 @@ import otaku.info.dto.FIMDto;
 import otaku.info.dto.ItemTeamDto;
 import otaku.info.dto.PDto;
 import otaku.info.entity.*;
+import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
 import otaku.info.form.IMVerForm;
@@ -41,10 +43,16 @@ public class ApiController {
     ItemService itemService;
 
     @Autowired
+    IRelMemService iRelMemService;
+
+    @Autowired
     IMService imService;
 
     @Autowired
     ImVerService imVerService;
+
+    @Autowired
+    IMRelMemService imRelMemService;
 
     @Autowired
     ProgramService programService;
@@ -87,14 +95,20 @@ public class ApiController {
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
-            List<Long> teamIdList = new ArrayList<>();
+            List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
+
+            List<IRelMem> iRelMemList = new ArrayList<>();
             for (IRel irel : irelList) {
-                if (!teamIdList.contains(irel.getTeam_id())) {
-                    teamIdList.add(irel.getTeam_id());
-                }
+                iRelMemList.addAll(iRelMemService.findByIRelId(irel.getI_rel_id()));
             }
+
+            List<Long> memIdList = Arrays.stream(MemberEnum.values()).map(MemberEnum::getId).collect(Collectors.toList());
+
             itemTeamDto.setItem(item);
+            itemTeamDto.setRelList(irelList);
             itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDto.setRelMemList(iRelMemList);
+            itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList.add(itemTeamDto);
         }
 
@@ -132,14 +146,20 @@ public class ApiController {
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
-            List<Long> teamIdList = new ArrayList<>();
+            List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
+
+            List<IRelMem> iRelMemList = new ArrayList<>();
             for (IRel irel : irelList) {
-                if (!teamIdList.contains(irel.getTeam_id())) {
-                    teamIdList.add(irel.getTeam_id());
-                }
+                iRelMemList.addAll(iRelMemService.findByIRelId(irel.getI_rel_id()));
             }
+
+            List<Long> memIdList = Arrays.stream(MemberEnum.values()).map(MemberEnum::getId).collect(Collectors.toList());
+
             itemTeamDto.setItem(item);
+            itemTeamDto.setRelList(irelList);
             itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDto.setRelMemList(iRelMemList);
+            itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList.add(itemTeamDto);
         }
 
@@ -157,6 +177,14 @@ public class ApiController {
             // relListも入れる
             List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
             imDto.setRelList(imRelList);
+
+            List<IMRelMem> imRelMemList = new ArrayList<>();
+            for (IMRel rel : imRelList) {
+                imRelMemList.addAll(imRelMemService.findByImRelId(rel.getIm_rel_id()));
+            }
+
+            // relMemListも入れる
+            imDto.setRelMemList(imRelMemList);
             fimDtoList.add(imDto);
         }
 
@@ -171,8 +199,20 @@ public class ApiController {
                     teamIdList.add(irel.getTeam_id());
                 }
             }
+
+            List<IRelMem> iRelMemList = new ArrayList<>();
+            for (IRel irel : irelList) {
+                iRelMemList.addAll(iRelMemService.findByIRelId(irel.getI_rel_id()));
+            }
+
+            List<Long> memIdList = new ArrayList<>();
+            for (IRelMem relMem : iRelMemList) {
+                memIdList.add(relMem.getMember_id());
+            }
+
             itemTeamDto.setItem(item1);
             itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList1.add(itemTeamDto);
         }
 
@@ -221,6 +261,13 @@ public class ApiController {
         dto.setIm(im);
         dto.setRelList(relList);
         dto.setVerList(imVerList);
+        // relMemListも入れる
+        List<IMRelMem> imRelMemList = new ArrayList<>();
+        for (IMRel imRel : relList) {
+            imRelMemList.addAll(imRelMemService.findByImRelId(imRel.getIm_rel_id()));
+        }
+
+        dto.setRelMemList(imRelMemList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
@@ -246,6 +293,12 @@ public class ApiController {
 
             List<ImVer> imVerList = imVerService.findByImId(im.getIm_id());
             dto.setVerList(imVerList);
+            List<IMRelMem> imRelMemList = new ArrayList<>();
+            for (IMRel imRel : imRelList) {
+                imRelMemList.addAll(imRelMemService.findByImRelId(imRel.getIm_rel_id()));
+            }
+
+            dto.setRelMemList(imRelMemList);
             dtoList.add(dto);
         }
         logger.debug("fin");
@@ -279,6 +332,12 @@ public class ApiController {
         List<ImVer> imVerList = imVerService.findByImId(imUpdated.getIm_id());
         dto.setVerList(imVerList);
 
+        List<IMRelMem> imRelMemList = new ArrayList<>();
+        for (IMRel imRel : imRelList) {
+            imRelMemList.addAll(imRelMemService.findByImRelId(imRel.getIm_rel_id()));
+        }
+
+        dto.setRelMemList(imRelMemList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }
@@ -555,6 +614,46 @@ public class ApiController {
                 im = savedIm;
             } else {
                 im = imService.findById(imVerForm.getIm_id());
+            }
+
+            // imrelの登録を行います(irelは更新しない)
+            if (imVerForm.getTeamArr() != null && imVerForm.getTeamArr().length > 0) {
+                List<Long> relList = imRelService.findTeamIdByItemMId(im.getIm_id());
+
+                List<Long> teamIdList = Arrays.stream(imVerForm.getTeamArr()).map(Long::parseLong).distinct().collect(Collectors.toList());
+                for (Long teamId : teamIdList) {
+                    if (!relList.contains(teamId)) {
+                        IMRel imRel = new IMRel();
+                        imRel.setIm_id(im.getIm_id());
+                        imRel.setTeam_id(teamId);
+                        imRelService.save(imRel);
+                    }
+                }
+            }
+
+            // imrelMemの登録を行います(irelMemは更新しない)
+            if (imVerForm.getMemArr() != null && imVerForm.getMemArr().length > 0) {
+                List<Long> memIdList = Arrays.stream(imVerForm.getMemArr()).map(Long::parseLong).distinct().collect(Collectors.toList());
+
+                List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
+
+                for (Long memId : memIdList) {
+                    Long tmpTeamId = MemberEnum.getTeamIdById(memId);
+                    IMRel targetImRel = imRelList.stream().filter(e -> e.getTeam_id().equals(tmpTeamId)).findFirst().orElseGet(null);
+                    if (targetImRel != null) {
+                        // imrelに該当のteamIdがしっかり登録されていたら、imrelMemがすでに登録されてるか確認する
+                        List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(targetImRel.getIm_rel_id());
+                        IMRelMem targetImRelMem = imRelMemList.stream().filter(e -> e.getMember_id().equals(memId)).findFirst().orElse(null);
+
+                        // imrelmemが登録されていなかったら登録する
+                        if (targetImRelMem == null) {
+                            IMRelMem relMem = new IMRelMem();
+                            relMem.setIm_rel_id(targetImRel.getIm_rel_id());
+                            relMem.setMember_id(memId);
+                            imRelMemService.save(relMem);
+                        }
+                    }
+                }
             }
 
             // im_relの登録を行います（指示を出したteam以外のteamについても、itemに紐づいてたらim_rel登録します）

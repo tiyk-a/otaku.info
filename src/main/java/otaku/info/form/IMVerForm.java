@@ -14,6 +14,10 @@ public class IMVerForm {
 
     private Long teamId;
 
+    private String[] teamArr;
+
+    private String[] memArr;
+
     private String title;
 
     private Long wp_id;

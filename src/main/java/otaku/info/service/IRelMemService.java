@@ -20,4 +20,14 @@ public class IRelMemService {
     public List<IRelMem> saveAll(List<IRelMem> relMemList) {
         return iRelMemRepository.saveAll(relMemList);
     }
+
+    /**
+     *
+     *
+     * @param itemId
+     * @return
+     */
+    public List<IRelMem> findByIRelId(Long itemId) {
+        return iRelMemRepository.findByIRelId(itemId);
+    }
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import otaku.info.entity.IM;
 import otaku.info.entity.IMRel;
+import otaku.info.entity.IMRelMem;
 import otaku.info.entity.ImVer;
 
 import java.sql.Timestamp;
@@ -21,6 +22,8 @@ public class FIMDto {
     private IM im;
 
     private List<IMRel> relList;
+
+    private List<IMRelMem> relMemList;
 
     private List<ImVer> verList;
 

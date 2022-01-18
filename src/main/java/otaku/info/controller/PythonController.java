@@ -78,13 +78,12 @@ public class PythonController {
                 headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
                 Map<String, Object> map = new HashMap<>();
                 map.put("title", text);
-                map.put("teamId", teamId);
                 HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
 
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-                ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi", entity, String.class);
+                ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi?teamId=" + teamId, entity, String.class);
 
                 lineList.add(text + " ■teamId=" + teamId);
                 logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);

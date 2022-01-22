@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.controller.LineController;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -34,10 +35,15 @@ public class TwFolBTasklet implements Tasklet {
     @Autowired
     Setting setting;
 
+    @Autowired
+    LineController lineController;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
         logger.debug("ジャニTwitter Follow Back START");
+        lineController.post("Follow Back Job始まったよ！");
+
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
         for (Long teamId : teamIdList) {
 

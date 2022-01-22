@@ -111,6 +111,7 @@ public class SampleController {
     private DateUtils dateUtils;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
+
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -118,43 +119,16 @@ public class SampleController {
      *
      * @return
      */
-    @GetMapping("/tmpMethod")
-    public String tempMethod() throws FileNotFoundException {
+    @GetMapping("/tmpMethod/{id}/{msg}")
+    public String tempMethod(@PathVariable Long id, @PathVariable String msg) {
 
-        // Method1
-//        // publishedのwpId&featured_mediaを取得、featured_mediaが0のものは抜く
-//        Map<Integer, Integer> wpIdFeaturedMediaMap = tmpController.getPublishedWpIdFeaturedMediaList();
-//        logger.debug("wpIdFeaturedMediaMap.size(): " + wpIdFeaturedMediaMap.size());
-//        List<Integer> wpIdList = wpIdFeaturedMediaMap.entrySet().stream().filter(e -> e.getValue() != 0).map(Map.Entry::getKey).collect(Collectors.toList());
-//        logger.debug("wpIdList.size(): " + wpIdList.size());
-//
-//        // featured_media IDからメディアURLを取得する
-//        Map<Integer, String> mediaIdMediaUrlMap = tmpController.getMediaUrlByMediaId(new ArrayList<>(wpIdFeaturedMediaMap.values()));
-//        logger.debug("mediaIdMediaUrlMap.size(): " + mediaIdMediaUrlMap.size());
-//
-//        // 画像パス(itemMaster.url)がnullのitemMasterを集める
-//        List<ItemMaster> itemMasterList = itemMasterService.findByWpIdUrlNullList(wpIdList);
-//        logger.debug("itemMasterList.size(): " + itemMasterList.size());
-//
-//        itemMasterList.forEach(e -> e.setUrl(mediaIdMediaUrlMap.get(e.getWp_id())));
-//        itemMasterService.saveAll(itemMasterList);
-//        logger.debug("itemMasterList.size(): " + itemMasterList.size());
+        try {
+            pythonController.post(id, msg);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-        // Method3全てのitemタイトルを分析して、出版社・雑誌名などを取得したい。そしてitemMasterのtitle作成につなげたいYahoo APIを使用したい
-//        String result = "";
-//        // ~/Desktop/title.txtにpro環境から落としてきたitem.titleの値を入れておく。それを読んで取り込んでyahoo apiでkeyを引き出してあげる
-//        try (BufferedReader br = new BufferedReader(new FileReader("/Users/chiara/Desktop/title.txt"))) {
-//            String line;
-//            while ((line = br.readLine()) != null) {
-//                List<String> tmpList = yahooController.extractKeywords(line);
-//                if (tmpList != null && tmpList.size() > 0) {
-//                    result = result + String.join(" ", tmpList) + "\n";
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        logger.debug(setting.getTest());
+        logger.debug("fin");
         return "done";
     }
 
@@ -238,9 +212,11 @@ public class SampleController {
             case 11:
                 scheduler.run11();
                 break;
-            case 13: // tmpメソッド
-                // ショートコードが反映できるか
-                tmpController.tmpMethod();
+            case 12:
+                scheduler.run12();
+                break;
+            case 13:
+                scheduler.run13();
                 break;
             case 14:
                 // 商品の情報を投稿する
@@ -259,9 +235,6 @@ public class SampleController {
                 orderM();
 //                orderM2();
 //                orderM3();
-                break;
-            case 17:
-                pythonController.post(6L,"testdesu");
                 break;
             case 18:
 //                managePRel();

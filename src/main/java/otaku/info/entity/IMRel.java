@@ -40,4 +40,7 @@ public class IMRel implements Serializable {
     @UpdateTimestamp
     @Column(nullable = true)
     private Timestamp updated_at;
+
+    @Column(columnDefinition = "Boolean default false")
+    private Boolean del_flg;
 }

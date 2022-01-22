@@ -626,7 +626,11 @@ public class ApiController {
                     // imの新規登録の場合(=imrelはないはず)と更新の場合(=imrelがすでにあるかもしれない)で処理分岐
                     if (!updFlg) {
                         // IM新規登録の場合
-                        imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null));
+
+                        // teamId=4(未選択)以外だったら登録
+                        if (!rel.get(2).equals(4)) {
+                            imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null, false));
+                        }
                     } else {
                         // IM更新の場合
                         // rel.get(3)から、irelデータか(-> imrel新規登録)imrelデータか(->imrel更新or変更なし)かを判別して処理分岐
@@ -635,19 +639,28 @@ public class ApiController {
                             // すでにimrelあるので、teamId確認して更新必要だったら更新する
                             IMRel imRel = imRelService.findByImRelId(Long.valueOf(rel.get(0)));
                             if (!imRel.getTeam_id().equals(Long.valueOf(rel.get(2)))) {
-                                imRel.setTeam_id(Long.valueOf(rel.get(2)));
+                                // teamId=4(未選択)だったらdel_flg=onにする。それ以外だったら更新
+                                if (rel.get(2).equals(4)) {
+                                    imRel.setDel_flg(true);
+                                } else {
+                                    imRel.setTeam_id(Long.valueOf(rel.get(2)));
+                                }
                                 imRelService.save(imRel);
                             }
                         } else {
                             // TODO: 処理早くしたいならここをloopの外に出してあげると良い
                             // irelデータなので、新規でImrelを登録してあげる
-                            // すでにimrelが登録されてるかもしれないので取得する
-                            List<Long> savedImRelTeamIdList = imRelService.findTeamIdByItemMId(im.getIm_id());
-                            // 該当teamの登録がすでにないか一応確認
-                            Long teamId = savedImRelTeamIdList.stream().filter(e -> e.equals(Long.valueOf(rel.get(2)))).findFirst().orElse(null);
-                            if (teamId == null) {
-                                // ないのが確認できたら新規登録
-                                imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null));
+
+                            // teamId=4(未選択)以外だったら処理進める
+                            if (!rel.get(2).equals(4)) {
+                                // すでにimrelが登録されてるかもしれないので取得する
+                                List<Long> savedImRelTeamIdList = imRelService.findTeamIdByItemMId(im.getIm_id());
+                                // 該当teamの登録がすでにないか一応確認
+                                Long teamId = savedImRelTeamIdList.stream().filter(e -> e.equals(Long.valueOf(rel.get(2)))).findFirst().orElse(null);
+                                if (teamId == null) {
+                                    // ないのが確認できたら新規登録
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null, false));
+                                }
                             }
                         }
                     }
@@ -664,15 +677,19 @@ public class ApiController {
 
                     if (!updFlg) {
                         // IM新規登録の場合、imrelmemもないはずなので新規登録
-                        Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
-                        IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
 
-                        // teamIdが登録されていなかったらimrelを登録する
-                        if (targetImRel == null) {
-                            targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null));
+                        // memberId=30(未選択)以外だったら新規登録
+                        if (!imrelm.get(2).equals(30)) {
+                            Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
+                            IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+
+                            // teamIdが登録されていなかったらimrelを登録する
+                            if (targetImRel == null) {
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null, false));
+                            }
+
+                            imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
                         }
-
-                        imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null));
                     } else {
                         // IM更新の場合
                         // imrelm.get(3)から、irelMデータか(-> imrelM新規登録)imrelMデータか(->imrelM更新or変更なし)かを判別して処理分岐
@@ -681,25 +698,35 @@ public class ApiController {
                         if (isImrelData) {
                             // すでにimrelMデータあるのでmemberの更新が必要であれば更新してあげる
                             IMRelMem imRelMem = imRelMemService.findByImRelMemId(Long.valueOf(imrelm.get(0)));
-                            if (!imRelMem.getMember_id().equals(Long.valueOf(imrelm.get(2)))) {
-                                imRelMem.setMember_id(Long.valueOf(imrelm.get(2)));
+
+                            // memberId=30(未選択)だったらdel_flg=trueにしてあげる。それ以外だったら必要であれば更新
+                            if (imrelm.get(2).equals(30)) {
+                                imRelMem.setDel_flg(true);
                                 imRelMemService.save(imRelMem);
+                            } else {
+                                if (!imRelMem.getMember_id().equals(Long.valueOf(imrelm.get(2)))) {
+                                    imRelMem.setMember_id(Long.valueOf(imrelm.get(2)));
+                                    imRelMemService.save(imRelMem);
+                                }
                             }
                         } else {
-                            // TeamIdがまず登録されてるか確認する
-                            Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
-                            IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+                            // memberId=30(未選択)以外であれば登録してあげる
+                            if (!imrelm.get(2).equals(30)) {
+                                // TeamIdがまず登録されてるか確認する
+                                Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
+                                IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
 
-                            // teamIdが登録されていなかったらimrelを登録する
-                            if (targetImRel == null) {
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null));
-                            }
+                                // teamIdが登録されていなかったらimrelを登録する
+                                if (targetImRel == null) {
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null, false));
+                                }
 
-                            // 既存でimrelmemの登録がないか確認
-                            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(targetImRel.getIm_rel_id(), tmpTeamId).orElse(null);
-                            if (imRelMem == null) {
-                                // imrelの用意ができたのでimrelmemを登録する
-                                imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null));
+                                // 既存でimrelmemの登録がないか確認
+                                IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(targetImRel.getIm_rel_id(), tmpTeamId).orElse(null);
+                                if (imRelMem == null) {
+                                    // imrelの用意ができたのでimrelmemを登録する
+                                    imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
+                                }
                             }
                         }
                     }

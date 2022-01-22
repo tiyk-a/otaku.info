@@ -8,6 +8,7 @@ import otaku.info.repository.IMRelMemRepository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -17,6 +18,9 @@ public class IMRelMemService {
     @Autowired
     IMRelMemRepository imRelMemRepository;
 
+    public IMRelMem findByImRelMemId(Long imRelMemId) {
+        return imRelMemRepository.findByImRelMemId(imRelMemId);
+    }
     public List<IMRelMem> findByImRelId(Long imRelId) {
         return imRelMemRepository.findByImRelId(imRelId);
     }
@@ -39,7 +43,7 @@ public class IMRelMemService {
         return imRelMemRepository.countByIDS(relId, memId);
     }
 
-    public IMRelMem findByImRelIdMemId(Long relId, Long memId) {
+    public Optional<IMRelMem> findByImRelIdMemId(Long relId, Long memId) {
         return imRelMemRepository.findByImRelIdMemId(relId, memId);
     }
 }

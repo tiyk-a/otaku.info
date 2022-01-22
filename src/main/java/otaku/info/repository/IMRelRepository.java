@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
 
+    @Query("select t from im_rel t where im_rel_id = ?1")
+    IMRel findByImRelId(Long imRelId);
     @Query("select t from im_rel t where im_id = ?1")
     List<IMRel> findByItemMId(Long itemMId);
 

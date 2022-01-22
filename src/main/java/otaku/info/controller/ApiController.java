@@ -583,13 +583,14 @@ public class ApiController {
     }
 
     /**
-     * IM+verを登録します
+     * IM+verを登録します。すでにIMがある場合は更新
      *
      * @return Boolean true: success / false: failed
      */
     @PostMapping("/im")
     public ResponseEntity<Boolean> newIMyVer(@Valid @RequestBody IMVerForm imVerForm) {
         logger.debug("accepted");
+        Boolean updFlg = false;
 
         try {
             IM im = null;
@@ -607,8 +608,9 @@ public class ApiController {
 
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(imVerForm, im);
-                if (im.getIm_id() != null) {
+                if (im.getIm_id() != null && !im.getIm_id().equals(0L)) {
                     im.setBlogNotUpdated(true);
+                    updFlg = true;
                 }
                 IM savedIm = imService.save(im);
                 im = savedIm;
@@ -616,57 +618,91 @@ public class ApiController {
                 im = imService.findById(imVerForm.getIm_id());
             }
 
-            // imrelの登録を行います(irelは更新しない)
-            if (imVerForm.getTeamArr() != null && imVerForm.getTeamArr().length > 0) {
-                List<Long> relList = imRelService.findTeamIdByItemMId(im.getIm_id());
+             // imrelの登録を行います(irelは更新しない)
+            if (imVerForm.getImrel() != null && imVerForm.getImrel().size() > 0) {
+                List<List<Integer>> imrelList = imVerForm.getImrel();
 
-                List<Long> teamIdList = Arrays.stream(imVerForm.getTeamArr()).map(Long::parseLong).distinct().collect(Collectors.toList());
-                for (Long teamId : teamIdList) {
-                    if (!relList.contains(teamId)) {
-                        IMRel imRel = new IMRel();
-                        imRel.setIm_id(im.getIm_id());
-                        imRel.setTeam_id(teamId);
-                        imRelService.save(imRel);
-                    }
-                }
-            }
-
-            // imrelMemの登録を行います(irelMemは更新しない)
-            if (imVerForm.getMemArr() != null && imVerForm.getMemArr().length > 0) {
-                List<Long> memIdList = Arrays.stream(imVerForm.getMemArr()).map(Long::parseLong).distinct().collect(Collectors.toList());
-
-                List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
-
-                for (Long memId : memIdList) {
-                    Long tmpTeamId = MemberEnum.getTeamIdById(memId);
-                    IMRel targetImRel = imRelList.stream().filter(e -> e.getTeam_id().equals(tmpTeamId)).findFirst().orElseGet(null);
-                    if (targetImRel != null) {
-                        // imrelに該当のteamIdがしっかり登録されていたら、imrelMemがすでに登録されてるか確認する
-                        List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(targetImRel.getIm_rel_id());
-                        IMRelMem targetImRelMem = imRelMemList.stream().filter(e -> e.getMember_id().equals(memId)).findFirst().orElse(null);
-
-                        // imrelmemが登録されていなかったら登録する
-                        if (targetImRelMem == null) {
-                            IMRelMem relMem = new IMRelMem();
-                            relMem.setIm_rel_id(targetImRel.getIm_rel_id());
-                            relMem.setMember_id(memId);
-                            imRelMemService.save(relMem);
+                for (List<Integer> rel : imrelList) {
+                    // imの新規登録の場合(=imrelはないはず)と更新の場合(=imrelがすでにあるかもしれない)で処理分岐
+                    if (!updFlg) {
+                        // IM新規登録の場合
+                        imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null));
+                    } else {
+                        // IM更新の場合
+                        // rel.get(3)から、irelデータか(-> imrel新規登録)imrelデータか(->imrel更新or変更なし)かを判別して処理分岐
+                        Boolean isImrelData = rel.get(3).equals(1);
+                        if (isImrelData) {
+                            // すでにimrelあるので、teamId確認して更新必要だったら更新する
+                            IMRel imRel = imRelService.findByImRelId(Long.valueOf(rel.get(0)));
+                            if (!imRel.getTeam_id().equals(Long.valueOf(rel.get(2)))) {
+                                imRel.setTeam_id(Long.valueOf(rel.get(2)));
+                                imRelService.save(imRel);
+                            }
+                        } else {
+                            // TODO: 処理早くしたいならここをloopの外に出してあげると良い
+                            // irelデータなので、新規でImrelを登録してあげる
+                            // すでにimrelが登録されてるかもしれないので取得する
+                            List<Long> savedImRelTeamIdList = imRelService.findTeamIdByItemMId(im.getIm_id());
+                            // 該当teamの登録がすでにないか一応確認
+                            Long teamId = savedImRelTeamIdList.stream().filter(e -> e.equals(Long.valueOf(rel.get(2)))).findFirst().orElse(null);
+                            if (teamId == null) {
+                                // ないのが確認できたら新規登録
+                                imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null));
+                            }
                         }
                     }
                 }
             }
 
-            // im_relの登録を行います（指示を出したteam以外のteamについても、itemに紐づいてたらim_rel登録します）
-            // TODO: 万一、すでに該当のrelがある場合存在チェックしてないから被って問題になるけど、多分大丈夫。
-            List<Long> teamIdList = iRelService.findTeamIdByItemId(item.getItem_id());
-            List<Long> existTeamIdList = imRelService.findTeamIdByItemMId(im.getIm_id());
+            // imrelMemの登録を行います(irelMemは更新しない)
+            if (imVerForm.getImrelm() != null && imVerForm.getImrelm().size() > 0) {
+                List<List<Integer>> imrelmList = imVerForm.getImrelm();
 
-            for (Long teamId : teamIdList) {
-                if (!existTeamIdList.contains(teamId)) {
-                    IMRel newRel = new IMRel();
-                    newRel.setTeam_id(teamId);
-                    newRel.setIm_id(im.getIm_id());
-                    imRelService.save(newRel);
+                // IDがすでにあれば更新、なければ新規登録をする
+                for (List<Integer> imrelm : imrelmList) {
+                    // imの新規登録の場合(=imrelMはないはず)と更新の場合(=imrelMがすでにあるかもしれない)で処理分岐
+
+                    if (!updFlg) {
+                        // IM新規登録の場合、imrelmemもないはずなので新規登録
+                        Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
+                        IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+
+                        // teamIdが登録されていなかったらimrelを登録する
+                        if (targetImRel == null) {
+                            targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null));
+                        }
+
+                        imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null));
+                    } else {
+                        // IM更新の場合
+                        // imrelm.get(3)から、irelMデータか(-> imrelM新規登録)imrelMデータか(->imrelM更新or変更なし)かを判別して処理分岐
+                        Boolean isImrelData = imrelm.get(3).equals(1);
+
+                        if (isImrelData) {
+                            // すでにimrelMデータあるのでmemberの更新が必要であれば更新してあげる
+                            IMRelMem imRelMem = imRelMemService.findByImRelMemId(Long.valueOf(imrelm.get(0)));
+                            if (!imRelMem.getMember_id().equals(Long.valueOf(imrelm.get(2)))) {
+                                imRelMem.setMember_id(Long.valueOf(imrelm.get(2)));
+                                imRelMemService.save(imRelMem);
+                            }
+                        } else {
+                            // TeamIdがまず登録されてるか確認する
+                            Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
+                            IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+
+                            // teamIdが登録されていなかったらimrelを登録する
+                            if (targetImRel == null) {
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null));
+                            }
+
+                            // 既存でimrelmemの登録がないか確認
+                            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(targetImRel.getIm_rel_id(), tmpTeamId).orElse(null);
+                            if (imRelMem == null) {
+                                // imrelの用意ができたのでimrelmemを登録する
+                                imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null));
+                            }
+                        }
+                    }
                 }
             }
 

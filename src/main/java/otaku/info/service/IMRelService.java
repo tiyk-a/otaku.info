@@ -20,6 +20,9 @@ public class IMRelService {
     @Autowired
     IMRelRepository iMRelRepository;
 
+    public IMRel findByImRelId(Long imRelId) {
+        return iMRelRepository.findByImRelId(imRelId);
+    }
     public List<IMRel> findByItemMId(Long itemMId) {
         return iMRelRepository.findByItemMId(itemMId);
     }

@@ -14,9 +14,11 @@ public class IMVerForm {
 
     private Long teamId;
 
-    private String[] teamArr;
+    // [irelId, itemId, teamId, imrelですかフラグ(1=true)]
+    private List<List<Integer>> imrel;
 
-    private String[] memArr;
+    // [irelMId, irelId, memberId, imrelMですかフラグ(1=true)]
+    private List<List<Integer>> imrelm;
 
     private String title;
 

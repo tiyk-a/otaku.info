@@ -55,8 +55,8 @@ public class TwFolBTasklet implements Tasklet {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             logger.info("teamId=" + teamId + "のフォロバ中");
-            ResponseEntity<Integer> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + teamId, Integer.class);
-            logger.info("teamId=" + teamId + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()).toString());
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + teamId, String.class);
+            logger.info("teamId=" + teamId + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         logger.debug("ジャニTwitter Follow Back END");
 
@@ -69,8 +69,8 @@ public class TwFolBTasklet implements Tasklet {
 
         for (Integer id : idList) {
             logger.info("teamId=" + id + "のフォロバ中");
-            ResponseEntity<Integer> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + id, Integer.class);
-            logger.info("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()).toString());
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + id, String.class);
+            logger.info("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         logger.debug("ジャニ以外Twitter Follow Back END");
         return RepeatStatus.FINISHED;

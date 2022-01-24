@@ -97,22 +97,25 @@ public class LineController {
      */
     public String post(String message) {
 
-            String outline = message.substring(0,30);
-            logger.debug("💬 " + message);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            Map<String, Object> map = new HashMap<>();
-            map.put("text", message);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-            if (setting.getTest() != null && setting.getTest().equals("dev")) {
-                logger.debug("🕊: " + message);
-            } else {
-                ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
-                logger.debug("Request Successful: " + outline);
-            }
+        String outline = message;
+        if (message.length() > 30) {
+            outline = message.substring(0,30);
+        }
+        logger.debug("💬 " + message);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        Map<String, Object> map = new HashMap<>();
+        map.put("text", message);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        if (setting.getTest() != null && setting.getTest().equals("dev")) {
+            logger.debug("🕊: " + message);
+        } else {
+            ResponseEntity<String> response = restTemplate.postForEntity(setting.getLineUrl(), entity, String.class);
+            logger.debug("Request Successful: " + outline);
+        }
         return "done";
     }
 

@@ -150,7 +150,7 @@ public class TwTextController {
             // ついでに登録（更新）する
             imService.save(itemMaster);
         }
-        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
     }
 
     /**
@@ -177,7 +177,7 @@ public class TwTextController {
             directUrl = stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(item.getUrl());
         }
 
-        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + directUrl + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
+        String str1 = "本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + directUrl + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id());
         String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
@@ -185,9 +185,9 @@ public class TwTextController {
     }
 
     public String twitterPerson(TwiDto twiDto, String memberName) {
-        String result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
+        String result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl();
         if (result.length() + memberName.length() < 135) {
-            result = "【PR】" + memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
+            result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A#" + memberName + "%0A#" + twiDto.getUrl();
         }
         String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
         return result + "%0A%0A" + tags;

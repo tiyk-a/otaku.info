@@ -239,7 +239,7 @@ public class TwTextController {
             teamIdList.forEach(e -> resultMap.put(e, null));
             for (Long teamId : teamIdList) {
                 List<String> tagList = new ArrayList<>();
-                String teamName = TeamEnum.get(teamId).getName();
+                String teamName = TeamEnum.get(teamId).getMnemonic();
                 tagList.add(teamName);
                 List<PRelMem> pRelMemList = pRelMemService.findByPRelId(teamId);
 

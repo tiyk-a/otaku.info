@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.batch.item.validator.SpringValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -429,19 +428,33 @@ public class BlogController {
             List<Long> teamIdList = new ArrayList<>();
             teamIdList.add(teamId);
             List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
-            IMRel rel = iMRelService.findByImIdTeamId(itemMaster.getIm_id(), teamId).orElse(null);
+            List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
+            IMRel rel = relList.stream().filter(e -> e.getTeam_id().equals(teamId)).findFirst().orElse(null);
+            Boolean generalBlogFlg = TeamEnum.get(teamId).getSubDomain().equals("https://otakuinfo.fun/");
+
+            wpId = rel.getWp_id();
+
+            if (generalBlogFlg && wpId == null) {
+                for (IMRel imRel : relList) {
+                    if (TeamEnum.get(imRel.getTeam_id()).getSubDomain().equals("https://otakuinfo.fun/")) {
+                        if (imRel.getWp_id() != null) {
+                            wpId = imRel.getWp_id();
+                            break;
+                        }
+                    }
+                }
+            }
 
             // TODO: memberListどこで使う
-            List<Long> memberIdList = new ArrayList<>();
-            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
-            if (relMemList.size() > 0) {
-                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
-            }
+//            List<Long> memberIdList = new ArrayList<>();
+//            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+//            if (relMemList.size() > 0) {
+//                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
+//            }
 
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
 
             if (headers != null && content != null) {
-                wpId = rel.getWp_id();
 
                 JSONObject jsonObject = new JSONObject();
                 if (setting.getTest()!= null && setting.getTest().equals("dev")) {
@@ -501,7 +514,18 @@ public class BlogController {
                     JSONObject jo = jsonUtils.createJsonObject(res, teamId);
                     if (jo.get("id") != null) {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
-                        rel.setWp_id(blogId);
+
+                        if (generalBlogFlg) {
+                            for (IMRel iMrel : relList) {
+                                if (!blogId.equals(iMrel.getWp_id())) {
+                                    iMrel.setWp_id(blogId);
+                                    iMRelService.save(iMrel);
+                                }
+                            }
+                        } else {
+                            rel.setWp_id(blogId);
+                        }
+
                         iMRelService.save(rel);
                         logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
                         resMap.put(itemMaster.getIm_id(), blogId);

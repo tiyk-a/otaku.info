@@ -242,6 +242,23 @@ public class ApiController {
     }
 
     /**
+     * まとめて一括IMの設定を行う
+     *
+     * @param forms
+     * @return
+     */
+    @PostMapping("/im/bundle/chk")
+    public ResponseEntity<Boolean> newBundleChk(@Valid @RequestBody IMVerForm[] forms) {
+        for (IMVerForm imVerForm : forms) {
+            ResponseEntity<Boolean> responseEntity = chkItem(imVerForm.getItem_id(), imVerForm.getIm_id(), imVerForm.getTeamId());
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                return ResponseEntity.status(500).body(false);
+            }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
      * IDから商品を取得し返す
      *
      * @param id 取得する商品のID

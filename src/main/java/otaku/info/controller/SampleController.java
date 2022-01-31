@@ -139,8 +139,9 @@ public class SampleController {
 //     * @return
 //     * @throws JSONException
 //     */
-//    @GetMapping("/twi/{artistId}")
-//    public String sample1(@PathVariable String artistId) throws InterruptedException {
+    @GetMapping("/test/path")
+    public String sample1() throws InterruptedException {
+        logger.info("test line");
 //        Item tmp = new Item();
 //        tmp.setSite_id(1);
 //        tmp.setItem_code("adcfvgbhnaa");
@@ -171,8 +172,8 @@ public class SampleController {
 //            logger.debug("itemList: " + ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
 //            e.printStackTrace();
 //        }
-//        return itemList.toString();
-//    }
+        return "ok";
+    }
 
     @GetMapping("/batch/{id}")
     public String batch(@PathVariable String id) throws InterruptedException, JSONException {

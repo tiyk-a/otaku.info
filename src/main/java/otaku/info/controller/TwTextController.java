@@ -77,19 +77,20 @@ public class TwTextController {
      */
     public String twitter(TwiDto twiDto) {
         String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
-        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A" + tags;
+        return "新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A" + tags;
     }
 
-    public String futureItemReminder(IM im, Long teamId, Item item) {
+    public String futureItemReminder(IM im, Long teamId, String itemUrl) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
         String title = "";
         String url = "";
         IMRel rel = iMRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
-        if (item.getUrl() == null || item.getUrl().isEmpty() && rel.getWp_id() != null) {
+
+        if (itemUrl != null && !itemUrl.isEmpty()) {
+            url = itemUrl;
+        } else {
             url = TeamEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
-        } else if (item.getUrl() != null || !item.getUrl().isEmpty()) {
-            url = item.getUrl();
         }
         if (!url.equals("")) {
             url = "%0Aリンクはこちら↓%0A" + url;
@@ -170,14 +171,13 @@ public class TwTextController {
 //    }
 
     public String releasedItemAnnounce(IM itemMaster, Long teamId, Item item) {
-        String url = TeamEnum.get(teamId).getSubDomain();
         String directUrl = item.getUrl();
 
         if (itemMaster.getAmazon_image() != null) {
             directUrl = stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(item.getUrl());
         }
 
-        String str1 = "本日発売！%0A%0A" + itemMaster.getTitle() + "%0Aご購入はこちら%0A" + directUrl + "%0A詳細はこちら↓%0A" + url + "blog/" + iMRelService.getWpIdByItemMId(itemMaster.getIm_id());
+        String str1 = "本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + directUrl;
         // TODO: twitterタグ、DB使わないで取れてる
         List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id());
         String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));

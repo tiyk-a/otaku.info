@@ -30,7 +30,7 @@ public class Item {
     private Long item_id;
 
     @Column(nullable = false)
-    private int site_id;
+    private Integer site_id;
 
     @Column(nullable = false)
     private String item_code;

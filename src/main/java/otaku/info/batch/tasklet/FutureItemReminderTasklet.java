@@ -9,6 +9,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.PythonController;
+import otaku.info.controller.RakutenController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.IM;
@@ -18,12 +19,16 @@ import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @StepScope
 public class FutureItemReminderTasklet implements Tasklet {
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("FutureItemReminderTasklet");
+
+    @Autowired
+    RakutenController rakutenController;
 
     @Autowired
     PythonController pythonController;
@@ -72,13 +77,23 @@ public class FutureItemReminderTasklet implements Tasklet {
         for (IM im : imList) {
             // TODO: メンバー名を取得していない
             Item item = null;
+            String rakutenUrl = "";
             List<Item> itemList = itemService.findByMasterId(im.getIm_id());
+            Boolean findRakutenFlg = false;
             if (itemList != null && itemList.size() > 0) {
-                item = itemList.get(0);
+                // tweetするときは楽天のアフィリURLに飛ばしたいため①IMにひもづくitemがyahooしかないなら、楽天で検索しURLを取得する②楽天のURLは有効であるか確認してから投稿する
+                List<Item> rakutenList = itemList.stream().filter(e -> e.getSite_id().equals(1)).collect(Collectors.toList());
+                findRakutenFlg = rakutenList.size() == 0;
+                if (!findRakutenFlg) {
+                    rakutenUrl = rakutenController.findAvailableRakutenUrl(rakutenList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamEnum.getId());
+                } else {
+                    rakutenUrl = rakutenController.findRakutenUrl(im.getTitle(), teamEnum.getId());
+                    item.setUrl(rakutenUrl);
+                }
             }
             String text = "";
             if (item != null) {
-                text = twTextController.futureItemReminder(im, teamEnum.getId(), item);
+                text = twTextController.futureItemReminder(im, teamEnum.getId(), rakutenUrl);
             }
             pythonController.post(teamEnum.getId(), text);
             ++postCount;

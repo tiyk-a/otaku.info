@@ -27,6 +27,7 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -177,6 +178,32 @@ public class RakutenController {
     }
 
     /**
+     * 楽天商品を商品コードから検索、Map<ItemCode, アフィリURL>を返します
+     *
+     * @param itemCodeList
+     * @return
+     */
+    public String getUrlByItemCodeList(List<String> itemCodeList, Long teamId) throws InterruptedException {
+        String availableUrl = "";
+
+        for (String key : itemCodeList) {
+            String parameter = "&itemCode=" + key + "&elements=availability%2CaffiliateUrl" + setting.getRakutenAffiliId();
+            JSONObject jsonObject = request(parameter, teamId);
+            //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
+            if (jsonObject != null && jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
+                logger.debug("詳細が取得できたのでデータを詰めます");
+                JSONArray jsonArray = jsonObject.getJSONArray("Items");
+                for (int i=0; i<jsonArray.length();i++) {
+                    if (Integer.parseInt(jsonArray.getJSONObject(i).getString("availability")) == 1) {
+                        availableUrl = jsonArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", "");
+                        break;
+                    }
+                }
+            }
+        }
+        return availableUrl;
+    }
+    /**
      * 楽天アフィリンクの更新を行います
      *
      * @return
@@ -254,5 +281,40 @@ public class RakutenController {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * 引数のItemリストから今もavailableな楽天URLを1つ返します
+     *
+     * @param itemCodeList
+     * @return
+     */
+    public String findAvailableRakutenUrl(List<String> itemCodeList, Long teamId) throws InterruptedException {
+
+        String url = getUrlByItemCodeList(itemCodeList, teamId);
+        if (url.equals("")) {
+
+        }
+        return url;
+    }
+
+    /**
+     * 引数の文字列で楽天検索を行いInterCodeを取得。そこからAvailableな楽天URLを取得し返却します
+     *
+     * @param title
+     * @param teamId
+     * @return
+     * @throws InterruptedException
+     */
+    public String findRakutenUrl(String title, Long teamId) throws InterruptedException {
+        List<String> searchList = new ArrayList<>();
+        searchList.add(title);
+        List<String> itemCodeList = search(searchList, teamId);
+        String url = "";
+
+        if (itemCodeList.size() > 0) {
+            url = findAvailableRakutenUrl(itemCodeList, teamId);
+        }
+        return url;
     }
 }

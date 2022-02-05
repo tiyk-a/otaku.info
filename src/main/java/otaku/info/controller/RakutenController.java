@@ -211,7 +211,7 @@ public class RakutenController {
     public boolean updateUrl() throws InterruptedException {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
         List<IM> itemMasterList = imService.findBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
-        Map<IM, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getIm_id()).stream().filter(f -> iRelService.findByItemId(f.getItem_id()) != null && !iRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg()).collect(Collectors.toList())));
+        Map<IM, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getIm_id()).stream().filter(f -> iRelService.findByItemId(f.getItem_id()) != null && !iRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg() && f.getSite_id().equals(1)).collect(Collectors.toList())));
 
         // 更新チェックを行う
         List<Item> targetList = new ArrayList<>();
@@ -278,6 +278,7 @@ public class RakutenController {
             return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません") || d.text().contains("ページが表示できません");
         } catch (Exception e) {
             // TODO: エラー出たらそのこと自体伝えた方がいい
+            logger.debug("*** updateTarget() ***");
             e.printStackTrace();
         }
         return false;

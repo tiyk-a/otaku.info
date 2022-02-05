@@ -393,7 +393,7 @@ public class TmpController {
         // TODO: 走らせたいならここをチームによってurl変更するように修正
         String finalUrl = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
-        return blogController.request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
+        return blogController.request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET, "requestPostData()");
     }
 
     /**
@@ -490,7 +490,7 @@ public class TmpController {
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
         String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/";
-        String res = blogController.request(url, request, HttpMethod.POST);
+        String res = blogController.request(url, request, HttpMethod.POST, "tmpMethod()");
         logger.debug(res);
     }
 
@@ -644,7 +644,7 @@ public class TmpController {
             HttpHeaders headers = generalHeaderSet(new HttpHeaders());
             JSONObject jsonObject = new JSONObject();
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            String res = blogController.request(url, request, HttpMethod.GET);
+            String res = blogController.request(url, request, HttpMethod.GET, "listPostsContainsNull()");
 
             try {
                 if (!JsonUtils.isJsonArray(res)) {
@@ -781,7 +781,7 @@ public class TmpController {
 
         while (nextFlg) {
             String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts?status=publish&_fields[]=featured_media&_fields[]=id&per_page=100&page=" + n;
-            String res = blogController.request(url, request, HttpMethod.GET);
+            String res = blogController.request(url, request, HttpMethod.GET, "getPublishedWpIdFeaturedMediaList()");
 
             // レスポンスを成形
             try {
@@ -876,6 +876,6 @@ public class TmpController {
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        return blogController.request(url, request, HttpMethod.GET);
+        return blogController.request(url, request, HttpMethod.GET, "getMediaUrl()");
     }
 }

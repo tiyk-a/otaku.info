@@ -118,7 +118,7 @@ public class BlogController {
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getId());
             JSONObject jsonObject = new JSONObject();
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-            String res = request(url, request, HttpMethod.GET);
+            String res = request(url, request, HttpMethod.GET, "insertTags()");
 
 
             try {
@@ -299,7 +299,7 @@ public class BlogController {
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
                     String finalUrl = teamEnum.getSubDomain() + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamEnum.getId());
-                    String res = request(finalUrl, request, HttpMethod.POST);
+                    String res = request(finalUrl, request, HttpMethod.POST, "updateReleaseItems()");
                 }
             }
         }
@@ -377,7 +377,8 @@ public class BlogController {
      * @param request
      * @return
      */
-    public String request(String url, HttpEntity<String> request, HttpMethod method) {
+    public String request(String url, HttpEntity<String> request, HttpMethod method, String position) {
+        logger.debug("■■■ Request() ■■■ " + position);
 
         String result = "";
 
@@ -431,13 +432,20 @@ public class BlogController {
             List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
             IMRel rel = relList.stream().filter(e -> e.getTeam_id().equals(teamId)).findFirst().orElse(null);
             Boolean generalBlogFlg = TeamEnum.get(teamId).getSubDomain().equals("https://otakuinfo.fun/");
+            logger.debug("teamId:" + teamId + " TeamEnum.get(teamId).getSubDomain():" + TeamEnum.get(teamId).getSubDomain());
+            logger.debug("generalBlogFlg: " + generalBlogFlg);
+            logger.debug("rel.getWp_id(): " + rel.getWp_id());
 
             wpId = rel.getWp_id();
 
             if (generalBlogFlg && wpId == null) {
+                logger.debug("***generalBlogFlg && wpId == null***");
                 for (IMRel imRel : relList) {
+                    logger.debug("imRel: " + imRel.getIm_rel_id());
                     if (TeamEnum.get(imRel.getTeam_id()).getSubDomain().equals("https://otakuinfo.fun/")) {
+                        logger.debug("TeamEnum.get(imRel.getTeam_id()).getSubDomain(): " + TeamEnum.get(imRel.getTeam_id()).getSubDomain());
                         if (imRel.getWp_id() != null) {
+                            logger.debug("imRel.getWp_id(): " + imRel.getWp_id());
                             wpId = imRel.getWp_id();
                             break;
                         }
@@ -510,7 +518,7 @@ public class BlogController {
                 // ここで投稿
                 try {
                     logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getIm_id());
-                    String res = request(url, request, HttpMethod.POST);
+                    String res = request(url, request, HttpMethod.POST, "postOrUpdate()");
                     JSONObject jo = jsonUtils.createJsonObject(res, teamId);
                     if (jo.get("id") != null) {
                         Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
@@ -616,7 +624,7 @@ public class BlogController {
                 jsonObject.put("name", dateUtils.getNextYYYYMM());
 
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                request(url, request, HttpMethod.POST);
+                request(url, request, HttpMethod.POST, "addNextMonthTag()");
                 logger.debug(subDomain + ":次の月タグ追加");
             }
         }
@@ -634,7 +642,7 @@ public class BlogController {
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.GET);
+        String res = request(url, request, HttpMethod.GET, "getBlogTagNotSavedOnInfoDb()");
         List<BlogTag> blogTagList = new ArrayList<>();
 
         try {
@@ -680,7 +688,7 @@ public class BlogController {
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.GET);
+        String res = request(url, request, HttpMethod.GET, "addTagIfNotExists()_1");
 
         BlogTag blogTag = new BlogTag();
 
@@ -705,7 +713,7 @@ public class BlogController {
                         HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), teamId);
                         JSONObject jsonObject1 = new JSONObject();
                         HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
-                        String res1 = request(url1, request1, HttpMethod.GET);
+                        String res1 = request(url1, request1, HttpMethod.GET, "addTagIfNotExists()_2");
 
                         try {
                             if (JsonUtils.isJsonArray(res1)) {
@@ -748,7 +756,7 @@ public class BlogController {
         jo.put("name", dateUtils.getYYYYMM(date));
 
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
-        String res = request(url, request, HttpMethod.POST);
+        String res = request(url, request, HttpMethod.POST, "registerTag()");
 
         JSONObject jsonObject1 = jsonUtils.createJsonObject(res, teamId);
 
@@ -833,7 +841,7 @@ public class BlogController {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                    request(url, request, HttpMethod.POST);
+                    request(url, request, HttpMethod.POST, "updateTvPage()_1");
                     postChkMap.put(subDomain, true);
                 }
             }
@@ -849,7 +857,7 @@ public class BlogController {
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                        request(url, request, HttpMethod.POST);
+                        request(url, request, HttpMethod.POST, "updateTvPage()_2");
                         postChkMap.put(subDomain, true);
                     }
                 }
@@ -865,7 +873,7 @@ public class BlogController {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                request(url, request, HttpMethod.POST);
+                request(url, request, HttpMethod.POST, "updateTvPage()_3");
                 postChkMap.put(subDomain, true);
             }
         }
@@ -887,7 +895,7 @@ public class BlogController {
                 HttpHeaders headers = generalHeaderSet(new HttpHeaders(), rel.getTeam_id());
                 JSONObject jsonObject = new JSONObject();
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-                String res = request(url, request, HttpMethod.GET);
+                String res = request(url, request, HttpMethod.GET, "updateTvPage()_4");
 
                 try {
                     if (StringUtils.hasText(res)) {
@@ -936,7 +944,7 @@ public class BlogController {
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
                 try {
-                    String res = request(url, request, HttpMethod.GET);
+                    String res = request(url, request, HttpMethod.GET, "updateTvPage()_5");
                     if (StringUtils.hasText(res)) {
                         if (JsonUtils.isJsonArray(res)) {
                             JSONArray ja = new JSONArray(res);
@@ -1066,7 +1074,7 @@ public class BlogController {
         jsonObject.put("content", content);
 
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.POST);
+        String res = request(url, request, HttpMethod.POST, "createDailySchedulePost()");
 
         JSONObject jo = jsonUtils.createJsonObject(res, teamIdList.get(0));
         if (jo.get("id") != null) {

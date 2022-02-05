@@ -41,7 +41,6 @@ public class TwFavTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
         logger.debug("ジャニTwitter Fav START");
-        lineController.post("Fab Job始まったよ！");
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
         for (Long teamId : teamIdList) {
 

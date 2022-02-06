@@ -11,12 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.controller.LineController;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,17 +30,26 @@ import java.util.stream.Collectors;
 @StepScope
 public class TwFavTasklet implements Tasklet {
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TwFavTasklet");
+    final Logger threadLogger = Log4jUtils.newFileLogger("ThreadMonitor", "Thread.log");
 
     @Autowired
     Setting setting;
-
-    @Autowired
-    LineController lineController;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
         logger.debug("ジャニTwitter Fav START");
+        logger.debug("*** Tmp thread monitor start ***");
+        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+        int count = 0;
+
+        threadLogger.debug("*** Thread at " + LocalDateTime.now() + " count: " + Thread.activeCount() + " ***");
+        for ( Thread t : threadSet){
+            ++ count;
+            threadLogger.debug(count + "①" + t.getName() + " ②" + t.getId() + " ③" + t.getContextClassLoader() + " ④" + t.getState() + " ⑤" + t.getThreadGroup());
+        }
+        logger.debug("*** Tmp thread monitor end ***");
+        threadLogger.debug("*** Monitor completed ***");
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
         for (Long teamId : teamIdList) {
 

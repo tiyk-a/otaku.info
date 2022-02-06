@@ -140,38 +140,13 @@ public class SampleController {
 //     * @throws JSONException
 //     */
     @GetMapping("/test/path")
-    public String sample1() throws InterruptedException {
-        logger.info("test line");
-//        Item tmp = new Item();
-//        tmp.setSite_id(1);
-//        tmp.setItem_code("adcfvgbhnaa");
-//        IRel ir = new IRel();
-//        Item savedItem = itemService.save(tmp);
-//        ir.setItem_id(savedItem.getItem_id());
-//        ir.setTeam_id(1L);
-//        iRelService.save(ir);
-//
-//        List<String> list = controller.affiliSearchWord(artistId);
-//        List<String> itemCodeList = rakutenController.search(list, artistId);
-//
-//        itemCodeList = itemService.findNewItemList(itemCodeList);
-//
-//        List<Item> newItemList = new ArrayList<>();
-//        if (itemCodeList.size() > 0) {
-//            newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList);
-//        }
-//
-//        List<Item> savedItemList = new ArrayList<>();
-//        List<Item> itemList = new ArrayList<>();
-//        logger.debug("１２：楽天APIから受信したItemのリストをDB保存します");
-//        try {
-//            savedItemList = itemService.saveAll(newItemList);
-//            itemList = itemService.findAll();
-//        } catch (Exception e) {
-//            logger.debug("savedItemList: " + ToStringBuilder.reflectionToString(savedItemList, ToStringStyle.MULTI_LINE_STYLE));
-//            logger.debug("itemList: " + ToStringBuilder.reflectionToString(itemList, ToStringStyle.MULTI_LINE_STYLE));
-//            e.printStackTrace();
-//        }
+    public String sample1() {
+        System.out.println(Thread.activeCount());
+        System.out.println("***********************");
+        Set<Thread> threadSet= Thread.getAllStackTraces().keySet();
+        for ( Thread t : threadSet){
+            System.out.println("1 " + t.getName() + "2 " + t.getId() + "3 " + t.getContextClassLoader() + "4 " + t.getState() + "5 " + t.getThreadGroup());
+        }
         return "ok";
     }
 

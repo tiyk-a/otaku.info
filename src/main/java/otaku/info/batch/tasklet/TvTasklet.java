@@ -94,8 +94,7 @@ public class TvTasklet implements Tasklet {
     }
 
     /**
-     * Jsoupでhtml要素を取ってきて、必要データを取り出して次ページへのパラメタを返却。
-     * 必要データは登録まで行う。
+     * Jsoupでhtml要素を取ってきて、必要データを取り出し保存して次ページへのパラメタを返却。
      *
      * @param url
      * @return

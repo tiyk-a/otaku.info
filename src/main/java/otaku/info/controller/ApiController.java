@@ -61,6 +61,9 @@ public class ApiController {
     PRelService pRelService;
 
     @Autowired
+    PRelMemService pRelMemService;
+
+    @Autowired
     IRelService iRelService;
 
     @Autowired
@@ -424,8 +427,14 @@ public class ApiController {
             PDto pDto = new PDto();
             List<PRel> pRelList = pRelService.getListByProgramId(p.getProgram_id());
 
+            List<PRelMem> pRelMemList = new ArrayList<>();
+            for (PRel prel : pRelList) {
+                pRelMemList.addAll(pRelMemService.findByPRelId(prel.getP_rel_id()));
+            }
+
             pDto.setProgram(p);
             pDto.setPRelList(pRelList);
+            pDto.setPRelMList(pRelMemList);
             pDto.setTeamIdList(teamIdList);
             pDtos.add(pDto);
         }

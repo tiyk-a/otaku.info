@@ -16,8 +16,6 @@ public class ItemTeamDto {
 
     private List<IRel> relList;
 
-    private List<Long> teamIdList;
-
     protected List<IRelMem> relMemList;
 
     private List<Long> memIdList;

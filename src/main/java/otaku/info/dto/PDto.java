@@ -19,6 +19,4 @@ public class PDto {
     private List<PRel> pRelList;
 
     private List<PRelMem> pRelMList;
-
-    private List<Long> teamIdList;
 }

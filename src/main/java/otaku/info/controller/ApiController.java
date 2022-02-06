@@ -19,7 +19,6 @@ import otaku.info.dto.ItemTeamDto;
 import otaku.info.dto.PDto;
 import otaku.info.entity.*;
 import otaku.info.enums.MemberEnum;
-import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
 import otaku.info.form.IMVerForm;
@@ -98,7 +97,6 @@ public class ApiController {
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
-            List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
 
             List<IRelMem> iRelMemList = new ArrayList<>();
             for (IRel irel : irelList) {
@@ -109,7 +107,6 @@ public class ApiController {
 
             itemTeamDto.setItem(item);
             itemTeamDto.setRelList(irelList);
-            itemTeamDto.setTeamIdList(teamIdList);
             itemTeamDto.setRelMemList(iRelMemList);
             itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList.add(itemTeamDto);
@@ -149,7 +146,6 @@ public class ApiController {
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item.getItem_id());
-            List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
 
             List<IRelMem> iRelMemList = new ArrayList<>();
             for (IRel irel : irelList) {
@@ -160,7 +156,6 @@ public class ApiController {
 
             itemTeamDto.setItem(item);
             itemTeamDto.setRelList(irelList);
-            itemTeamDto.setTeamIdList(teamIdList);
             itemTeamDto.setRelMemList(iRelMemList);
             itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList.add(itemTeamDto);
@@ -196,12 +191,6 @@ public class ApiController {
         for (Item item1 : itemList1) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item1.getItem_id());
-            List<Long> teamIdList = new ArrayList<>();
-            for (IRel irel : irelList) {
-                if (!teamIdList.contains(irel.getTeam_id())) {
-                    teamIdList.add(irel.getTeam_id());
-                }
-            }
 
             List<IRelMem> iRelMemList = new ArrayList<>();
             for (IRel irel : irelList) {
@@ -214,7 +203,7 @@ public class ApiController {
             }
 
             itemTeamDto.setItem(item1);
-            itemTeamDto.setTeamIdList(teamIdList);
+            itemTeamDto.setRelList(irelList);
             itemTeamDto.setMemIdList(memIdList);
             itemTeamDtoList1.add(itemTeamDto);
         }
@@ -421,8 +410,6 @@ public class ApiController {
             pList = programService.findbyTeamId(teamId);
         }
 
-        List<Long> teamIdList = teamService.findAllTeam().stream().map(e -> e.getTeam_id()).collect(Collectors.toList());
-
         for (Program p : pList) {
             PDto pDto = new PDto();
             List<PRel> pRelList = pRelService.getListByProgramId(p.getProgram_id());
@@ -435,7 +422,6 @@ public class ApiController {
             pDto.setProgram(p);
             pDto.setPRelList(pRelList);
             pDto.setPRelMList(pRelMemList);
-            pDto.setTeamIdList(teamIdList);
             pDtos.add(pDto);
         }
         logger.debug("fin");

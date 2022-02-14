@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -11,8 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.controller.LoggerController;
 import otaku.info.enums.TeamEnum;
-import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
 import java.nio.charset.StandardCharsets;
@@ -29,7 +28,8 @@ import java.util.stream.Collectors;
 @StepScope
 public class TwFolBTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TwFolBTasklet");
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     Setting setting;
@@ -37,7 +37,7 @@ public class TwFolBTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-        logger.debug("ジャニTwitter Follow Back START");
+        loggerController.printTwFolBTasklet("ジャニTwitter Follow Back START");
 
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
         for (Long teamId : teamIdList) {
@@ -45,13 +45,13 @@ public class TwFolBTasklet implements Tasklet {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-            logger.info("teamId=" + teamId + "のフォロバ中");
+            loggerController.printTwFolBTasklet("teamId=" + teamId + "のフォロバ中");
             ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + teamId, String.class);
-            logger.info("teamId=" + teamId + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
+            loggerController.printTwFolBTasklet("teamId=" + teamId + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
-        logger.debug("ジャニTwitter Follow Back END");
+        loggerController.printTwFolBTasklet("ジャニTwitter Follow Back END");
 
-        logger.debug("ジャニ以外Twitter Follow Back START");
+        loggerController.printTwFolBTasklet("ジャニ以外Twitter Follow Back START");
         // 100: @LjtYdg, 101: @ChiccaSalak, 102: @BlogChicca, 103: @Berry_chicca
         int[] idArr = {100, 101, 102, 103};
         List<Integer> idList = Arrays.stream(idArr).boxed().collect(Collectors.toList());
@@ -59,11 +59,11 @@ public class TwFolBTasklet implements Tasklet {
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
         for (Integer id : idList) {
-            logger.info("teamId=" + id + "のフォロバ中");
+            loggerController.printTwFolBTasklet("teamId=" + id + "のフォロバ中");
             ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + id, String.class);
-            logger.info("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
+            loggerController.printTwFolBTasklet("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
-        logger.debug("ジャニ以外Twitter Follow Back END");
+        loggerController.printTwFolBTasklet("ジャニ以外Twitter Follow Back END");
         return RepeatStatus.FINISHED;
     }
 }

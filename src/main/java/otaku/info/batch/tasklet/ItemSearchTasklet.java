@@ -2,7 +2,6 @@ package otaku.info.batch.tasklet;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -10,10 +9,10 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.controller.LoggerController;
 import otaku.info.controller.SampleController;
 import otaku.info.entity.Team;
 import otaku.info.service.TeamService;
-import otaku.info.setting.Log4jUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +21,11 @@ import java.util.List;
 @StepScope
 public class ItemSearchTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("ItemSearchTasklet");
-
     @Autowired
     SampleController sampleController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     TeamService teamService;
@@ -44,9 +44,9 @@ public class ItemSearchTasklet implements Tasklet {
         Map<Long, String> artistMap = new HashMap<Long, String>();
         teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
-            logger.debug("***** START: " + artist.getValue() + "*****");
+            loggerController.printItemSearchTasklet("***** START: " + artist.getValue() + "*****");
             sampleController.searchItem(artist.getKey(), artist.getValue(), 0L, 1L);
-            logger.debug("***** END: " + artist + "*****");
+            loggerController.printItemSearchTasklet("***** END: " + artist + "*****");
             try{
                 Thread.sleep(1000);
             }catch(InterruptedException e){

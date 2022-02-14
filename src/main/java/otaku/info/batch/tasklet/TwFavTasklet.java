@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -11,12 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.controller.LoggerController;
 import otaku.info.enums.TeamEnum;
-import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,8 +27,9 @@ import java.util.stream.Collectors;
 @Component
 @StepScope
 public class TwFavTasklet implements Tasklet {
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TwFavTasklet");
-    final Logger threadLogger = Log4jUtils.newFileLogger("ThreadMonitor", "Thread.log");
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     Setting setting;
@@ -38,31 +37,20 @@ public class TwFavTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-        logger.debug("ジャニTwitter Fav START");
-        logger.debug("*** Tmp thread monitor start ***");
-        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-        int count = 0;
-
-        threadLogger.debug("*** Thread at " + LocalDateTime.now() + " count: " + Thread.activeCount() + " ***");
-        for ( Thread t : threadSet){
-            ++ count;
-            threadLogger.debug(count + "①" + t.getName() + " ②" + t.getId() + " ③" + t.getContextClassLoader() + " ④" + t.getState() + " ⑤" + t.getThreadGroup());
-        }
-        logger.debug("*** Tmp thread monitor end ***");
-        threadLogger.debug("*** Monitor completed ***");
+        loggerController.printTwFavTasklet("ジャニTwitter Fav START");
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).collect(Collectors.toList());
         for (Long teamId : teamIdList) {
 
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-            logger.info("teamId=" + teamId + "の検索＆ファボ中");
+            loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ中");
             ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twSearch?q=" + TeamEnum.get(teamId).getMnemonic() + "&teamId=" + teamId, String.class);
-            logger.info("teamId=" + teamId + "の検索＆ファボ結果：" + Objects.requireNonNull(response.getBody()));
+            loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ結果：" + Objects.requireNonNull(response.getBody()));
         }
-        logger.debug("ジャニTwitter Fav END");
+        loggerController.printTwFavTasklet("ジャニTwitter Fav END");
 
-        logger.debug("ジャニ以外Twitter Fav START");
+        loggerController.printTwFavTasklet("ジャニ以外Twitter Fav START");
         // 100: @LjtYdg, 101: @ChiccaSalak, 102: @BlogChicca, 103: @Berry_chicca
         Map<Integer, String> idMap = new HashMap<>() {
             {
@@ -77,11 +65,11 @@ public class TwFavTasklet implements Tasklet {
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
         for (Map.Entry<Integer, String> entry : idMap.entrySet()) {
-            logger.info("teamId=" + entry.getKey() + "のフォロバ中");
+            loggerController.printTwFavTasklet("teamId=" + entry.getKey() + "のフォロバ中");
             ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twSearch?q=" + entry.getValue() + "&teamId=" + entry.getKey(), String.class);
-            logger.info("teamId=" + entry.getKey() + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
+            loggerController.printTwFavTasklet("teamId=" + entry.getKey() + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
-        logger.debug("ジャニ以外Twitter Fav END");
+        loggerController.printTwFavTasklet("ジャニ以外Twitter Fav END");
         return RepeatStatus.FINISHED;
     }
 }

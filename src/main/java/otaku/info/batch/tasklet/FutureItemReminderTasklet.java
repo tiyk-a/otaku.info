@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -8,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.RakutenController;
 import otaku.info.controller.TwTextController;
@@ -16,7 +16,6 @@ import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
-import otaku.info.setting.Log4jUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,8 +23,6 @@ import java.util.stream.Collectors;
 @Component
 @StepScope
 public class FutureItemReminderTasklet implements Tasklet {
-
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("FutureItemReminderTasklet");
 
     @Autowired
     RakutenController rakutenController;
@@ -35,6 +32,9 @@ public class FutureItemReminderTasklet implements Tasklet {
 
     @Autowired
     TwTextController twTextController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     ItemService itemService;
@@ -55,7 +55,7 @@ public class FutureItemReminderTasklet implements Tasklet {
         for (TeamEnum e : TeamEnum.values()) {
             // 7日以内に発売の商品は絶対投稿したい。それ以降のやつは毎日ポストしないでいい。5で割れる日だけでいい
             List<IM> imList = imService.findNearFutureIMByTeamId(e.getId());
-            logger.debug(e.getName() + "imList size: " + imList.size());
+            loggerController.printFutureItemReminderTasklet(e.getName() + "imList size: " + imList.size());
 
             post(imList, e);
 //        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
@@ -70,7 +70,7 @@ public class FutureItemReminderTasklet implements Tasklet {
 
         // TODO: 未来商品が全くないチームについての処理
         if (imList.isEmpty()) {
-            logger.debug(teamEnum.getName() + "imList empty");
+            loggerController.printFutureItemReminderTasklet(teamEnum.getName() + "imList empty");
         }
 
         Integer postCount = 0;
@@ -103,6 +103,6 @@ public class FutureItemReminderTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger.debug("postCount: " + postCount);
+        loggerController.printFutureItemReminderTasklet("postCount: " + postCount);
     }
 }

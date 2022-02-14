@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -9,11 +8,11 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
+import otaku.info.controller.LoggerController;
 import otaku.info.entity.IMRel;
 import otaku.info.entity.IM;
 import otaku.info.service.IMRelService;
 import otaku.info.service.IMService;
-import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
 
 import java.util.ArrayList;
@@ -29,10 +28,11 @@ import java.util.TreeMap;
 @StepScope
 public class BlogCatchupTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("BlogCatchupTasklet");
-
     @Autowired
     BlogController blogController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     IMService imService;
@@ -47,7 +47,7 @@ public class BlogCatchupTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         // wpIdがnullで未来発売の商品のimrelを集める
         List<IMRel> imRelList = imRelService.findByWpIdNullPublicationDateFuture(dateUtils.getToday());
-        logger.debug("対象imrel:" + imRelList.size());
+        loggerController.printBlogCatchupTaskletLogger("対象imrel:" + imRelList.size());
         // teamId, list<Itemmaster>
         Map<Long, List<IM>> imTeamIdMap = new TreeMap<>();
         for (IMRel imRel : imRelList) {
@@ -62,15 +62,15 @@ public class BlogCatchupTasklet implements Tasklet {
             imTeamIdMap.put(imRel.getTeam_id(), tmpList);
         }
 
-        logger.debug("ポストありteam数:" + imTeamIdMap.size());
+        loggerController.printBlogCatchupTaskletLogger("ポストありteam数:" + imTeamIdMap.size());
         // List<Itemmaster>, teamId
         for (Map.Entry<Long, List<IM>> e : imTeamIdMap.entrySet()) {
             // TODO: teamid=0Lはあってはいけないはずだがまだいるので処理分割してる
             if (e.getKey() != 0L) {
                 Map<Long, Long> imWpMap = blogController.postOrUpdate(e.getValue(), e.getKey());
-                logger.debug("teamId:" + e.getKey() + " itemMaster数:" + e.getValue().size());
+                loggerController.printBlogCatchupTaskletLogger("teamId:" + e.getKey() + " itemMaster数:" + e.getValue().size());
             } else {
-                logger.debug("teamId=0L:" + e.getValue().size());
+                loggerController.printBlogCatchupTaskletLogger("teamId=0L:" + e.getValue().size());
             }
         }
 

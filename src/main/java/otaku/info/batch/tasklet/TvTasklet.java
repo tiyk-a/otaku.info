@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.batch.core.StepContribution;
@@ -19,20 +18,21 @@ import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import otaku.info.controller.LoggerController;
 import otaku.info.controller.TvController;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
-import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
 @Component
 @StepScope
 public class TvTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvTasklet");
-
     @Autowired
     TvController tvController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     Setting setting;
@@ -40,15 +40,15 @@ public class TvTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-        logger.debug("グループごとの検索 START");
+        loggerController.printTvTasklet("グループごとの検索 START");
         List<String> teamNameList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getName).collect(Collectors.toList());
         mainTransaction(teamNameList, false);
-        logger.debug("グループごとの検索 END");
+        loggerController.printTvTasklet("グループごとの検索 END");
 
-        logger.debug("個人検索 START");
+        loggerController.printTvTasklet("個人検索 START");
         List<String> memNameList = Arrays.stream(MemberEnum.values()).map(MemberEnum::getName).collect(Collectors.toList());
         mainTransaction(memNameList, true);
-        logger.debug("個人検索 END");
+        loggerController.printTvTasklet("個人検索 END");
         return RepeatStatus.FINISHED;
     }
 
@@ -71,7 +71,7 @@ public class TvTasklet implements Tasklet {
 
             urlWithParam += param;
 
-            logger.debug(artist + "の番組を検索します");
+            loggerController.printTvTasklet(artist + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
                 if (memFlg) {

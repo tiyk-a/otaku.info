@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -8,6 +7,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.IMRel;
@@ -17,7 +17,6 @@ import otaku.info.enums.TeamEnum;
 import otaku.info.service.IMRelService;
 import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
-import otaku.info.setting.Log4jUtils;
 
 import java.util.*;
 
@@ -25,13 +24,14 @@ import java.util.*;
 @StepScope
 public class PublishAnnounceTasklet implements Tasklet {
 
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("PublishAnnounceTasklet");
-
     @Autowired
     PythonController pythonController;
 
     @Autowired
     TwTextController twTextController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Autowired
     ItemService itemService;
@@ -53,7 +53,7 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         List<IM> itemMasterList = imService.findReleasedItemList();
-        logger.debug("itemMasterList size: " + itemMasterList.size());
+        loggerController.printPublishAnnounceTasklet("itemMasterList size: " + itemMasterList.size());
         Integer postCount = 0;
 
         for (IM itemMaster : itemMasterList) {
@@ -104,7 +104,7 @@ public class PublishAnnounceTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        logger.debug("postCount: " + postCount);
+        loggerController.printPublishAnnounceTasklet("postCount: " + postCount);
         return RepeatStatus.FINISHED;
     }
 }

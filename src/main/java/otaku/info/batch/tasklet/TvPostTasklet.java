@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import org.apache.log4j.Logger;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -9,19 +8,17 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TvController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.Program;
-import otaku.info.setting.Log4jUtils;
 
 import java.util.*;
 
 @Component
 @StepScope
 public class TvPostTasklet implements Tasklet {
-
-    final Logger logger = Log4jUtils.newConsoleCsvAllLogger("TvPostTasklet");
 
     @Autowired
     TvController tvController;
@@ -31,6 +28,9 @@ public class TvPostTasklet implements Tasklet {
 
     @Autowired
     PythonController pythonController;
+
+    @Autowired
+    LoggerController loggerController;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -77,7 +77,7 @@ public class TvPostTasklet implements Tasklet {
             }
         }
 
-        logger.debug("--- TV番組投稿グループ数: " + postCount + " ---");
+        loggerController.printTvPostTasklet("--- TV番組投稿グループ数: " + postCount + " ---");
         return RepeatStatus.FINISHED;
     }
 

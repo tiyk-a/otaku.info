@@ -23,7 +23,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import otaku.info.enums.GColorEnum;
 
+/**
+ * デフォルトのservice accountは
+ * otakuinfo@otakuinfo-front.iam.gserviceaccount.com
+ */
 @RestController
 @RequestMapping("/cal")
 @AllArgsConstructor
@@ -38,12 +43,14 @@ public class CalendarApiController {
     private static final String SERVICE_CREDENTIALS_FILE_PATH = "/Users/chiara/Desktop/info/src/main/resources/" + "otakuinfo-front-aef10ca74233.json";
 
     /**
-     * Service account authorize
+     * Service account authorize Get Event
      *
+     * @param calendarId "1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com"こんな形のcalendarId
      * @throws IOException
+     * @throws GeneralSecurityException
      */
     @GetMapping("/get")
-    static void getEvents() throws IOException, GeneralSecurityException {
+    static void getEvents(String calendarId) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
         GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
@@ -53,22 +60,23 @@ public class CalendarApiController {
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build();
 
         // GET
-        Events events = service.events().list("1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com").execute();
+        Events events = service.events().list(calendarId).execute();
         List<Event> items = events.getItems();
         for (Event event : items) {
             DateTime start = event.getStart().getDateTime();
             DateTime end = event.getEnd().getDateTime();
-            System.out.printf(event.getSummary() + " (" + start + " - " + end + ")");
+            System.out.print(event.getSummary() + " (" + start + " - " + end + ")");
         }
     }
 
     /**
-     * Service account authorize
+     * Service account authorize Post Event
      *
      * @throws IOException
+     * @throws GeneralSecurityException
      */
     @GetMapping("/post")
-    static void postEvent() throws IOException, GeneralSecurityException {
+    static void postEvent(String calendarId, DateTime startDate, DateTime endDate, String summary, String desc) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
         GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
@@ -78,20 +86,17 @@ public class CalendarApiController {
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build();
 
         // POST
-        EventDateTime startEventDateTime = new EventDateTime().setDateTime(new DateTime("2022-02-16T09:00:00-07:00")); // イベント開始日時
-        EventDateTime endEventDateTime = new EventDateTime().setDateTime(new DateTime("2022-02-16T09:00:00-07:00")); // イベント終了日時
-
-        Double d = Math.random();
-        String summary = "テスト" + d;
-        String description = "テスト";
+        EventDateTime startEventDateTime = new EventDateTime().setDateTime(startDate); // イベント開始日時
+        EventDateTime endEventDateTime = new EventDateTime().setDateTime(endDate); // イベント終了日時
 
         Event event = new Event()
                 .setSummary(summary)
-                .setDescription(description)
-                .setColorId("2") // green
+                .setDescription(desc)
+                .setColorId(GColorEnum.GREEN.toString())
                 .setStart(startEventDateTime)
                 .setEnd(endEventDateTime);
 
-        event = service.events().insert("1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com", event).execute();
+        event = service.events().insert(calendarId, event).execute();
+        System.out.println("Event status:" + event.getStatus());
     }
 }

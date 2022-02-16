@@ -653,12 +653,8 @@ public class ApiController {
                             // googleカレンダーの登録を行う
                             Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
 
-                            String eventId = "";
-                            if (event.getId() != null) {
-                                eventId = event.getId();
-                            }
-
-                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, eventId, null, null, false));
+                            // imrelの登録
+                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, event.getId(), null, null, false));
                         }
                     } else {
                         // IM更新の場合
@@ -690,12 +686,9 @@ public class ApiController {
                                     // ないのが確認できたら新規登録
                                     // googleカレンダーの登録を行う
                                     Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
-                                    String eventId = "";
-                                    if (event.getId() != null) {
-                                        eventId = event.getId();
-                                    }
 
-                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, eventId, null, null, false));
+                                    // imrelの登録
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, event.getId(), null, null, false));
                                 }
                             }
                         }
@@ -723,11 +716,9 @@ public class ApiController {
                             if (targetImRel == null) {
                                 // googleカレンダーの登録を行う
                                 Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
-                                String eventId = "";
-                                if (event.getId() != null) {
-                                    eventId = event.getId();
-                                }
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, eventId, null, null, false));
+
+                                // imrelの登録
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, event.getId(), null, null, false));
                             }
 
                             imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
@@ -762,11 +753,9 @@ public class ApiController {
                                 if (targetImRel == null) {
                                     // googleカレンダーの登録を行う
                                     Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
-                                    String eventId = "";
-                                    if (event.getId() != null) {
-                                        eventId = event.getId();
-                                    }
-                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, eventId, null, null, false));
+
+                                    // imrelの登録
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, event.getId(), null, null, false));
                                 }
 
                                 // 既存でimrelmemの登録がないか確認

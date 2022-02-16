@@ -35,6 +35,8 @@ public class LoggerController {
 
     final Logger yahooItemSearchTaskletLogger = Log4jUtils.newConsoleCsvAllLogger("YahooItemSearchTasklet");
 
+    final Logger calendarCatchupTaskletLogger = Log4jUtils.newConsoleCsvAllLogger("CalendarCatchupTasklet");
+
     public void printBlogCatchupTaskletLogger(String arg) {
         blogCatchupTaskletLogger.info(arg);
     }
@@ -85,5 +87,9 @@ public class LoggerController {
 
     public void printYahooItemSearchTasklet(String arg) {
         yahooItemSearchTaskletLogger.info(arg);
+    }
+
+    public void printCalendarCatchupTaskletLogger(String arg) {
+        calendarCatchupTaskletLogger.info(arg);
     }
 }

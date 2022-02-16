@@ -90,4 +90,8 @@ public class IMRelService {
     public IMRel findByItemMIdTeamId(Long imId, Long teamId) {
         return iMRelRepository.findByItemMIdTeamId(imId, teamId);
     }
+
+    public List<IMRel> findByCalIdIsNull() {
+        return iMRelRepository.findByCalIdIsNull();
+    }
 }

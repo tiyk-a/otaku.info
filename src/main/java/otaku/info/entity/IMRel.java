@@ -33,6 +33,10 @@ public class IMRel implements Serializable {
     @Column(nullable = true)
     private Long wp_id;
 
+    /** Google Calendar Id */
+    @Column(nullable = true)
+    private String calendar_id;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

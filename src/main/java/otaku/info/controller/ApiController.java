@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.Event;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -649,10 +650,15 @@ public class ApiController {
                         // IM新規登録の場合
                         // teamId=4(未選択)以外だったら登録
                         if (!rel.get(2).equals(4)) {
-                            imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null, false));
-
                             // googleカレンダーの登録を行う
-                            calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                            Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+
+                            String eventId = "";
+                            if (event.getId() != null) {
+                                eventId = event.getId();
+                            }
+
+                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, eventId, null, null, false));
                         }
                     } else {
                         // IM更新の場合
@@ -682,7 +688,14 @@ public class ApiController {
                                 Long teamId = savedImRelTeamIdList.stream().filter(e -> e.equals(Long.valueOf(rel.get(2)))).findFirst().orElse(null);
                                 if (teamId == null) {
                                     // ないのが確認できたら新規登録
-                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null, false));
+                                    // googleカレンダーの登録を行う
+                                    Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    String eventId = "";
+                                    if (event.getId() != null) {
+                                        eventId = event.getId();
+                                    }
+
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, eventId, null, null, false));
                                 }
                             }
                         }
@@ -708,7 +721,13 @@ public class ApiController {
 
                             // teamIdが登録されていなかったらimrelを登録する
                             if (targetImRel == null) {
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null, false));
+                                // googleカレンダーの登録を行う
+                                Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                String eventId = "";
+                                if (event.getId() != null) {
+                                    eventId = event.getId();
+                                }
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, eventId, null, null, false));
                             }
 
                             imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
@@ -741,7 +760,13 @@ public class ApiController {
 
                                 // teamIdが登録されていなかったらimrelを登録する
                                 if (targetImRel == null) {
-                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, null, false));
+                                    // googleカレンダーの登録を行う
+                                    Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    String eventId = "";
+                                    if (event.getId() != null) {
+                                        eventId = event.getId();
+                                    }
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, eventId, null, null, false));
                                 }
 
                                 // 既存でimrelmemの登録がないか確認
@@ -796,23 +821,21 @@ public class ApiController {
 
         dto.setTitle(im.getTitle());
 
-        if (im.getCalendar_id() == null) {
-            DateTime dateTime = new DateTime(im.getPublication_date());
-            dto.setStartDate(dateTime);
-            dto.setEndDate(dateTime);
-            String url = stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
-            if (url == null) {
-                List<Item> itemList = itemService.findByMasterId(im.getIm_id());
-                for (Item i : itemList) {
-                    if (i.getUrl() != null) {
-                        url = i.getUrl();
-                        break;
-                    }
+        DateTime dateTime = new DateTime(im.getPublication_date());
+        dto.setStartDate(dateTime);
+        dto.setEndDate(dateTime);
+        String url = stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
+        if (url == null) {
+            List<Item> itemList = itemService.findByMasterId(im.getIm_id());
+            for (Item i : itemList) {
+                if (i.getUrl() != null) {
+                    url = i.getUrl();
+                    break;
                 }
             }
-
-            dto.setDesc(url);
         }
+
+        dto.setDesc(url);
 
         dto.setAllDayFlg(true);
         return dto;

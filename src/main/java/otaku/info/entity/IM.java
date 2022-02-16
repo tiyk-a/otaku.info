@@ -35,10 +35,6 @@ public class IM implements Comparable<IM> {
     @Column(nullable = true, columnDefinition="TEXT")
     private String amazon_image;
 
-    /** Google Calendar Id */
-    @Column(nullable = true)
-    private String calendar_id;
-
     @Column(nullable = false)
     private boolean del_flg;
 

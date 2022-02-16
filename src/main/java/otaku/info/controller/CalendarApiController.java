@@ -81,7 +81,7 @@ public class CalendarApiController {
      * @throws GeneralSecurityException
      */
     @GetMapping("/post")
-    public void postEvent(String calendarId, DateTime startDate, DateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+    public Event postEvent(String calendarId, DateTime startDate, DateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
         GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
@@ -110,5 +110,6 @@ public class CalendarApiController {
 
         event = service.events().insert(calendarId, event).execute();
         System.out.println("Event status:" + event.getStatus());
+        return event;
     }
 }

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import com.google.api.client.util.DateTime;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,12 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
-import otaku.info.dto.FAllDto;
-import otaku.info.dto.FIMDto;
-import otaku.info.dto.ItemTeamDto;
-import otaku.info.dto.PDto;
+import otaku.info.dto.*;
 import otaku.info.entity.*;
 import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
 import otaku.info.form.IMForm;
 import otaku.info.form.IMVerForm;
@@ -27,6 +26,7 @@ import otaku.info.form.PForm;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.StringUtilsMine;
 
 @RestController
 @RequestMapping("/api")
@@ -37,6 +37,9 @@ public class ApiController {
 
     @Autowired
     BlogController blogController;
+
+    @Autowired
+    CalendarApiController calendarApiController;
 
     @Autowired
     ItemService itemService;
@@ -79,6 +82,9 @@ public class ApiController {
 
     @Autowired
     DateUtils dateUtils;
+
+    @Autowired
+    StringUtilsMine stringUtilsMine;
 
     /**
      * トップ画面用のデータ取得メソッド
@@ -630,7 +636,10 @@ public class ApiController {
                 im = imService.findById(imVerForm.getIm_id());
             }
 
-             // imrelの登録を行います(irelは更新しない)
+            // googleカレンダー登録のためのデータを用意する
+            CalendarInsertDto calendarDto = setGCalDate(im);
+
+            // imrelの登録を行います(irelは更新しない)
             if (imVerForm.getImrel() != null && imVerForm.getImrel().size() > 0) {
                 List<List<Integer>> imrelList = imVerForm.getImrel();
 
@@ -638,10 +647,12 @@ public class ApiController {
                     // imの新規登録の場合(=imrelはないはず)と更新の場合(=imrelがすでにあるかもしれない)で処理分岐
                     if (!updFlg) {
                         // IM新規登録の場合
-
                         // teamId=4(未選択)以外だったら登録
                         if (!rel.get(2).equals(4)) {
                             imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, null, false));
+
+                            // googleカレンダーの登録を行う
+                            calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
                         }
                     } else {
                         // IM更新の場合
@@ -775,6 +786,39 @@ public class ApiController {
     }
 
     /**
+     * GoogleカレンダーinsertのためのデータをIMから格納する
+     *
+     * @param im
+     * @return
+     */
+    public CalendarInsertDto setGCalDate(IM im) {
+        CalendarInsertDto dto = new CalendarInsertDto();
+
+        dto.setTitle(im.getTitle());
+
+        if (im.getCalendar_id() == null) {
+            DateTime dateTime = new DateTime(im.getPublication_date());
+            dto.setStartDate(dateTime);
+            dto.setEndDate(dateTime);
+            String url = stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
+            if (url == null) {
+                List<Item> itemList = itemService.findByMasterId(im.getIm_id());
+                for (Item i : itemList) {
+                    if (i.getUrl() != null) {
+                        url = i.getUrl();
+                        break;
+                    }
+                }
+            }
+
+            dto.setDesc(url);
+        }
+
+        dto.setAllDayFlg(true);
+        return dto;
+    }
+
+    /**
      * TODO:IM+verを更新します。画面から、verのver_name & ver_idをセットにして渡せれば実現可能
      *
      * @return Boolean true: success / false: failed
@@ -793,14 +837,21 @@ public class ApiController {
 
             // imの更新
             if (!imVerForm.getTitle().equals(im.getTitle())) {
+                logger.info("IMのtitle変更");
                 im.setTitle(imVerForm.getTitle());
                 updatedFlg = true;
+            } else {
+                logger.info("IMのtitle変更ではありません");
             }
 
             if (!imVerForm.getAmazon_image().equals(im.getAmazon_image())) {
+                logger.info("IMのamazon_image変更");
                 im.setAmazon_image(imVerForm.getAmazon_image());
                 updatedFlg = true;
+            } else {
+                logger.info("IMのamazon_image変更ではありません");
             }
+            logger.info("amazon_image:" + imVerForm.getAmazon_image());
 
             // IMの要素が変わってるよフラグがtrueであれば更新してあげます
             if (updatedFlg) {

@@ -1,5 +1,15 @@
 # オタク.インフォ.v0.1
 
+### Compile Command
+```
+$ mvn package -Drun.jvmArguments="-Dfile.encoding=UTF-8"
+```
+
+### Java Run
+```
+$
+```
+
 ### 機能
 #### 新商品情報の配信
 * アフィリエイトサイトから`「グループ名　検索ワード」`で検索し、新商品のアフィリエイトURLを生成する。

@@ -1,5 +1,8 @@
 package otaku.info.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum GColorEnum {
 
     PALE_BLUE("1"),

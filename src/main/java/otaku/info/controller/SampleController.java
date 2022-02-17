@@ -1,14 +1,14 @@
 package otaku.info.controller;
 
 import java.io.*;
+import java.security.GeneralSecurityException;
 import java.text.ParseException;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
+import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.Event;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +23,6 @@ import otaku.info.enums.StationEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
-import otaku.info.setting.Setting;
-import otaku.info.utils.DateUtils;
-import otaku.info.utils.ItemUtils;
 import otaku.info.utils.StringUtilsMine;
 
 
@@ -61,6 +58,9 @@ public class SampleController {
 
     @Autowired
     PythonController pythonController;
+
+    @Autowired
+    CalendarApiController calendarApiController;
 
     @Autowired
     private ItemService itemService;
@@ -101,17 +101,6 @@ public class SampleController {
     @Autowired
     Scheduler scheduler;
 
-    @Autowired
-    private Setting setting;
-
-    @Autowired
-    private ItemUtils itemUtils;
-
-    @Autowired
-    private DateUtils dateUtils;
-
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("h:m");
-
     /**
      * URLでアクセスできるtmpのメソッドです。
      * 任意に中身を変えます、テスト用。
@@ -119,17 +108,13 @@ public class SampleController {
      *
      * @return
      */
-    @GetMapping("/tmpMethod/{id}/{msg}")
-    public String tempMethod(@PathVariable Long id, @PathVariable String msg) {
+    @GetMapping("/tmpMethod/{teamId}")
+    public String tempMethod(@PathVariable Long teamId) throws IOException, GeneralSecurityException {
 
-        try {
-            pythonController.post(id, msg);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        logger.debug("fin");
-        return "done";
+        logger.debug("samplecontroller.tmpMethod() START");
+        Event e = calendarApiController.postEvent(TeamEnum.get(teamId).getCalendarId(), new DateTime(new Date()), new DateTime(new Date()), "test" + Math.random(), "test description", false);
+        logger.debug("samplecontroller.tmpMethod() END");
+        return "Status: " + e.getStatus() + " id: " + e.getId();
     }
 
 //    /**

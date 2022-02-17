@@ -94,21 +94,25 @@ public class CalendarApiController {
         EventDateTime endEventDateTime;
 
         if (allDayFlg) {
-            startEventDateTime = new EventDateTime().setDate(startDate).setTimeZone("Japan/Tokyo");
-            endEventDateTime = new EventDateTime().setDate(endDate).setTimeZone("Japan/Tokyo");
+            startEventDateTime = new EventDateTime().setDate(startDate).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDate(endDate).setTimeZone("Asia/Tokyo");
         } else {
-            startEventDateTime = new EventDateTime().setDateTime(startDate).setTimeZone("Japan/Tokyo");
-            endEventDateTime = new EventDateTime().setDateTime(endDate).setTimeZone("Japan/Tokyo");
+            startEventDateTime = new EventDateTime().setDateTime(startDate).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDateTime(endDate).setTimeZone("Asia/Tokyo");
         }
 
         Event event = new Event()
                 .setSummary(summary)
                 .setDescription(desc)
-                .setColorId(GColorEnum.GREEN.toString())
+                .setColorId(GColorEnum.GREEN.getId())
                 .setStart(startEventDateTime)
                 .setEnd(endEventDateTime);
 
-        event = service.events().insert(calendarId, event).execute();
+        try {
+            event = service.events().insert(calendarId, event).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println("Event status:" + event.getStatus());
         return event;
     }

@@ -116,11 +116,7 @@ public class TvTasklet implements Tasklet {
                 tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
             }
         }
-        if (memId != null) {
-            tvController.tvKingdomSave(tvMap, teamName, memId);
-        } else {
-            tvController.tvKingdomSave(tvMap, teamName, null);
-        }
+        tvController.tvKingdomSave(tvMap, teamName, memId);
 
         // 次のページがあるか確認する
         Element nextBtn = document.select("div.listIndexNum").first();

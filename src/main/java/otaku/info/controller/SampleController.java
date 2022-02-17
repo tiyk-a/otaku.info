@@ -210,7 +210,7 @@ public class SampleController {
 //                insertImRel();
                 break;
             case 22:
-                List<TeamEnum> list = Arrays.asList(TeamEnum.values().clone());
+                TeamEnum[] list = TeamEnum.values().clone();
                 Map<String, TeamEnum> map = new HashMap<>();
                 for (TeamEnum l : list) {
                     if (!map.containsKey(l.getSubDomain())) {

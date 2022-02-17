@@ -53,7 +53,7 @@ public class TvController  {
     private final PRelService pRelService;
 
     @Autowired
-    private PRelMemService pRelMemService;
+    private final PRelMemService pRelMemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 

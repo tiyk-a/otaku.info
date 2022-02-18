@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import otaku.info.enums.TeamEnum;
 import otaku.info.utils.DateUtils;
 
 /**
@@ -149,6 +150,109 @@ public class CalendarApiController {
         LocalDateTime startLdt = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
         LocalDateTime endLdt = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
         Event event = postEvent(calendarId, startLdt, endLdt, summary, desc, allDayFlg);
+        return event;
+    }
+
+    /**
+     * Service account authorize Post Event
+     *
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    @GetMapping("/update")
+    public Event updateEvent(String calendarId, String eventId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+        // You can specify a credential file by providing a path to GoogleCredentials.
+        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+                .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
+
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build();
+
+        EventDateTime startEventDateTime;
+        EventDateTime endEventDateTime;
+
+        if (allDayFlg) {
+            Date startDateObj = DateUtils.localDateTimeToDate(startDate);
+            Date endDateObj = DateUtils.localDateTimeToDate(endDate);
+            DateTime startDateTime = new DateTime(dateUtils.getStringDateByDate(startDateObj));
+            DateTime endDateTime = new DateTime(dateUtils.getStringDateByDate(endDateObj));
+            startEventDateTime = new EventDateTime().setDate(startDateTime).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDate(endDateTime).setTimeZone("Asia/Tokyo");
+        } else {
+            DateTime startDateTime = new DateTime(startDate.toString());
+            DateTime endDateTime = new DateTime(endDate.toString());
+            startEventDateTime = new EventDateTime().setDateTime(startDateTime).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDateTime(endDateTime).setTimeZone("Asia/Tokyo");
+        }
+
+        Event event = new Event()
+                .setId(eventId)
+                .setSummary("Updated:" + summary)
+                .setDescription(desc)
+//                .setColorId(GColorEnum.GREEN.getId())
+                .setStart(startEventDateTime)
+                .setEnd(endEventDateTime);
+
+        try {
+            event = service.events().update(calendarId, eventId, event).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Event status:" + event.getStatus() + " id:" + event.getId());
+        return event;
+    }
+
+    /**
+     * 日付をDateで受け取る
+     * 日付型変換して本メソッドに飛ばす
+     * all-dayタイプしかうまくいかないかも
+     *
+     * @param calendarId
+     * @param startDate
+     * @param endDate
+     * @param summary
+     * @param desc
+     * @param allDayFlg
+     * @return
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public Event updateEvent(String calendarId, String eventId, Date startDate, Date endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+        LocalDateTime startLdt = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
+        LocalDateTime endLdt = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
+        Event event = updateEvent(calendarId, eventId, startLdt, endLdt, summary, desc, allDayFlg);
+        return event;
+    }
+
+    /**
+     * visibilityをprivateにしてイベントを外から見えないようにする
+     *
+     * @param teamId
+     * @param eventId
+     * @return
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public Event hideEvent(Long teamId, String eventId) throws IOException, GeneralSecurityException {
+        // You can specify a credential file by providing a path to GoogleCredentials.
+        // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+                .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
+
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(APPLICATION_NAME).build();
+
+        Event event = new Event()
+                .setId(eventId)
+                .setVisibility("private");
+
+        try {
+            event = service.events().update(TeamEnum.get(teamId).getCalendarId(), eventId, event).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Event status:" + event.getStatus() + " id:" + event.getId());
         return event;
     }
 }

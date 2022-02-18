@@ -33,7 +33,7 @@ public class IMRel implements Serializable {
     @Column(nullable = true)
     private Long wp_id;
 
-    /** Google Calendar Id */
+    /** Google Calendar Idって名前だけどeventIdが入ってるよ */
     @Column(nullable = true)
     private String calendar_id;
 

@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
@@ -80,6 +79,9 @@ public class ApiController {
 
     @Autowired
     TeamService teamService;
+
+    @Autowired
+    DelCalService delCalService;
 
     @Autowired
     DateUtils dateUtils;
@@ -665,10 +667,24 @@ public class ApiController {
                             IMRel imRel = imRelService.findByImRelId(Long.valueOf(rel.get(0)));
                             if (!imRel.getTeam_id().equals(Long.valueOf(rel.get(2)))) {
                                 // teamId=4(未選択)だったらdel_flg=onにする。それ以外だったら更新
+
+                                // calendarが入っていれば非表示にする
+                                if (imRel.getCalendar_id() != null) {
+                                    Event event = calendarApiController.hideEvent(imRel.getTeam_id(), imRel.getCalendar_id());
+
+                                    // imrelのcalendarid上書くため、退避する
+                                    DelCal delCal = new DelCal(null, TeamEnum.get(imRel.getTeam_id()).getCalendarId(), imRel.getTeam_id(), event.getId(), 1L);
+                                    delCalService.save(delCal);
+                                }
+
                                 if (rel.get(2).equals(4)) {
                                     imRel.setDel_flg(true);
                                 } else {
                                     imRel.setTeam_id(Long.valueOf(rel.get(2)));
+
+                                    // calendar新しく作る
+                                    Event event = calendarApiController.postEvent(TeamEnum.get(imRel.getTeam_id()).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), calendarDto.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    imRel.setCalendar_id(event.getId());
                                 }
                                 imRelService.save(imRel);
                             }

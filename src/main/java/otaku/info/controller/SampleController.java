@@ -107,11 +107,11 @@ public class SampleController {
      *
      * @return
      */
-    @GetMapping("/tmpMethod/{teamId}")
-    public String tempMethod(@PathVariable Long teamId) throws IOException, GeneralSecurityException {
+    @GetMapping("/tmpMethod/{teamId}/{eId}")
+    public String tempMethod(@PathVariable Long teamId, @PathVariable String eId) throws IOException, GeneralSecurityException {
 
         logger.debug("samplecontroller.tmpMethod() START");
-        Event e = calendarApiController.postEvent(TeamEnum.get(teamId).getCalendarId(), new Date(), new Date(), "test" + Math.random(), "test description", true);
+        Event e = calendarApiController.updateEvent(TeamEnum.get(teamId).getCalendarId(), eId, new Date(), new Date(), "test" + Math.random(), "test description", true);
         logger.debug("samplecontroller.tmpMethod() END");
         return "Status: " + e.getStatus() + " id: " + e.getId();
     }

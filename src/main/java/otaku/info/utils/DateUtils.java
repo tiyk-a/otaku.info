@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.service.BlogTagService;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -192,5 +193,17 @@ public class DateUtils {
 
     public Long ldtToMilliseconds(LocalDateTime ldt) {
         return LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    /**
+     * Dateオブジェクトからstringの日付を返します
+     *
+     * @param date
+     * @return
+     */
+    public String getStringDateByDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String strDate = dateFormat.format(date);
+        return strDate;
     }
 }

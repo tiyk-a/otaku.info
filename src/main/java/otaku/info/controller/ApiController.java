@@ -801,6 +801,7 @@ public class ApiController {
 
     /**
      * GoogleカレンダーinsertのためのデータをIMから格納する
+     * itemなのでall-dayイベントを想定
      *
      * @param im
      * @return
@@ -810,10 +811,13 @@ public class ApiController {
 
         dto.setTitle(im.getTitle());
 
-        DateTime dateTime = new DateTime(im.getPublication_date());
-        dto.setStartDate(dateTime);
-        dto.setEndDate(dateTime);
+        Date startDate = im.getPublication_date();
+        Date endDate = new Date(startDate.getTime() + 86400000);
+
+        dto.setStartDate(startDate);
+        dto.setEndDate(endDate);
         String url = stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
+
         if (url == null) {
             List<Item> itemList = itemService.findByMasterId(im.getIm_id());
             for (Item i : itemList) {
@@ -822,6 +826,10 @@ public class ApiController {
                     break;
                 }
             }
+        }
+
+        if (url == null) {
+            url = "";
         }
 
         dto.setDesc(url);

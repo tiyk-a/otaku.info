@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -112,7 +111,7 @@ public class SampleController {
     public String tempMethod(@PathVariable Long teamId) throws IOException, GeneralSecurityException {
 
         logger.debug("samplecontroller.tmpMethod() START");
-        Event e = calendarApiController.postEvent(TeamEnum.get(teamId).getCalendarId(), new DateTime(new Date()), new DateTime(new Date()), "test" + Math.random(), "test description", false);
+        Event e = calendarApiController.postEvent(TeamEnum.get(teamId).getCalendarId(), new Date(), new Date(), "test" + Math.random(), "test description", true);
         logger.debug("samplecontroller.tmpMethod() END");
         return "Status: " + e.getStatus() + " id: " + e.getId();
     }

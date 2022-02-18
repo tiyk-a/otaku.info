@@ -13,18 +13,22 @@ import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 
 import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import otaku.info.enums.GColorEnum;
+import otaku.info.utils.DateUtils;
 
 /**
  * デフォルトのservice accountは
@@ -36,6 +40,9 @@ import otaku.info.enums.GColorEnum;
 @RequestMapping("/cal")
 @AllArgsConstructor
 public class CalendarApiController {
+
+    @Autowired
+    DateUtils dateUtils;
 
     /** Application name. */
     private static final String APPLICATION_NAME = "Google Calendar API Java Quickstart";
@@ -81,7 +88,7 @@ public class CalendarApiController {
      * @throws GeneralSecurityException
      */
     @GetMapping("/post")
-    public Event postEvent(String calendarId, DateTime startDate, DateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+    public Event postEvent(String calendarId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
         GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
@@ -94,17 +101,23 @@ public class CalendarApiController {
         EventDateTime endEventDateTime;
 
         if (allDayFlg) {
-            startEventDateTime = new EventDateTime().setDate(startDate).setTimeZone("Asia/Tokyo");
-            endEventDateTime = new EventDateTime().setDate(endDate).setTimeZone("Asia/Tokyo");
+            Date startDateObj = DateUtils.localDateTimeToDate(startDate);
+            Date endDateObj = DateUtils.localDateTimeToDate(endDate);
+            DateTime startDateTime = new DateTime(dateUtils.getStringDateByDate(startDateObj));
+            DateTime endDateTime = new DateTime(dateUtils.getStringDateByDate(endDateObj));
+            startEventDateTime = new EventDateTime().setDate(startDateTime).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDate(endDateTime).setTimeZone("Asia/Tokyo");
         } else {
-            startEventDateTime = new EventDateTime().setDateTime(startDate).setTimeZone("Asia/Tokyo");
-            endEventDateTime = new EventDateTime().setDateTime(endDate).setTimeZone("Asia/Tokyo");
+            DateTime startDateTime = new DateTime(startDate.toString());
+            DateTime endDateTime = new DateTime(endDate.toString());
+            startEventDateTime = new EventDateTime().setDateTime(startDateTime).setTimeZone("Asia/Tokyo");
+            endEventDateTime = new EventDateTime().setDateTime(endDateTime).setTimeZone("Asia/Tokyo");
         }
 
         Event event = new Event()
                 .setSummary(summary)
                 .setDescription(desc)
-                .setColorId(GColorEnum.GREEN.getId())
+//                .setColorId(GColorEnum.GREEN.getId())
                 .setStart(startEventDateTime)
                 .setEnd(endEventDateTime);
 
@@ -114,6 +127,28 @@ public class CalendarApiController {
             e.printStackTrace();
         }
         System.out.println("Event status:" + event.getStatus());
+        return event;
+    }
+
+    /**
+     * 日付をDateで受け取る
+     * 日付型変換して本メソッドに飛ばす
+     * all-dayタイプしかうまくいかないかも
+     *
+     * @param calendarId
+     * @param startDate
+     * @param endDate
+     * @param summary
+     * @param desc
+     * @param allDayFlg
+     * @return
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public Event postEvent(String calendarId, Date startDate, Date endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+        LocalDateTime startLdt = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
+        LocalDateTime endLdt = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
+        Event event = postEvent(calendarId, startLdt, endLdt, summary, desc, allDayFlg);
         return event;
     }
 }

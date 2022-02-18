@@ -72,7 +72,7 @@ public class CalendarCatchupTasklet implements Tasklet {
                 }
                 loggerController.printCalendarCatchupTaskletLogger("Event post:" + im.getIm_id() + ":" + im.getTitle());
 
-                Event event = calendarApiController.postEvent(TeamEnum.get(imRel.getTeam_id()).getCalendarId(), new DateTime(im.getPublication_date()), new DateTime(im.getPublication_date()), im.getTitle(), url, true);
+                Event event = calendarApiController.postEvent(TeamEnum.get(imRel.getTeam_id()).getCalendarId(), im.getPublication_date(), im.getPublication_date(), im.getTitle(), url, true);
 
                 loggerController.printCalendarCatchupTaskletLogger("event insert status: " + event.getId());
 

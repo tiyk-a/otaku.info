@@ -1,8 +1,10 @@
 package otaku.info.dto;
 
-import com.google.api.client.util.DateTime;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * GoogleカレンダーInsertのためのDTO
@@ -11,9 +13,13 @@ import lombok.Setter;
 @Getter
 public class CalendarInsertDto {
 
-    private DateTime startDate;
+    private Date startDate;
 
-    private DateTime endDate;
+    private Date endDate;
+
+    private LocalDateTime startDateTime;
+
+    private LocalDateTime endDateTime;
 
     private String title;
 

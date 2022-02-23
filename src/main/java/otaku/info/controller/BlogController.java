@@ -386,6 +386,7 @@ public class BlogController {
             RestTemplate restTemplate = new RestTemplate();
             logger.debug("Post: " + url);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
+            logger.debug("Request posted");
             
             try {
                 Thread.sleep(50);
@@ -395,6 +396,9 @@ public class BlogController {
             result = responseEntity.getBody();
         } catch (Exception e) {
             logger.debug("Request result: " + result);
+            logger.debug("Post: " + url);
+            logger.debug("Post: " + method);
+            logger.debug("Post: " + request);
             if (e instanceof HttpClientErrorException.Forbidden) {
                 throw new HttpClientErrorException(HttpStatus.FORBIDDEN);
             } else if (e instanceof HttpClientErrorException.BadRequest) {

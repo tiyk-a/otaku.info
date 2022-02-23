@@ -31,7 +31,7 @@ public class DelCal {
     @Column(nullable = false)
     private String eventId;
 
-    /** イベントのカテゴリ。1=商品、2=TVとしようかな */
+    /** イベントのカテゴリ。1=商品、10=TVとしようかな。商品は細分化される予定 */
     @Column(nullable = false)
     private Long categoryId;
 }

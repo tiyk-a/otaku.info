@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import otaku.info.enums.TeamEnum;
+import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
 /**
@@ -43,6 +44,9 @@ import otaku.info.utils.DateUtils;
 public class CalendarApiController {
 
     @Autowired
+    Setting setting;
+
+    @Autowired
     DateUtils dateUtils;
 
     /** Application name. */
@@ -50,8 +54,6 @@ public class CalendarApiController {
 
     /** Global instance of the JSON factory. */
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-
-    private static final String SERVICE_CREDENTIALS_FILE_PATH = "/Users/chiara/Desktop/info/src/main/resources/" + "otakuinfo-front-aef10ca74233.json";
 
     /**
      * Service account authorize Get Event
@@ -64,7 +66,7 @@ public class CalendarApiController {
     public void getEvents(@RequestParam String calendarId) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(setting.getCalendarCredential()))
                 .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -92,7 +94,7 @@ public class CalendarApiController {
     public Event postEvent(String calendarId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(setting.getCalendarCredential()))
                 .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -163,7 +165,7 @@ public class CalendarApiController {
     public Event updateEvent(String calendarId, String eventId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(setting.getCalendarCredential()))
                 .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -237,7 +239,7 @@ public class CalendarApiController {
     public Event hideEvent(Long teamId, String eventId) throws IOException, GeneralSecurityException {
         // You can specify a credential file by providing a path to GoogleCredentials.
         // Otherwise credentials are read from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(SERVICE_CREDENTIALS_FILE_PATH))
+        GoogleCredential credential = GoogleCredential.fromStream(new FileInputStream(setting.getCalendarCredential()))
                 .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();

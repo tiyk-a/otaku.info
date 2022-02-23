@@ -58,7 +58,12 @@ public class IMService {
         return imRepository.findByTeamIdDate(teamId, date);
     }
 
-    public List<IM> findByKeyExcludeTeamId(String key, Long excludeTeamId) {
-        return imRepository.findByKeyExcludeTeamId(key, excludeTeamId);
+    /**
+     *
+     * @param key
+     * @return
+     */
+    public List<IM> findByKeyExcludeTeamId(String key) {
+        return imRepository.findByKeyExcludeTeamId(key);
     }
 }

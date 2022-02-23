@@ -1019,13 +1019,18 @@ public class ApiController {
         }
     }
 
+    /**
+     *
+     * @param key
+     * @return
+     */
     @GetMapping("/im/search")
-    public ResponseEntity<List<IM>> searchOtherTeamIM(@RequestParam("key") String key, @RequestParam("excludeTeamId") Long excludeTeamId) {
+    public ResponseEntity<List<IM>> searchOtherTeamIM(@RequestParam("key") String key) {
         if (key.equals("") ) {
             // TODO: excludeTeamIdがnullやundefinedの時の対処がないよ
             return ResponseEntity.ok(new ArrayList<>());
         }
 
-        return ResponseEntity.ok(imService.findByKeyExcludeTeamId(key, excludeTeamId));
+        return ResponseEntity.ok(imService.findByKeyExcludeTeamId(key));
     }
 }

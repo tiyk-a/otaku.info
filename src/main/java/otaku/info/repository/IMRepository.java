@@ -34,6 +34,6 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query("select t from im t inner join im_rel b on t.im_id = b.im_id where b.team_id = ?1 and t.publication_date = ?2")
     List<IM> findByTeamIdDate(Long teamId, Date date);
 
-    @Query(nativeQuery = true, value = "select a.* from im a inner join im_rel b on a.im_id = b.im_id where a.title like %?1% and b.team_id != ?2")
-    List<IM> findByKeyExcludeTeamId(String key, Long excludeTeamId);
+    @Query(nativeQuery = true, value = "select a.* from im a inner join im_rel b on a.im_id = b.im_id where a.title like %?1%")
+    List<IM> findByKeyExcludeTeamId(String key);
 }

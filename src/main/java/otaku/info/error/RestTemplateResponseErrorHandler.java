@@ -21,9 +21,9 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
 
     @Override
     public boolean hasError(ClientHttpResponse httpResponse) throws IOException {
-        logger.debug(httpResponse.getStatusCode());
-        logger.debug(httpResponse.getHeaders());
-        logger.debug(httpResponse.getBody());
+        logger.debug("Status code: " + httpResponse.getStatusCode());
+        logger.debug("Headers: " + httpResponse.getHeaders());
+        logger.debug("Body: " + httpResponse.getBody());
         lineController.post("RestErrorHandlerMine:hasError:" + httpResponse.getStatusCode() + "\n" + httpResponse.getBody().toString().substring(0, 200));
         return (httpResponse.getStatusCode().series() == HttpStatus.Series.CLIENT_ERROR || httpResponse.getStatusCode().series() == HttpStatus.Series.SERVER_ERROR);
     }

@@ -83,10 +83,18 @@ public class PythonController {
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-                ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi?teamId=" + teamId, entity, String.class);
+                try {
+                    ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi?teamId=" + teamId, entity, String.class);
+                    if (response.getStatusCode() != HttpStatus.ACCEPTED && response.getStatusCode() != HttpStatus.CREATED) {
+                        logger.debug("Response status CHECKER HIT");
+                        logger.debug(response.getBody());
+                    }
+                    logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 lineList.add(text + " ■teamId=" + teamId);
-                logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
                 twLog.debug("teamId:" + teamId + "■" + text);
             }
         }

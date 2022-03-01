@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 @Getter
 public enum MemberEnum {
 
+    /** 誕生日はyyyy-1900, m-1, dd */
     HIKARU_IWAMOTO(31L,new Date(1993-1900,5-1,17),"いわもとひかる","岩本照","ひーくんひかる",6L),
     SHINYA_FUKASAWA(32L,new Date(1992-1900,5-1,5),"ふかさわしんや","深澤辰哉","ふっか",6L),
     SHOTA_WATANABE(33L,new Date(1992-1900,11-1,5),"わたなべしょうた","渡辺翔太","しょっぴー",6L),
@@ -83,7 +84,20 @@ public enum MemberEnum {
     KYOHEI_TAKAHASHI(100L,new Date(2000-1900,2-1,28),"たかはしきょうへい","高橋恭平","恭平キョロ",18L),
     KENTO_NAGAO(101L,new Date(2002-1900,8-1,15),"ながおけんと","長尾謙杜","長尾けんとけんけんけんちゃん",18L),
     JOICHIRO_FUJIWARA(102L,new Date(1996-1900,2-1,8),"ふじわらじょういちろう","藤原丈一郎","丈丈くん",18L),
-    KAZUYA_OHASHI(103L,new Date(1997-1900,8-1,9),"おおはしかずや","大橋和也","大橋君はっすんかずくん",18L);
+    KAZUYA_OHASHI(103L,new Date(1997-1900,8-1,9),"おおはしかずや","大橋和也","大橋君はっすんかずくん",18L),
+    RYOSUKE_YAMADA(104L,new Date(1993-1900,5-1,9), "やまだりょうすけ","山田涼介","山ちゃん山田くん涼介くん",19L),
+    YURI_CHINEN(105L,new Date(1993-1900,11-1,30), "ちねんゆうり","知念侑李","ちぃちゃん知念ちゃん 侑李くん",19L),
+    YUTO_NAKAJIMA(106L,new Date(1993-1900,8-1,10), "なかじまゆうと","中島裕翔","ゆーてぃー",19L),
+    DAIKI_ARIOKA(107L,new Date(1991-1900,4-1,15), "ありおかだいき","有岡大貴","大ちゃん",19L),
+    YUYA_TAKAKI(108L,new Date(1990-1900,2-1,26), "たかきゆうや","高木雄也","髙木くん雄也くん",19L),
+    KEI_INOO(109L,new Date(1990-1900,6-1,22), "いのおけい","伊野尾慧","伊野尾ちゃん",19L),
+    HIKARU_YAOTOME(110L,new Date(1990-1900,12-1,2), "やおとめひかる","八乙女光","光くん",19L),
+    KOTA_YABU(111L,new Date(1990-1900,1-1,31), "やぶこうた","薮宏太","薮くん",19L),
+    KAZUYA_KAMENASHI(112L,new Date(1986-1900,2-1,23), "かめなしかずや","亀梨和也","亀亀ちゃん",20L),
+    TATSUYA_UEDA(113L,new Date(1983-1900,10-1,4), "うえだたつや","上田竜也","たっちゃん上ぽむ",20L),
+    YUICHI_NAKAMARU(114L,new Date(1983-1900,9-1,4), "なかまるゆういち","中丸雄一","ゆっち鼻鼻丸ポット",20L),
+    KOICHI_DOMOTO(114L,new Date(1979-1900,1-1,1), "どうもとこういち","堂本光一","王子",21L),
+    TSUYOSHI_DOMOTO(114L,new Date(1979-1900,4-1,10), "どうもとつよし","堂本剛","剛くん",21L);
 
     private final Long id;
     private final Date birthday;

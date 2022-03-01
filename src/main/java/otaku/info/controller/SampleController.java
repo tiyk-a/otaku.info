@@ -128,7 +128,7 @@ public class SampleController {
         System.out.println(Thread.activeCount());
         System.out.println("***********************");
         Set<Thread> threadSet= Thread.getAllStackTraces().keySet();
-        for ( Thread t : threadSet){
+        for ( Thread t : threadSet) {
             System.out.println("1 " + t.getName() + "2 " + t.getId() + "3 " + t.getContextClassLoader() + "4 " + t.getState() + "5 " + t.getThreadGroup());
         }
         return "ok";

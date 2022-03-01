@@ -11,7 +11,7 @@ public class MyMessageException extends Exception {
     private String keyValue;
     private String error;
 
-    public MyMessageException(String error, String keyName, String keyValue){
+    public MyMessageException(String error, String keyName, String keyValue) {
         this.keyName = keyName;
         this.keyValue = keyValue;
         this.error = error;

@@ -16,7 +16,7 @@ public class ServerUtils {
     public void sleep() {
         try{
             Thread.sleep(10000);
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

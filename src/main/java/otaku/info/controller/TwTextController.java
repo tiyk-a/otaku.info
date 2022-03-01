@@ -288,7 +288,7 @@ public class TwTextController {
      * https://qiita.com/hakozaki/items/856230d3f8e29d3302d6
      * @return
      */
-    public int getSimilarScoreByLevenshteinDistance(String s1, String s2){
+    public int getSimilarScoreByLevenshteinDistance(String s1, String s2) {
 
         // 入力チェックは割愛
         LevensteinDistance dis =  new LevensteinDistance();
@@ -302,7 +302,7 @@ public class TwTextController {
      * https://qiita.com/hakozaki/items/856230d3f8e29d3302d6
      * @return
      */
-    public int getSimilarScoreByJaroWinklerDistance(String s1, String s2){
+    public int getSimilarScoreByJaroWinklerDistance(String s1, String s2) {
 
         // 入力チェックは割愛
         JaroWinklerDistance dis =  new JaroWinklerDistance();

@@ -95,7 +95,7 @@ public class ApiController {
      * @return
      */
     @GetMapping("/all")
-    public ResponseEntity<FAllDto> getAll(){
+    public ResponseEntity<FAllDto> getAll() {
         logger.debug("accepted");
         FAllDto dto = new FAllDto();
 
@@ -135,7 +135,7 @@ public class ApiController {
      * @return
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FAllDto> getTop(@PathVariable Long id){
+    public ResponseEntity<FAllDto> getTop(@PathVariable Long id) {
         logger.debug("accepted");
 
         // IMがない未来のItemを取得する（他チームで登録されてれば取得しない）
@@ -266,7 +266,7 @@ public class ApiController {
      * @return Item
      */
     @GetMapping("/im/{id}")
-    public ResponseEntity<FIMDto> getIm(@PathVariable Long teamId, @PathVariable Long id){
+    public ResponseEntity<FIMDto> getIm(@PathVariable Long teamId, @PathVariable Long id) {
         logger.debug("accepted");
         IM im = imService.findById(id);
         IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
@@ -297,7 +297,7 @@ public class ApiController {
      * @return Item
      */
     @GetMapping("/im/team/{id}")
-    public ResponseEntity<List<FIMDto>> getTeam(@PathVariable Long id){
+    public ResponseEntity<List<FIMDto>> getTeam(@PathVariable Long id) {
         logger.debug("getTeam teamId=" + id);
         List<IM> imList = imService.findByTeamIdNotDeleted(id);
         List<FIMDto> dtoList = new ArrayList<>();
@@ -332,7 +332,7 @@ public class ApiController {
      * @return Item
      */
     @PostMapping("/im/{teamId}/{id}")
-    public ResponseEntity<FIMDto> upIm(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody IMForm imForm){
+    public ResponseEntity<FIMDto> upIm(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody IMForm imForm) {
         logger.debug("accepted");
         IM im = imService.findById(id);
         im.absorb(imForm);
@@ -367,7 +367,7 @@ public class ApiController {
      */
     @DeleteMapping("/im/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Boolean> delIm(@PathVariable Long id){
+    public ResponseEntity<Boolean> delIm(@PathVariable Long id) {
         logger.debug("accepted");
         try {
             IM im = imService.findById(id);
@@ -406,7 +406,7 @@ public class ApiController {
      * @return リスト
      */
     @GetMapping("/tv")
-    public ResponseEntity<List<PDto>> tvAll(@RequestParam("teamId") Long teamId){
+    public ResponseEntity<List<PDto>> tvAll(@RequestParam("teamId") Long teamId) {
         logger.debug("accepted");
         List<PDto> pDtos = new ArrayList<>();
         List<Program> pList = null;
@@ -445,7 +445,7 @@ public class ApiController {
      * @return Item
      */
     @PostMapping("/tv/{teamId}/{id}")
-    public ResponseEntity<Boolean> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm){
+    public ResponseEntity<Boolean> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm) {
         logger.debug("accepted");
         try {
             // programの更新
@@ -482,7 +482,7 @@ public class ApiController {
      */
     @DeleteMapping("/tv/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Boolean> delTv(@PathVariable Long id){
+    public ResponseEntity<Boolean> delTv(@PathVariable Long id) {
         logger.debug("accepted");
         try {
             Program im = pageTvService.findById(id);

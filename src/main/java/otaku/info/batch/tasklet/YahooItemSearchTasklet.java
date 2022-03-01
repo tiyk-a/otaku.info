@@ -55,7 +55,7 @@ public class YahooItemSearchTasklet implements Tasklet {
                 loggerController.printYahooItemSearchTasklet("***** END: " + artist + "*****");
                 try{
                     Thread.sleep(1000);
-                }catch(InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -73,7 +73,7 @@ public class YahooItemSearchTasklet implements Tasklet {
                 loggerController.printYahooItemSearchTasklet("***** END: " + dto.getMember_name() + "*****");
                 try{
                     Thread.sleep(1000);
-                }catch(InterruptedException e){
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }

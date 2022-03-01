@@ -85,7 +85,7 @@ public class Scheduler {
     private Job twFolBJob;
 
     @Scheduled(cron = "${cron.itemSearch}")
-    public void run1(){
+    public void run1() {
         logger.debug("--- run1: 楽天新商品検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<String, JobParameter>();
@@ -93,7 +93,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(itemSearchJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run1: 楽天新商品検索 " + ex.getMessage());
         }
@@ -104,7 +104,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.futureItemReminder}")
-    public void run2(){
+    public void run2() {
         logger.debug("--- run2: 未発売商品リマインダー START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -112,7 +112,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(futureItemReminderJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run2: 未発売商品リマインダー" + ex.getMessage());
         }
@@ -123,7 +123,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.yahooItemSearch}")
-    public void run3(){
+    public void run3() {
         logger.debug("--- run3: Yahoo新商品検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -131,7 +131,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(yahooItemSearchJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run3: Yahoo新商品検索" + ex.getMessage());
         }
@@ -142,7 +142,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.publishAnnounce}")
-    public void run4(){
+    public void run4() {
         logger.debug("--- run4: 商品発売日アナウンス START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -150,7 +150,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(publishAnnouncementJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run4: 商品発売日アナウンス" + ex.getMessage());
         }
@@ -161,7 +161,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.itemSearchMember}")
-    public void run5(){
+    public void run5() {
         logger.debug("--- run5: 新商品検索（個人） START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -169,7 +169,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(itemSearchMemberJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run5: 新商品検索（個人）" + ex.getMessage());
         }
@@ -180,7 +180,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.tvSearch}")
-    public void run6(){
+    public void run6() {
         logger.debug("--- run6: TV検索 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -188,7 +188,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(tvJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run6: TV検索" + ex.getMessage());
         }
@@ -199,7 +199,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.tvPost}")
-    public void run7(){
+    public void run7() {
         logger.debug("--- run7: TV番組投稿処理 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -207,7 +207,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(tvPostJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run7: TV番組投稿処理" + ex.getMessage());
         }
@@ -218,7 +218,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.blogCatchup}")
-    public void run8(){
+    public void run8() {
         logger.debug("--- run8: IMブログ投稿キャッチアップ START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -226,7 +226,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(blogCatchupJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run8: IMブログ投稿キャッチアップ" + ex.getMessage());
         }
@@ -237,7 +237,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.tvAlert}")
-    public void run9(){
+    public void run9() {
         logger.debug("--- run9: TVアラート START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -245,7 +245,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(tvAlertJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run9: TVアラート" + ex.getMessage());
         }
@@ -256,7 +256,7 @@ public class Scheduler {
     }
 
     @Scheduled(cron = "${cron.updateUrl}")
-    public void run10(){
+    public void run10() {
         logger.debug("--- run10: DB商品アフェリリンク更新 START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -264,7 +264,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(updateUrlJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run10: DB商品アフェリリンク更新" + ex.getMessage());
         }
@@ -276,7 +276,7 @@ public class Scheduler {
 
     // 固定ページの更新
     @Scheduled(cron = "${cron.blogUpdate}")
-    public void run11(){
+    public void run11() {
         logger.debug("--- run11: Blog Update START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -284,7 +284,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(blogUpdateJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run11: Blog Update" + ex.getMessage());
         }
@@ -298,7 +298,7 @@ public class Scheduler {
      * Twitterファボ
      */
     @Scheduled(cron = "${cron.twFav}")
-    public void run12(){
+    public void run12() {
         logger.debug("--- run12: Twitter Fav START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -306,7 +306,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(twFavJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run12: Twitter Fav" + ex.getMessage());
         }
@@ -320,7 +320,7 @@ public class Scheduler {
      * Twitterフォロバ
      */
     @Scheduled(cron = "${cron.twFolB}")
-    public void run13(){
+    public void run13() {
         logger.debug("--- run13: Twitter Follow Back START ---");
         Long startTime = System.currentTimeMillis();
         Map<String, JobParameter> confMap = new HashMap<>();
@@ -328,7 +328,7 @@ public class Scheduler {
         JobParameters jobParameters = new JobParameters(confMap);
         try {
             jobLauncher.run(twFolBJob, jobParameters);
-        }catch (Exception ex){
+        }catch (Exception ex) {
             logger.debug(ex.getMessage());
             lineController.post("run13: Twitter Follow Back" + ex.getMessage());
         }

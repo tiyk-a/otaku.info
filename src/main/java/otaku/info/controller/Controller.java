@@ -23,7 +23,7 @@ public class Controller {
      * @param artist アーティスト名
      * return List<String> 検索キーワードリスト
      */
-    public List<String> affiliSearchWord(String artist){
+    public List<String> affiliSearchWord(String artist) {
         // アフィリサイトでの検索ワード一覧
         List<String> resultList = new ArrayList<>();
         searchList.forEach(arr -> resultList.add(String.join(" ",artist, arr)));

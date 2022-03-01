@@ -984,7 +984,7 @@ public class BlogController {
                     }
                     filewriter.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e) {
                 logger.debug(e);
             }
         }

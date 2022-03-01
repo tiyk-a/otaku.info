@@ -48,7 +48,7 @@ public class ItemSearchMemberTasklet implements Tasklet {
             loggerController.printItemSearchMemberTasklet("***** END: " + dto.getMember_name() + "*****");
             try{
                 Thread.sleep(1000);
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }

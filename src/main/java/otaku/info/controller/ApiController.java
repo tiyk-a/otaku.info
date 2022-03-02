@@ -219,7 +219,6 @@ public class ApiController {
 
         dto.setI(itemTeamDtoList);
         dto.setIm(fimDtoList);
-        dto.setIim(itemTeamDtoList1);
         dto.setErrJ(errorJsonList);
         logger.debug("fin");
         return ResponseEntity.ok(dto);

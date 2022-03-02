@@ -21,8 +21,5 @@ public class FAllDto {
     // IMを集める
     private List<FIMDto> im;
 
-    // IMのあるItemを詰める
-    private List<ItemTeamDto> iim;
-
     private List<ErrorJson> errJ;
 }

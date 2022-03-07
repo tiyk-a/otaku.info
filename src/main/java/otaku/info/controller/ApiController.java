@@ -101,8 +101,8 @@ public class ApiController {
 
         List<ItemTeamDto> itemTeamDtoList = new ArrayList<>();
 
-        // IMがない未来のItemを取得する（どこかのチームで登録されてれば取得しない）
-        List<Item> itemList = itemService.findFutureNotDeletedNoIM();
+        // IMがないItemを取得する（どこかのチームで登録されてれば取得しない）
+        List<Item> itemList = itemService.findNotDeletedNoIM();
         for (Item item : itemList) {
             ItemTeamDto itemTeamDto = new ItemTeamDto();
             List<IRel> irelList = iRelService.findByItemId(item.getItem_id());

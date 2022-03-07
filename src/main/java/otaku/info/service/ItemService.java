@@ -149,8 +149,8 @@ public class ItemService {
         return itemRepository.findByTeamIdFutureNotDeletedWIM(teamId);
     }
 
-    public List<Item> findFutureNotDeletedNoIM() {
-        return itemRepository.findFutureNotDeletedNoIM();
+    public List<Item> findNotDeletedNoIM() {
+        return itemRepository.findNotDeletedNoIM();
     }
 }
 

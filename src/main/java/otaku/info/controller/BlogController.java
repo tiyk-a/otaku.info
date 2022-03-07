@@ -543,7 +543,7 @@ public class BlogController {
                         resMap.put(itemMaster.getIm_id(), blogId);
                     }
 
-                    // 新規ブログ投稿の場合はTwitterポストします
+                    // 新規ブログ投稿で未来商品の場合はTwitterポストします
                     if (newPostFlg) {
                         logger.debug("🕊ブログ投稿のお知らせ");
                         if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {

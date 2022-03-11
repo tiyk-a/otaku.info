@@ -69,7 +69,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0")
     List<Item> findByTeamIdNotDeleted(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is null")
+    /**
+     * 10日前〜のIMIDのないitemを取得します
+     * @param teamId
+     * @return
+     */
+    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
     List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")
@@ -78,6 +83,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(nativeQuery = true, value = "select a.* from item a where a.publication_date >= CURRENT_DATE and a.del_flg = 0 and a.im_id is null")
     List<Item> findFutureNotDeletedNoIM();
 
-    @Query(nativeQuery = true, value = "select a.* from item a where a.del_flg = 0 and a.im_id is null")
+    /**
+     * 10日前〜のIMIDのないitemを取得します
+     * @return
+     */
+    @Query(nativeQuery = true, value = "select a.* from item a where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
     List<Item> findNotDeletedNoIM();
 }

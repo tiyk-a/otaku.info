@@ -141,8 +141,8 @@ public class ApiController {
         // IMがない未来のItemを取得する（他チームで登録されてれば取得しない）
         List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
 
-        // 未来のIMを取得する
-        List<IM> imList = imService.findByTeamIdFuture(id);
+        // 未来/WPIDがnullのIMを取得する
+        List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(id);
         List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
         List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
 

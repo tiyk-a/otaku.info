@@ -26,6 +26,10 @@ public class IMService {
         return imRepository.findByTeamIdFuture(teamId);
     }
 
+    public List<IM> findByTeamIdFutureOrWpIdNull(Long teamId) {
+        return imRepository.findByTeamIdFutureOrWpIdNull(teamId);
+    }
+
     public IM findById(Long id) {
         return imRepository.findById(id).orElse(new IM());
     }

@@ -305,7 +305,40 @@ public class TextController {
             String pubDate = sdf1.format(itemMaster.getPublication_date());
             String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
 
-            String text = String.join("\n", h2, publicationDateStr, itemMaster.getAmazon_image(), String.join("\n", verTxtList));
+            // SEO対策：external linkとしてグループの公式サイトのリンク
+            String externalLink = "";
+            for (String teamName : teamNameList) {
+                String tmpLink = TeamEnum.get(teamName).getOfficialSite();
+                tmpLink = "<a href='" + tmpLink + "'><p>" + teamName + "公式サイト</p></a>";
+                if (externalLink.isBlank()) {
+                    externalLink = tmpLink;
+                } else {
+                    String tmp = externalLink;
+                    externalLink = tmp + "<br />" + tmpLink;
+                }
+            }
+
+            // SEO対策：internal linkとしてグループの公式サイトのリンク
+            String internalLink = "";
+            for (String teamName : teamNameList) {
+                TeamEnum teamEnum = TeamEnum.get(teamName);
+                String tmpLink = teamEnum.getInternalTop();
+
+                if (tmpLink == null) {
+                    tmpLink = "<a href='" + teamEnum.getSubDomain() + "'><p>" + teamName + "トップ</p></a>";
+                } else {
+                    tmpLink = "<a href='" + tmpLink + "'><p>" + teamName + "トップ</p></a>";
+                }
+
+                if (internalLink.isBlank()) {
+                    internalLink = tmpLink;
+                } else {
+                    String tmp = internalLink;
+                    internalLink = tmp + "<br />" + tmpLink;
+                }
+            }
+
+            String text = String.join("\n", h2, publicationDateStr, itemMaster.getAmazon_image(), String.join("\n", verTxtList), externalLink, internalLink);
             // 返却リストに追加する
             resultList.add(text);
         }
@@ -632,6 +665,7 @@ public class TextController {
     }
 
     /**
+     * その日の1日の予定画面のテキスト本文を作成します。
      *
      * @param teamId
      * @param tmrw
@@ -643,7 +677,6 @@ public class TextController {
         boolean tvContentFlg = true;
         boolean imContentFlg = true;
 
-        String result = "";
         String date = "<h3>" + TeamEnum.get(teamId).getName() + "</h3>";
 
         // TV
@@ -695,6 +728,14 @@ public class TextController {
         if (tvContentFlg || tvContentFlg) {
             contentFlg = true;
         }
-        return Collections.singletonMap(String.join("\n", date, "<h2>TV</h2>" , String.join("\n", pTextList), "<h2>発売</h2>", String.join("\n", imTextList)), contentFlg);
+
+        // SEO対策のためexternal/internal linkを用意する
+        TeamEnum teamEnum = TeamEnum.get(teamId);
+        String externalLink = teamEnum.getOfficialSite();
+        String internalLink = teamEnum.getInternalTop();
+        if (internalLink == null) {
+            internalLink = teamEnum.getSubDomain();
+        }
+        return Collections.singletonMap(String.join("\n", date, "<h2>TV</h2>" , String.join("\n", pTextList), "<h2>発売</h2>", String.join("\n", imTextList), externalLink, internalLink), contentFlg);
     }
 }

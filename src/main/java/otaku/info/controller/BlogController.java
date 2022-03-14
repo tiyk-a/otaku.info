@@ -1013,9 +1013,10 @@ public class BlogController {
         // コンテンツ文章の作成
         List<String> tmpList = new ArrayList<>();
         for (Long teamId : teamIdList) {
-            // 明日の日付で、一覧画面を作る
+            // 明日の日付で、テレビ一覧画面を作る
             List<Program> plist = programService.findByOnAirDateTeamId(tmrw, teamId);
 
+            // 明日の日付で、商品一覧画面を作る
             List<IM> imList = imService.findByTeamIdDate(teamId, tmrw);
             Map<IM, List<ImVer>> imMap = new TreeMap<>();
             for (IM im : imList) {

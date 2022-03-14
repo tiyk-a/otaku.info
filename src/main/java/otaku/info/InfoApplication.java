@@ -42,6 +42,11 @@ public class InfoApplication {
 						.allowedOrigins("http://chiharu-front.herokuapp.com")
 						.allowedOrigins("*")
 				.allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS");
+				registry.addMapping("/youtube/**")
+						.allowedOrigins("http://localhost")
+						.allowedOrigins("https://chiharu-yt.herokuapp.com/")
+						.allowedOrigins("*")
+						.allowedMethods("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS");
 			}
 		};
 	}

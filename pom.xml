@@ -176,6 +176,11 @@
 			<artifactId>listenablefuture</artifactId>
 			<version>9999.0-empty-to-avoid-conflict-with-guava</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-youtube</artifactId>
+			<version>v3-rev222-1.25.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

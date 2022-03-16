@@ -33,6 +33,8 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 
 /**
+ * Google Calendarにイベントを追加したりするコントローラ
+ *
  * デフォルトのservice accountは
  * otakuinfo@otakuinfo-front.iam.gserviceaccount.com
  *

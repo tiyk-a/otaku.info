@@ -36,4 +36,5 @@ public class Setting {
     private String amazonCardPos;
     private String calendarCredential;
     private String generatedImage;
+    private String youtuberedential;
 }

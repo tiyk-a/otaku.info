@@ -35,4 +35,5 @@ public class Setting {
     private String amazonCardHead;
     private String amazonCardPos;
     private String calendarCredential;
+    private String generatedImage;
 }

@@ -13,37 +13,37 @@ import java.util.stream.Collectors;
 public enum TeamEnum {
 
     SNOWMAN(6L,null,"","SnowMan","Snow man","snowmanhayainfo", "https://snowman.otakuinfo.fun/", "snowman:k9UR wNsr LzdK IYFT oQ4s gKuJ",
-            18L,20L, 39L, "gfb6rs9140td7etmbup4qeu95c@group.calendar.google.com", "https://mentrecording.jp/snowman/", null),
+            18L,20L, 39L, "gfb6rs9140td7etmbup4qeu95c@group.calendar.google.com", "https://mentrecording.jp/snowman/", null, "https://snowman.otakuinfo.fun/wp-content/uploads/2022/03/schedule3.png"),
     KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com", "https://www.infinity-r.jp/", ""),
+            43L,1707L, 176L, "1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com", "https://www.infinity-r.jp/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     SEXYZONE(8L,null,"セクシーゾーン","SexyZone","Sexy Zone","sexyz0neinfo", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "kmikj1iusd3j8rquta40adqjek@group.calendar.google.com", "https://topjrecords.jp/", ""),
+            43L,1707L, 176L, "kmikj1iusd3j8rquta40adqjek@group.calendar.google.com", "https://topjrecords.jp/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     TOKIO(9L,null,"トキオ","TOKIO","TOKIO","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "jjr7ntm72bhm2kpmu7im4p8de0@group.calendar.google.com", "https://www.tokio.inc/s/tokio/", ""),
+            43L,1707L, 176L, "jjr7ntm72bhm2kpmu7im4p8de0@group.calendar.google.com", "https://www.tokio.inc/s/tokio/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     V6(10L,null,"ブイシックス","V6","V6","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "jivfndb5tl2jhrie3jj0mg3rf4@group.calendar.google.com", "https://avex.jp/v6/", ""),
+            43L,1707L, 176L, "jivfndb5tl2jhrie3jj0mg3rf4@group.calendar.google.com", "https://avex.jp/v6/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     ARASHI(11L,null,"アラシ","嵐","ARASHI","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "fdb4l5ap4c90alatvikqqp6dfo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0004", ""),
+            43L,1707L, 176L, "fdb4l5ap4c90alatvikqqp6dfo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0004", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     NEWS(12L,null,"ニュース","NEWS","NEWS ジャニーズ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "vunh6s6f3n5emin2kb3cgv1278@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0005?ima=2344", ""),
+            43L,1707L, 176L, "vunh6s6f3n5emin2kb3cgv1278@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0005?ima=2344", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     KISMYFT2(13L,null,"キスマイフットツー","KisMyFt2","Kis-My-Ft2","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "n35frscj6ds1p6nfopkdo60vmk@group.calendar.google.com", "https://mentrecording.jp/kismyft2/", ""),
+            43L,1707L, 176L, "n35frscj6ds1p6nfopkdo60vmk@group.calendar.google.com", "https://mentrecording.jp/kismyft2/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     ABCZ(14L,null,"エービーシーズィー","ABCZ","A.B.C-Z","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "of5nq9o9g4k5pj11bvt1rr5168@group.calendar.google.com", "https://abcz.ponycanyon.co.jp/", ""),
+            43L,1707L, 176L, "of5nq9o9g4k5pj11bvt1rr5168@group.calendar.google.com", "https://abcz.ponycanyon.co.jp/", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     JOHNNYSWEST(15L,null,"ジャニーズウェスト","ジャニーズWEST","ジャニーズWEST ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "ico4t9mlh9fd4smc47ptf2g3h8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0010", ""),
+            43L,1707L, 176L, "ico4t9mlh9fd4smc47ptf2g3h8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0010", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     KINGPRINCE(16L,null,"キングアンドプリンス ","KingandPrince","King & Prince","princehayainfo", "https://kingandprince.otakuinfo.fun/", "king:5Hsj xJot J6Ez jkA1 ZXse ELwX",
-            18L,20L, 35L, "93v42jd3m5tkf2e7k42fa1id34@group.calendar.google.com", "https://www.universal-music.co.jp/king-and-prince/", null),
+            18L,20L, 35L, "93v42jd3m5tkf2e7k42fa1id34@group.calendar.google.com", "https://www.universal-music.co.jp/king-and-prince/", null, "https://kingandprince.otakuinfo.fun/wp-content/uploads/2022/03/schedule2.png"),
     SIXTONES(17L,null,"ストーンズ ","SixTONES","SixTONES ","sixtoneshayain1", "https://sixtones.otakuinfo.fun/", "sixtones:r9Ux DkUr 4cqp or4q FX3c U1sM",
-            20L,22L, 52L, "kan71rrmb42l2mh1qnp5br1hb0@group.calendar.google.com", "https://www.sixtones.jp/", null),
+            20L,22L, 52L, "kan71rrmb42l2mh1qnp5br1hb0@group.calendar.google.com", "https://www.sixtones.jp/", null, "https://sixtones.otakuinfo.fun/wp-content/uploads/2022/03/schedule4.png"),
     NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ男子","なにわ男子 ","naniwa_hayainfo", "https://naniwadanshi.otakuinfo.fun/", "naniwa:0iqK j9dg a2Ec aQ0h gJOI v0rs",
-            18L,20L, 27L, "enf647q0ka2ijj35n9ibvmdbbg@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0011", null),
+            18L,20L, 27L, "enf647q0ka2ijj35n9ibvmdbbg@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0011", null, "https://naniwadanshi.otakuinfo.fun/wp-content/uploads/2022/03/schedule1.png"),
     HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "pjlojsmpi6vjhmu4v3ve6a5jlo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0007", ""),
+            43L,1707L, 176L, "pjlojsmpi6vjhmu4v3ve6a5jlo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0007", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     KATTUN(20L,null,"カトゥーン ","KATTUN","KAT-TUN ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "1mol4ar70n9ch4737rg8s6bs3k@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0006", ""),
+            43L,1707L, 176L, "1mol4ar70n9ch4737rg8s6bs3k@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0006", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png"),
     KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids ","", "https://otakuinfo.fun/", "hayainfo:j2Uz s3Ko YiCx Rbsg SFnQ TFeV",
-            43L,1707L, 176L, "16o2mrgjfscpti4pib9stma0b8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0003", "");
+            43L,1707L, 176L, "16o2mrgjfscpti4pib9stma0b8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0003", "", "https://otakuinfo.fun/wp-content/uploads/2022/03/schedule.png");
 
     private final Long id;
     private final String anniversary;
@@ -64,9 +64,10 @@ public enum TeamEnum {
     private final String officialSite;
     /** SEO対策のためinternal linkを必ずwordpress投稿に入れたい。nullの場合、subdomainとかをそのまま使えばいいのでは */
     private final String internalTop;
+    private final String scheduleImagePath;
 
     TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain,
-             String blogPw, Long itemPageId, Long tvPageId, Long dailyScheCategoryId, String calendarId, String officialSite, String internalTop) {
+             String blogPw, Long itemPageId, Long tvPageId, Long dailyScheCategoryId, String calendarId, String officialSite, String internalTop, String scheduleImagePath) {
         this.id = id;
         this.anniversary = anniversary;
         this.kana = kana;
@@ -81,6 +82,7 @@ public enum TeamEnum {
         this.calendarId = calendarId;
         this.officialSite = officialSite;
         this.internalTop = internalTop;
+        this.scheduleImagePath = scheduleImagePath;
     }
 
     public Team convertToEntity() {

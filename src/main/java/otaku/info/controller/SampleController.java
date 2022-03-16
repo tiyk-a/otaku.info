@@ -62,6 +62,9 @@ public class SampleController {
     CalendarApiController calendarApiController;
 
     @Autowired
+    YouTubeApiController youTubeApiController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -123,14 +126,10 @@ public class SampleController {
 //     * @return
 //     * @throws JSONException
 //     */
-    @GetMapping("/test/path")
-    public String sample1() {
-        System.out.println(Thread.activeCount());
-        System.out.println("***********************");
-        Set<Thread> threadSet= Thread.getAllStackTraces().keySet();
-        for ( Thread t : threadSet) {
-            System.out.println("1 " + t.getName() + "2 " + t.getId() + "3 " + t.getContextClassLoader() + "4 " + t.getState() + "5 " + t.getThreadGroup());
-        }
+    @GetMapping("/test")
+    public String sample1() throws IOException, GeneralSecurityException {
+//        imageController.createImage("test1.png", "日本語のテスト", "楽しみだね！🐶");
+        youTubeApiController.main();
         return "ok";
     }
 

@@ -5,8 +5,11 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.HttpClientErrorException;
@@ -22,6 +25,7 @@ import otaku.info.utils.JsonUtils;
 import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,6 +48,9 @@ public class BlogController {
 
     @Autowired
     RakutenController rakutenController;
+
+    @Autowired
+    ImageController imageController;
 
     @Autowired
     TwTextController twTextController;
@@ -101,6 +108,8 @@ public class BlogController {
 
     @Autowired
     Setting setting;
+
+    HttpServletResponse response;
 
     /**
      * 引数TeamEnumのブログにあるタグがDBになかったらDBにデータを入れます
@@ -272,17 +281,17 @@ public class BlogController {
             for (Map.Entry<String, Map<IM, List<Item>>> e : teamIdItemMasterItemMap.entrySet()) {
                 // 明日のリストはあるが未来のリストがそもそもない→明日のだけでテキスト作る
                 if (teamIdItemMasterItemFutureMap.size() == 0) {
-                    blogText = textController.blogUpdateReleaseItems(e.getValue(), null);
+                    blogText = textController.blogUpdateReleaseItems(e.getValue(), null, e.getKey());
                 } else {
                     // 明日のリストと未来のリスト両方あるor明日のリストはあるが未来のリスト（同じteamId）がない
-                    blogText = textController.blogUpdateReleaseItems(e.getValue(), teamIdItemMasterItemFutureMap.getOrDefault(e.getKey(), null));
+                    blogText = textController.blogUpdateReleaseItems(e.getValue(), teamIdItemMasterItemFutureMap.getOrDefault(e.getKey(), null), e.getKey());
                 }
                 requestMap.put(e.getKey(), blogText);
             }
         } else if (teamIdItemMasterItemFutureMap.size() > 0) {
             // 明日の発売商品がないがその先１週間はある場合
             for (Map.Entry<String, Map<IM, List<Item>>> e : teamIdItemMasterItemFutureMap.entrySet()) {
-                blogText = textController.blogUpdateReleaseItems(null, e.getValue());
+                blogText = textController.blogUpdateReleaseItems(null, e.getValue(), e.getKey());
                 requestMap.put(e.getKey(), blogText);
             }
         }
@@ -425,7 +434,32 @@ public class BlogController {
         for (IM itemMaster : itemMasterList) {
             List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
-            List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList));
+
+            // 画像生成して投稿して画像IDゲットして、で？
+            String teamName = TeamEnum.get(teamId).getName();
+            String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
+
+            // 画像が用意できたら投稿していく
+            String imagePath = "";
+            if (StringUtils.hasText(imageUrl)) {
+                System.out.println("メディアポスト:" + imageUrl);
+                Map<Integer, String> tmpMap = requestMedia(response, teamId, imageUrl);
+                for (Map.Entry<Integer, String> elem : tmpMap.entrySet()) {
+                    imagePath = elem.getValue();
+                }
+
+                System.out.println("ポスト完了");
+                // なんかアップロードに失敗したら次のマスター商品に飛ばす
+                if (imagePath.equals("")) {
+                    continue;
+                }
+
+                // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
+//                setMedia(itemMaster.getWp_id(), uploadedImageWpId);
+                // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
+            }
+
+            List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList), imagePath);
             String content = null;
             if (!contentList.isEmpty()) {
                 content = contentList.get(0);
@@ -1089,5 +1123,59 @@ public class BlogController {
                 // コンテンツがある場合はブログポストできるのでは
             }
         }
+    }
+
+    /**
+     * 画像をWordPressにポストします。
+     *
+     * @param response
+     * @param imageUrl
+     * @return Map<画像ID, 画像path>
+     */
+    public Map<Integer, String> requestMedia(HttpServletResponse response, Long teamId, String imageUrl) {
+        String finalUrl = TeamEnum.get(teamId).getSubDomain() + setting.getBlogApiPath() + "media";
+
+        imageUrl = imageUrl.replaceAll("\\?.*$", "");
+
+//        String imagePath = "";
+//
+//        // 楽天の画像の場合は取得しに行く
+//        if (imageUrl.startsWith("http")) {
+//            try (InputStream in = new URL(imageUrl).openStream()) {
+//                imagePath = availablePath(imageUrl);
+//                Files.copy(in, Paths.get(imagePath));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        } else {
+//            imagePath = imageUrl;
+//        }
+
+        response.setHeader("Cache-Control", "no-cache");
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+        headers.add("content-disposition", "attachment; filename=" + imageUrl + ".png");
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        body.add("file", new FileSystemResource(imageUrl));
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        System.out.println("画像投稿します");
+        System.out.println(imageUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(finalUrl, requestEntity, String.class);
+        String text = responseEntity.getBody();
+        System.out.println("request result: " + text);
+        JSONObject jsonObject = new JSONObject(text);
+        Map<Integer, String> res;
+        if (jsonObject.get("id") != null) {
+            Integer imageId = Integer.parseInt(jsonObject.get("id").toString().replaceAll("^\"|\"$", ""));
+            String imagePath = jsonObject.get("source_url").toString().replaceAll("^\"|\"$", "");
+            res = Collections.singletonMap(imageId, imagePath);
+        } else {
+            res = Collections.singletonMap(null, null);
+        }
+        return res;
     }
 }

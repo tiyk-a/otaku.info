@@ -220,12 +220,15 @@ public class TextController {
      * @param futureMap
      * @return
      */
-    public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap) {
+    public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap, String subDomain) {
+
+        String imagePath = TeamEnum.getBySubDomain(subDomain).getScheduleImagePath();
+
         String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
-        List<String> todaysElems = todayMap == null ? new ArrayList<>() : blogReleaseItemsText(todayMap);
-        List<String> futureElems = futureMap == null ? new ArrayList<>() : blogReleaseItemsText(futureMap);
+        List<String> todaysElems = todayMap == null ? new ArrayList<>() : blogReleaseItemsText(todayMap, imagePath);
+        List<String> futureElems = futureMap == null ? new ArrayList<>() : blogReleaseItemsText(futureMap, imagePath);
 
         // 本日発売の商品
         if (todaysElems.size() > 0) {
@@ -248,11 +251,13 @@ public class TextController {
 
     /**
      * 商品ブログ投稿文章
+     * SEO対策のためにトップに自分で作った画像を入れる
      *
      * @param itemMasterListMap
+     * @param imagePath
      * @return
      */
-    public List<String> blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap) {
+    public List<String> blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap, String imagePath) {
         List<String> resultList = new ArrayList<>();
 
         logger.debug("blogReleaseItemsTextの中です");
@@ -290,6 +295,12 @@ public class TextController {
 
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
+
+            // SEO対策のため画像を入れる
+            String seoImage = "";
+            if (!imagePath.isBlank()) {
+                seoImage = "<figure class='wp-block-image size-large'><img src=" + imagePath + "' alt='' class='wp-image-6736'/></figure>";
+            }
 
             List<String> verTxtList = new ArrayList<>();
             String txt = "";
@@ -338,7 +349,7 @@ public class TextController {
                 }
             }
 
-            String text = String.join("\n", h2, publicationDateStr, itemMaster.getAmazon_image(), String.join("\n", verTxtList), externalLink, internalLink);
+            String text = String.join("\n", h2, publicationDateStr, seoImage, itemMaster.getAmazon_image(), String.join("\n", verTxtList), externalLink, internalLink);
             // 返却リストに追加する
             resultList.add(text);
         }
@@ -737,5 +748,15 @@ public class TextController {
             internalLink = teamEnum.getSubDomain();
         }
         return Collections.singletonMap(String.join("\n", date, "<h2>TV</h2>" , String.join("\n", pTextList), "<h2>発売</h2>", String.join("\n", imTextList), externalLink, internalLink), contentFlg);
+    }
+
+    /**
+     * 単純に日付をstringにして返します。
+     *
+     * @param date
+     * @return
+     */
+    public String dateToString(Date date) {
+        return sdf3.format(date);
     }
 }

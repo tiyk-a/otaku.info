@@ -70,4 +70,14 @@ public class IMService {
     public List<IM> findByKeyExcludeTeamId(String key) {
         return imRepository.findByKeyExcludeTeamId(key);
     }
+
+    /**
+     * タイトルが一致するimを取得する
+     *
+     * @param title
+     * @return
+     */
+    public List<IM> findByTitle(String title) {
+        return imRepository.findByTitle(title);
+    }
 }

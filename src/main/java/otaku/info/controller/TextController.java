@@ -759,4 +759,22 @@ public class TextController {
     public String dateToString(Date date) {
         return sdf3.format(date);
     }
+
+    /**
+     * 半角記号を全角に置き換えます
+     *
+     * @param originStr
+     * @return
+     */
+    public String replaceSignals(String originStr) {
+        if (originStr.contains("(")) {
+            originStr.replace("(", "（");
+        }
+
+        if (originStr.contains(")")) {
+            originStr.replace(")", "）");
+        }
+
+        return originStr;
+    }
 }

@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 public class BlogController {
 
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("BlogController");
+    final Logger blogLog = Log4jUtils.newFileLogger("BlogControllerPost", "BlogPost.log");
 
     @Autowired
     TextController textController;
@@ -394,6 +395,7 @@ public class BlogController {
         try {
             RestTemplate restTemplate = new RestTemplate();
             logger.debug("Post: " + url);
+            blogLog.debug(request);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
             logger.debug("Request posted");
             
@@ -404,6 +406,9 @@ public class BlogController {
             }
             result = responseEntity.getBody();
         } catch (Exception e) {
+            blogLog.debug("***ERROR***");
+            blogLog.debug(request);
+            blogLog.debug("******");
             logger.debug("Request result: " + result);
             logger.debug("Post: " + url);
             logger.debug("Post: " + method);
@@ -417,6 +422,7 @@ public class BlogController {
             }
             result = "";
         }
+        blogLog.debug("---SUCCESS---");
         return result;
     }
 

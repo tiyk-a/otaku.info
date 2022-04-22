@@ -33,8 +33,9 @@ public class ImageController {
         BufferedImage bufferedImage = new BufferedImage(1200, 630, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics2D = bufferedImage.createGraphics();
 
-        // TODO: 色カラフルとか指定とか何かしたい
-        graphics2D.setColor(Color.WHITE);
+        // 背景色はランダムに1つ選ぶ
+        Color color = randomColor4BackGround();
+        graphics2D.setColor(color);
         graphics2D.fillRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
 
         // TODO: フォント可愛くしたい
@@ -46,8 +47,8 @@ public class ImageController {
         }
 
         graphics2D.setFont(font);
-        // TODO: 文字色赤は渋い
-        graphics2D.setColor(Color.RED);
+        // 文字色はDark Brown
+        graphics2D.setColor(new Color(51, 0, 0));
 
         FontMetrics fm1 = graphics2D.getFontMetrics();
         Rectangle rectText1 = fm1.getStringBounds(text1, graphics2D).getBounds();
@@ -72,5 +73,59 @@ public class ImageController {
             e.printStackTrace();
         }
         return "";
+    }
+
+    /**
+     * ランダムに背景となる色を返却します。
+     *
+     * @return
+     */
+    private Color randomColor4BackGround() {
+        Color[] colorArray = {
+                // Lavendar
+                new Color(230,230,250),
+
+                // lightcyan
+                new Color(224,255,255),
+
+                // honeydew
+                new Color(240,255,240),
+
+                // beige
+                new Color(245,245,220),
+
+                // lemonchiffon
+                new Color(255,250,205),
+
+                // oldlace
+                new Color(253,245,230),
+
+                // blanchedalmond
+                new Color(255,235,205),
+
+                // lavenderblush
+                new Color(255,240,245),
+
+                // mistyrose
+                new Color(255,228,225),
+
+                // pink
+                new Color(255,192,203),
+
+                // wheat
+                new Color(245,222,179),
+
+                // peachpuff
+                new Color(255,218,185),
+
+                // navajowhite
+                new Color(255,222,173),
+
+                // thistle
+                new Color(216,191,216)
+        };
+
+        int num =  (int) (Math.random() * (colorArray.length));
+        return colorArray[num];
     }
 }

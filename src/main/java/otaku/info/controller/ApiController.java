@@ -87,6 +87,9 @@ public class ApiController {
     DateUtils dateUtils;
 
     @Autowired
+    TextController textController;
+
+    @Autowired
     StringUtilsMine stringUtilsMine;
 
     /**
@@ -632,8 +635,19 @@ public class ApiController {
                     im.setBlogNotUpdated(true);
                     updFlg = true;
                 }
-                IM savedIm = imService.save(im);
-                im = savedIm;
+
+                // wordpressでエラーになる記号を処理し、設定し直す
+                im.setTitle(textController.replaceSignals(im.getTitle()));
+
+                // 登録前に本当に重複登録がないかチェック
+                // 同じタイトルのimがあるなら、登録せずに0番目のimをセットする
+                List<IM> checkedImList = imService.findByTitle(imVerForm.getTitle());
+                if (checkedImList.size() == 0) {
+                    IM savedIm = imService.save(im);
+                    im = savedIm;
+                } else {
+                    im = checkedImList.get(0);
+                }
             } else {
                 im = imService.findById(imVerForm.getIm_id());
             }
@@ -799,7 +813,7 @@ public class ApiController {
                     String verName = ver[1];
 
                     ImVer newVer = new ImVer();
-                    newVer.setVer_name(verName);
+                    newVer.setVer_name(textController.replaceSignals(verName));
                     newVer.setIm_id(im.getIm_id());
                     newVer.setDel_flg(false);
                     imVerService.save(newVer);

@@ -227,20 +227,20 @@ public class TextController {
         String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
-        List<String> todaysElems = todayMap == null ? new ArrayList<>() : blogReleaseItemsText(todayMap, imagePath);
-        List<String> futureElems = futureMap == null ? new ArrayList<>() : blogReleaseItemsText(futureMap, imagePath);
+        String todaysElems = todayMap == null ? null : blogReleaseItemsText(todayMap, imagePath);
+        String futureElems = futureMap == null ? null : blogReleaseItemsText(futureMap, imagePath);
 
         // 本日発売の商品
-        if (todaysElems.size() > 0) {
-            result = result + "\n" + String.join("\n\n", String.join("\n\n", todaysElems));
+        if (todaysElems != null) {
+            result = result + "\n" + todaysElems;
         } else {
             result = result + "\n" + "<h2>今日発売の商品はありません。</h2>";
         }
 
         // 明日以降発売の商品
         String result2 = "";
-        if (futureElems.size() > 0) {
-            result2 = String.join("\n\n", result, String.join("\n\n", futureElems));
+        if (futureElems != null) {
+            result2 = String.join("\n\n", result, futureElems);
         } else {
             result2 = String.join("\n\n", result, "<h2>明日以降1週間内発売の商品はありません。</h2>");
         }
@@ -254,11 +254,10 @@ public class TextController {
      * SEO対策のためにトップに自分で作った画像を入れる
      *
      * @param itemMasterListMap
-     * @param imagePath
      * @return
      */
-    public List<String> blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap, String imagePath) {
-        List<String> resultList = new ArrayList<>();
+    public String blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap, String imagePath) {
+        String result = "";
 
         logger.debug("blogReleaseItemsTextの中です");
         logger.debug("itemMasterListMap.size=" + itemMasterListMap.size());
@@ -298,8 +297,10 @@ public class TextController {
 
             // SEO対策のため画像を入れる
             String seoImage = "";
-            if (!imagePath.isBlank()) {
-                seoImage = "<figure class='wp-block-image size-large'><img src=" + imagePath + "' alt='' class='wp-image-6736'/></figure>";
+            if (imagePath == null) {
+                seoImage = "<figure class='wp-block-image size-large'><img src='***INNER_IMAGE***' alt='' class='wp-image-6736'/></figure>";
+            } else {
+                seoImage = "PARAM_IMAGE";
             }
 
             List<String> verTxtList = new ArrayList<>();
@@ -350,11 +351,17 @@ public class TextController {
             }
 
             String text = String.join("\n", h2, publicationDateStr, seoImage, itemMaster.getAmazon_image(), String.join("\n", verTxtList), externalLink, internalLink);
-            // 返却リストに追加する
-            resultList.add(text);
+            // 返却に追加
+            result = result + "\n" + text;
         }
-        logger.debug("resultList.size=" + resultList.size());
-        return resultList;
+
+        // SEO対策のため画像を入れる(第二引数がある場合)
+        String seoImage = "";
+        if (imagePath != null) {
+            result.replaceAll("PARAM_IMAGE", imagePath);
+        }
+
+        return result;
     }
 
     /**

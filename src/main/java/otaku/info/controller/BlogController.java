@@ -431,82 +431,73 @@ public class BlogController {
      * imId, wpIdのマップを返します。
      *
      */
-    public Map<Long, Long> postOrUpdate(List<IM> itemMasterList, Long teamId) throws InterruptedException {
+    public Map<Long, Long> postOrUpdate(IM itemMaster) throws InterruptedException {
         Map<Long, Long> resMap = new TreeMap<>();
-        Long wpId = null;
 
-        logger.debug("postOrUpdateです。IMListサイズは：" + itemMasterList.size());
-        logger.debug("teamId=" + teamId);
-        for (IM itemMaster : itemMasterList) {
-            List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
-            String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+        logger.debug("postOrUpdateです。IMid：" + itemMaster.getIm_id());
+        List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
+        List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
+        List<Long> teamIdList = relList.stream().map(IMRel::getTeam_id).collect(Collectors.toList());
+        List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
+        String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
 
-            // 画像生成して投稿して画像IDゲットして、で？
-            String teamName = TeamEnum.get(teamId).getName();
-            String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), teamName);
+        // 画像生成して投稿して画像IDゲットして、で？
+        // TODO: 画像は必要な時だけでいいのよ。もうあるなら不要
+        // TODO: 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
+        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), String.join(",", teamNameList));
 
-            // 画像が用意できたら投稿していく
+        // ひとまずcontentを作る。後でSEO対策のinner_imageを詰める（サイトごと）
+        String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList), null);
+
+        // generalBlogの有無、対応の有無を管理(なし=1,あり・未対応==2,あり・対応済み=3)
+        Integer generalBlogHandle = 1;
+
+        // generalBlogがimrelの中にあるか
+        for (Long teamId : teamIdList) {
+            if (generalBlogHandle.equals(2)) {
+                break;
+            }
+
+            if (TeamEnum.get(teamId).getSubDomain().equals("https://otakuinfo.fun/")) {
+                generalBlogHandle = 2;
+            }
+        }
+
+        // ここからimrelごと(=ブログごと)に処理。必要なところは投稿・更新する
+        for (IMRel rel : relList) {
+
+            // このrelがgeneralBlogなのかフラグ
+            Boolean generalBlogFlg = TeamEnum.get(rel.getTeam_id()).getSubDomain().equals("https://otakuinfo.fun/");
+
+            // このrelがgeneralBlogで、他のgeneralBlogのrelにより処理が完了していたら飛ばす
+            if (generalBlogFlg && generalBlogHandle.equals(3)) {
+                continue;
+            }
+
+            Long wpId = rel.getWp_id();
+            Long teamId = rel.getTeam_id();
+
+            // inner_imageがまだ投稿されていない場合は投稿していく
             String imagePath = "";
-            if (StringUtils.hasText(imageUrl)) {
+            if (rel.getInner_image() == null || rel.getInner_image().isBlank()) {
                 System.out.println("メディアポスト:" + imageUrl);
                 Map<Integer, String> tmpMap = requestMedia(response, teamId, imageUrl);
                 for (Map.Entry<Integer, String> elem : tmpMap.entrySet()) {
                     imagePath = elem.getValue();
                 }
 
-                System.out.println("ポスト完了");
-                // なんかアップロードに失敗したら次のマスター商品に飛ばす
-                if (imagePath.equals("")) {
-                    continue;
-                }
+                System.out.println("メディアポスト完了");
 
-                // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
-//                setMedia(itemMaster.getWp_id(), uploadedImageWpId);
-                // TODO: itemMasterにはWPにアップした画像のIDを設定するところがないんだよね
+                // imrelを更新する
+                rel.setInner_image(imagePath);
+                iMRelService.save(rel);
             }
 
-            List<String> contentList = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList), imagePath);
-            String content = null;
-            if (!contentList.isEmpty()) {
-                content = contentList.get(0);
-            }
-            List<Long> teamIdList = new ArrayList<>();
-            teamIdList.add(teamId);
-            List<String> tagList = teamService.findTeamNameByIdList(teamIdList);
-            List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
-            IMRel rel = relList.stream().filter(e -> e.getTeam_id().equals(teamId)).findFirst().orElse(null);
-            Boolean generalBlogFlg = TeamEnum.get(teamId).getSubDomain().equals("https://otakuinfo.fun/");
-            logger.debug("teamId:" + teamId + " TeamEnum.get(teamId).getSubDomain():" + TeamEnum.get(teamId).getSubDomain());
-            logger.debug("generalBlogFlg: " + generalBlogFlg);
-            logger.debug("rel.getWp_id(): " + rel.getWp_id());
-
-            wpId = rel.getWp_id();
-
-            if (generalBlogFlg && wpId == null) {
-                logger.debug("***generalBlogFlg && wpId == null***");
-                for (IMRel imRel : relList) {
-                    logger.debug("imRel: " + imRel.getIm_rel_id());
-                    if (TeamEnum.get(imRel.getTeam_id()).getSubDomain().equals("https://otakuinfo.fun/")) {
-                        logger.debug("TeamEnum.get(imRel.getTeam_id()).getSubDomain(): " + TeamEnum.get(imRel.getTeam_id()).getSubDomain());
-                        if (imRel.getWp_id() != null) {
-                            logger.debug("imRel.getWp_id(): " + imRel.getWp_id());
-                            wpId = imRel.getWp_id();
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // TODO: memberListどこで使う
-//            List<Long> memberIdList = new ArrayList<>();
-//            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
-//            if (relMemList.size() > 0) {
-//                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
-//            }
-
+            // blogポストに向かう
             HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+            content = content.replace("***INNER_IMAGE***", rel.getInner_image());
 
-            if (headers != null && content != null) {
+            if (headers != null) {
 
                 JSONObject jsonObject = new JSONObject();
                 if (setting.getTest()!= null && setting.getTest().equals("dev")) {
@@ -519,11 +510,12 @@ public class BlogController {
 
                 // 年月
                 BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));
-                tagList.add(yyyyMMTag.getTag_name());
+                teamNameList.add(yyyyMMTag.getTag_name());
 
-                // TODO: チームメイトメンバー名が登録されrてるか、新規追加必要か確認執拗
+                // TODO: チームメイトメンバー名が登録されてるか、新規追加必要か確認必要
+                // TODO: タグどした？
                 // BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey()); for all
-                List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagList);
+                List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(teamNameList);
                 int[] tags = new int[0];
                 if (!list.isEmpty()) {
                     tags = list.stream().mapToInt(i->i).toArray();
@@ -613,9 +605,22 @@ public class BlogController {
             } else {
                 logger.debug("headerがエラーみたいです");
             }
-            logger.debug("postOrUpdate終わり");
-            Thread.sleep(500);
+
+            // このrelがgeneralBlogで、このrelにより処理が完了した場合、generalBlogは処理済みに設定する
+            if (generalBlogFlg) {
+                generalBlogHandle = 3;
+            }
         }
+
+            // TODO: memberListどこで使う
+//            List<Long> memberIdList = new ArrayList<>();
+//            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
+//            if (relMemList.size() > 0) {
+//                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
+//            }
+
+        logger.debug("postOrUpdate終わり");
+        Thread.sleep(500);
         return resMap;
     }
 

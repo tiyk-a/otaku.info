@@ -33,6 +33,10 @@ public class IMRel implements Serializable {
     @Column(nullable = true)
     private Long wp_id;
 
+    /** WP blogにSEO対策のためにあげるJavaが生成した画像のパス(blog上) */
+    @Column(nullable = true)
+    private String inner_image;
+
     /** Google Calendar Idって名前だけどeventIdが入ってるよ */
     @Column(nullable = true)
     private String calendar_id;

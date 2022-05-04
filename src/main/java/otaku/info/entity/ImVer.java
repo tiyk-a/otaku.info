@@ -3,8 +3,11 @@ package otaku.info.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 /**
  * 第２世代IM用
@@ -34,4 +37,12 @@ public class ImVer {
     /** 論理抹消 */
     @Column(columnDefinition = "Boolean default false")
     private Boolean del_flg;
+
+    @CreationTimestamp
+    @Column(nullable = true)
+    private Timestamp created_at;
+
+    @UpdateTimestamp
+    @Column(nullable = true)
+    private Timestamp updated_at;
 }

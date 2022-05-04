@@ -3,10 +3,13 @@ package otaku.info.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
 import otaku.info.form.IMForm;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -41,6 +44,14 @@ public class IM implements Comparable<IM> {
     /** trueだとブログが更新されていないので更新する必要がある */
     @Column(columnDefinition = "Boolean default false")
     private boolean blogNotUpdated;
+
+    @CreationTimestamp
+    @Column(nullable = true)
+    private Timestamp created_at;
+
+    @UpdateTimestamp
+    @Column(nullable = true)
+    private Timestamp updated_at;
 
     public IM absorb(IMForm imForm) {
         if (imForm.getTitle() != null && !imForm.getTitle().isEmpty()) {

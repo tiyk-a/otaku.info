@@ -3,8 +3,11 @@ package otaku.info.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 /**
  * BlogTagテーブル(Wp tag)
@@ -32,4 +35,12 @@ public class BlogTag {
 
     @Column(nullable = false)
     private Long team_id;
+
+    @CreationTimestamp
+    @Column(nullable = true)
+    private Timestamp created_at;
+
+    @UpdateTimestamp
+    @Column(nullable = true)
+    private Timestamp updated_at;
 }

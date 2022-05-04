@@ -13,12 +13,9 @@ import otaku.info.entity.IMRel;
 import otaku.info.entity.IM;
 import otaku.info.service.IMRelService;
 import otaku.info.service.IMService;
-import otaku.info.utils.DateUtils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * データが揃ってるのにブログポストされてないIMがあったら投稿してあげる
@@ -40,41 +37,17 @@ public class BlogCatchupTasklet implements Tasklet {
     @Autowired
     IMRelService imRelService;
 
-    @Autowired
-    DateUtils dateUtils;
-
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        // wpIdがnullで未来発売の商品のimrelを集める
-        List<IMRel> imRelList = imRelService.findByWpIdNullPublicationDateFuture(dateUtils.getToday());
-        loggerController.printBlogCatchupTaskletLogger("対象imrel:" + imRelList.size());
-        // teamId, list<Itemmaster>
-        Map<Long, List<IM>> imTeamIdMap = new TreeMap<>();
-        for (IMRel imRel : imRelList) {
-            List<IM> tmpList = new ArrayList<>();
-            if (imTeamIdMap.containsKey(imRel.getTeam_id())) {
-                tmpList = imTeamIdMap.get(imRel.getTeam_id());
-            }
-            IM im = imService.findById(imRel.getIm_id());
-            if (im != null) {
-                tmpList.add(im);
-            }
-            imTeamIdMap.put(imRel.getTeam_id(), tmpList);
-        }
 
-        loggerController.printBlogCatchupTaskletLogger("ポストありteam数:" + imTeamIdMap.size());
-        // List<Itemmaster>, teamId
-        for (Map.Entry<Long, List<IM>> e : imTeamIdMap.entrySet()) {
-            // TODO: teamid=0Lはあってはいけないはずだがまだいるので処理分割してる
-            if (e.getKey() != 0L) {
-                Map<Long, Long> imWpMap = blogController.postOrUpdate(e.getValue(), e.getKey());
-                loggerController.printBlogCatchupTaskletLogger("teamId:" + e.getKey() + " itemMaster数:" + e.getValue().size());
-            } else {
-                loggerController.printBlogCatchupTaskletLogger("teamId=0L:" + e.getValue().size());
+        List<IM> imList = imService.findFuture();
+
+        for (IM im : imList) {
+            List<IMRel> relList = imRelService.findByItemMId(im.getIm_id()).stream().filter(e -> e.getWp_id() == null).collect(Collectors.toList());
+            if (relList.size() > 0) {
+                blogController.postOrUpdate(im);
             }
         }
-
-        //
         return RepeatStatus.FINISHED;
     }
 }

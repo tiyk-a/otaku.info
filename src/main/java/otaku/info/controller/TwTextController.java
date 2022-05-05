@@ -76,7 +76,13 @@ public class TwTextController {
      * @return
      */
     public String twitter(TwiDto twiDto) {
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
+
+        String memTag = "";
+        if (twiDto.getMemList() != null && twiDto.getMemList().size() > 0) {
+            memTag = String.join(" #", twiDto.getMemList());
+        }
+
+        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic() + memTag;
         return "新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A" + tags;
     }
 

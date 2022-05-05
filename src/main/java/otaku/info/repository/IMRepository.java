@@ -42,4 +42,7 @@ public interface IMRepository extends JpaRepository<IM, Long> {
 
     @Query("select t from im t where title = ?1")
     List<IM> findByTitle(String title);
+
+    @Query("select t from im t where publication_date >= CURRENT_DATE and del_flg = 0")
+    List<IM> findFuture();
 }

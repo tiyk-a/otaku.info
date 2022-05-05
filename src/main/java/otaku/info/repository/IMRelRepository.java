@@ -13,8 +13,12 @@ public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
 
     @Query("select t from im_rel t where im_rel_id = ?1")
     IMRel findByImRelId(Long imRelId);
+
     @Query("select t from im_rel t where im_id = ?1")
     List<IMRel> findByItemMId(Long itemMId);
+
+    @Query("select t from im_rel t where im_id = ?1 and del_flg = 0")
+    List<IMRel> findByImIdNotDeleted(Long imId);
 
     @Query("select distinct team_id from im_rel t where im_id = ?1")
     List<Long> findTeamIdByItemMId(Long itemMId);

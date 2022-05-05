@@ -1,5 +1,6 @@
 package otaku.info.controller;
 
+import java.awt.*;
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
@@ -43,8 +44,6 @@ public class SampleController {
 
     @Autowired
     private TwTextController twTextController;
-    @Autowired
-    private Controller controller;
 
     @Autowired
     private AnalyzeController analyzeController;
@@ -119,17 +118,22 @@ public class SampleController {
         return "Status: " + e.getStatus() + " id: " + e.getId();
     }
 
-//    /**
-//     * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
-//     *
-//     * @param artistId
-//     * @return
-//     * @throws JSONException
-//     */
+    /**
+     * ブラウザとかでテスト投稿（1件）がいつでもできるメソッド
+     *
+     * @return
+     */
     @GetMapping("/test")
-    public String sample1() throws IOException, GeneralSecurityException {
+    public String sample1() {
 //        imageController.createImage("test1.png", "日本語のテスト", "楽しみだね！🐶");
-        youTubeApiController.main();
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Font[] allFonts = ge.getAllFonts();
+
+        for (Font font : allFonts) {
+
+            System.out.println(font.getFontName(Locale.JAPAN));
+        }
+//        youTubeApiController.main();
         return "ok";
     }
 
@@ -419,13 +423,18 @@ public class SampleController {
      * ②Yahoo検索
      *
      * @param teamId
-     * @param artist
+     * @param name // teamNameかmemberNameが入る
      * @return
      * @throws JSONException
      */
-    public String searchItem(Long teamId, String artist, Long memberId, Long siteId) throws JSONException, ParseException, InterruptedException {
+    public String searchItem(Long teamId, String name, Long memberId, Long siteId) throws ParseException, InterruptedException {
         boolean isTeam = memberId == 0L;
-        List<String> list = controller.affiliSearchWord(artist);
+
+        List<String> searchList = new ArrayList<String>(Arrays.asList("雑誌", "CD", "DVD"));
+        List<String> resultList = new ArrayList<>();
+        // アフィリサイトでの検索ワード一覧
+        searchList.forEach(arr -> resultList.add(String.join(" ", name, arr)));
+
         List<Item> newItemList = new ArrayList<>();
         // 検索の誤引っ掛かりした商品をストアするリスト
         List<Item> removeList = new ArrayList<>();
@@ -433,7 +442,7 @@ public class SampleController {
         // siteIdで処理切り替え
         if (siteId == 1) {
             // ■■■■■　①楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
-            List<String> itemCodeList = rakutenController.search(list, teamId);
+            List<String> itemCodeList = rakutenController.search(resultList, teamId);
 
             itemCodeList = itemService.findNewItemList(itemCodeList);
 
@@ -442,7 +451,7 @@ public class SampleController {
             }
         } else if (siteId == 2) {
             // ■■■■■　Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
-            newItemList.addAll(yahooController.search(list, teamId));
+            newItemList.addAll(yahooController.search(resultList, teamId));
         }
 
         logger.debug("新商品候補数：" + newItemList.size());

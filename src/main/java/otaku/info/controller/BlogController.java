@@ -437,13 +437,13 @@ public class BlogController {
         logger.debug("postOrUpdateです。IMid：" + itemMaster.getIm_id());
         List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
         List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
+        List<IMRelMem> memList = imRelMemService.findByImRelIdListNotDeleted(relList.stream().map(e -> e.getIm_rel_id()).collect(Collectors.toList()));
         List<Long> teamIdList = relList.stream().map(IMRel::getTeam_id).collect(Collectors.toList());
         List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
         String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
 
         // 画像生成して投稿して画像IDゲットして、で？
-        // TODO: 画像は必要な時だけでいいのよ。もうあるなら不要
-        // TODO: 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
+        // 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
         String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), String.join(",", teamNameList));
 
         // ひとまずcontentを作る。後でSEO対策のinner_imageを詰める（サイトごと）
@@ -508,14 +508,18 @@ public class BlogController {
                 jsonObject.put("author", 1);
                 jsonObject.put("categories", new Integer[]{5});
 
-                // 年月
+                // 年月を追加
+                List<String> tagNameList = new ArrayList<>();
+                tagNameList.addAll(teamNameList);
                 BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));
-                teamNameList.add(yyyyMMTag.getTag_name());
+                tagNameList.add(yyyyMMTag.getTag_name());
 
-                // TODO: チームメイトメンバー名が登録されてるか、新規追加必要か確認必要
-                // TODO: タグどした？
-                // BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey()); for all
-                List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(teamNameList);
+                // member名を追加
+                if (memList != null && memList.size() > 0) {
+                    tagNameList.addAll(memList.stream().map(e -> memberService.getMemberName(e.getMember_id())).collect(Collectors.toList()));
+                }
+
+                List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagNameList);
                 int[] tags = new int[0];
                 if (!list.isEmpty()) {
                     tags = list.stream().mapToInt(i->i).toArray();
@@ -581,14 +585,15 @@ public class BlogController {
                         if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                             logger.debug(itemMaster.getTitle());
                             url = e.getSubDomain() + "blog/" + rel.getWp_id();
-                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId);
+                            List<String> memNameList = memList.stream().filter(g -> g.getIm_rel_id().equals(rel.getIm_rel_id())).map(f -> memberService.getMemberName(f.getMember_id())).collect(Collectors.toList());
+                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId, memNameList);
                             // TEST:temporaryアマゾンImageがあればそれを入れてあげるようにする
                             if (itemMaster.getAmazon_image() != null) {
                                 twiDto.setUrl(stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(url));
                             }
 
                             String result;
-                            // TODO: text作成、memberを抜いてるので追加したほうがいい
+                            // text作成
                             result = twTextController.twitter(twiDto);
                             // Twitter投稿
                             pythonController.post(teamId, result);
@@ -611,13 +616,6 @@ public class BlogController {
                 generalBlogHandle = 3;
             }
         }
-
-            // TODO: memberListどこで使う
-//            List<Long> memberIdList = new ArrayList<>();
-//            List<IMRelMem> relMemList = imRelMemService.findByImRelId(rel.getIm_rel_id());
-//            if (relMemList.size() > 0) {
-//                memberIdList = relMemList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList());
-//            }
 
         logger.debug("postOrUpdate終わり");
         Thread.sleep(500);
@@ -930,7 +928,8 @@ public class BlogController {
 
     /**
      * wpIdがしっかり繋がっているか確認する。繋がっていないかったらwpId抜いてあげる
-     * TODO: wpの投稿全部落として、wpidがdbに保存されてないやつはどうにかしないといけない
+     * PENDING: wpの投稿全部落として、wpidがdbに保存されてないやつはどうにかしないといけない
+     * -> tmpmethodのためあまり重要ではなく放置
      */
     public void chkWpId() throws InterruptedException {
         List<IMRel> imRelList = iMRelService.findAllWpIdNotNull();
@@ -974,7 +973,8 @@ public class BlogController {
 
     /**
      * ブログの投稿を全部取ってきて、対応するwpidがdbにあるか確認する。なかったら
-     * TODO: subdomainなしotakuinfoの場合、teamIdが適切なもの取れていないのではないか？
+     * PENDING: subdomainなしotakuinfoの場合、teamIdが適切なもの取れていないのではないか？
+     * -> tmpmethodのためそんなに重要ではなく放置
      */
     public void chkWpIdByBlog() throws InterruptedException {
 
@@ -1053,6 +1053,9 @@ public class BlogController {
         // チームIDリスト
         List<Long> teamIdList = Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(subDomain)).map(TeamEnum::getId).collect(Collectors.toList());
 
+        // memberList(のちループで詰める。variableだけ宣言)
+        List<Long> memIdList = new ArrayList<>();
+
         Boolean contentFlg = true;
 
         // コンテンツ文章の作成
@@ -1067,6 +1070,16 @@ public class BlogController {
             for (IM im : imList) {
                 List<ImVer> verList = imVerService.findByImId(im.getIm_id());
                 imMap.put(im, verList);
+
+                // memIdListにメンバーなかったら詰める
+                List<Long> tmpMemIdList = imRelMemService.findMemIdListByImId(im.getIm_id());
+                if (tmpMemIdList != null && tmpMemIdList.size() > 0) {
+                    for (Long memId : tmpMemIdList) {
+                        if (!memIdList.contains(memId)) {
+                            memIdList.add(memId);
+                        }
+                    }
+                }
             }
 
             Map<String, Boolean> tmpMap = textController.createDailySchedulePost(teamId, tmrw, imMap, plist);
@@ -1100,21 +1113,33 @@ public class BlogController {
         // dailyScheduleCategoryIdをカテゴリに入れてあげる
         jsonObject.put("categories", cat);
 
-        // 年月
-//            BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));
-//            tagList.add(yyyyMMTag.getTag_name());
+        // タグを詰める
+        List<String> tagNameList = new ArrayList<>();
+        // subdomainでない場合、teamを追加
+        if (teamIdList.size() > 1) {
+            tagNameList.addAll(teamService.findTeamNameByIdList(teamIdList));
+        }
 
-        // TODO: チームメイトメンバー名が登録されrてるか、新規追加必要か確認執拗
-        // BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), entry.getKey()); for all
-//            List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagList);
-//            int[] tags = new int[0];
-//            if (!list.isEmpty()) {
-//                tags = list.stream().mapToInt(i->i).toArray();
-//            }
+        // 年月を追加
+        BlogTag yyyyMMTag = addTagIfNotExists(tmrw, subDomain);
+        tagNameList.add(yyyyMMTag.getTag_name());
 
-//            if (tags.length > 0) {
-//                jsonObject.put("tags", tags);
-//            }
+        // member名を追加
+        if (memIdList != null && memIdList.size() > 0) {
+            tagNameList.addAll(memIdList.stream().map(f -> memberService.getMemberName(f)).collect(Collectors.toList()));
+        }
+
+        // stringでタグ名が揃ったのでidに変換
+        List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagNameList);
+        int[] tags = new int[0];
+        if (!list.isEmpty()) {
+            tags = list.stream().mapToInt(j->j).toArray();
+        }
+
+        if (tags.length > 0) {
+            jsonObject.put("tags", tags);
+        }
+
         if (setting.getTest()!= null && setting.getTest().equals("dev")) {
             jsonObject.put("status", "draft");
         } else {

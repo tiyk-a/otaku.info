@@ -21,8 +21,17 @@ public class IMRelMemService {
     public IMRelMem findByImRelMemId(Long imRelMemId) {
         return imRelMemRepository.findByImRelMemId(imRelMemId);
     }
+
     public List<IMRelMem> findByImRelId(Long imRelId) {
         return imRelMemRepository.findByImRelId(imRelId);
+    }
+
+    public List<IMRelMem> findByImRelIdNotDeleted(Long imRelId) {
+        return imRelMemRepository.findByImRelIdNotDeleted(imRelId);
+    }
+
+    public List<IMRelMem> findByImRelIdListNotDeleted(List<Long> imRelIdList) {
+        return imRelMemRepository.findByImRelIdListNotDeleted(imRelIdList);
     }
 
     public IMRelMem save(IMRelMem rel) {
@@ -45,5 +54,9 @@ public class IMRelMemService {
 
     public Optional<IMRelMem> findByImRelIdMemId(Long relId, Long memId) {
         return imRelMemRepository.findByImRelIdMemId(relId, memId);
+    }
+
+    public List<Long> findMemIdListByImId(Long imId) {
+        return imRelMemRepository.findMemIdListByImId(imId);
     }
 }

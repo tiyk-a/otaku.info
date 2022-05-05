@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Twitter用、あまり活用できてない
@@ -24,4 +25,6 @@ public class TwiDto {
     public Date reserve_due;
 
     public Long team_id;
+
+    public List<String> memList;
 }

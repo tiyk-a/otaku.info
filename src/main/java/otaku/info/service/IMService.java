@@ -80,4 +80,8 @@ public class IMService {
     public List<IM> findByTitle(String title) {
         return imRepository.findByTitle(title);
     }
+
+    public List<IM> findFuture() {
+        return imRepository.findFuture();
+    }
 }

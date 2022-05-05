@@ -185,12 +185,12 @@ public class ApiController {
             imDto.setVerList(verList);
 
             // relListも入れる
-            List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
+            List<IMRel> imRelList = imRelService.findByImIdNotDeleted(im.getIm_id());
             imDto.setRelList(imRelList);
 
             List<IMRelMem> imRelMemList = new ArrayList<>();
             for (IMRel rel : imRelList) {
-                imRelMemList.addAll(imRelMemService.findByImRelId(rel.getIm_rel_id()));
+                imRelMemList.addAll(imRelMemService.findByImRelIdNotDeleted(rel.getIm_rel_id()));
             }
 
             // relMemListも入れる
@@ -391,11 +391,9 @@ public class ApiController {
     public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Long imId, @RequestParam("team") Long team) throws InterruptedException {
         logger.debug("accepted");
         IM im = imService.findById(imId);
-        List<IM> list = new ArrayList<>();
-        list.add(im);
         logger.debug("fin");
         if (im != null) {
-            blogController.postOrUpdate(list, team);
+            blogController.postOrUpdate(im);
             return ResponseEntity.ok(true);
         } else {
             return ResponseEntity.ok(false);
@@ -624,6 +622,8 @@ public class ApiController {
             }
 
             // im_idが入っていたらverだけ追加処理処理、入っていなかったらim新規登録とあればver追加処理、と判断（ここではimのタイトル変更などはできない）
+            // まずはim
+            // imから新規追加?
             if (imVerForm.getIm_id() == null || imVerForm.getIm_id() == 0) {
 
                 // 対象のItemが見つからなかったら処理しません。見つかったら処理する。
@@ -669,7 +669,7 @@ public class ApiController {
                             Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
 
                             // imrelの登録
-                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, event.getId(), null, null, false));
+                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, event.getId(), null, null, false));
                         }
                     } else {
                         // IM更新の場合
@@ -686,7 +686,7 @@ public class ApiController {
                                     Event event = calendarApiController.hideEvent(imRel.getTeam_id(), imRel.getCalendar_id());
 
                                     // imrelのcalendarid上書くため、退避する
-                                    DelCal delCal = new DelCal(null, TeamEnum.get(imRel.getTeam_id()).getCalendarId(), imRel.getTeam_id(), event.getId(), 1L);
+                                    DelCal delCal = new DelCal(null, TeamEnum.get(imRel.getTeam_id()).getCalendarId(), imRel.getTeam_id(), event.getId(), 1L, null, null);
                                     delCalService.save(delCal);
                                 }
 
@@ -717,7 +717,7 @@ public class ApiController {
                                     Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
 
                                     // imrelの登録
-                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, event.getId(), null, null, false));
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, event.getId(), null, null, false));
                                 }
                             }
                         }
@@ -747,7 +747,7 @@ public class ApiController {
                                 Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
 
                                 // imrelの登録
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, event.getId(), null, null, false));
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, event.getId(), null, null, false));
                             }
 
                             imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
@@ -784,7 +784,7 @@ public class ApiController {
                                     Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
 
                                     // imrelの登録
-                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, event.getId(), null, null, false));
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, event.getId(), null, null, false));
                                 }
 
                                 // 既存でimrelmemの登録がないか確認
@@ -965,6 +965,121 @@ public class ApiController {
                     newVer.setIm_id(im.getIm_id());
                     newVer.setDel_flg(false);
                     imVerService.save(newVer);
+                }
+            }
+
+            // imrelを更新
+            // formのimrel1つずつ処理
+            List<IMRel> imRelList = imRelService.findByImIdNotDeleted(im.getIm_id());
+            List<Long> copyRelIdListt = new ArrayList<>();
+
+            for (List<Integer> imrel : imVerForm.getImrel()) {
+
+                IMRel targetRel = null;
+                boolean newRelFlg = false;
+
+                // listから元データが見つかるか？
+                if (imrel.get(0) != null && imRelList.stream().anyMatch(e -> e.getIm_rel_id().equals(imrel.get(0).longValue()))) {
+                    targetRel = imRelList.stream().filter(e -> e.getIm_rel_id().equals(imrel.get(0).longValue())).findFirst().get();
+
+                    // 値に変更がある時だけ更新する
+                    if (!targetRel.getIm_id().equals(imrel.get(1).longValue()) || !targetRel.getTeam_id().equals(imrel.get(2).longValue())) {
+                        targetRel.setDel_flg(true);
+                        imRelService.save(targetRel);
+
+                        if (!imrel.get(2).equals(4)) {
+                            newRelFlg = true;
+                        }
+                    }
+                    copyRelIdListt.add(targetRel.getIm_rel_id());
+                } else {
+                    // del_flgがtrueのレコードで該当のがないか検索
+                    Optional<IMRel> targetRel2 = imRelService.findByImIdTeamId(imrel.get(1).longValue(), imrel.get(2).longValue());
+                    if (targetRel2.isPresent()) {
+                        // targetがあったらdel_flgをfalseに戻してあげてレコード復活
+                        targetRel2.get().setDel_flg(false);
+                        imRelService.save(targetRel2.get());
+                    } else {
+                        newRelFlg = true;
+                    }
+                }
+
+                if (newRelFlg) {
+                    IMRel newRel = new IMRel(null, imrel.get(1).longValue(), imrel.get(2).longValue(), null, null, TeamEnum.get(imrel.get(2).longValue()).getCalendarId(), null, null, false);
+                    imRelService.save(newRel);
+                }
+            }
+
+            // 削除処理がないか、更新後のサイズから確認
+            if (copyRelIdListt.size() != imRelList.size()) {
+                for (IMRel rel : imRelList) {
+                    if (!copyRelIdListt.contains(rel.getIm_rel_id())) {
+                        rel.setDel_flg(true);
+                        imRelService.save(rel);
+                    }
+                }
+            }
+
+            // memlistも更新
+            if (imVerForm.getImrelm() != null) {
+                // 今有効なrellistを取得
+                List<IMRel> relList = imRelService.findByImIdNotDeleted(im.getIm_id());
+
+                // relごとに該当のrelmemを見つけて更新
+                for (IMRel rel : relList) {
+                    // 今すでに登録されてるデータを取ってくる
+                    List<IMRelMem> existRelMemList = imRelMemService.findByImRelIdNotDeleted(rel.getIm_rel_id());
+                    List<Long> updatedRelMemIdList = new ArrayList<>();
+                    boolean newMenFlg = false;
+
+                    if (imVerForm.getImrelm().stream().anyMatch(e -> e.get(1).longValue() == rel.getIm_rel_id())) {
+                        List<List<Integer>> relMList = imVerForm.getImrelm().stream().filter(e -> e.get(1).longValue() == rel.getIm_rel_id()).collect(Collectors.toList());
+                        for (List<Integer> data : relMList) {
+                            IMRelMem targetMem = null;
+                            if (data.get(0) != null) {
+                                targetMem = existRelMemList.stream().filter(e -> e.getIm_rel_mem_id() == data.get(0).longValue()).findFirst().orElse(null);
+
+                                if (targetMem != null && targetMem.getIm_rel_mem_id().equals(data.get(0).longValue())
+                                        && (!targetMem.getIm_rel_id().equals(data.get(1).longValue()) || !targetMem.getMember_id().equals(data.get(2).longValue()))) {
+                                    targetMem.setDel_flg(true);
+                                    imRelMemService.save(targetMem);
+
+                                    if (!data.get(2).equals(30)) {
+                                        newMenFlg = true;
+                                    }
+                                }
+
+                                if (targetMem != null) {
+                                    updatedRelMemIdList.add(targetMem.getIm_rel_mem_id());
+                                }
+
+                            } else {
+                                Optional<IMRelMem> targetMem2 = imRelMemService.findByImRelIdMemId(rel.getIm_rel_id(), data.get(2).longValue());
+
+                                if (targetMem2.isPresent()) {
+                                    targetMem2.get().setDel_flg(false);
+                                    imRelMemService.save(targetMem2.get());
+                                } else {
+                                    newMenFlg = true;
+                                }
+                            }
+
+                            if (newMenFlg) {
+                                IMRelMem newMem = new IMRelMem(null, data.get(1).longValue(), data.get(2).longValue(), null, null, false);
+                                imRelMemService.save(newMem);
+                            }
+                        }
+                    }
+
+                    // 更新漏れがないか確認、あるならdel_flg=trueにして更新
+                    if (existRelMemList.size() != updatedRelMemIdList.size()) {
+                        for (IMRelMem relMem : existRelMemList) {
+                            if (updatedRelMemIdList.stream().noneMatch(e -> e.equals(relMem.getIm_rel_mem_id()))) {
+                                relMem.setDel_flg(true);
+                                imRelMemService.save(relMem);
+                            }
+                        }
+                    }
                 }
             }
 

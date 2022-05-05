@@ -23,8 +23,13 @@ public class IMRelService {
     public IMRel findByImRelId(Long imRelId) {
         return iMRelRepository.findByImRelId(imRelId);
     }
+
     public List<IMRel> findByItemMId(Long itemMId) {
         return iMRelRepository.findByItemMId(itemMId);
+    }
+
+    public List<IMRel> findByImIdNotDeleted(Long imId) {
+        return iMRelRepository.findByImIdNotDeleted(imId);
     }
 
     public List<Long> findTeamIdByItemMId(Long itemMId) {

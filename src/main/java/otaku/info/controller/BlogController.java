@@ -154,7 +154,7 @@ public class BlogController {
                             teamId = 7L;
                         }
 
-                        if (blogTagService.findBlogTagIdByTagName(tagName, teamId) == 0) {
+                        if (blogTagService.findBlogTagIdByTagName(tagName, teamId).isEmpty()) {
                             BlogTag blogTag = new BlogTag();
                             blogTag.setWp_tag_id((long)wpId);
                             blogTag.setTag_name(tagName);
@@ -331,7 +331,7 @@ public class BlogController {
             headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            String auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+            String auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
             headers.add("Authorization", "Basic " + auth);
             resultMap.put("", headers);
         } else {
@@ -341,9 +341,9 @@ public class BlogController {
 
                 String auth = "";
                 if (subDomain != null) {
-                    auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getBlogPw().getBytes()));
+                    auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getApiPw().getBytes()));
                 } else {
-                    auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+                    auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
                 }
                 headers.add("Authorization", "Basic " + auth);
                 resultMap.put(subDomain, headers);
@@ -370,9 +370,9 @@ public class BlogController {
         TeamEnum e = TeamEnum.get(teamId);
 
         if (e == null) {
-            auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+            auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
         } else {
-            auth = new String(Base64.getEncoder().encode(e.getBlogPw().getBytes()));
+            auth = new String(Base64.getEncoder().encode(e.getApiPw().getBytes()));
         }
 
         headers.add("Authorization", "Basic " + auth);
@@ -511,7 +511,9 @@ public class BlogController {
                 // 年月を追加
                 List<String> tagNameList = new ArrayList<>();
                 tagNameList.addAll(teamNameList);
-                BlogTag yyyyMMTag = addTagIfNotExists(itemMaster.getPublication_date(), TeamEnum.findSubDomainById(teamId));
+
+                String yyyyMM = dateUtils.getYYYYMM(itemMaster.getPublication_date());
+                BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, TeamEnum.findSubDomainById(teamId));
                 tagNameList.add(yyyyMMTag.getTag_name());
 
                 // member名を追加
@@ -519,10 +521,17 @@ public class BlogController {
                     tagNameList.addAll(memList.stream().map(e -> memberService.getMemberName(e.getMember_id())).collect(Collectors.toList()));
                 }
 
-                List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagNameList);
+                // tag取得のためのteamIdを用意
+                Long tagTeamId = null;
+                if (generalBlogFlg) {
+                    tagTeamId = 7L;
+                } else {
+                    tagTeamId = teamId;
+                }
+                List<Long> list = findBlogTagIdListByTagNameListTeamId(tagNameList, tagTeamId);
                 int[] tags = new int[0];
                 if (!list.isEmpty()) {
-                    tags = list.stream().mapToInt(i->i).toArray();
+                    tags = list.stream().mapToInt(Math::toIntExact).toArray();
                 }
 
                 if (tags.length > 0) {
@@ -661,9 +670,8 @@ public class BlogController {
             logger.debug("月末につき月タグ確認処理");
             // info DBのblogTagテーブルに翌月のyyyyMMタグが存在するか？
             Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-            Integer wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
-            boolean existsBlogTag =  (wpTagId!= null) && (wpTagId != 0);
-            if (!existsBlogTag) {
+            Optional<Long> wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
+            if (wpTagId.isEmpty()) {
                 String url = subDomain + setting.getBlogApiPath() + "tags/";
 
                 HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
@@ -700,7 +708,7 @@ public class BlogController {
                     String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
                     String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
 
-                    if (blogTagService.findBlogTagIdByTagName(tagName, teamId) == 0) {
+                    if (blogTagService.findBlogTagIdByTagName(tagName, teamId).isEmpty()) {
                         BlogTag blogTag = new BlogTag();
                         blogTag.setWp_tag_id((long)wpId);
                         blogTag.setTag_name(tagName);
@@ -724,18 +732,18 @@ public class BlogController {
      * タグが存在しなかったらWPとDB両方に登録する
      *
      */
-    public BlogTag addTagIfNotExists(Date date, String subDomain) {
+    public BlogTag addTagIfNotExists(String tagName, String subDomain) {
 
-        String yyyyMM = dateUtils.getYYYYMM(date);
-
-        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + yyyyMM;
+        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + tagName;
 
         // request
         Long teamId = TeamEnum.findIdBySubDomain(subDomain);
         HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.GET, "addTagIfNotExists()_1");
+
+        // 一応まずそのタグがすでに登録されていないかチェックするリクエスト
+        String res = request(url, request, HttpMethod.GET, "addTagIfNotExists()");
 
         BlogTag blogTag = new BlogTag();
 
@@ -744,17 +752,16 @@ public class BlogController {
                 JSONArray ja = new JSONArray(res);
                 // タグがまだWPになかったら登録する
                 if (ja.length() == 0) {
-                    blogTag = registerTag(date, subDomain);
+//                    blogTag = registerTag(date, subDomain);
                 } else {
-                    // タグはWPにある場合
-                    blogTag = blogTagService.findByTagName(yyyyMM);
-
                     // WPにタグあるがDBから見つからなかった場合、DBに登録する
+                    blogTag = blogTagService.findByTagName(tagName);
+
                     if (blogTag == null || blogTag.getBlog_tag_id() == null) {
                         BlogTag blogTag1 = new BlogTag();
 
                         // WPからDBに登録したいタグのデータを取ってくる
-                        String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + yyyyMM + "&per_page=1";
+                        String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + tagName + "&per_page=1";
 
                         // request
                         HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), teamId);
@@ -1121,7 +1128,8 @@ public class BlogController {
         }
 
         // 年月を追加
-        BlogTag yyyyMMTag = addTagIfNotExists(tmrw, subDomain);
+        String yyyyMM = dateUtils.getYYYYMM(tmrw);
+        BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, subDomain);
         tagNameList.add(yyyyMMTag.getTag_name());
 
         // member名を追加
@@ -1130,10 +1138,16 @@ public class BlogController {
         }
 
         // stringでタグ名が揃ったのでidに変換
-        List<Integer> list = blogTagService.findBlogTagIdListByTagNameList(tagNameList);
+        Long teamId = null;
+        if (subDomain.equals("https://snowman.otakuinfo.fun/")) {
+            teamId = 7L;
+        } else {
+            teamIdList.get(0);
+        }
+        List<Long> list = findBlogTagIdListByTagNameListTeamId(tagNameList, teamId);
         int[] tags = new int[0];
         if (!list.isEmpty()) {
-            tags = list.stream().mapToInt(j->j).toArray();
+            tags = list.stream().mapToInt(Math::toIntExact).toArray();
         }
 
         if (tags.length > 0) {
@@ -1213,5 +1227,32 @@ public class BlogController {
             res = Collections.singletonMap(null, null);
         }
         return res;
+    }
+
+    /**
+     * stringリストからDB検索、データあればそのまま返し、存在しなかったらwpにあるか確認しなければ登録、その後dbにもデータ登録し返却
+     *
+     * @param tagNameList
+     * @return
+     */
+    public List<Long> findBlogTagIdListByTagNameListTeamId(List<String> tagNameList, Long teamId) {
+        List<Long> tagIdList = new ArrayList<>();
+
+        for (String tagName : tagNameList) {
+            Optional<Long> tagIdResult = blogTagService.findBlogTagIdByTagName(tagName, teamId);
+
+            Long tagId = null;
+            if (tagIdResult.isPresent()) {
+                tagId = tagIdResult.get();
+            } else {
+                // タグが見つからなかった場合、WPブログに登録したり引っ張ってきてDBに保存したり
+                BlogTag tag = addTagIfNotExists(tagName, TeamEnum.get(teamId).getSubDomain());
+                tagId = tag.getBlog_tag_id();
+            }
+
+            tagIdList.add(tagId);
+        }
+
+        return tagIdList;
     }
 }

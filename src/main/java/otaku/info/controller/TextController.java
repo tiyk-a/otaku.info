@@ -94,7 +94,7 @@ public class TextController {
 //        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A"
 //                + akansetting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "楽天リンクはこちら↓%0A"
 //                + item.getUrl();
-//        // TODO: twitterタグ、DB使わないで取れてる
+//        // twitterタグ、DB使わないで取れてる
 //        List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
 //        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
 //        return str1 + "%0A" + tags;
@@ -104,7 +104,7 @@ public class TextController {
 ////        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
 //
 //        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A" + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "詳細はこちら↓%0A" + item.getUrl();
-//        // TODO: twitterタグ、DB使わないで取れてる
+//        // twitterタグ、DB使わないで取れてる
 //        List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
 //        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
 //        return str1 + "%0A" + tags;
@@ -275,22 +275,22 @@ public class TextController {
                 continue;
             }
 
-            List<String> teamNameList = teamService.findTeamNameByIdList(iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()));
+            List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
+            List<String> teamNameList = relList.stream().map(e -> TeamEnum.get(e.getTeam_id()).getName()).collect(Collectors.toList());
             String teamNameUnited = String.join(" ", teamNameList);
+            List<Long> memList = imRelMemService.findMemIdListByImId(itemMaster.getIm_id());
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
-            // TODO: メンバー名今なし
-            // メンバー名もある場合はこちら
-//            List<Long> memberIdList = imRelMemService.findMemberIdListByRelId();
-//                    IMRelService.findMemberIdListByItemMId(itemMaster.getItem_m_id());
-//            if (memberIdList.size() > 0) {
-//                List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-//                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memberNameList), itemMaster.getTitle());
-//            } else {
+
+            if (memList != null && memList.size() > 0) {
+                // メンバー名もある場合はこちら
+                List<String> memNameList = memList.stream().map(e -> MemberEnum.get(e).getName()).collect(Collectors.toList());
+                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memNameList), itemMaster.getTitle());
+            } else {
                 // メンバー名ない場合はこちら
                 h2 = String.join(" ", publicationDate, teamNameUnited, itemMaster.getTitle());
-//            }
+            }
 
             // htmlタグ付与
             h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
@@ -405,157 +405,6 @@ public class TextController {
             return "2021年XX月XX日" + title;
         }
         return  sdf1.format(publicationDate) + " " + title;
-    }
-
-    /**
-     * ItemMasterのタイトルを作成します。
-     *
-     * @return
-     */
-    public String createItemMasterTitle(List<Item> itemList, Date publicationDate) {
-        // Id, count(カウントが多い方が信頼性がある)
-        Map<Long, Integer> teamIdMap = new HashMap<>();
-        Map<Long, Integer>  memberIdMap = new HashMap<>();
-        Map<Long, Integer>  magazineEnumsIdMap = new HashMap<>();
-        Map<Long, Integer>  publisherEnumIdMap = new HashMap<>();
-
-        for (Item item : itemList) {
-            if (!StringUtils.hasText(item.getTitle())) {
-                continue;
-            }
-
-            // それぞれのItemについて、チーム名、メンバー名、出版社名、雑誌名がないか調べ、あったらリストに追加していきたい
-            // team名
-            List<Long> tmpList = teamService.findTeamIdListByText(item.getTitle());
-            if (tmpList != null && !tmpList.isEmpty()) {
-                for (Long id : tmpList) {
-                    Integer count = 0;
-                    if (teamIdMap.containsKey(id)) {
-                        count = teamIdMap.get(id);
-                    }
-                    teamIdMap.put(id, ++count);
-                }
-            }
-
-            // メンバー名を追加する
-            tmpList = memberService.findMemberIdByText(item.getTitle());
-            if (tmpList != null && !tmpList.isEmpty()) {
-                for (Long id : tmpList) {
-                    Integer count = 0;
-                    if (memberIdMap.containsKey(id)) {
-                        count = memberIdMap.get(id);
-                    }
-                    memberIdMap.put(id, ++count);
-                }
-            }
-
-            // 雑誌名を追加する。雑誌名が見つかった場合、出版社も探す
-            tmpList = MagazineEnum.findMagazineIdByText(item.getTitle());
-            if (tmpList != null && !tmpList.isEmpty()) {
-                for (Long id : tmpList) {
-                    Integer count = 0;
-                    if (magazineEnumsIdMap.containsKey(id)) {
-                        count = magazineEnumsIdMap.get(id);
-                    }
-                    magazineEnumsIdMap.put(id, ++count);
-                }
-
-                // 出版社名を追加する
-                tmpList = PublisherEnum.findPublisherIdByText(item.getTitle());
-                if (tmpList.size() > 0) {
-                    for (Long id : tmpList) {
-                        Integer count = 0;
-                        if (publisherEnumIdMap.containsKey(id)) {
-                            count = publisherEnumIdMap.get(id);
-                        }
-                        publisherEnumIdMap.put(id, ++count);
-                    }
-                }
-            } else {
-                // 雑誌名が見つからなかった場合、その旨をLINE通知する
-                logger.debug("ItemMasterの登録で雑誌名が見つかりませんでした。itemId=" + item.getItem_id());
-            }
-
-        }
-
-        // 採点値より、確実性の低いデータは捨てる
-        List<Long> teamIdList = new ArrayList<>();
-        List<Long> memberIdList = new ArrayList<>();
-        List<Long> magazineIdList = new ArrayList<>();
-        List<Long> publisherIdList = new ArrayList<>();
-
-        if (teamIdMap.size() > 0) {
-            teamIdList = teamIdMap.entrySet().stream().filter(e -> (float) e.getValue()/ itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
-        }
-
-        if (memberIdMap.size() > 0) {
-            memberIdList = memberIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
-        }
-
-        // 雑誌名が見つかってる場合、出版社情報も入れる
-        if (magazineEnumsIdMap.size() > 0) {
-            magazineIdList = magazineEnumsIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
-
-            if (publisherEnumIdMap.size() > 0) {
-                publisherIdList = publisherEnumIdMap.entrySet().stream().filter(e -> (float) e.getValue()/itemList.size() >= 0.5).sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).map(Map.Entry::getKey).collect(Collectors.toList());
-            }
-        }
-
-        // 追加処理。メンバー見つかってるのにチームが対応してなかったら入れてあげる
-        if (memberIdList.size() > 0) {
-            // Serviceからの返却値は重複も含むので、distinctで抜いてあげる
-            List<Long> teamIdOfMemberList = memberService.findTeamIdListByMemberIdList(memberIdList).stream().distinct().collect(Collectors.toList());
-            if (teamIdList.size() != teamIdOfMemberList.size()) {
-                if (teamIdList.size() > teamIdOfMemberList.size()) {
-                    // teamIdOfMemberListの要素が全部入ってるかの確認をする。入ってなかったら追加
-                    List<Long> tmpList = new ArrayList<>();
-                    for (Long id : teamIdList) {
-                        if (!teamIdOfMemberList.contains(id)) {
-                            tmpList.add(id);
-                        }
-                    }
-                    if (tmpList.size() > 0) {
-                        teamIdList.addAll(tmpList);
-                    }
-                } else {
-                    // teamIdOfMemberListの方がサイズが大きい場合、既存のteamIdList要素を全て削除したdiffリストを用意、残った要素があったらteamIdListに追加する
-                    List<Long> diff = new ArrayList<>(teamIdOfMemberList);
-                    diff.removeAll(teamIdList);
-                    teamIdList.addAll(diff);
-                }
-            }
-        }
-        // 全てのItemからデータを抜いたので、これから返却するタイトルを作成する
-        String res = "";
-        if (publicationDate != null) {
-            res = sdf1.format(publicationDate);
-        }
-
-        if (teamIdList.size() > 0) {
-            List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
-            res = res + " " + teamNameList.stream().collect(Collectors.joining(" ", "", ""));
-        }
-
-        if (memberIdList.size() > 0) {
-            List<String> memberNameList = memberService.getMemberNameList(memberIdList);
-            res = res + " " +  memberNameList.stream().collect(Collectors.joining(" ", "", ""));
-        }
-
-        // 雑誌名が見つかってる場合、出版社情報も入れる
-        if (magazineIdList.size() > 0) {
-            List<String> magazineNameList = MagazineEnum.findMagazineNameList(magazineIdList);
-            res = res + " " + magazineNameList.stream().collect(Collectors.joining(" ", "", ""));
-
-            if (publisherIdList.size() > 0) {
-                List<String> publisherNameList = PublisherEnum.findPublisherNameList(publisherIdList);
-                res = res + " " + publisherNameList.stream().collect(Collectors.joining(" ", "", ""));
-            }
-        } else {
-            // 雑誌じゃない場合||Enumに雑誌名が見つからなかった場合の処理
-            res = res + " " + itemList.get(0).getTitle();
-        }
-
-        return res;
     }
 
     /**

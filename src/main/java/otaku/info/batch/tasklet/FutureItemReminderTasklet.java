@@ -14,6 +14,7 @@ import otaku.info.controller.TwTextController;
 import otaku.info.entity.Item;
 import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
+import otaku.info.service.IMRelMemService;
 import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
 
@@ -42,6 +43,9 @@ public class FutureItemReminderTasklet implements Tasklet {
     @Autowired
     IMService imService;
 
+    @Autowired
+    IMRelMemService imRelMemService;
+
     /**
      * TODO: 日数ではなくteamごとに件数指定で取得、全チームの情報を流すように変更します。
      *
@@ -58,25 +62,23 @@ public class FutureItemReminderTasklet implements Tasklet {
             loggerController.printFutureItemReminderTasklet(e.getName() + "imList size: " + imList.size());
 
             post(imList, e);
-//        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する START ---");
-//        List<Item> tmpList = itemService.findNotDeleted();
-//        blogController.tmpItemPost(tmpList);
-//        logger.debug("--- TMP追加：マスタ商品がない商品はマスタを探して登録する END ---");
         }
         return RepeatStatus.FINISHED;
     }
 
     private void post(List<IM> imList, TeamEnum teamEnum) throws Exception {
 
-        // TODO: 未来商品が全くないチームについての処理
+        // 未来商品が全くないチームは現状ポストなし
         if (imList.isEmpty()) {
-            loggerController.printFutureItemReminderTasklet(teamEnum.getName() + "imList empty");
+            loggerController.printFutureItemReminderTasklet(teamEnum.getName() + "imList emptyのためno post");
         }
 
         Integer postCount = 0;
         for (IM im : imList) {
-            // TODO: メンバー名を取得していない
-            Item item = null;
+
+            // メンバー名を取得
+            List<Long> memIdList = imRelMemService.findMemIdListByImId(im.getIm_id());
+
             String rakutenUrl = "";
             List<Item> itemList = itemService.findByMasterId(im.getIm_id());
             Boolean findRakutenFlg = false;
@@ -88,15 +90,15 @@ public class FutureItemReminderTasklet implements Tasklet {
                     rakutenUrl = rakutenController.findAvailableRakutenUrl(rakutenList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamEnum.getId());
                 } else {
                     rakutenUrl = rakutenController.findRakutenUrl(im.getTitle(), teamEnum.getId());
-                    item.setUrl(rakutenUrl);
                 }
             }
             String text = "";
-            if (item != null) {
-                text = twTextController.futureItemReminder(im, teamEnum.getId(), rakutenUrl);
+            if (rakutenUrl != null) {
+                text = twTextController.futureItemReminder(im, teamEnum.getId(), rakutenUrl, memIdList);
+                pythonController.post(teamEnum.getId(), text);
+                ++postCount;
             }
-            pythonController.post(teamEnum.getId(), text);
-            ++postCount;
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

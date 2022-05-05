@@ -38,7 +38,6 @@ public class ImageController {
         graphics2D.setColor(color);
         graphics2D.fillRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
 
-        // TODO: フォント可愛くしたい
         Font font = null;
         try {
             font = new Font("YuppyTC-Regular", Font.BOLD, 100);

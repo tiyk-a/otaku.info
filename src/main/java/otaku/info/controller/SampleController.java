@@ -258,49 +258,6 @@ public class SampleController {
     }
 
     /**
-     * irelの整理(重複を削除してあげる)
-     */
-//    private void orderiRel2() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IRel> iRelList = iRelService.findAll();
-//        List<IRel> opeList = iRelService.findAll();
-//        List<IRel> removeList = new ArrayList<>();
-//        for (IRel rel : iRelList) {
-//            for (IRel ope : opeList) {
-//                // 一致するレコードがあったら
-//                if (rel.getI_rel_id() != ope.getI_rel_id() && rel.getItem_id() == ope.getItem_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
-//                    if (rel.getI_rel_id() > ope.getI_rel_id()) {
-//                        if (!removeList.contains(rel)) {
-//                            removeList.add(rel);
-//                        }
-//                    } else {
-//                        if (!removeList.contains(ope)) {
-//                            removeList.add(ope);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        iRelService.removeAll(removeList);
-//    }
-
-    /**
-     * irelの整理(memberを入れてあげる)
-     */
-//    private void orderiRel3() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IRel> iRelList = iRelService.findAll();
-//        List<IRelMem> relMenList = new ArrayList<>();
-//        for (IRel rel : iRelList) {
-//            if (rel.getMember_id() != null) {
-//                IRelMem relMen = new IRelMem(null, rel.getI_rel_id(), rel.getMember_id(), null, null);
-//                relMenList.add(relMen);
-//            }
-//        }
-//        iRelMemService.saveAll(relMenList);
-//    }
-
-    /**
      * irelの整理(からteamを入れてあげる)
      */
     private void orderM() {
@@ -324,49 +281,6 @@ public class SampleController {
         iMRelService.saveAll(updateList);
         iMRelService.removeAll(removeList);
     }
-
-    /**
-     * irelの整理(重複を削除してあげる)
-     */
-//    private void orderM2() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IMRel> iRelList = iMRelService.findAll();
-//        List<IMRel> opeList = iMRelService.findAll();
-//        List<IMRel> removeList = new ArrayList<>();
-//        for (IMRel rel : iRelList) {
-//            for (IMRel ope : opeList) {
-//                // 一致するレコードがあったら
-//                if (rel.getIm_rel_id() != ope.getIm_rel_id() && rel.getIm_id() == ope.getIm_id() && rel.getTeam_id() == ope.getTeam_id() && (rel.getMember_id() == ope.getMember_id() || (rel.getMember_id() == null && ope.getMember_id() == null))) {
-//                    if (rel.getIm_rel_id() > ope.getIm_rel_id()) {
-//                        if (!removeList.contains(rel)) {
-//                            removeList.add(rel);
-//                        }
-//                    } else {
-//                        if (!removeList.contains(ope)) {
-//                            removeList.add(ope);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        iMRelService.removeAll(removeList);
-//    }
-
-    /**
-     * irelの整理(memberを入れてあげる)
-     */
-//    private void orderM3() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IMRel> iRelList = iMRelService.findAll();
-//        List<IMRelMem> relMenList = new ArrayList<>();
-//        for (IMRel rel : iRelList) {
-//            if (rel.getMember_id() != null) {
-//                IMRelMem relMen = new IMRelMem(null, rel.getIm_rel_id(), null, null);
-//                relMenList.add(relMen);
-//            }
-//        }
-//        imRelMemService.saveAll(relMenList);
-//    }
 
     /**
      * Itemに不適切な商品が入ってしまっていたらItemId指定でdel_flgをonにします。
@@ -403,18 +317,6 @@ public class SampleController {
 //            }
 //        }
 //        return result;
-//    }
-
-    /**
-     * wpidの入っていないIMをポストする
-     *
-     * @throws InterruptedException
-     */
-//    private void insertIM() throws InterruptedException {
-//        // 対象IM（wpIdがnull）を取得
-//        List<ItemMaster> imList = itemMasterService.findAllNotPosted();
-//        Map<List<ItemMaster>, List<ItemMaster>> result = blogController.postOrUpdate(imList);
-//        logger.debug(result.size());
 //    }
 
     /**
@@ -520,40 +422,6 @@ public class SampleController {
                 }
             }
         }
-
-        // itemMasterに接続（追加/新規登録）し、itemのitem_m_idも更新する
-//        logger.debug("IM登録に入ります");
-//        Map<IM, List<Item>> itemMasterListMap = itemUtils.groupItem(savedItemList);
-//        // itemMasterRelも更新する
-//        logger.debug("IMRel登録に入ります");
-//        for (Map.Entry<IM, List<Item>> e : itemMasterListMap.entrySet()) {
-//            // 既存の登録済みrel情報を取得する
-//            IMRel imrel = iMRelService.findByItemMIdTeamId(e.getKey().getIm_id(), teamId);
-//
-//            // imrelの登録
-//            if (imrel == null) {
-//                logger.debug("imrelがnullなので新規IMRel登録します");
-//                IMRel newRel = new IMRel(null, e.getKey().getIm_id(), teamId, null, null, null);
-//                IMRel savedRel = iMRelService.save(newRel);
-//                logger.debug("saveしましたよ" + savedRel.toString());
-//                imrel = savedRel;
-//                logger.debug("新規IMRel登録しました:" + imrel.toString());
-//            } else {
-//                logger.debug("imrelはこう" + imrel.toString());
-//            }
-
-//            IMRelMem imRelMem = imRelMemService.findByImRelIdMemId(imrel.getIm_rel_id(), memberId);
-//            if (imRelMem == null) {
-//                logger.debug("imrel.im_rel_idはこちらです：" + imrel.getIm_rel_id());
-//                IMRelMem relmem = new IMRelMem(null, imrel.getIm_rel_id(), memberId, null, null);
-//                imRelMemService.save(relmem);
-//                logger.debug("imrelmem登録に成功しました！：" + relmem.getIm_rel_mem_id());
-//            }
-//        }
-
-        // ブログ投稿（新規/更新）を行う(twitter投稿まで）
-        // TODO: ブログ投稿は手動にしたほうがいいのでは？誤検知がありすぎる。IM登録の時点で確認したほうが簡単なのでは？
-//        Map<Long, Long> imWpMap = blogController.postOrUpdate(new ArrayList<>(itemMasterListMap.keySet()), teamId);
         return "Ok";
     }
 

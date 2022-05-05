@@ -27,7 +27,6 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,7 +71,6 @@ public class RakutenController {
 
     /**
      * 楽天APIにリクエストを投げる
-     * TODO: returnを変える。正常終了した時としなかった時、しなかったら次のリクエスト求めた方がいいから
      *
      * @param param Additional params. Will be connected to degault params
      * @return
@@ -92,7 +90,7 @@ public class RakutenController {
             serverUtils.sleep();
         } catch (Exception e) {
             if (e instanceof HttpClientErrorException) {
-                logger.debug("Too many request. sleep");
+                logger.debug("Too many requests. sleep");
                 Thread.sleep(60000);
             } else if (e instanceof HttpServerErrorException) {
                 logger.debug("Server error");
@@ -277,8 +275,8 @@ public class RakutenController {
             Elements e = d.getElementsByTag("title");
             return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません") || d.text().contains("ページが表示できません");
         } catch (Exception e) {
-            // TODO: エラー出たらそのこと自体伝えた方がいい
-            logger.debug("*** updateTarget() ***");
+            logger.debug("*** updateTarget() エラーです " + url + "***");
+            logger.debug(e);
             e.printStackTrace();
         }
         return false;

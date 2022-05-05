@@ -176,7 +176,6 @@ public class ApiController {
         // IMリスト
         List<FIMDto> fimDtoList = new ArrayList<>();
         for (IM im : imList) {
-            // TODO: modify
             FIMDto imDto = new FIMDto();
             imDto.setIm(im);
 
@@ -702,7 +701,6 @@ public class ApiController {
                                 imRelService.save(imRel);
                             }
                         } else {
-                            // TODO: 処理早くしたいならここをloopの外に出してあげると良い
                             // irelデータなので、新規でImrelを登録してあげる
 
                             // teamId=4(未選択)以外だったら処理進める
@@ -868,7 +866,7 @@ public class ApiController {
     }
 
     /**
-     * TODO:IM+verを更新します。画面から、verのver_name & ver_idをセットにして渡せれば実現可能
+     * IM+verを更新します
      *
      * @return Boolean true: success / false: failed
      */
@@ -1092,7 +1090,7 @@ public class ApiController {
     }
 
     /**
-     * TODO:IM+verを更新します。画面から、verのver_name & ver_idをセットにして渡せれば実現可能
+     * IM+verを更新します(一括更新)
      *
      * @return Boolean true: success / false: failed
      */
@@ -1155,8 +1153,7 @@ public class ApiController {
     @GetMapping("/im/search")
     public ResponseEntity<List<IM>> searchOtherTeamIM(@RequestParam("key") String key) {
         if (key.equals("") ) {
-            // TODO: excludeTeamIdがnullやundefinedの時の対処がないよ
-            return ResponseEntity.ok(new ArrayList<>());
+            return ResponseEntity.notFound().build();
         }
 
         return ResponseEntity.ok(imService.findByKeyExcludeTeamId(key));

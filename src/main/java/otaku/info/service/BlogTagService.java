@@ -7,8 +7,8 @@ import otaku.info.entity.BlogTag;
 import otaku.info.repository.BlogTagRepository;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -18,8 +18,8 @@ public class BlogTagService {
     @Autowired
     BlogTagRepository blogTagRepository;
 
-    public Integer findBlogTagIdByTagName(String tagName, Long teamId) {
-        return blogTagRepository.findBlogTagIdByTagName(tagName, teamId).orElse(0);
+    public Optional<Long> findBlogTagIdByTagName(String tagName, Long teamId) {
+        return blogTagRepository.findBlogTagIdByTagName(tagName, teamId);
     }
 
     public void saveAll(List<BlogTag> blogTagList) {
@@ -46,14 +46,5 @@ public class BlogTagService {
             blogTag = new BlogTag();
         }
         return blogTag;
-    }
-
-    public List<Integer> findBlogTagIdListByTagNameList(List<String> tagNameList) {
-        List<Integer> list = blogTagRepository.findBlogTagIdListByTagNameList(tagNameList);
-        // TODO: 名前渡したのにタグが見つからなかった場合、WPブログに登録したり引っ張ってきてDBに保存したりしてあげないといけない
-        if(list.isEmpty()) {
-            list = new ArrayList<>();
-        }
-        return list;
     }
 }

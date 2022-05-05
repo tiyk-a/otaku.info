@@ -54,8 +54,7 @@ public enum TeamEnum {
     private final String tw_id;
     /** 固有WPブログが用意されてる場合、サブドメインの固有値部分を指定。ない場合、null */
     private final String subDomain;
-    /** TODO: apiPwに変更したいです */
-    private final String blogPw;
+    private final String apiPw;
     private final Long itemPageId;
     private final Long tvPageId;
     private final Long dailyScheCategoryId;
@@ -67,7 +66,7 @@ public enum TeamEnum {
     private final String scheduleImagePath;
 
     TeamEnum(Long id, String anniversary, String kana, String mnemonic, String name, String tw_id, String subDomain,
-             String blogPw, Long itemPageId, Long tvPageId, Long dailyScheCategoryId, String calendarId, String officialSite, String internalTop, String scheduleImagePath) {
+             String apiPw, Long itemPageId, Long tvPageId, Long dailyScheCategoryId, String calendarId, String officialSite, String internalTop, String scheduleImagePath) {
         this.id = id;
         this.anniversary = anniversary;
         this.kana = kana;
@@ -75,7 +74,7 @@ public enum TeamEnum {
         this.name = name;
         this.tw_id = tw_id;
         this.subDomain = subDomain;
-        this.blogPw = blogPw;
+        this.apiPw = apiPw;
         this.itemPageId = itemPageId;
         this.tvPageId = tvPageId;
         this.dailyScheCategoryId = dailyScheCategoryId;
@@ -101,7 +100,6 @@ public enum TeamEnum {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.mnemonic.equals(argName)).findFirst().orElse(null);
     }
 
-    // TODO: メソッド名と処理に乖離がある。メソッドの使用箇所において、subDomainではなくnameを渡しているところがありそうなので、nameでも引っ掛かるようにしてみる
     public static TeamEnum getBySubDomain(String argSubDomain) {
         if (argSubDomain == null) {
             // なんとなくデフォはえびさん

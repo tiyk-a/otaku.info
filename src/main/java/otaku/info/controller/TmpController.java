@@ -361,8 +361,8 @@ public class TmpController {
     }
     /**
      * [From] BlogController
-     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
-     * TODO: エラーが出ないように治してね
+     * TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * エラーが出ないように治してね
      * 認証などどのリクエストでも必要なヘッダーをセットする(第2引数がリストではなくチーム1件の場合)。
      *
      * @param headers
@@ -374,8 +374,8 @@ public class TmpController {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         String auth = "";
-        // TODO: 走らせたいならここをチームによってurl変更するように修正
-        auth = new String(Base64.getEncoder().encode(setting.getBlogPw().getBytes()));
+        // 走らせたいならここをチームによってurl変更するように修正
+        auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
         headers.add("Authorization", "Basic " + auth);
         return headers;
     }
@@ -383,14 +383,14 @@ public class TmpController {
     /**
      * [From] BlogController
      * WpIdからポストの内容を取得します。
-     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
-     * TODO: エラーが出ないように治してね
+     * TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * エラーが出ないように治してね
      *
      * @param wpId
      * @return
      */
     public String requestPostData(String wpId) {
-        // TODO: 走らせたいならここをチームによってurl変更するように修正
+        // 走らせたいならここをチームによってurl変更するように修正
         String finalUrl = setting.getBlogWebUrl() + setting.getBlogApiPath() + "posts/" + wpId;
         HttpHeaders headers = generalHeaderSet(new HttpHeaders());
         return blogController.request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET, "requestPostData()");
@@ -399,14 +399,14 @@ public class TmpController {
     /**
      * [From] BlogController
      * 日付タグをWPとDBに登録します。
-     * TODO: TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
-     * TODO: エラーが出ないように治してね
+     * TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de
+     * エラーが出ないように治してね
      *
      * @param date
      * @return
      */
 //    public BlogTag registerTag(Date date) {
-//        // TODO: チームによってurlを変更
+//        // チームによってurlを変更
 //        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags/";
 //
 //        HttpHeaders h = generalHeaderSet(new HttpHeaders()) ;
@@ -436,7 +436,7 @@ public class TmpController {
 //     *
 //     */
 //    public void getBlogTagNotSavedOnInfoDb() {
-//        // TODO: チームによってurlを変更
+//        // チームによってurlを変更
 //        String url = setting.getBlogWebUrl() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
 //
 //        HttpHeaders headers = generalHeaderSet(new HttpHeaders());
@@ -505,7 +505,7 @@ public class TmpController {
         for (String key : searchList) {
             String parameter = "&itemCode=" + key + "&elements=itemCode%2CitemCaption%2CitemName&" + setting.getRakutenAffiliId();
             JSONObject node = rakutenController.request(parameter, teamId);
-            if (node != null) {
+            if (node != null && !node.equals("")) {
 
                 if (node.has("Items") && !JsonUtils.isJsonArray(node.getString("Items"))) {
                     continue;
@@ -523,6 +523,8 @@ public class TmpController {
                         logger.debug(e.getMessage());
                     }
                 }
+            } else {
+                logger.info("Rakutenでデータが見つかりませんでした");
             }
         }
         return resultList;
@@ -765,7 +767,7 @@ public class TmpController {
     /**
      * [From] BlogController
      * 公開済み投稿でfeatured_mediaの設定があるものを返却します
-     * TODO: メソッド一部間違えてたから使用箇所でまた実行した方がいいかも
+     * メソッド一部間違えてたから使用箇所でまた実行した方がいいかも
      * @return Map\<WpId, featuredMediaId>
      */
     public Map<Integer, Integer> getPublishedWpIdFeaturedMediaList() {

@@ -1,5 +1,6 @@
 package otaku.info.batch.tasklet;
 
+import org.codehaus.jettison.json.JSONException;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -9,20 +10,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
+import otaku.info.controller.RakutenController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.IMRel;
+import otaku.info.entity.IMRelMem;
 import otaku.info.entity.Item;
 import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
+import otaku.info.service.IMRelMemService;
 import otaku.info.service.IMRelService;
 import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @StepScope
 public class PublishAnnounceTasklet implements Tasklet {
+
+    @Autowired
+    RakutenController rakutenController;
 
     @Autowired
     PythonController pythonController;
@@ -42,8 +50,10 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     IMRelService IMRelService;
 
+    @Autowired
+    IMRelMemService imRelMemService;
+
     /**
-     * TODO: 今日発売のあるチームだけポストする
      *
      * @param contribution
      * @param chunkContext
@@ -52,49 +62,43 @@ public class PublishAnnounceTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        List<IM> itemMasterList = imService.findReleasedItemList();
-        loggerController.printPublishAnnounceTasklet("itemMasterList size: " + itemMasterList.size());
+        List<IM> imList = imService.findReleasedItemList();
+        loggerController.printPublishAnnounceTasklet("itemMasterList size: " + imList.size());
         Integer postCount = 0;
 
-        for (IM itemMaster : itemMasterList) {
+        for (IM itemMaster : imList) {
             List<IMRel> relList = IMRelService.findByItemMId(itemMaster.getIm_id());
-            if (relList.size() > 0) {
-                // member違いのrelもあるのでチームごとにrelListをまとめる
-                Map<Long, List<IMRel>> teamMemberMap = new TreeMap<>();
-                for (IMRel rel : relList) {
-                    List<IMRel> tmpList = new ArrayList<>();
-                    if (teamMemberMap.containsKey(rel.getTeam_id())) {
-                        tmpList = teamMemberMap.get(rel.getTeam_id());
-                    }
-                    tmpList.add(rel);
-                    teamMemberMap.put(rel.getTeam_id(), tmpList);
-                }
 
-                Map<Long, List<IMRel>> noTwMap = new HashMap<>();
-                for (Map.Entry<Long, List<IMRel>> e : teamMemberMap.entrySet()) {
-                    // twIdがない場合
-                    if (TeamEnum.get(e.getKey()).getTw_id().equals("")) {
-                        noTwMap.put(e.getKey(), e.getValue());
-                    } else {
-                        Item item = itemService.findByMasterId(itemMaster.getIm_id()).get(0);
-                        String text = "";
-                        if (item != null) {
-                            text = twTextController.releasedItemAnnounce(itemMaster, e.getKey(), item);
+            // general twitter用のチーム・メンバーリストを用意→まとめてポスト
+            Long teamIdHead = null;
+            List<Long> teamIdList = new ArrayList<>();
+            List<Long> memIdList = new ArrayList<>();
+
+            if (relList.size() > 0) {
+
+                for (IMRel rel : relList) {
+                    List<IMRelMem> memList = imRelMemService.findByImRelIdNotDeleted(rel.getIm_rel_id());
+
+                    // general twitter使うチームならリストにGU追加して終わり。自分のtwあるならポストに向かう
+                    if (TeamEnum.get(rel.getTeam_id()).getTw_id().equals("")) {
+                        if (teamIdHead == null) {
+                            teamIdHead = rel.getTeam_id();
                         }
-                        pythonController.post(e.getKey(), text);
+                        teamIdList.add(rel.getTeam_id());
+                        if (memList != null && memList.size() > 0) {
+                            memIdList.addAll(memList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList()));
+                        }
+                    } else {
+                        List<Long> teamIdList2 = new ArrayList<>();
+                        teamIdList2.add(rel.getTeam_id());
+                        post(itemMaster, rel.getTeam_id(), teamIdList2);
                         ++postCount;
                     }
                 }
 
-                // 個別TWないチームのデータがあったら
-                if (noTwMap.size() > 0) {
-                    Item item = itemService.findByMasterId(itemMaster.getIm_id()).get(0);
-                    String text = "";
-                    if (item != null) {
-                        text = twTextController.releasedItemAnnounce(itemMaster,7L, item);
-                    }
-                    pythonController.post(TeamEnum.ABCZ.getId(), text);
-                    ++postCount;
+                // general twitterへのポストが必要な時、ポストする
+                if (teamIdList.size() > 0) {
+                    post(itemMaster, teamIdHead, teamIdList);
                 }
             }
 
@@ -106,5 +110,21 @@ public class PublishAnnounceTasklet implements Tasklet {
         }
         loggerController.printPublishAnnounceTasklet("postCount: " + postCount);
         return RepeatStatus.FINISHED;
+    }
+
+    /**
+     *
+     * @param im データもと
+     * @param teamId Twitteｒポストの際にキーとするteam
+     * @param teamIdList テキストに入れるteamのリスト
+     * @throws JSONException
+     * @throws InterruptedException
+     */
+    private void post(IM im, Long teamId, List<Long> teamIdList) throws JSONException, InterruptedException {
+        List<Item> itemList = itemService.findByMasterId(im.getIm_id());
+        String rakutenUrl = rakutenController.findAvailableRakutenUrl(itemList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamId);
+        // text作ってポストする
+        String text = twTextController.releasedItemAnnounce(im, teamIdList, rakutenUrl);
+        pythonController.post(teamId, text);
     }
 }

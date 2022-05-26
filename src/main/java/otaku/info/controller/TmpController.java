@@ -351,14 +351,15 @@ public class TmpController {
      * @param wpId
      * @return
      */
-    private Long getWpIdJudge(Long wpId, Long teamId) {
-        String subDomain = TeamEnum.findSubDomainById(teamId);
-        if (subDomain.equals("NA")) {
-            return wpId;
-        } else {
-            return 0L;
-        }
-    }
+//    private Long getWpIdJudge(Long wpId, Long teamId) {
+//        String subDomain = TeamEnum.findSubDomainById(teamId);
+//        if (subDomain.equals("NA")) {
+//            return wpId;
+//        } else {
+//            return 0L;
+//        }
+//    }
+
     /**
      * [From] BlogController
      * TmpController内のBlogControllerからお引越してきたメソッドたちはブログのチームごと分岐前のメソッド。走らせたらエラーになってしまうが、とりあえずエラー解消のためheader作成メソッドを持ってきました。もし走らせたいならblogControllerのheader作るメソッド（これと同名）de

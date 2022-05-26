@@ -149,7 +149,7 @@ public class SampleController {
                 break;
             case 3:
                 blogController.chkWpId();
-                blogController.chkWpIdByBlog();
+//                blogController.chkWpIdByBlog();
                 break;
             case 4:
                 scheduler.run4();
@@ -211,18 +211,18 @@ public class SampleController {
             case 21:
 //                insertImRel();
                 break;
-            case 22:
-                TeamEnum[] list = TeamEnum.values().clone();
-                Map<String, TeamEnum> map = new HashMap<>();
-                for (TeamEnum l : list) {
-                    if (!map.containsKey(l.getSubDomain())) {
-                        map.put(l.getSubDomain(), l);
-                    }
-                }
-                for (TeamEnum s : map.values()) {
-                    blogController.insertTags(s);
-                }
-                break;
+//            case 22:
+//                TeamEnum[] list = TeamEnum.values().clone();
+//                Map<String, TeamEnum> map = new HashMap<>();
+//                for (TeamEnum l : list) {
+//                    if (!map.containsKey(l.getSubDomain())) {
+//                        map.put(l.getSubDomain(), l);
+//                    }
+//                }
+//                for (TeamEnum s : map.values()) {
+//                    blogController.insertTags(s);
+//                }
+//                break;
             case 23:
                 modifyStation();
                 logger.debug("残ったstationをdelします");

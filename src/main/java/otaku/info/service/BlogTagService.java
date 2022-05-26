@@ -39,8 +39,8 @@ public class BlogTagService {
         return blogTagRepository.save(blogTag);
     }
 
-    public BlogTag findByTagName(String tagName) {
-        BlogTag blogTag = blogTagRepository.findByTagName(tagName);
+    public BlogTag findByTagName(String tagName, Long teamId) {
+        BlogTag blogTag = blogTagRepository.findByTagName(tagName, teamId).orElse(null);
 
         if (blogTag == null) {
             blogTag = new BlogTag();

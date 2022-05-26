@@ -83,8 +83,8 @@ public class TeamService {
      * @param teamIdList
      * @return
      */
-    public List<String> findTeamNameByIdList(List<Long> teamIdList) {
-        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> f.equals(e.getId()))).map(TeamEnum::getName).collect(Collectors.toList());
+    public Map<String, Long> findTeamNameByIdList(List<Long> teamIdList) {
+        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> f.equals(e.getId()))).collect(Collectors.toMap(TeamEnum::getName, TeamEnum::getId));
     }
 
     public List<String> findTwIdListByTeamIdList(List<Long> teamIdList) {

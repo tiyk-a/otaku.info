@@ -101,7 +101,7 @@ public class TwTextController {
         if (itemUrl != null && !itemUrl.isEmpty()) {
             url = itemUrl;
         } else {
-            url = "%0Aリンクはこちら↓%0A" + TeamEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
+            url = "%0Aリンクはこちら↓%0A" + BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
         }
 
         if (StringUtils.hasText(im.getTitle())) {
@@ -221,7 +221,8 @@ public class TwTextController {
         }
 
         // blogへの誘導
-        String blog = "一覧はこちら%0A" + TeamEnum.findSubDomainById(teamId) + "pages/" + TeamEnum.getTvPageId(teamId);
+        BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId());
+        String blog = "一覧はこちら%0A" + blogEnum.getSubDomain() + "pages/" + blogEnum.getTvPageId();
         return result + info + blog;
     }
 

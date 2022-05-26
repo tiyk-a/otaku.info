@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
 import otaku.info.controller.LoggerController;
-import otaku.info.enums.TeamEnum;
+import otaku.info.enums.BlogEnum;
 
 import java.util.List;
 
@@ -35,24 +35,24 @@ public class BlogUpdateTasklet implements Tasklet {
         loggerController.printBlogUpdateTasklet("①固定商品ページ");
 //        logger.debug(System.getProperty("user.name"));
 //        // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。
-        List<String> domainList = TeamEnum.getAllSubDomain();
-//        for (String subDomain : domainList) {
-//            blogController.addNextMonthTag(subDomain);
-//        }
-//        // 近日発売新商品情報を更新
-//        try {
-//            blogController.updateReleaseItems();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        List<String> domainList = BlogEnum.getAllSubdomain();
+        for (String subDomain : domainList) {
+            blogController.addNextMonthTag(subDomain);
+        }
+        // 近日発売新商品情報を更新
+        try {
+            blogController.updateReleaseItems();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         loggerController.printBlogUpdateTasklet("①固定商品ページ完了");
         loggerController.printBlogUpdateTasklet("②固定TV出演情報ページ");
-//        logger.debug(System.getProperty("user.name"));
-//        try {
-//            blogController.updateTvPage();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        loggerController.printBlogUpdateTasklet(System.getProperty("user.name"));
+        try {
+            blogController.updateTvPage();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         loggerController.printBlogUpdateTasklet("②固定TV出演情報ページ完了");
         loggerController.printBlogUpdateTasklet("③明日の1日の予定投稿");
         try {

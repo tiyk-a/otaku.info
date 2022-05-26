@@ -16,6 +16,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
+import otaku.info.enums.BlogEnum;
+import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -26,9 +28,6 @@ import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -115,21 +114,20 @@ public class BlogController {
     /**
      * 引数TeamEnumのブログにあるタグがDBになかったらDBにデータを入れます
      *
-     * @param e
+     * @param blogEnum
      */
-    public void insertTags(TeamEnum e) {
+    public void insertTags(BlogEnum blogEnum, Long teamId) {
         Integer n = 1;
         boolean nextFlg = true;
 
         while (nextFlg) {
-            String url = e.getSubDomain() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
+            String url = blogEnum.getSubDomain() + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link&per_page=40&page=" + n;
 
             // request
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getId());
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
             JSONObject jsonObject = new JSONObject();
             HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
             String res = request(url, request, HttpMethod.GET, "insertTags()");
-
 
             try {
                 if (JsonUtils.isJsonArray(res)) {
@@ -149,19 +147,12 @@ public class BlogController {
                         String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
                         String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
 
-                        Long teamId = e.getId();
-                        if (e.getSubDomain().equals("https://snowman.otakuinfo.fun/")) {
-                            teamId = 7L;
-                        }
-
-                        if (blogTagService.findBlogTagIdByTagName(tagName, teamId).isEmpty()) {
-                            BlogTag blogTag = new BlogTag();
-                            blogTag.setWp_tag_id((long)wpId);
-                            blogTag.setTag_name(tagName);
-                            blogTag.setLink(link);
-                            blogTag.setTeam_id(teamId);
-                            blogTagList.add(blogTag);
-                        }
+                        BlogTag blogTag = new BlogTag();
+                        blogTag.setWp_tag_id((long)wpId);
+                        blogTag.setTag_name(tagName);
+                        blogTag.setLink(link);
+                        blogTag.setTeam_id(blogEnum.getId());
+                        blogTagList.add(blogTag);
                     }
                     blogTagService.saveAll(blogTagList);
                 }
@@ -190,7 +181,7 @@ public class BlogController {
 
         // subDomainごとにまとめる
         Map<String, Map<IM, List<Item>>> teamIdItemMasterItemMap = new TreeMap<>();
-        List<String> subDomainList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getSubDomain).distinct().collect(Collectors.toList());
+        List<String> subDomainList = BlogEnum.getAllSubdomain();
         for (String s : subDomainList) {
             teamIdItemMasterItemMap.put(s, new TreeMap<>());
         }
@@ -199,7 +190,7 @@ public class BlogController {
             // itemMasterとitemListは用意できた
             List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
-            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
+            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> BlogEnum.get(TeamEnum.get(e.getTeam_id()).getBlogEnumId()).getSubDomain()).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
                 Map<IM, List<Item>> tmpMap1 = teamIdItemMasterItemMap.get(subDomain);
@@ -241,7 +232,7 @@ public class BlogController {
             // itemMasterとitemListは用意できた
             List<Item> itemList = itemService.findByMasterId(itemMaster.getIm_id());
             List<Long> itemIdList = itemList.stream().map(Item::getItem_id).collect(Collectors.toList());
-            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> TeamEnum.findSubDomainById(e.getTeam_id())).distinct().collect(Collectors.toList());
+            List<String> subDomainList1 = iRelService.findByItemIdList(itemIdList).stream().map(e -> BlogEnum.get(TeamEnum.get(e.getTeam_id()).getBlogEnumId()).getSubDomain()).distinct().collect(Collectors.toList());
 
             for (String subDomain : subDomainList1) {
                 Map<IM, List<Item>> tmpMap1 = teamIdItemMasterItemFutureMap.get(subDomain);
@@ -270,7 +261,7 @@ public class BlogController {
         // MapをsubDomainでまとめ、それぞれテキストを生成、それぞれrequest送信する
         Map<String, String> requestMap = new TreeMap<>();
 
-        for (TeamEnum e : TeamEnum.values()) {
+        for (BlogEnum e : BlogEnum.values()) {
             if (!requestMap.containsKey(e.getSubDomain())) {
                 requestMap.put(e.getSubDomain(), "先１週間の新発売情報はありません");
             }
@@ -300,15 +291,14 @@ public class BlogController {
         // リクエスト送信
         if (requestMap.size() > 0) {
             for (Map.Entry<String, String> e : requestMap.entrySet()) {
-                Long teamId= TeamEnum.findIdBySubDomain(e.getKey());
-                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), teamId);
+                BlogEnum blogEnum = BlogEnum.findBySubdomain(e.getKey());
+                HttpHeaders headersMap = generalHeaderSet(new HttpHeaders(), blogEnum);
 
                 if (headersMap != null && !headersMap.isEmpty()) {
-                    TeamEnum teamEnum = TeamEnum.getBySubDomain(e.getKey());
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", blogText);
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
-                    String finalUrl = teamEnum.getSubDomain() + setting.getBlogApiPath() + "pages/" + TeamEnum.getItemPageId(teamEnum.getId());
+                    String finalUrl = e.getKey() + setting.getBlogApiPath() + "pages/" + blogEnum.getItemPageId();
                     String res = request(finalUrl, request, HttpMethod.POST, "updateReleaseItems()");
                 }
             }
@@ -341,7 +331,7 @@ public class BlogController {
 
                 String auth = "";
                 if (subDomain != null) {
-                    auth = new String(Base64.getEncoder().encode(TeamEnum.getBySubDomain(subDomain).getApiPw().getBytes()));
+                    auth = new String(Base64.getEncoder().encode(BlogEnum.findBySubdomain(subDomain).getApiPw().getBytes()));
                 } else {
                     auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
                 }
@@ -357,23 +347,17 @@ public class BlogController {
      * 認証などどのリクエストでも必要なヘッダーをセットする(第2引数がリストではなくチーム1件の場合)。
      *
      * @param headers
-     * @param teamId
+     * @param blogEnum
      * @return
      */
-    public HttpHeaders generalHeaderSet(HttpHeaders headers, Long teamId) {
+    public HttpHeaders generalHeaderSet(HttpHeaders headers, BlogEnum blogEnum) {
 
         headers.add("Accept", MediaType.APPLICATION_JSON_VALUE);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         String auth = "";
 
-        TeamEnum e = TeamEnum.get(teamId);
-
-        if (e == null) {
-            auth = new String(Base64.getEncoder().encode(setting.getApiPw().getBytes()));
-        } else {
-            auth = new String(Base64.getEncoder().encode(e.getApiPw().getBytes()));
-        }
+        auth = new String(Base64.getEncoder().encode(blogEnum.getApiPw().getBytes()));
 
         headers.add("Authorization", "Basic " + auth);
 
@@ -439,12 +423,13 @@ public class BlogController {
         List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
         List<IMRelMem> memList = imRelMemService.findByImRelIdListNotDeleted(relList.stream().map(e -> e.getIm_rel_id()).collect(Collectors.toList()));
         List<Long> teamIdList = relList.stream().map(IMRel::getTeam_id).collect(Collectors.toList());
-        List<String> teamNameList = teamService.findTeamNameByIdList(teamIdList);
+        // <TagName, TeamId>
+        Map<String, Long> teamNameMap = teamService.findTeamNameByIdList(teamIdList);
         String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
 
         // 画像生成して投稿して画像IDゲットして、で？
         // 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
-        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), String.join(",", teamNameList));
+        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), String.join(",", teamNameMap.keySet()));
 
         // ひとまずcontentを作る。後でSEO対策のinner_imageを詰める（サイトごと）
         String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList), null);
@@ -458,7 +443,7 @@ public class BlogController {
                 break;
             }
 
-            if (TeamEnum.get(teamId).getSubDomain().equals("https://otakuinfo.fun/")) {
+            if (BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId()).equals(BlogEnum.MAIN)) {
                 generalBlogHandle = 2;
             }
         }
@@ -467,7 +452,7 @@ public class BlogController {
         for (IMRel rel : relList) {
 
             // このrelがgeneralBlogなのかフラグ
-            Boolean generalBlogFlg = TeamEnum.get(rel.getTeam_id()).getSubDomain().equals("https://otakuinfo.fun/");
+            Boolean generalBlogFlg = BlogEnum.get(TeamEnum.get(rel.getTeam_id()).getBlogEnumId()).equals(BlogEnum.MAIN);
 
             // このrelがgeneralBlogで、他のgeneralBlogのrelにより処理が完了していたら飛ばす
             if (generalBlogFlg && generalBlogHandle.equals(3)) {
@@ -493,8 +478,10 @@ public class BlogController {
                 iMRelService.save(rel);
             }
 
+            BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId());
+
             // blogポストに向かう
-            HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+            HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
             content = content.replace("***INNER_IMAGE***", rel.getInner_image());
 
             if (headers != null) {
@@ -509,16 +496,15 @@ public class BlogController {
                 jsonObject.put("categories", new Integer[]{5});
 
                 // 年月を追加
-                List<String> tagNameList = new ArrayList<>();
-                tagNameList.addAll(teamNameList);
-
                 String yyyyMM = dateUtils.getYYYYMM(itemMaster.getPublication_date());
-                BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, TeamEnum.findSubDomainById(teamId));
-                tagNameList.add(yyyyMMTag.getTag_name());
+
+                // 年月のタグなのでそのsubdomainのgeneralなidをteamidに入れる
+                BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, blogEnum.getSubDomain(), blogEnum.getId());
+                teamNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
 
                 // member名を追加
                 if (memList != null && memList.size() > 0) {
-                    tagNameList.addAll(memList.stream().map(e -> memberService.getMemberName(e.getMember_id())).collect(Collectors.toList()));
+                    teamNameMap.putAll(memList.stream().map(e -> MemberEnum.get(e.getMember_id())).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getTeamId)));
                 }
 
                 // tag取得のためのteamIdを用意
@@ -528,7 +514,7 @@ public class BlogController {
                 } else {
                     tagTeamId = teamId;
                 }
-                List<Long> list = findBlogTagIdListByTagNameListTeamId(tagNameList, tagTeamId);
+                List<Long> list = findBlogTagIdListByTagNameListTeamId(teamNameMap);
                 int[] tags = new int[0];
                 if (!list.isEmpty()) {
                     tags = list.stream().mapToInt(Math::toIntExact).toArray();
@@ -558,10 +544,10 @@ public class BlogController {
                 TeamEnum e = TeamEnum.get(teamId);
                 boolean newPostFlg = true;
                 if (wpId == null) {
-                    url = e.getSubDomain() + setting.getBlogApiPath() + "posts/";
+                    url = blogEnum.getSubDomain() + setting.getBlogApiPath() + "posts/";
                 } else {
                     newPostFlg = false;
-                    url = e.getSubDomain() + setting.getBlogApiPath() + "posts/" + wpId;
+                    url = blogEnum.getSubDomain() + setting.getBlogApiPath() + "posts/" + wpId;
                 }
 
                 // ここで投稿
@@ -593,7 +579,7 @@ public class BlogController {
                         logger.debug("🕊ブログ投稿のお知らせ");
                         if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                             logger.debug(itemMaster.getTitle());
-                            url = e.getSubDomain() + "blog/" + rel.getWp_id();
+                            url = blogEnum.getSubDomain() + "blog/" + rel.getWp_id();
                             List<String> memNameList = memList.stream().filter(g -> g.getIm_rel_id().equals(rel.getIm_rel_id())).map(f -> memberService.getMemberName(f.getMember_id())).collect(Collectors.toList());
                             TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId, memNameList);
                             // TEST:temporaryアマゾンImageがあればそれを入れてあげるようにする
@@ -632,35 +618,6 @@ public class BlogController {
     }
 
     /**
-     * WpIdからポストの内容を取得します。
-     *
-     * @param wpId
-     * @param subDomain
-     * @return
-     */
-//    public String requestPostData(String wpId, String subDomain) {
-//        String finalUrl = subDomain + setting.getBlogApiPath() + "posts/" + wpId;
-//
-//        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), subDomain);
-//        return request(finalUrl, new HttpEntity<>(headers), HttpMethod.GET);
-//    }
-
-    /**
-     * アイキャッチメディアがある場合、画像IDを返却します。
-     * ない場合、0
-     *
-     * @param text
-     * @return
-     */
-//    public Integer extractMedia(String text) {
-//        JSONObject jsonObject = jsonUtils.createJsonObject(text);
-//        if (jsonObject.get("featured_media") != null) {
-//            return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
-//        }
-//        return 0;
-//    }
-
-    /**
      * 翌月のyyyyMMタグを追加する。
      *
      */
@@ -669,12 +626,12 @@ public class BlogController {
         if (dateUtils.getDate() == 27 || dateUtils.getDate() == 28) {
             logger.debug("月末につき月タグ確認処理");
             // info DBのblogTagテーブルに翌月のyyyyMMタグが存在するか？
-            Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-            Optional<Long> wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), teamId);
+            BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+            Optional<Long> wpTagId = blogTagService.findBlogTagIdByTagName(dateUtils.getNextYYYYMM(), blogEnum.getId());
             if (wpTagId.isEmpty()) {
                 String url = subDomain + setting.getBlogApiPath() + "tags/";
 
-                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("name", dateUtils.getNextYYYYMM());
 
@@ -686,59 +643,16 @@ public class BlogController {
     }
 
     /**
-     * WPにあるがDBにないタグを保存する
-     *
-     */
-    public void getBlogTagNotSavedOnInfoDb(String subDomain) {
-        // WPにあるタグを取得する
-        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=id&_fields[]=name&_fields[]=link";
-
-        Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
-        JSONObject jsonObject = new JSONObject();
-        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-        String res = request(url, request, HttpMethod.GET, "getBlogTagNotSavedOnInfoDb()");
-        List<BlogTag> blogTagList = new ArrayList<>();
-
-        try {
-            if (JsonUtils.isJsonArray(res)) {
-                JSONArray ja = new JSONArray(res);
-                for (int i=0;i<ja.length();i++) {
-                    Integer wpId = ja.getJSONObject(i).getInt("id");
-                    String tagName = ja.getJSONObject(i).getString("name").replaceAll("^\"|\"$", "");
-                    String link = ja.getJSONObject(i).getString("link").replaceAll("^\"|\"$", "");
-
-                    if (blogTagService.findBlogTagIdByTagName(tagName, teamId).isEmpty()) {
-                        BlogTag blogTag = new BlogTag();
-                        blogTag.setWp_tag_id((long)wpId);
-                        blogTag.setTag_name(tagName);
-                        blogTag.setLink(link);
-                        blogTag.setTeam_id(teamId);
-                        blogTagList.add(blogTag);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // infoDBに保存されていないタグは保存する
-        if (blogTagList.size() > 0) {
-            blogTagService.saveIfNotSaved(blogTagList);
-        }
-    }
-
-    /**
      * タグが存在しなかったらWPとDB両方に登録する
      *
      */
-    public BlogTag addTagIfNotExists(String tagName, String subDomain) {
+    public BlogTag addTagIfNotExists(String tagName, String subDomain, Long teamId) {
 
         String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + tagName;
 
+        BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
         // request
-        Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
         JSONObject jsonObject = new JSONObject();
         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
 
@@ -752,10 +666,10 @@ public class BlogController {
                 JSONArray ja = new JSONArray(res);
                 // タグがまだWPになかったら登録する
                 if (ja.length() == 0) {
-//                    blogTag = registerTag(date, subDomain);
+                    blogTag = registerTag(tagName, subDomain, teamId);
                 } else {
                     // WPにタグあるがDBから見つからなかった場合、DBに登録する
-                    blogTag = blogTagService.findByTagName(tagName);
+                    blogTag = blogTagService.findByTagName(tagName, blogEnum.getId());
 
                     if (blogTag == null || blogTag.getBlog_tag_id() == null) {
                         BlogTag blogTag1 = new BlogTag();
@@ -764,7 +678,7 @@ public class BlogController {
                         String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + tagName + "&per_page=1";
 
                         // request
-                        HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), teamId);
+                        HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), blogEnum);
                         JSONObject jsonObject1 = new JSONObject();
                         HttpEntity<String> request1 = new HttpEntity<>(jsonObject1.toString(), headers1);
                         String res1 = request(url1, request1, HttpMethod.GET, "addTagIfNotExists()_2");
@@ -777,7 +691,7 @@ public class BlogController {
                                 blogTag1.setLink(ja1.getJSONObject(0).getString("link"));
                                 blogTag1.setWp_tag_id((long) ja1.getJSONObject(0).getInt("id"));
 
-                                blogTag1.setTeam_id(teamId);
+                                blogTag1.setTeam_id(blogEnum.getId());
                                 blogTagService.save(blogTag1);
 
                                 // 無事にDB登録までできたので返却するBlogTagに設定してあげる
@@ -796,31 +710,32 @@ public class BlogController {
     }
 
     /**
-     * 日付タグをWPとDBに登録します。
+     * タグをWPとDBに登録します。
      *
-     * @param date
+     * @param tagName
+     * @param subDomain
      * @return
      */
-    public BlogTag registerTag(Date date, String subDomain) {
+    public BlogTag registerTag(String tagName, String subDomain, Long teamId) {
         String url = subDomain + setting.getBlogApiPath() + "tags/";
 
-        Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-        HttpHeaders h = generalHeaderSet(new HttpHeaders(), teamId);
+        BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+        HttpHeaders h = generalHeaderSet(new HttpHeaders(), blogEnum);
         JSONObject jo = new JSONObject();
-        jo.put("name", dateUtils.getYYYYMM(date));
+        jo.put("name", tagName);
 
         HttpEntity<String> request = new HttpEntity<>(jo.toString(), h);
         String res = request(url, request, HttpMethod.POST, "registerTag()");
 
         JSONObject jsonObject1 = jsonUtils.createJsonObject(res, teamId);
 
-        int yyyyMMId;
+        int tagId;
         if (jsonObject1.get("id") != null) {
-            yyyyMMId = jsonObject1.getInt("id");
+            tagId = jsonObject1.getInt("id");
             String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
             BlogTag blogTag = new BlogTag();
-            blogTag.setTag_name(dateUtils.getYYYYMM(date));
-            blogTag.setWp_tag_id((long) yyyyMMId);
+            blogTag.setTag_name(tagName);
+            blogTag.setWp_tag_id((long) tagId);
             blogTag.setLink(link);
 
             blogTag.setTeam_id(teamId);
@@ -859,7 +774,7 @@ public class BlogController {
             Map<String, Map<String, Program>> domainMap = new TreeMap<>();
             for (Map.Entry<String, Program> e : confirmedMap.entrySet()) {
                 Long teamId = Long.valueOf(e.getKey().replaceAll("^\\d*_", ""));
-                String subDomain = TeamEnum.findSubDomainById(teamId);
+                String subDomain = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId()).getSubDomain();
 
                 Map<String, Program> tmpMap;
                 if (domainMap.containsKey(subDomain)) {
@@ -884,14 +799,14 @@ public class BlogController {
             // テキストを用意できた時だけページを更新する
             // 各サブドメインがpostされたかチェックつけるMap<Subdomain, T/F>
             Map<String, Boolean> postChkMap = new TreeMap<>();
-            TeamEnum.getAllSubDomain().forEach(e -> postChkMap.put(e, false));
+            BlogEnum.getAllSubdomain().forEach(e -> postChkMap.put(e, false));
 
             if (resultMap.size() > 0) {
                 for (Map.Entry<String, String> e : resultMap.entrySet()) {
                     String subDomain = e.getKey();
-                    String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
-                    Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-                    HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+                    BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+                    String url = subDomain + setting.getBlogApiPath() + "pages/" + blogEnum.getTvPageId();
+                    HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -905,9 +820,9 @@ public class BlogController {
                 for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                     if (e.getValue().equals(false)) {
                         String subDomain = e.getKey();
-                        String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
-                        Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-                        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+                        BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+                        String url = subDomain + setting.getBlogApiPath() + "pages/" + blogEnum.getTvPageId();
+                        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
                         JSONObject jsonObject = new JSONObject();
                         jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                         HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -918,12 +833,12 @@ public class BlogController {
             }
         } else {
             Map<String, Boolean> postChkMap = new TreeMap<>();
-            TeamEnum.getAllSubDomain().forEach(e -> postChkMap.put(e, false));
+            BlogEnum.getAllSubdomain().forEach(e -> postChkMap.put(e, false));
             for (Map.Entry<String, Boolean> e : postChkMap.entrySet()) {
                 String subDomain = e.getKey();
-                String url = subDomain + setting.getBlogApiPath() + "pages/" + TeamEnum.getTvPageIdBySubDomain(subDomain);
-                Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+                BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+                String url = subDomain + setting.getBlogApiPath() + "pages/" + blogEnum.getTvPageId();
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("content", "<h2>１週間以内のTV情報はありません</h2>");
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
@@ -943,11 +858,12 @@ public class BlogController {
         List<IMRel> updateList = new ArrayList<>();
 
         for (IMRel rel : imRelList) {
-            String subDomain = TeamEnum.findSubDomainById(rel.getTeam_id());
+            BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(rel.getTeam_id()).getBlogEnumId());
+            String subDomain = blogEnum.getSubDomain();
             if (subDomain != null) {
                 String url = subDomain + setting.getBlogApiPath() + "posts/" + rel.getWp_id();
                 // request
-                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), rel.getTeam_id());
+                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
                 JSONObject jsonObject = new JSONObject();
                 HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
                 String res = request(url, request, HttpMethod.GET, "updateTvPage()_4");
@@ -979,71 +895,6 @@ public class BlogController {
     }
 
     /**
-     * ブログの投稿を全部取ってきて、対応するwpidがdbにあるか確認する。なかったら
-     * PENDING: subdomainなしotakuinfoの場合、teamIdが適切なもの取れていないのではないか？
-     * -> tmpmethodのためそんなに重要ではなく放置
-     */
-    public void chkWpIdByBlog() throws InterruptedException {
-
-        List<String> domainList = Arrays.stream(TeamEnum.values()).map(e -> e.getSubDomain()).distinct().collect(Collectors.toList());
-        for (String subDomain : domainList) {
-            List<String> outPut = new ArrayList<>();
-            Long teamId = TeamEnum.findIdBySubDomain(subDomain);
-            int n = 1;
-            boolean nextFlg = true;
-            int errCnt = 0;
-            while (nextFlg) {
-                String url = subDomain + setting.getBlogApiPath() + "posts?_fields[]=id&_fields[]=title&per_page=50&page=" + n;
-                // request
-                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
-                JSONObject jsonObject = new JSONObject();
-                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-
-                try {
-                    String res = request(url, request, HttpMethod.GET, "updateTvPage()_5");
-                    if (StringUtils.hasText(res)) {
-                        if (JsonUtils.isJsonArray(res)) {
-                            JSONArray ja = new JSONArray(res);
-                            for (int i=0;i<ja.length();i++) {
-                                Integer wpId = ja.getJSONObject(i).getInt("id");
-                                List<IMRel> relList = iMRelService.findbyWpIdTeamId((long) wpId, teamId);
-                                if (relList.size() == 0) {
-                                    String title = ja.getJSONObject(i).getJSONObject("title").getString("rendered");
-                                    outPut.add(subDomain + ":" + wpId + ":" + title);
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    if (e instanceof HttpClientErrorException.BadRequest) {
-                        nextFlg = false;
-                    }
-                    ++errCnt;
-                }
-                if (errCnt > 5) {
-                    nextFlg = false;
-                }
-                Thread.sleep(50);
-                ++n;
-            }
-            try{
-                if (outPut.size() > 0) {
-                    File file = new File("/root/outfile_" +subDomain + "txt");
-                    FileWriter filewriter = new FileWriter(file);
-                    for (String msg : outPut) {
-                        filewriter.write(msg + "\n");
-                    }
-                    filewriter.close();
-                }
-            } catch (IOException e) {
-                logger.debug(e);
-            }
-        }
-        logger.debug("chkWpIdByBlog() Done");
-    }
-
-    /**
      * 明日の1日の予定の投稿をポストします
      *
      */
@@ -1058,15 +909,15 @@ public class BlogController {
         String title = textController.createDailyScheduleTitle(tmrw);
 
         // チームIDリスト
-        List<Long> teamIdList = Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain().equals(subDomain)).map(TeamEnum::getId).collect(Collectors.toList());
+        BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
+        List<Long> teamIdList = Arrays.stream(TeamEnum.values()).filter(e -> e.getBlogEnumId().equals(blogEnum.getId())).map(TeamEnum::getId).collect(Collectors.toList());
 
         // memberList(のちループで詰める。variableだけ宣言)
         List<Long> memIdList = new ArrayList<>();
 
-        Boolean contentFlg = true;
-
         // コンテンツ文章の作成
         List<String> tmpList = new ArrayList<>();
+
         for (Long teamId : teamIdList) {
             // 明日の日付で、テレビ一覧画面を作る
             List<Program> plist = programService.findByOnAirDateTeamId(tmrw, teamId);
@@ -1092,7 +943,6 @@ public class BlogController {
             Map<String, Boolean> tmpMap = textController.createDailySchedulePost(teamId, tmrw, imMap, plist);
             for (Map.Entry<String, Boolean> e : tmpMap.entrySet()) {
                 tmpList.add(e.getKey());
-                contentFlg = e.getValue();
             }
         }
 
@@ -1100,7 +950,7 @@ public class BlogController {
 
         // post
         String url = subDomain + setting.getBlogApiPath() + "posts/";
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamIdList.get(0));
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
 
         JSONObject jsonObject = new JSONObject();
 
@@ -1111,8 +961,7 @@ public class BlogController {
         }
         jsonObject.put("author", 1);
 
-        TeamEnum e = TeamEnum.get(teamIdList.get(0));
-        Long l = e.getDailyScheCategoryId();
+        Long l = blogEnum.getDailyScheCategoryId();
         Integer i = Math.toIntExact(l);
         Integer[] cat = new Integer[(1)];
         cat[0] = i;
@@ -1120,31 +969,23 @@ public class BlogController {
         // dailyScheduleCategoryIdをカテゴリに入れてあげる
         jsonObject.put("categories", cat);
 
-        // タグを詰める
-        List<String> tagNameList = new ArrayList<>();
-        // subdomainでない場合、teamを追加
-        if (teamIdList.size() > 1) {
-            tagNameList.addAll(teamService.findTeamNameByIdList(teamIdList));
+        // タグ名を詰める
+        Map<String, Long> tagNameMap = new HashMap<>();
+        if (teamIdList.size() > 0) {
+            tagNameMap.putAll(teamService.findTeamNameByIdList(teamIdList));
         }
 
-        // 年月を追加
+        // 年月を追加/teamIdはそのsubdomainのgeneralなIDを入れる。
         String yyyyMM = dateUtils.getYYYYMM(tmrw);
-        BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, subDomain);
-        tagNameList.add(yyyyMMTag.getTag_name());
+        BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, subDomain, blogEnum.getId());
+        tagNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
 
         // member名を追加
-        if (memIdList != null && memIdList.size() > 0) {
-            tagNameList.addAll(memIdList.stream().map(f -> memberService.getMemberName(f)).collect(Collectors.toList()));
+        if (memIdList.size() > 0) {
+            tagNameMap.putAll(memIdList.stream().map(MemberEnum::get).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getTeamId)));
         }
 
-        // stringでタグ名が揃ったのでidに変換
-        Long teamId = null;
-        if (subDomain.equals("https://snowman.otakuinfo.fun/")) {
-            teamId = 7L;
-        } else {
-            teamIdList.get(0);
-        }
-        List<Long> list = findBlogTagIdListByTagNameListTeamId(tagNameList, teamId);
+        List<Long> list = findBlogTagIdListByTagNameListTeamId(tagNameMap);
         int[] tags = new int[0];
         if (!list.isEmpty()) {
             tags = list.stream().mapToInt(Math::toIntExact).toArray();
@@ -1169,9 +1010,6 @@ public class BlogController {
         if (jo.get("id") != null) {
             Long blogId = Long.valueOf(jo.get("id").toString().replaceAll("^\"|\"$", ""));
             logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
-            if (contentFlg) {
-                // コンテンツがある場合はブログポストできるのでは
-            }
         }
     }
 
@@ -1183,7 +1021,8 @@ public class BlogController {
      * @return Map<画像ID, 画像path>
      */
     public Map<Integer, String> requestMedia(HttpServletResponse response, Long teamId, String imageUrl) {
-        String finalUrl = TeamEnum.get(teamId).getSubDomain() + setting.getBlogApiPath() + "media";
+        BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId());
+        String finalUrl = blogEnum.getSubDomain() + setting.getBlogApiPath() + "media";
 
         imageUrl = imageUrl.replaceAll("\\?.*$", "");
 
@@ -1202,7 +1041,7 @@ public class BlogController {
 //        }
 
         response.setHeader("Cache-Control", "no-cache");
-        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), teamId);
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
         headers.add("content-disposition", "attachment; filename=" + imageUrl + ".png");
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -1232,27 +1071,32 @@ public class BlogController {
     /**
      * stringリストからDB検索、データあればそのまま返し、存在しなかったらwpにあるか確認しなければ登録、その後dbにもデータ登録し返却
      *
-     * @param tagNameList
+     * @param tagNameTeamIdMap
      * @return
      */
-    public List<Long> findBlogTagIdListByTagNameListTeamId(List<String> tagNameList, Long teamId) {
+    public List<Long> findBlogTagIdListByTagNameListTeamId(Map<String, Long> tagNameTeamIdMap) {
         List<Long> tagIdList = new ArrayList<>();
 
-        for (String tagName : tagNameList) {
-            Optional<Long> tagIdResult = blogTagService.findBlogTagIdByTagName(tagName, teamId);
+        for (Map.Entry<String, Long> e : tagNameTeamIdMap.entrySet()) {
+
+            Long teamId = e.getValue();
+            Long finalTeamId = teamId;
+            if (Arrays.stream(BlogEnum.values()).noneMatch(f -> f.getId().equals(finalTeamId))) {
+                teamId = BlogEnum.MAIN.getId();
+            }
+            Optional<Long> tagIdResult = blogTagService.findBlogTagIdByTagName(e.getKey(), teamId);
 
             Long tagId = null;
             if (tagIdResult.isPresent()) {
                 tagId = tagIdResult.get();
             } else {
                 // タグが見つからなかった場合、WPブログに登録したり引っ張ってきてDBに保存したり
-                BlogTag tag = addTagIfNotExists(tagName, TeamEnum.get(teamId).getSubDomain());
+                BlogEnum blogEnum = BlogEnum.get(teamId);
+                BlogTag tag = addTagIfNotExists(e.getKey(), blogEnum.getSubDomain(), teamId);
                 tagId = tag.getBlog_tag_id();
             }
-
             tagIdList.add(tagId);
         }
-
         return tagIdList;
     }
 }

@@ -134,7 +134,8 @@ public class TextController {
         }
 
         // blogへの誘導
-        String blog = "一覧はこちら%0A" + TeamEnum.findSubDomainById(teamId) + "pages/" + TeamEnum.getTvPageId(teamId);
+        BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId());
+        String blog = "一覧はこちら%0A" + blogEnum.getSubDomain() + "pages/" + blogEnum.getTvPageId();
         return result + info + blog;
     }
 
@@ -222,7 +223,7 @@ public class TextController {
      */
     public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap, String subDomain) {
 
-        String imagePath = TeamEnum.getBySubDomain(subDomain).getScheduleImagePath();
+        String imagePath = BlogEnum.findBySubdomain(subDomain).getScheduleImagePath();
 
         String result = "[toc depth='4']";
 
@@ -337,7 +338,7 @@ public class TextController {
                 String tmpLink = teamEnum.getInternalTop();
 
                 if (tmpLink == null) {
-                    tmpLink = "<a href='" + teamEnum.getSubDomain() + "'><p>" + teamName + "トップ</p></a>";
+                    tmpLink = "<a href='" + BlogEnum.get(teamEnum.getBlogEnumId()).getSubDomain() + "'><p>" + teamName + "トップ</p></a>";
                 } else {
                     tmpLink = "<a href='" + tmpLink + "'><p>" + teamName + "トップ</p></a>";
                 }
@@ -542,9 +543,12 @@ public class TextController {
      */
     public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<Program> plist) {
         boolean tvContentFlg = true;
-        boolean imContentFlg = true;
 
-        String date = "<h3>" + TeamEnum.get(teamId).getName() + "</h3>";
+        String teamName = TeamEnum.get(teamId).getName();
+        if (teamName.equals("NEWS ジャニーズ")) {
+            teamName = "NEWS";
+        }
+        String date = "<h3>" + teamName + "</h3>";
 
         // TV
         List<String> pTextList = new ArrayList<>();
@@ -565,7 +569,7 @@ public class TextController {
 
         if (pTextList.size() == 0) {
             tvContentFlg = false;
-            pTextList.add("本日の出演情報はありません。確認次第追記します！");
+            pTextList.add("本日の出演情報はありません。確認次第更新します！");
         }
 
         // IM
@@ -587,8 +591,7 @@ public class TextController {
         }
 
         if (imTextList.size() == 0) {
-            imContentFlg = false;
-            imTextList.add("本日発売予定は未確認です。確認次第追記します！");
+            imTextList.add("本日発売予定は未確認です。確認次第更新します！");
         }
 
         boolean contentFlg = false;
@@ -598,12 +601,12 @@ public class TextController {
 
         // SEO対策のためexternal/internal linkを用意する
         TeamEnum teamEnum = TeamEnum.get(teamId);
-        String externalLink = teamEnum.getOfficialSite();
+        String externalLink = "<h5>公式情報はこちらから</h5><br /><p><a href='" + teamEnum.getOfficialSite() + "' >公式サイト</a></p>";
         String internalLink = teamEnum.getInternalTop();
         if (internalLink == null) {
-            internalLink = teamEnum.getSubDomain();
+            internalLink = BlogEnum.get(teamEnum.getBlogEnumId()).getSubDomain();
         }
-        return Collections.singletonMap(String.join("\n", date, "<h2>TV</h2>" , String.join("\n", pTextList), "<h2>発売</h2>", String.join("\n", imTextList), externalLink, internalLink), contentFlg);
+        return Collections.singletonMap(String.join("\n", date, "<h4>TV</h4>" , String.join("\n", pTextList), "<h4>発売</h4>", String.join("\n", imTextList), externalLink, internalLink), contentFlg);
     }
 
     /**

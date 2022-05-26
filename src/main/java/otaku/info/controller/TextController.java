@@ -223,7 +223,7 @@ public class TextController {
      */
     public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap, String subDomain) {
 
-        String imagePath = BlogEnum.findBySubdomain(subDomain).getScheduleImagePath();
+        String imagePath = subDomain + BlogEnum.findBySubdomain(subDomain).getScheduleImagePath();
 
         String result = "[toc depth='4']";
 
@@ -420,7 +420,7 @@ public class TextController {
             return "";
         }
 
-        String result = "[toc depth='6']";
+        String result = "[toc depth='4']";
         // 丁寧にプログラムをソートする（放送日、チーム）
         // 1:日付ごとにまとめる<DateStr, List<Program>>
         Map<String, List<Program>> datePMap = new TreeMap<>();

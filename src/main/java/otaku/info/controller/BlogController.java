@@ -493,7 +493,11 @@ public class BlogController {
                     jsonObject.put("title", title);
                 }
                 jsonObject.put("author", 1);
-                jsonObject.put("categories", new Integer[]{5});
+
+                // カテゴリの設定
+                Integer[] cat = new Integer[(1)];
+                cat[0] = blogEnum.getCategoryItemId().intValue();
+                jsonObject.put("categories", cat);
 
                 // 年月を追加
                 String yyyyMM = dateUtils.getYYYYMM(itemMaster.getPublication_date());
@@ -507,13 +511,6 @@ public class BlogController {
                     teamNameMap.putAll(memList.stream().map(e -> MemberEnum.get(e.getMember_id())).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getTeamId)));
                 }
 
-                // tag取得のためのteamIdを用意
-                Long tagTeamId = null;
-                if (generalBlogFlg) {
-                    tagTeamId = 7L;
-                } else {
-                    tagTeamId = teamId;
-                }
                 List<Long> list = findBlogTagIdListByTagNameListTeamId(teamNameMap);
                 int[] tags = new int[0];
                 if (!list.isEmpty()) {
@@ -961,10 +958,8 @@ public class BlogController {
         }
         jsonObject.put("author", 1);
 
-        Long l = blogEnum.getDailyScheCategoryId();
-        Integer i = Math.toIntExact(l);
         Integer[] cat = new Integer[(1)];
-        cat[0] = i;
+        cat[0] = blogEnum.getDailyScheCategoryId().intValue();
 
         // dailyScheduleCategoryIdをカテゴリに入れてあげる
         jsonObject.put("categories", cat);

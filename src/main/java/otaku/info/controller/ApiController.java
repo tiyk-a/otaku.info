@@ -60,10 +60,22 @@ public class ApiController {
     ProgramService programService;
 
     @Autowired
+    PMService pmService;
+
+    @Autowired
+    PmVerService pmVerService;
+
+    @Autowired
     PRelService pRelService;
 
     @Autowired
+    PMRelService pmRelService;
+
+    @Autowired
     PRelMemService pRelMemService;
+
+    @Autowired
+    PMRelMemService pmRelMemService;
 
     @Autowired
     IRelService iRelService;
@@ -405,9 +417,10 @@ public class ApiController {
      * @return リスト
      */
     @GetMapping("/tv")
-    public ResponseEntity<List<PDto>> tvAll(@RequestParam("teamId") Long teamId) {
+    public ResponseEntity<PAllDto> tvAll(@RequestParam("teamId") Long teamId) {
         logger.debug("accepted");
-        List<PDto> pDtos = new ArrayList<>();
+        PAllDto pAllDto = new PAllDto();
+        List<PDto> pDtoList = new ArrayList<>();
         List<Program> pList = null;
 
         // 全チームデータ取得の場合
@@ -430,10 +443,44 @@ public class ApiController {
             pDto.setProgram(p);
             pDto.setPRelList(pRelList);
             pDto.setPRelMList(pRelMemList);
-            pDtos.add(pDto);
+            pDtoList.add(pDto);
         }
+
+        pAllDto.setP(pDtoList);
+
+        // PMの方をつめる
+        List<PMDto> pmDtoList = new ArrayList<>();
+        List<PM> pmList = pmService.findByTeamIdFuture(teamId);
+
+        // PMの付随データを探しにいく
+        for (PM pm : pmList) {
+            PMDto dto = new PMDto();
+            dto.setPm(pm);
+
+            List<PMRel> relList = pmRelService.findByPmId(pm.getPm_id());
+            dto.setRelList(relList);
+
+            List<PMRelMem> tmpList = new ArrayList<>();
+            if (relList.size() > 0) {
+                for (PMRel rel : relList) {
+                    List<PMRelMem> relMemList = pmRelMemService.findByPRelId(rel.getPm_rel_id());
+                    tmpList.addAll(relMemList);
+                }
+                dto.setRelMemList(tmpList);
+            }
+
+            // verを取ってくる
+            List<PMVer> pmVerList = pmVerService.findByPmId(pm.getPm_id());
+            dto.setVerList(pmVerList);
+
+            // リストに入れる
+            pmDtoList.add(dto);
+        }
+        // 返却リストに入れる
+        pAllDto.setPm(pmDtoList);
+
         logger.debug("fin");
-        return ResponseEntity.ok(pDtos);
+        return ResponseEntity.ok(pAllDto);
     }
 
     /**

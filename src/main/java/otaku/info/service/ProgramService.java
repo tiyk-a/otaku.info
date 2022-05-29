@@ -3,6 +3,7 @@ package otaku.info.service;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
@@ -60,5 +61,9 @@ public class ProgramService  {
 
     public List<Program> findByOnAirDateTeamId(Date date, Long teamId) {
         return programRepository.findByOnAirDateTeamId(date, teamId);
+    }
+
+    public List<Program> findByTeamIdFutureNotDeletedNoPM(Long teamId) {
+        return programRepository.findByTeamIdFutureNotDeletedNoPM(teamId);
     }
 }

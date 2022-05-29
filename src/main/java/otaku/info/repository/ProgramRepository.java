@@ -2,6 +2,7 @@ package otaku.info.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 
 import java.time.LocalDateTime;
@@ -36,4 +37,13 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query(nativeQuery = true, value = "SELECT p.* FROM program p inner join p_rel b on p.program_id = b.program_id WHERE DATE(p.on_air_date) = ?1 and b.team_id = ?2")
     List<Program> findByOnAirDateTeamId(Date date, Long teamId);
+
+    /**
+     * 10日前〜のPMIDのないitemを取得します
+     *
+     * @param teamId
+     * @return
+     */
+    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= now() - interval 10 day and a.pm_id is null")
+    List<Program> findByTeamIdFutureNotDeletedNoPM(Long teamId);
 }

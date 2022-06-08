@@ -1,5 +1,6 @@
 package otaku.info.service;
 
+import com.sun.istack.Nullable;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.PMVer;
@@ -15,6 +16,18 @@ public class PmVerService {
 
     private PmVerRepository pmVerRepository;
 
+    public PMVer save(PMVer ver) {
+        return pmVerRepository.save(ver);
+    }
+
+    public List<PMVer> saveAll(List<PMVer> verList) {
+        return pmVerRepository.saveAll(verList);
+    }
+
+    public PMVer findById(Long id) {
+        return pmVerRepository.findById(id).orElse(null);
+    }
+
     /**
      * pmIdが一致するverを全部取得します
      * del_flg = 0のものしか取得しない
@@ -22,7 +35,15 @@ public class PmVerService {
      * @param pmId
      * @return
      */
-    public List<PMVer> findByPmId(Long pmId) {
-        return pmVerRepository.findByPmId(pmId);
+    public List<PMVer> findByPmIdDelFlg(Long pmId, @Nullable Boolean delFlg) {
+        if (delFlg == null) {
+            return pmVerRepository.findByPmId(pmId);
+        } else {
+            return pmVerRepository.findByPmIdDelFlg(pmId, delFlg);
+        }
+    }
+
+    public List<PMVer> findByPmIdStationId(Long pmId, Long stationId) {
+        return pmVerRepository.findByPmIdStationId(pmId, stationId);
     }
 }

@@ -158,6 +158,28 @@ public class CalendarApiController {
     }
 
     /**
+     * 日付をDateで受け取る
+     * 日付型変換して本メソッドに飛ばす
+     * all-dayタイプしかうまくいかないかも
+     *
+     * @param calendarId
+     * @param startDate
+     * @param endDate
+     * @param summary
+     * @param desc
+     * @param allDayFlg
+     * @return
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public Event postEventTime(String calendarId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
+//        LocalDateTime startLdt = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
+//        LocalDateTime endLdt = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
+        Event event = postEvent(calendarId, startDate, endDate, summary, desc, allDayFlg);
+        return event;
+    }
+
+    /**
      * Service account authorize Post Event
      *
      * @throws IOException

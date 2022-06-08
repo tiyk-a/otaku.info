@@ -29,8 +29,8 @@ public class PM implements Comparable<PM> {
     @Column(nullable = true)
     private String title;
 
-    @Column(nullable = false)
-    private Long im_id;
+    @Column(nullable = true)
+    private String description;
 
     @Column(nullable = false)
     private boolean del_flg;

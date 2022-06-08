@@ -26,8 +26,16 @@ public class ProgramService  {
         return programRepository.save(program);
     }
 
+    public Program findByPId(Long programId) {
+        return programRepository.findByPId(programId).orElse(null);
+    }
+
     public List<Program> findByOnAirDate(Date date) {
         return programRepository.findByOnAirDate(date);
+    }
+
+    public List<Program> findByOnAirDatePmIdNullDelFlg(Date date, Boolean delFlg) {
+        return programRepository.findByOnAirDatePmIdNullDelFlg(date, delFlg);
     }
 
     public List<Program> findByOnAirDateBeterrn(Date from, Date to) {
@@ -49,6 +57,10 @@ public class ProgramService  {
 
     public List<Program> findbyTeamId(Long teamId) {
         return programRepository.findbyTeamId(teamId);
+    }
+
+    public List<Program> findbyTeamIdPmIdNullDelFlg(Long teamId, Boolean delFlg) {
+        return programRepository.findbyTeamIdPmIdNullDelFlg(teamId, delFlg);
     }
 
     public List<Program> findbyStationId(Long sId) {

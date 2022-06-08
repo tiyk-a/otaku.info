@@ -19,7 +19,7 @@ public class PMDto {
 
     private List<PMRelMem> relMemList;
 
-    private List<PMVer> verList;
+    private List<PMVerDto> verList;
 
     private Timestamp created_at;
 

@@ -636,4 +636,20 @@ public class TextController {
 
         return originStr;
     }
+
+    /**
+     * wordpressのtagのslugを作成する
+     *
+     * @param source
+     * @return
+     */
+    public String getTagSlug(String source) {
+        // 大文字は小文字に
+        String result = source.toLowerCase();
+        // スペースは切り取る
+        result = result.replaceAll("", result);
+        // 記号は切り取る
+        result = result.replaceAll("!", "");
+        return result;
+    }
 }

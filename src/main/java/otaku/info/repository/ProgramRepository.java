@@ -2,17 +2,23 @@ package otaku.info.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProgramRepository extends JpaRepository<Program, Long> {
 
-    @Query("SELECT p FROM program p WHERE DATE(on_air_date) >= ?1")
+    @Query("select t from program t where program_id = ?1")
+    Optional<Program> findByPId(Long programId);
+
+    @Query(nativeQuery = true, value = "SELECT * FROM program p WHERE DATE(on_air_date) >= ?1 limit 20")
     List<Program> findByOnAirDate(Date date);
+
+    @Query(nativeQuery = true, value = "SELECT * FROM program p WHERE DATE(on_air_date) >= ?1 and pm_id is null and del_flg = ?2 limit 20")
+    List<Program> findByOnAirDatePmIdNullDelFlg(Date date, Boolean delFlg);
 
     @Query("SELECT p FROM program p WHERE DATE(on_air_date) >= ?1 and DATE(on_air_date) <= ?2 and del_flg = 0")
     List<Program> findByOnAirDateBeterrn(Date from, Date fo);
@@ -31,6 +37,9 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= CURRENT_DATE order by a.on_air_date asc")
     List<Program> findbyTeamId(Long teamId);
+
+    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= CURRENT_DATE and a.pm_id is null and a.del_flg = ?2 order by a.on_air_date asc")
+    List<Program> findbyTeamIdPmIdNullDelFlg(Long teamId, Boolean delFlg);
 
     @Query("select t from program t where station_id = ?1")
     List<Program> findbyStationId(Long sId);

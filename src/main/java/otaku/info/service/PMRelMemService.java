@@ -1,5 +1,6 @@
 package otaku.info.service;
 
+import com.sun.istack.Nullable;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,31 @@ public class PMRelMemService {
     @Autowired
     PMRelMemRepository pmRelMemRepository;
 
-    public List<PMRelMem> findByPRelId(Long pmRelId) {
-        return pmRelMemRepository.findByPRelId(pmRelId);
+    public PMRelMem save(PMRelMem mem) {
+        return pmRelMemRepository.save(mem);
+    }
+
+    public List<PMRelMem> saveAll(List<PMRelMem> memList) {
+        return pmRelMemRepository.saveAll(memList);
+    }
+
+    public PMRelMem findByPmRelMemId(Long id) {
+        return pmRelMemRepository.findByPmRelMemId(id).orElse(null);
+    }
+
+    public List<PMRelMem> findByPRelIdDelFlg(Long pmRelId, @Nullable Boolean delFlg) {
+        if (delFlg == null) {
+            return pmRelMemRepository.findByPRelId(pmRelId);
+        } else {
+            return pmRelMemRepository.findByPRelIdDelFlg(pmRelId, delFlg);
+        }
+    }
+
+    public PMRelMem findByPmRelIdMemId(Long pmRelId, Long memId) {
+        return pmRelMemRepository.findByPmRelIdMemId(pmRelId, memId).orElse(null);
+    }
+
+    public PMRelMem findByPmIdMemId(Long pmId, Long memId) {
+        return pmRelMemRepository.findByPmIdMemId(pmId, memId).orElse(null);
     }
 }

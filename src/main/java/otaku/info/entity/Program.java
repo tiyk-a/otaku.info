@@ -49,6 +49,9 @@ public class Program {
     @Column(nullable = true)
     private Timestamp updated_at;
 
+    @Column(nullable = true)
+    private Long pm_id;
+
     public Program absorb(PForm form) {
         this.setTitle(form.getTitle());
         this.setDescription(form.getDescription());

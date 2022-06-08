@@ -18,6 +18,8 @@ import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
 import otaku.info.utils.StringUtilsMine;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,9 +57,6 @@ public class TmpController {
     @Autowired
     PRelService pRelService;
 
-//    @Autowired
-//    ItemMasterService itemMasterService;
-
     @Autowired
     BlogTagService blogTagService;
 
@@ -72,6 +71,100 @@ public class TmpController {
 
     @Autowired
     JsonUtils jsonUtils;
+
+    @Autowired
+    PRelMemService pRelMemService;
+
+    @Autowired
+    PMService pmService;
+
+    @Autowired
+    PmVerService pmVerService;
+
+    @Autowired
+    PMRelService pmRelService;
+
+    @Autowired
+    PMRelMemService pmRelMemService;
+
+    /**
+     * Program -> PM, Pm related tables tmp method
+     * データをマスターに入れる。既存のをやるメソッド
+     */
+    public void pmMasterMethod(String from, String to) throws ParseException {
+        // 対象のprogramを取得する
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        List<Program> programList = programService.findByOnAirDateBeterrn(dateFormat.parse(from), dateFormat.parse(to));
+        // それぞれのprogramに対してpmとそのrelated dataを作成・insertする
+        for (Program p : programList) {
+            // PMを作る：すでにPMないか確認して
+            List<PM> pmList = pmService.findByTitleOnAirDate(p.getTitle(), p.getOn_air_date());
+
+            PM targetPM = null;
+
+            if (pmList.size() == 0) {
+                PM pm = new PM(null, p.getTitle(), p.getDescription(), false, null, null);
+                targetPM = pmService.save(pm);
+
+                // verも登録する
+            } else {
+                targetPM = pmList.stream().sorted().collect(Collectors.toList()).get(0);
+            }
+
+            // verを登録する
+            // すでにverがあるか確認する
+            List<PMVer> verList = pmVerService.findByPmIdStationId(targetPM.getPm_id(), p.getStation_id());
+
+            // verないなら登録する
+            if (verList.size() == 0) {
+                PMVer ver = new PMVer(null, targetPM.getPm_id(), p.getOn_air_date(), p.getStation_id(), false, null, null);
+                pmVerService.save(ver);
+            }
+
+            // pmrelを作る
+            List<PRel> relList = pRelService.getListByProgramId(p.getProgram_id());
+            List<PMRel> pmRelList = pmRelService.findByPmIdDelFlg(targetPM.getPm_id(), null);
+            for (PRel rel : relList) {
+                PMRel targetRel = null;
+                // pmrelになかったら登録する
+                if (pmRelList.stream().noneMatch(e -> e.getTeam_id().equals(rel.getTeam_id()))) {
+                    PMRel newRel = new PMRel(null, targetPM.getPm_id(), rel.getTeam_id(), null, null, false);
+                    PMRel savedRel = pmRelService.save(newRel);
+                    targetRel = savedRel;
+                } else {
+                    targetRel = pmRelList.stream().filter(e -> e.getTeam_id().equals(rel.getTeam_id())).sorted().collect(Collectors.toList()).get(0);
+
+                    // 既存データあるけど削除されてる場合、復活してあげる
+                    if (targetRel.getDel_flg().equals(true)) {
+                        targetRel.setDel_flg(false);
+                        pmRelService.save(targetRel);
+                    }
+                }
+
+                // memも確認する
+                List<PRelMem> memList = pRelMemService.findByPRelId(rel.getP_rel_id());
+                List<PMRelMem> pmMemList = pmRelMemService.findByPRelIdDelFlg(targetRel.getPm_rel_id(), null);
+                for (PRelMem mem : memList) {
+                    if (pmMemList.stream().noneMatch(e -> e.getMember_id().equals(mem.getMember_id()))) {
+                        // 既存なかったら登録
+                        PMRelMem newMem = new PMRelMem(null, targetRel.getPm_rel_id(), mem.getMember_id(), null, null, false);
+                        if (newMem.getPm_rel_id() == null) {
+                            System.out.println("here");
+                        }
+                        pmRelMemService.save(newMem);
+                    } else {
+                        PMRelMem targetMem = pmMemList.stream().filter(e -> e.getMember_id().equals(mem.getMember_id())).findFirst().get();
+
+                        // 既存あるが削除されてる場合、復活してあげる
+                        if (targetMem.getDel_flg().equals(true)) {
+                            targetMem.setDel_flg(false);
+                            pmRelMemService.save(targetMem);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 //    /**
 //     * Item -> ItemRel

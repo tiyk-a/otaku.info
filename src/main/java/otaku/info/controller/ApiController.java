@@ -1,5 +1,7 @@
 package otaku.info.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,10 +21,7 @@ import otaku.info.entity.*;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
-import otaku.info.form.IMForm;
-import otaku.info.form.IMVerForm;
-import otaku.info.form.ItemByJsonForm;
-import otaku.info.form.PForm;
+import otaku.info.form.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
@@ -76,6 +75,9 @@ public class ApiController {
 
     @Autowired
     PMRelMemService pmRelMemService;
+
+    @Autowired
+    PMCalService pmCalService;
 
     @Autowired
     IRelService iRelService;
@@ -282,7 +284,11 @@ public class ApiController {
     public ResponseEntity<FIMDto> getIm(@PathVariable Long teamId, @PathVariable Long id) {
         logger.debug("accepted");
         IM im = imService.findById(id);
-        IMRel rel = imRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
+        List<IMRel> tmpList = imRelService.findByImIdTeamId(im.getIm_id(), teamId);
+        IMRel rel = null;
+        if (!tmpList.isEmpty() && tmpList.size() > 0) {
+            rel = tmpList.get(0);
+        }
         List<IMRel> relList = new ArrayList<>();
         relList.add(rel);
         List<ImVer> imVerList = imVerService.findByImId(im.getIm_id());
@@ -395,11 +401,32 @@ public class ApiController {
     }
 
     /**
+     * IDからPMを削除する
+     *
+     * @param id 削除されるPMのID
+     */
+    @DeleteMapping("/pm/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<Boolean> delPm(@PathVariable Long id) {
+        logger.debug("accepted");
+        try {
+            PM pm = pmService.findByPmId(id);
+            pm.setDel_flg(true);
+            logger.debug("fin");
+            pmService.save(pm);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
      * 指定のIMをブログ投稿します
      *
      */
     @GetMapping("/im/blog")
-    public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Long imId, @RequestParam("team") Long team) throws InterruptedException {
+    public ResponseEntity<Boolean> upImBlog(@RequestParam("imId") Long imId) throws InterruptedException {
         logger.debug("accepted");
         IM im = imService.findById(imId);
         logger.debug("fin");
@@ -420,15 +447,17 @@ public class ApiController {
     public ResponseEntity<PAllDto> tvAll(@RequestParam("teamId") Long teamId) {
         logger.debug("accepted");
         PAllDto pAllDto = new PAllDto();
+
+        // PMのないprogramだけを集める
         List<PDto> pDtoList = new ArrayList<>();
         List<Program> pList = null;
 
         // 全チームデータ取得の場合
         if (teamId == null || teamId == 5) {
-            pList = programService.findByOnAirDate(dateUtils.getToday());
+            pList = programService.findByOnAirDatePmIdNullDelFlg(dateUtils.getToday(), false);
         } else {
             // チーム指定が適切に入っていればそのチームのを返す
-            pList = programService.findbyTeamId(teamId);
+            pList = programService.findbyTeamIdPmIdNullDelFlg(teamId, false);
         }
 
         for (Program p : pList) {
@@ -450,28 +479,52 @@ public class ApiController {
 
         // PMの方をつめる
         List<PMDto> pmDtoList = new ArrayList<>();
-        List<PM> pmList = pmService.findByTeamIdFuture(teamId);
+        // 放送局のマップ
+        HashMap<Long, String> stationMap = new HashMap<>();
+
+        // 全チームデータ取得の場合
+        List<PM> pmList = null;
+        if (teamId == null || teamId == 5) {
+            pmList = pmService.findFutureDelFlg(false);
+        } else {
+            // チーム指定が適切に入っていればそのチームのを返す
+            pmList = pmService.findByTeamIdFuture(teamId);
+        }
 
         // PMの付随データを探しにいく
         for (PM pm : pmList) {
             PMDto dto = new PMDto();
             dto.setPm(pm);
 
-            List<PMRel> relList = pmRelService.findByPmId(pm.getPm_id());
+            List<PMRel> relList = pmRelService.findByPmIdDelFlg(pm.getPm_id(), false);
             dto.setRelList(relList);
 
             List<PMRelMem> tmpList = new ArrayList<>();
             if (relList.size() > 0) {
                 for (PMRel rel : relList) {
-                    List<PMRelMem> relMemList = pmRelMemService.findByPRelId(rel.getPm_rel_id());
+                    List<PMRelMem> relMemList = pmRelMemService.findByPRelIdDelFlg(rel.getPm_rel_id(), false);
                     tmpList.addAll(relMemList);
                 }
                 dto.setRelMemList(tmpList);
             }
 
             // verを取ってくる
-            List<PMVer> pmVerList = pmVerService.findByPmId(pm.getPm_id());
-            dto.setVerList(pmVerList);
+            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
+            List<PMVerDto> verDtoList = new ArrayList<>();
+            for (PMVer ver : pmVerList) {
+                // 放送局名を取得
+                String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
+                PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
+                verDtoList.add(pmVerDto);
+            }
+            dto.setVerList(verDtoList);
+
+            // verの放送局が放送局マップに存在しない場合、追加する
+            for (PMVer v : pmVerList) {
+                if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
+                    stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
+                }
+            }
 
             // リストに入れる
             pmDtoList.add(dto);
@@ -627,6 +680,104 @@ public class ApiController {
     }
 
     /**
+     * PMのデータを更新する
+     *
+     * @param id データ更新をするPMのID
+     * @param form 更新される新しいデータ
+     * @return Pm
+     */
+    @PostMapping("/pm/{id}")
+    public ResponseEntity<Boolean> upPm(@PathVariable Long id, @Valid @RequestBody PMDto form) {
+        logger.debug("accepted");
+
+        // pm
+        PM pm =pmService.findByPmId(id);
+        if (Objects.compare(form.getPm(), pm, Comparator.naturalOrder()) != 0) {
+            BeanUtils.copyProperties(form.getPm(), pm);
+            pmService.save(pm);
+        }
+
+
+        // pmrel
+        List<PMRel> relList = pmRelService.findByPmIdDelFlg(pm.getPm_id(), null);
+        List<PMRel> updRelList = new ArrayList<>();
+        for (PMRel rel : form.getRelList()) {
+            PMRel targetRel = null;
+            if (rel.getPm_rel_id() != null && relList.stream().anyMatch(e -> e.getPm_rel_id().equals(rel.getPm_rel_id()))) {
+                // 既存のrelがあるならそれを更新
+                targetRel = relList.stream().filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id())).findFirst().get();
+                if (Objects.compare(rel, targetRel, Comparator.comparing(PMRel::getTeam_id)) != 0) {
+                    BeanUtils.copyProperties(rel, targetRel);
+                }
+            } else if (relList.stream().noneMatch(e -> e.getTeam_id().equals(rel.getTeam_id()))) {
+                // 既存がなければ新規作成
+                targetRel = new PMRel(null, rel.getPm_id(), rel.getTeam_id(), null, null, false);
+            }
+
+            if (targetRel != null) {
+                updRelList.add(targetRel);
+            }
+        }
+
+        // pmrel更新対象があれば更新
+        if (updRelList.size() > 0) {
+            pmRelService.saveAll(updRelList);
+        }
+
+        // pmrelm
+        List<PMRelMem> updMemList = new ArrayList<>();
+        for (PMRelMem relMem : form.getRelMemList()) {
+            PMRelMem targetMem = null;
+            if (relMem.getPm_rel_mem_id() != null) {
+                // IDがある場合元データを取得
+                targetMem = pmRelMemService.findByPmRelMemId(relMem.getPm_rel_mem_id());
+                if (Objects.compare(relMem, targetMem, Comparator.comparing(PMRelMem::getPm_rel_id).thenComparing(PMRelMem::getMember_id)) != 0) {
+                    BeanUtils.copyProperties(relMem, targetMem);
+                }
+            } else {
+                // IDがない場合要素からデータを確認
+                targetMem = pmRelMemService.findByPmIdMemId(pm.getPm_id(), relMem.getMember_id());
+                if (targetMem == null) {
+                    targetMem = new PMRelMem(null, relMem.getPm_rel_id(), relMem.getMember_id(), null, null, false);
+                }
+            }
+
+            if (targetMem != null) {
+                updMemList.add(targetMem);
+            }
+        }
+
+        if (updMemList.size() > 0) {
+            pmRelMemService.saveAll(updMemList);
+        }
+
+        // pmver
+        List<PMVer> updVList = new ArrayList<>();
+        for (PMVerDto verDto : form.getVerList()) {
+            PMVer targetVer = null;
+            if (verDto.getPm_v_id() != null) {
+                // 元データがある場合
+                targetVer = pmVerService.findById(verDto.getPm_v_id());
+                BeanUtils.copyProperties(verDto, targetVer);
+            } else {
+                // 元データがない場合
+                targetVer = new PMVer(null, pm.getPm_id(), verDto.getOn_air_date(), verDto.getStation_id(), false, null, null);
+            }
+
+            if (targetVer != null) {
+                updVList.add(targetVer);
+            }
+        }
+
+        if (updVList.size() > 0) {
+            pmVerService.saveAll(updVList);
+        }
+
+        logger.debug("fin");
+        return ResponseEntity.ok(true);
+    }
+
+    /**
      * IDから商品を削除する
      *
      * @param id 削除される商品のID
@@ -658,6 +809,7 @@ public class ApiController {
     public ResponseEntity<Boolean> newIMyVer(@Valid @RequestBody IMVerForm imVerForm) {
         logger.debug("accepted");
         Boolean updFlg = false;
+        Boolean noCalFlg = false;
 
         try {
             IM im = null;
@@ -693,9 +845,11 @@ public class ApiController {
                     im = savedIm;
                 } else {
                     im = checkedImList.get(0);
+                    noCalFlg = true;
                 }
             } else {
                 im = imService.findById(imVerForm.getIm_id());
+                noCalFlg = true;
             }
 
             // googleカレンダー登録のためのデータを用意する
@@ -711,11 +865,15 @@ public class ApiController {
                         // IM新規登録の場合
                         // teamId=4(未選択)以外だったら登録
                         if (!rel.get(2).equals(4)) {
-                            // googleカレンダーの登録を行う
-                            Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                            String eventId = "";
+                            if (!noCalFlg) {
+                                // googleカレンダーの登録を行う
+                                Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                eventId = event.getId();
+                            }
 
                             // imrelの登録
-                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, event.getId(), null, null, false));
+                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false));
                         }
                     } else {
                         // IM更新の場合
@@ -742,8 +900,12 @@ public class ApiController {
                                     imRel.setTeam_id(Long.valueOf(rel.get(2)));
 
                                     // calendar新しく作る
-                                    Event event = calendarApiController.postEvent(TeamEnum.get(imRel.getTeam_id()).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), calendarDto.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
-                                    imRel.setCalendar_id(event.getId());
+                                    String eventId = "";
+                                    if (!noCalFlg) {
+                                        Event event = calendarApiController.postEvent(TeamEnum.get(imRel.getTeam_id()).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), calendarDto.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                        eventId = event.getId();
+                                    }
+                                    imRel.setCalendar_id(eventId);
                                 }
                                 imRelService.save(imRel);
                             }
@@ -759,10 +921,14 @@ public class ApiController {
                                 if (teamId == null) {
                                     // ないのが確認できたら新規登録
                                     // googleカレンダーの登録を行う
-                                    Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    String eventId = "";
+                                    if (!noCalFlg) {
+                                        Event event = calendarApiController.postEvent(TeamEnum.get(Long.valueOf(rel.get(2))).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                        eventId = event.getId();
+                                    }
 
                                     // imrelの登録
-                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, event.getId(), null, null, false));
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false));
                                 }
                             }
                         }
@@ -784,15 +950,23 @@ public class ApiController {
                         // memberId=30(未選択)以外だったら新規登録
                         if (!imrelm.get(2).equals(30)) {
                             Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
-                            IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+                            List<IMRel> tmpList = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId);
+                            IMRel targetImRel = null;
+                            if (!tmpList.isEmpty() && tmpList.size() > 0) {
+                                targetImRel = tmpList.get(0);
+                            }
 
                             // teamIdが登録されていなかったらimrelを登録する
                             if (targetImRel == null) {
-                                // googleカレンダーの登録を行う
-                                Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                String eventId = "";
+                                if (!noCalFlg) {
+                                    // googleカレンダーの登録を行う
+                                    Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    eventId = event.getId();
+                                }
 
                                 // imrelの登録
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, event.getId(), null, null, false));
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false));
                             }
 
                             imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
@@ -821,15 +995,23 @@ public class ApiController {
                             if (!imrelm.get(2).equals(30)) {
                                 // TeamIdがまず登録されてるか確認する
                                 Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(imrelm.get(2)));
-                                IMRel targetImRel = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId).orElse(null);
+                                IMRel targetImRel = null;
+                                List<IMRel> tmpList = imRelService.findByImIdTeamId(im.getIm_id(), tmpTeamId);
+                                if (!tmpList.isEmpty() && tmpList.size() > 0) {
+                                    targetImRel = tmpList.get(0);
+                                }
 
                                 // teamIdが登録されていなかったらimrelを登録する
                                 if (targetImRel == null) {
                                     // googleカレンダーの登録を行う
-                                    Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                    String eventId = "";
+                                    if (!noCalFlg) {
+                                        Event event = calendarApiController.postEvent(TeamEnum.get(tmpTeamId).getCalendarId(), calendarDto.getStartDate(), calendarDto.getEndDate(), im.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                                        eventId = event.getId();
+                                    }
 
                                     // imrelの登録
-                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, event.getId(), null, null, false));
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false));
                                 }
 
                                 // 既存でimrelmemの登録がないか確認
@@ -874,6 +1056,252 @@ public class ApiController {
     }
 
     /**
+     * PM+付随データを登録します。すでにPMがある場合は更新
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/tv")
+    public ResponseEntity<Boolean> newPMyVer(@Valid @RequestBody PMVerForm pmVerForm) {
+        logger.debug("accepted");
+        Boolean updFlg = false;
+
+        try {
+            PM pm = null;
+            Program program = programService.findByPId(pmVerForm.getProgram_id());
+
+            if (program == null) {
+                return ResponseEntity.ok(false);
+            }
+
+            // pm_idが入っていたらverだけ追加処理処理、入っていなかったらpm新規登録とあればver追加処理、と判断（ここではpmのタイトル変更などはできない）
+            // まずはpm
+            if (pmVerForm.getPm_id() == null || pmVerForm.getPm_id() == 0) {
+
+                // 対象のItemが見つからなかったら処理しません。見つかったら処理する。
+                pm = new PM();
+
+                // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
+                BeanUtils.copyProperties(pmVerForm, pm);
+                if (pm.getPm_id() != null && !pm.getPm_id().equals(0L)) {
+                    updFlg = true;
+                }
+
+                // wordpressでエラーになる記号を処理し、設定し直す
+                pm.setTitle(textController.replaceSignals(pm.getTitle()));
+
+                // 登録前に本当に重複登録がないかチェック
+                // 同じタイトルのpmがあるなら、登録せずに0番目のpmをセットする
+                List<PM> checkedPmList = pmService.findByTitle(pmVerForm.getTitle());
+                if (checkedPmList.size() == 0) {
+                    PM savedPm = pmService.save(pm);
+                    pm = savedPm;
+                } else {
+                    pm = checkedPmList.get(0);
+                }
+            } else {
+                pm = pmService.findByPmId(pmVerForm.getPm_id());
+            }
+
+            // pmrelの登録を行います(irelは更新しない)
+            if (pmVerForm.getPmrel() != null && pmVerForm.getPmrel().size() > 0) {
+                List<List<Integer>> pmrelList = pmVerForm.getPmrel();
+
+                for (List<Integer> rel : pmrelList) {
+                    // pmの新規登録の場合(=pmrelはないはず)と更新の場合(=pmrelがすでにあるかもしれない)で処理分岐
+                    if (!updFlg) {
+                        // PM新規登録の場合
+                        // teamId=4(未選択)以外だったら登録
+                        if (!rel.get(2).equals(4)) {
+                            // pmrelの登録
+                            PMRel pmRel = pmRelService.save(new PMRel(null, pm.getPm_id(), Long.valueOf(rel.get(2)), null, null, false));
+                        }
+                    } else {
+                        // PM更新の場合
+                        // rel.get(3)から、prelデータか(-> pmrel新規登録)pmrelデータか(->pmrel更新or変更なし)かを判別して処理分岐
+                        Boolean isPmrelData = rel.get(3).equals(1);
+                        if (isPmrelData) {
+                            // すでにpmrelあるので、teamId確認して更新必要だったら更新する
+                            PMRel pmRel = pmRelService.findByPmRelId(Long.valueOf(rel.get(0)));
+                            if (!pmRel.getTeam_id().equals(Long.valueOf(rel.get(2)))) {
+                                // teamId=4(未選択)だったらdel_flg=onにする。それ以外だったら更新
+                                if (rel.get(2).equals(4)) {
+                                    pmRel.setDel_flg(true);
+                                } else {
+                                    pmRel.setTeam_id(Long.valueOf(rel.get(2)));
+                                }
+                                pmRelService.save(pmRel);
+                            }
+                        } else {
+                            // prelデータなので、新規でPmrelを登録してあげる
+                            // teamId=4(未選択)以外だったら処理進める
+                            if (!rel.get(2).equals(4)) {
+                                // すでにpmRelが登録されてるかもしれないので取得する
+                                List<Long> savedPmRelTeamIdList = pmRelService.findTeamIdByProgramId(pm.getPm_id());
+
+                                // 該当teamの登録がすでにないか一応確認
+                                Long teamId = savedPmRelTeamIdList.stream().filter(e -> e.equals(Long.valueOf(rel.get(2)))).findFirst().orElse(null);
+                                if (teamId == null) {
+                                    // ないのが確認できたら新規登録
+                                    // pmRelの登録
+                                    pmRelService.save(new PMRel(null, pm.getPm_id(), Long.valueOf(rel.get(2)), null, null, false));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // pmRelMemの登録を行います(irelMemは更新しない)
+            if (pmVerForm.getPmrelm() != null && pmVerForm.getPmrelm().size() > 0) {
+                List<List<Integer>> pmRelmList = pmVerForm.getPmrelm();
+
+                // IDがすでにあれば更新、なければ新規登録をする
+                for (List<Integer> pmRelm : pmRelmList) {
+                    // pmの新規登録の場合(=pmRelMはないはず)と更新の場合(=pmRelMがすでにあるかもしれない)で処理分岐
+
+                    if (!updFlg) {
+                        // PM新規登録の場合、pmRelmemもないはずなので新規登録
+
+                        // memberId=30(未選択)以外だったら新規登録
+                        if (!pmRelm.get(2).equals(30)) {
+                            Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(pmRelm.get(2)));
+                            PMRel targetPmRel = pmRelService.findByPmIdTeamId(pm.getPm_id(), tmpTeamId);
+
+                            // teamIdが登録されていなかったらpmRelを登録する
+                            if (targetPmRel == null) {
+                                // pmRelの登録
+                                targetPmRel = pmRelService.save(new PMRel(null, pm.getPm_id(), tmpTeamId, null, null, false));
+                            }
+
+                            pmRelMemService.save(new PMRelMem(null, targetPmRel.getPm_rel_id(), Long.valueOf(pmRelm.get(2)), null, null, false));
+                        }
+                    } else {
+                        // PM更新の場合
+                        // pmRelm.get(3)から、prelMデータか(-> pmRelM新規登録)pmRelMデータか(->pmRelM更新or変更なし)かを判別して処理分岐
+                        Boolean isPmrelData = pmRelm.get(3).equals(1);
+
+                        if (isPmrelData) {
+                            // すでにpmRelMデータあるのでmemberの更新が必要であれば更新してあげる
+                            PMRelMem pmRelMem = pmRelMemService.findByPmRelMemId(Long.valueOf(pmRelm.get(0)));
+
+                            // memberId=30(未選択)だったらdel_flg=trueにしてあげる。それ以外だったら必要であれば更新
+                            if (pmRelm.get(2).equals(30)) {
+                                pmRelMem.setDel_flg(true);
+                                pmRelMemService.save(pmRelMem);
+                            } else {
+                                if (!pmRelMem.getMember_id().equals(Long.valueOf(pmRelm.get(2)))) {
+                                    pmRelMem.setMember_id(Long.valueOf(pmRelm.get(2)));
+                                    pmRelMemService.save(pmRelMem);
+                                }
+                            }
+                        } else {
+                            // memberId=30(未選択)以外であれば登録してあげる
+                            if (!pmRelm.get(2).equals(30)) {
+                                // TeamIdがまず登録されてるか確認する
+                                Long tmpTeamId = MemberEnum.getTeamIdById(Long.valueOf(pmRelm.get(2)));
+                                PMRel targetPmRel = pmRelService.findByPmIdTeamId(pm.getPm_id(), tmpTeamId);
+
+                                // teamIdが登録されていなかったらpmRelを登録する
+                                if (targetPmRel == null) {
+                                    // pmRelの登録
+                                    targetPmRel = pmRelService.save(new PMRel(null, pm.getPm_id(), tmpTeamId, null, null, false));
+                                }
+
+                                // 既存でpmRelmemの登録がないか確認
+                                PMRelMem pmRelMem = pmRelMemService.findByPmRelIdMemId(targetPmRel.getPm_rel_id(), tmpTeamId);
+                                if (pmRelMem == null) {
+                                    // pmRelの用意ができたのでpmRelmemを登録する
+                                    pmRelMemService.save(new PMRelMem(null, targetPmRel.getPm_rel_id(), Long.valueOf(pmRelm.get(2)), null, null, false));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // programのpm_idを登録します
+            program.setPm_id(pm.getPm_id());
+            program.setFct_chk(true);
+            programService.save(program);
+
+            // verがあれば登録します
+            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), null);
+
+            if (pmVerList.stream().noneMatch(e -> e.getStation_id().equals(pmVerForm.getStation_id()) && e.getOn_air_date().equals(LocalDateTime.parse(pmVerForm.getOn_air_date())))) {
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                LocalDateTime startTime = LocalDateTime.parse(pmVerForm.getOn_air_date(), dtf);
+                PMVer ver = new PMVer(null, pm.getPm_id(), startTime, pmVerForm.getStation_id(), false, null, null);
+                pmVerService.save(ver);
+            } else if (pmVerList.stream().anyMatch(e -> e.getStation_id().equals(pmVerForm.getStation_id()) && e.getOn_air_date().equals(LocalDateTime.parse(pmVerForm.getOn_air_date())))) {
+                PMVer ver = pmVerList.stream().filter(e -> e.getStation_id().equals(pmVerForm.getStation_id()) && e.getOn_air_date().equals(LocalDateTime.parse(pmVerForm.getOn_air_date()))).findFirst().get();
+                if (ver.getDel_flg().equals(true)) {
+                    ver.setDel_flg(false);
+                    pmVerService.save(ver);
+                }
+            }
+
+            // カレンダーを登録・更新する
+            // 既存カレンダーデータ取得する
+            List<PMVer> verList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), true);
+            List<PMRel> relList = pmRelService.findByPmIdDelFlg(pm.getPm_id(), true);
+            List<Long> verIdList = verList.stream().map(e -> e.getPm_v_id()).collect(Collectors.toList());
+            List<Long> relIdList = relList.stream().map(e -> e.getPm_rel_id()).collect(Collectors.toList());
+            List<PMCal> pmCalList = pmCalService.findByVerIdListRelIdListDelFlg(verIdList, relIdList, false);
+            List<PMCal> updCalList = new ArrayList<>();
+
+            // 既存データのないものは作成する
+            for (PMVer ver : verList) {
+                for (PMRel rel : relList) {
+                    if (pmCalList.stream().noneMatch(e -> e.getPm_ver_id().equals(ver.getPm_v_id()) && e.getPm_rel_id().equals(rel.getPm_rel_id()))) {
+                        // 作成条件合致したらまず既存削除データがないか確認する
+                        PMCal delCal = pmCalService.findByVerIdRelIdDelFlg(ver.getPm_v_id(), rel.getPm_rel_id(), true);
+                        if (delCal != null) {
+                            // 既存があればフラグの変更のみ
+                            delCal.setDel_flg(false);
+                            updCalList.add(delCal);
+                        } else {
+                            // 既存がないなら新規作成
+                            PMCal cal = new PMCal(null, ver.getPm_v_id(), rel.getPm_rel_id(), false, null, false);
+                            updCalList.add(cal);
+                        }
+                    }
+                }
+            }
+
+            // 既存データの不要なものは削除する
+            for (PMCal cal : pmCalList) {
+                if (verList.stream().noneMatch(e -> e.getPm_v_id().equals(cal.getPm_ver_id()))
+                        || (verList.stream().anyMatch(e -> e.getPm_v_id().equals(cal.getPm_ver_id())) && relList.stream().noneMatch(e -> e.getPm_rel_id().equals(cal.getPm_rel_id())) )) {
+                    cal.setDel_flg(true);
+                    // TODO: カレンダーを抜きたい
+                    updCalList.add(cal);
+                }
+            }
+
+            // 更新が必要なデータ全部更新。
+            List<PMCal> targetCalList = pmCalService.saveAll(updCalList);
+
+            // googleカレンダー登録のためのデータを用意する
+            for (PMCal cal : targetCalList) {
+                PMVer targetVer = verList.stream().filter(e -> e.getPm_v_id().equals(cal.getPm_ver_id())).findFirst().get();
+                PMRel targetRel = relList.stream().filter(e -> e.getPm_rel_id().equals(cal.getPm_rel_id())).findFirst().get();
+                // TODO: ここの処理減らせる。rel使わないから同じverのは1度だけ取得するようにしてあげるといい
+                CalendarInsertDto calendarDto = setGCalDatePm(pm, targetVer);
+                Event event = calendarApiController.postEvent(TeamEnum.get(targetRel.getTeam_id()).getCalendarId(), calendarDto.getStartDateTime(), calendarDto.getEndDateTime(), pm.getTitle(), calendarDto.getDesc(), calendarDto.getAllDayFlg());
+                cal.setCalendar_id(event.getId());
+                cal.setCal_active_flg(true);
+                pmCalService.save(cal);
+            }
+
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+    }
+    
+    /**
      * GoogleカレンダーinsertのためのデータをIMから格納する
      * itemなのでall-dayイベントを想定
      *
@@ -912,6 +1340,45 @@ public class ApiController {
         return dto;
     }
 
+    /**
+     * GoogleカレンダーinsertのためのデータをIMから格納する
+     * itemなのでall-dayイベントを想定
+     *
+     * @param pm
+     * @return
+     */
+    public CalendarInsertDto setGCalDatePm(PM pm, PMVer ver) {
+        CalendarInsertDto dto = new CalendarInsertDto();
+
+        dto.setTitle(pm.getTitle());
+
+        LocalDateTime startDate = ver.getOn_air_date();
+        LocalDateTime endDate = ver.getOn_air_date();
+
+        dto.setStartDateTime(startDate);
+        dto.setEndDateTime(endDate);
+//        String url = stringUtilsMine.getAmazonLinkFromCard(pm.getAmazon_pmage()).orElse(null);
+
+//        if (url == null) {
+//            List<Item> itemList = itemService.findByMasterId(pm.getIm_id());
+//            for (Item i : itemList) {
+//                if (i.getUrl() != null) {
+//                    url = i.getUrl();
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if (url == null) {
+//            url = "";
+//        }
+
+        dto.setDesc(pm.getDescription());
+
+        dto.setAllDayFlg(false);
+        return dto;
+    }
+    
     /**
      * IM+verを更新します
      *
@@ -1039,11 +1506,11 @@ public class ApiController {
                     copyRelIdListt.add(targetRel.getIm_rel_id());
                 } else {
                     // del_flgがtrueのレコードで該当のがないか検索
-                    Optional<IMRel> targetRel2 = imRelService.findByImIdTeamId(imrel.get(1).longValue(), imrel.get(2).longValue());
-                    if (targetRel2.isPresent()) {
+                    List<IMRel> targetRel2 = imRelService.findByImIdTeamId(imrel.get(1).longValue(), imrel.get(2).longValue());
+                    if (!targetRel2.isEmpty() && targetRel2.size() > 0) {
                         // targetがあったらdel_flgをfalseに戻してあげてレコード復活
-                        targetRel2.get().setDel_flg(false);
-                        imRelService.save(targetRel2.get());
+                        targetRel2.get(0).setDel_flg(false);
+                        imRelService.save(targetRel2.get(0));
                     } else {
                         newRelFlg = true;
                     }
@@ -1176,12 +1643,43 @@ public class ApiController {
             itemService.save(item);
 
             // imrelがない場合は作成します
-            IMRel rel = imRelService.findByImIdTeamId(imId, teamId).orElse(null);
+            IMRel rel = null;
+            List<IMRel> tmpList = imRelService.findByImIdTeamId(imId, teamId);
+            if (!tmpList.isEmpty() && tmpList.size() > 0) {
+                rel = tmpList.get(0);
+            }
+
             if (rel == null) {
                 IMRel newRel = new IMRel();
                 newRel.setTeam_id(teamId);
                 newRel.setIm_id(imId);
                 imRelService.save(newRel);
+            }
+
+            logger.debug("fin");
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    /**
+     * Programにpm_idを追加してfct_chkを更新します（既存pmある場合ですね）
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @GetMapping("/pm/chk")
+    public ResponseEntity<Boolean> chkProgram(@RequestParam("pId") Long pid, @RequestParam("pmId") Long pmId) {
+        logger.debug("accepted");
+
+        try {
+            Program program = programService.findByPId(pid);
+
+            if (program != null) {
+                program.setPm_id(pmId);
+                program.setFct_chk(true);
+                programService.save(program);
             }
 
             logger.debug("fin");

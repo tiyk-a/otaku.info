@@ -14,6 +14,9 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     @Query("select t from program t where program_id = ?1")
     Optional<Program> findByPId(Long programId);
 
+    @Query("select t from program t where program_id in ?1")
+    List<Program> findByIdList(List<Long> pIdList);
+
     @Query(nativeQuery = true, value = "SELECT * FROM program p WHERE DATE(on_air_date) >= ?1 limit 20")
     List<Program> findByOnAirDate(Date date);
 

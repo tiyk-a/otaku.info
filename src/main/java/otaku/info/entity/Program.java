@@ -52,6 +52,9 @@ public class Program {
     @Column(nullable = true)
     private Long pm_id;
 
+    @Column(nullable = true)
+    private String url;
+
     public Program absorb(PForm form) {
         this.setTitle(form.getTitle());
         this.setDescription(form.getDescription());

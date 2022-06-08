@@ -30,6 +30,10 @@ public class ProgramService  {
         return programRepository.findByPId(programId).orElse(null);
     }
 
+    public List<Program> findByPidList(List<Long> pidList) {
+        return programRepository.findByIdList(pidList);
+    }
+
     public List<Program> findByOnAirDate(Date date) {
         return programRepository.findByOnAirDate(date);
     }

@@ -120,6 +120,7 @@ public class TvController  {
                 // 新しいProjectオブジェクトを作ります。
                 Program program = new Program();
                 program.setTitle(valueArr[0]);
+                program.setUrl(valueArr[1]);
                 program.setFct_chk(false);
 
                 Matcher m = datePattern.matcher(e.getKey());

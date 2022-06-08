@@ -578,27 +578,6 @@ public class ApiController {
     }
 
     /**
-     * IDから商品を削除する
-     *
-     * @param id 削除される商品のID
-     */
-    @DeleteMapping("/tv/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<Boolean> delTv(@PathVariable Long id) {
-        logger.debug("accepted");
-        try {
-            Program im = pageTvService.findById(id);
-            im.setDel_flg(true);
-            pageTvService.save(im);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.ok(false);
-        }
-        logger.debug("fin");
-        return ResponseEntity.ok(true);
-    }
-
-    /**
      * 指定Teamidの商品を未来発売日順に取得し返す、削除されていない商品のみ。
      *
      * @param id 取得するTeamId
@@ -1620,6 +1599,22 @@ public class ApiController {
             if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
                 return ResponseEntity.status(500).body(false);
             }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
+     * Program一括削除
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/tv/bundle/del_p")
+    public ResponseEntity<Boolean> bundleDelP(@Valid @RequestBody Long[] pIdArr) {
+        logger.debug("accepted");
+        List<Program> pList = programService.findByPidList(Arrays.asList(pIdArr));
+        if (pList.size() > 0) {
+            pList.forEach(e -> e.setDel_flg(true));
+            programService.saveAll(pList);
         }
         return ResponseEntity.ok(true);
     }

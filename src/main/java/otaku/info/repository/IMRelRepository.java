@@ -33,7 +33,7 @@ public interface IMRelRepository extends JpaRepository<IMRel, IMRelKey> {
     int existsByElem(Long imId, Long teamId);
 
     @Query("select t from im_rel t where im_id = ?1 and team_id = ?2")
-    Optional<IMRel> findByImIdTeamId(Long imId, Long teamId);
+    List<IMRel> findByImIdTeamId(Long imId, Long teamId);
 
     @Query("select t from im_rel t where im_id = ?1 and team_id is not null")
     List<IMRel> findByItemIdTeamIdNotNull(Long imId);

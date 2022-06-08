@@ -378,7 +378,7 @@ public class BlogController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            logger.debug("Post: " + url);
+            logger.debug(method + ": " + url);
             blogLog.debug(request);
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, method, request, String.class);
             logger.debug("Request posted");
@@ -405,9 +405,10 @@ public class BlogController {
                 e.printStackTrace();
             }
             result = "";
+        } finally {
+            blogLog.debug("---Fin---");
+            return result;
         }
-        blogLog.debug("---SUCCESS---");
-        return result;
     }
 
     /**
@@ -503,8 +504,12 @@ public class BlogController {
                 String yyyyMM = dateUtils.getYYYYMM(itemMaster.getPublication_date());
 
                 // 年月のタグなのでそのsubdomainのgeneralなidをteamidに入れる
+                System.out.println("addTagIfNotExistsを呼ぶ");
+                System.out.println("1st arg: " + yyyyMM);
                 BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, blogEnum.getSubDomain(), blogEnum.getId());
-                teamNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
+                if (yyyyMMTag != null && yyyyMMTag.getTag_name() != null && yyyyMMTag.getTeam_id() != null) {
+                    teamNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
+                }
 
                 // member名を追加
                 if (memList != null && memList.size() > 0) {
@@ -645,7 +650,11 @@ public class BlogController {
      */
     public BlogTag addTagIfNotExists(String tagName, String subDomain, Long teamId) {
 
-        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + tagName;
+        System.out.println("***addTagIfNotExists***");
+        System.out.println(tagName);
+        // slugの文字列を用意
+        String slug = textController.getTagSlug(tagName);
+        String url = subDomain + setting.getBlogApiPath() + "tags?_fields[]=name&slug=" + slug;
 
         BlogEnum blogEnum = BlogEnum.findBySubdomain(subDomain);
         // request
@@ -671,8 +680,8 @@ public class BlogController {
                     if (blogTag == null || blogTag.getBlog_tag_id() == null) {
                         BlogTag blogTag1 = new BlogTag();
 
-                        // WPからDBに登録したいタグのデータを取ってくる
-                        String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + tagName + "&per_page=1";
+                        // WPからDBに登録したいタグのデータを取ってくる(slugで引っ掛ける)
+                        String url1 = subDomain + setting.getBlogApiPath() + "tags?slug=" + slug + "&per_page=1";
 
                         // request
                         HttpHeaders headers1 = generalHeaderSet(new HttpHeaders(), blogEnum);
@@ -727,7 +736,7 @@ public class BlogController {
         JSONObject jsonObject1 = jsonUtils.createJsonObject(res, teamId);
 
         int tagId;
-        if (jsonObject1.get("id") != null) {
+        if (jsonObject1.has("id") && jsonObject1.get("id") != null) {
             tagId = jsonObject1.getInt("id");
             String link = jsonObject1.getString("link").replaceAll("^\"|\"$", "");
             BlogTag blogTag = new BlogTag();
@@ -972,8 +981,12 @@ public class BlogController {
 
         // 年月を追加/teamIdはそのsubdomainのgeneralなIDを入れる。
         String yyyyMM = dateUtils.getYYYYMM(tmrw);
+        System.out.println("addTagIfNotExistsを呼ぶ");
+        System.out.println("1st arg: " + yyyyMM);
         BlogTag yyyyMMTag = addTagIfNotExists(yyyyMM, subDomain, blogEnum.getId());
-        tagNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
+        if (yyyyMMTag != null && yyyyMMTag.getTag_name() != null && yyyyMMTag.getTeam_id() != null) {
+            tagNameMap.put(yyyyMMTag.getTag_name(), yyyyMMTag.getTeam_id());
+        }
 
         // member名を追加
         if (memIdList.size() > 0) {
@@ -1079,7 +1092,10 @@ public class BlogController {
             if (Arrays.stream(BlogEnum.values()).noneMatch(f -> f.getId().equals(finalTeamId))) {
                 teamId = BlogEnum.MAIN.getId();
             }
-            Optional<Long> tagIdResult = blogTagService.findBlogTagIdByTagName(e.getKey(), teamId);
+
+            String name = e.getKey().replaceAll(" ", "");
+
+            Optional<Long> tagIdResult = blogTagService.findBlogTagIdByTagName(name, teamId);
 
             Long tagId = null;
             if (tagIdResult.isPresent()) {
@@ -1087,10 +1103,15 @@ public class BlogController {
             } else {
                 // タグが見つからなかった場合、WPブログに登録したり引っ張ってきてDBに保存したり
                 BlogEnum blogEnum = BlogEnum.get(teamId);
-                BlogTag tag = addTagIfNotExists(e.getKey(), blogEnum.getSubDomain(), teamId);
+                System.out.println("addTagIfNotExistsを呼ぶ");
+                System.out.println("1st arg: " + name);
+                BlogTag tag = addTagIfNotExists(name, blogEnum.getSubDomain(), teamId);
                 tagId = tag.getBlog_tag_id();
             }
-            tagIdList.add(tagId);
+
+            if (tagId != null) {
+                tagIdList.add(tagId);
+            }
         }
         return tagIdList;
     }

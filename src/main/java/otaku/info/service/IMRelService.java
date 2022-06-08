@@ -68,7 +68,15 @@ public class IMRelService {
         return iMRelRepository.save(rel);
     }
 
-    public Optional<IMRel> findByImIdTeamId(Long imId, Long teamId) {
+    /**
+     * 論理的には重複キーのデータ生まれないはずだが現状エラーが出てしまうためリストで取得する
+     * 本当はOptionalで1件だけ取得したい
+     *
+     * @param imId
+     * @param teamId
+     * @return
+     */
+    public List<IMRel> findByImIdTeamId(Long imId, Long teamId) {
         return iMRelRepository.findByImIdTeamId(imId, teamId);
     }
 

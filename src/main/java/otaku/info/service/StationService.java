@@ -29,8 +29,21 @@ public class StationService {
         return id;
     }
 
-    public String getStationName(Long stationId) {
-        return Arrays.stream(StationEnum.values()).filter(e -> e.getId().equals(Math.toIntExact(stationId))).map(StationEnum::getName).findFirst().orElse("");
+    /**
+     *
+     * @param stationId
+     * @return
+     */
+    public String getStationNameByEnumDB(Long stationId) {
+        String result = "";
+        result = Arrays.stream(StationEnum.values()).filter(e -> e.getId().equals(Math.toIntExact(stationId))).map(StationEnum::getName).findFirst().orElse("");
+        if (result.equals("")) {
+            Station station = stationRepository.findById(stationId).orElse(null);
+            if (station != null) {
+                result = station.getStation_name();
+            }
+        }
+        return result;
     }
 
     /**

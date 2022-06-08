@@ -130,7 +130,7 @@ public class TextController {
 
         String info = "";
         for (Program p : ele.getValue()) {
-            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
+            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
         }
 
         // blogへの誘導
@@ -496,7 +496,7 @@ public class TextController {
 
                 String broad = "<p>放送局：";
                 for (Program r : p.getValue()) {
-                    String stationName = stationService.getStationName(r.getStation_id());
+                    String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
                     broad = broad + stationName + "<br />";
                 }
                 broad = broad + "</p>";

@@ -96,7 +96,11 @@ public class TwTextController {
 
         String title = "";
         String url = "";
-        IMRel rel = iMRelService.findByImIdTeamId(im.getIm_id(), teamId).orElse(null);
+        IMRel rel = null;
+        List<IMRel> tmpList = iMRelService.findByImIdTeamId(im.getIm_id(), teamId);
+        if (!tmpList.isEmpty() && tmpList.size() > 0) {
+            rel = tmpList.get(0);
+        }
 
         if (itemUrl != null && !itemUrl.isEmpty()) {
             url = itemUrl;
@@ -217,7 +221,7 @@ public class TwTextController {
 
         String info = "";
         for (Program p : ele.getValue()) {
-            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationName(p.getStation_id()) + ")%0A";
+            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
         }
 
         // blogへの誘導
@@ -402,7 +406,7 @@ public class TwTextController {
 
                 String broad = "<p>放送局：";
                 for (Program r : p.getValue()) {
-                    String stationName = stationService.getStationName(r.getStation_id());
+                    String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
                     broad = broad + stationName + "<br />";
                 }
                 broad = broad + "</p>";

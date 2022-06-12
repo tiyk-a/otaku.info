@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Item;
 
+import java.util.Map;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -89,4 +90,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      */
     @Query(nativeQuery = true, value = "select a.* from item a where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
     List<Item> findNotDeletedNoIM();
+
+    /**
+     * 各チームのitem数（未来で削除されていなくてIMIDがないもの
+     * @return
+     */
+    @Query(nativeQuery = true, value = "select b.team_id, count(*) from item a inner join i_rel b on a.item_id = b.item_id where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null group by b.team_id")
+    List<Object[]> getNumbersOfEachTeamIdFutureNotDeletedNoIM();
 }

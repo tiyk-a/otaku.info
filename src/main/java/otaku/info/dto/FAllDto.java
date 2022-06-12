@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import otaku.info.entity.ErrorJson;
 
+import java.math.BigInteger;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -22,4 +24,7 @@ public class FAllDto {
     private List<FIMDto> im;
 
     private List<ErrorJson> errJ;
+
+    // 各チームの未チェックID件数
+    private Map<BigInteger, BigInteger> itemNumberMap;
 }

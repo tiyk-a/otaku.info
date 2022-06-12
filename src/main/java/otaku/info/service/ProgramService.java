@@ -3,14 +3,16 @@ package otaku.info.service;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import otaku.info.entity.Item;
 import otaku.info.entity.Program;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
+import java.math.BigInteger;
 import java.time.*;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -38,8 +40,8 @@ public class ProgramService  {
         return programRepository.findByOnAirDate(date);
     }
 
-    public List<Program> findByOnAirDatePmIdNullDelFlg(Date date, Boolean delFlg) {
-        return programRepository.findByOnAirDatePmIdNullDelFlg(date, delFlg);
+    public List<Program> findByOnAirDatePmIdNullDelFlg(Date date, Boolean delFlg, Integer limit) {
+        return programRepository.findByOnAirDatePmIdNullDelFlg(date, delFlg, limit);
     }
 
     public List<Program> findByOnAirDateBeterrn(Date from, Date to) {
@@ -63,8 +65,8 @@ public class ProgramService  {
         return programRepository.findbyTeamId(teamId);
     }
 
-    public List<Program> findbyTeamIdPmIdNullDelFlg(Long teamId, Boolean delFlg) {
-        return programRepository.findbyTeamIdPmIdNullDelFlg(teamId, delFlg);
+    public List<Program> findbyTeamIdPmIdNullDelFlg(Long teamId, Boolean delFlg, Integer limit) {
+        return programRepository.findbyTeamIdPmIdNullDelFlg(teamId, delFlg, limit);
     }
 
     public List<Program> findbyStationId(Long sId) {
@@ -81,5 +83,16 @@ public class ProgramService  {
 
     public List<Program> findByTeamIdFutureNotDeletedNoPM(Long teamId) {
         return programRepository.findByTeamIdFutureNotDeletedNoPM(teamId);
+    }
+
+    public Map<BigInteger, BigInteger> getNumbersOfEachTeamIdFutureNotDeletedNoPM() {
+        Map<BigInteger, BigInteger> mappedResult = new HashMap<>();
+        List<Object[]> queryResult = programRepository.getNumbersOfEachTeamIdFutureNotDeletedNoPM();
+        for (Object[] obj : queryResult ) {
+            BigInteger teamId = (BigInteger) obj[0];
+            BigInteger num = (BigInteger) obj[1];
+            mappedResult.put(teamId, num);
+        }
+        return mappedResult;
     }
 }

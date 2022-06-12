@@ -1,5 +1,6 @@
 package otaku.info.service;
 
+import java.math.BigInteger;
 import java.util.*;
 
 import lombok.AllArgsConstructor;
@@ -151,6 +152,22 @@ public class ItemService {
 
     public List<Item> findNotDeletedNoIM() {
         return itemRepository.findNotDeletedNoIM();
+    }
+
+    /**
+     * 各チームのitem数（未来で削除されていなくてIMIDがないもの）
+     *
+     * @return
+     */
+    public Map<BigInteger, BigInteger> getNumbersOfEachTeamIdFutureNotDeletedNoIM() {
+        Map<BigInteger, BigInteger> mappedResult = new HashMap<>();
+        List<Object[]> queryResult = itemRepository.getNumbersOfEachTeamIdFutureNotDeletedNoIM();
+        for (Object[] obj : queryResult ) {
+            BigInteger teamId = (BigInteger) obj[0];
+            BigInteger num = (BigInteger) obj[1];
+            mappedResult.put(teamId, num);
+        }
+        return mappedResult;
     }
 }
 

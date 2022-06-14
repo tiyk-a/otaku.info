@@ -24,4 +24,7 @@ public interface PMRelRepository extends JpaRepository<PMRel, PMRelKey> {
 
     @Query("select t from pm_rel t where pm_id = ?1 and team_id = ?2")
     Optional<PMRel> findByPmIdTeamId(Long pmId, Long teamId);
+
+    @Query("select t.team_id from pm_rel t where pm_id = ?1")
+    List<Long> getTeamIdList(Long pmId);
 }

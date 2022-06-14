@@ -48,8 +48,8 @@ public class ProgramService  {
         return programRepository.findByOnAirDateBeterrn(from, to);
     }
 
-    public List<Program> findByOnAirDateTimeTeamId(LocalDateTime ldt, int hour) {
-        return programRepository.findByOnAirDateTeamId(ldt, ldt.plusHours(hour));
+    public List<Program> findByOnAirDateBetween(LocalDateTime ldt, int hour) {
+        return programRepository.findByOnAirDateBetween(ldt, ldt.plusHours(hour));
     }
 
     public boolean hasProgram(String title, Long stationId, LocalDateTime onAirDate) {
@@ -79,10 +79,6 @@ public class ProgramService  {
 
     public List<Program> findByOnAirDateTeamId(Date date, Long teamId) {
         return programRepository.findByOnAirDateTeamId(date, teamId);
-    }
-
-    public List<Program> findByTeamIdFutureNotDeletedNoPM(Long teamId) {
-        return programRepository.findByTeamIdFutureNotDeletedNoPM(teamId);
     }
 
     public Map<BigInteger, BigInteger> getNumbersOfEachTeamIdFutureNotDeletedNoPM() {

@@ -7,6 +7,8 @@ import otaku.info.entity.PMVer;
 import otaku.info.repository.PmVerRepository;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -14,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PmVerService {
 
-    private PmVerRepository pmVerRepository;
+    private final PmVerRepository pmVerRepository;
 
     public PMVer save(PMVer ver) {
         return pmVerRepository.save(ver);
@@ -45,5 +47,14 @@ public class PmVerService {
 
     public List<PMVer> findByPmIdStationId(Long pmId, Long stationId) {
         return pmVerRepository.findByPmIdStationId(pmId, stationId);
+    }
+
+    public List<PMVer> findByOnAirDateNotDeleted(LocalDateTime dateTime, Integer hour) {
+        LocalDateTime endTime = dateTime.plusHours(hour);
+        return pmVerRepository.findByOnAirDateNotDeleted(dateTime, endTime);
+    }
+
+    public List<PMVer> findByOnAirDateNotDeleted(Date date) {
+        return pmVerRepository.findByOnAirDateNotDeleted(date);
     }
 }

@@ -1,6 +1,5 @@
 package otaku.info.service;
 
-import com.sun.istack.Nullable;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class PMRelService {
         return pmRelRepository.findTeamIdByProgramId(pId);
     }
 
-    public List<PMRel> findByPmIdDelFlg(Long pmId, @Nullable Boolean delFlg) {
+    public List<PMRel> findByPmIdDelFlg(Long pmId, Boolean delFlg) {
         if (delFlg == null) {
             return pmRelRepository.findByPmId(pmId);
         } else {
@@ -44,5 +43,9 @@ public class PMRelService {
 
     public PMRel findByPmIdTeamId(Long pmId, Long teamId) {
         return pmRelRepository.findByPmIdTeamId(pmId, teamId).orElse(null);
+    }
+
+    public List<Long> getTeamIdList(Long pmId) {
+        return pmRelRepository.getTeamIdList(pmId);
     }
 }

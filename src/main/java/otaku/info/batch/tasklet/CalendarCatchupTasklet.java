@@ -1,6 +1,5 @@
 package otaku.info.batch.tasklet;
 
-import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;

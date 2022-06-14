@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Station;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface StationRepository extends JpaRepository<Station, Long> {
 

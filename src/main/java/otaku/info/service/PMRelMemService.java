@@ -45,4 +45,8 @@ public class PMRelMemService {
     public PMRelMem findByPmIdMemId(Long pmId, Long memId) {
         return pmRelMemRepository.findByPmIdMemId(pmId, memId).orElse(null);
     }
+
+    public List<PMRelMem> findByPmRelIdListDelFlg(List<Long> pmRelIdList, Boolean delFlg) {
+        return pmRelMemRepository.findByPmRelIdListDelFlg(pmRelIdList, delFlg);
+    }
 }

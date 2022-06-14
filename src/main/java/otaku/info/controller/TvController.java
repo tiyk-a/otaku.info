@@ -8,10 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import otaku.info.entity.PRelMem;
-import otaku.info.entity.Program;
-import otaku.info.entity.PRel;
-import otaku.info.entity.Station;
+import otaku.info.entity.*;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -35,6 +32,9 @@ public class TvController  {
     private final ProgramService programService;
 
     @Autowired
+    private final PMService pmService;
+
+    @Autowired
     private final TeamService teamService;
 
     @Autowired
@@ -53,6 +53,12 @@ public class TvController  {
     private final PRelService pRelService;
 
     @Autowired
+    private final PmVerService pmVerService;
+
+    @Autowired
+    private final PMRelService pmRelService;
+
+    @Autowired
     private final PRelMemService pRelMemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
@@ -68,32 +74,32 @@ public class TvController  {
      * @param date
      * @return
      */
-    public List<Program> getTvList(Date date) {
-        return programService.findByOnAirDate(date);
+    public List<PMVer> getTvList(Date date) {
+        return pmVerService.findByOnAirDateNotDeleted(date);
     }
 
     /**
      * 番組リストをグループごとにマップして返却します。
      *
-     * @param programList
+     * @param verList
      * @return
      */
-    public Map<Long, List<Program>>  mapByGroup(List<Program> programList) {
-        Map<Long, List<Program>> tvListMapByGroup = new HashMap<>();
+    public Map<Long, List<PMVer>>  mapByGroup(List<PMVer> verList) {
+        Map<Long, List<PMVer>> tvListMapByGroup = new HashMap<>();
 
         // 全グループIDを取得して、それぞれを空プログラムリストを値としてMapに入れる。Mapサイズはここで完成。
         Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
 
         // マップのvalueに情報を追加していく
-        for (Program p : programList) {
+        for (PMVer ver : verList) {
             // マップからグループIDの要素のvalueに情報を追加して
-            List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
+            List<Long> teamIdList = pmRelService.getTeamIdList(ver.getPm_id());
 
             if (teamIdList != null && !teamIdList.isEmpty()) {
                 for (Long teamId : teamIdList) {
-                    List<Program> list = tvListMapByGroup.get(teamId);
+                    List<PMVer> list = tvListMapByGroup.get(teamId);
                     if (list != null && !list.isEmpty()) {
-                        list.add(p);
+                        list.add(ver);
                         tvListMapByGroup.put(teamId, list);
                     }
                 }

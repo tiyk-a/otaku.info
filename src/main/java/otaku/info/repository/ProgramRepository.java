@@ -26,8 +26,8 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     @Query("SELECT p FROM program p WHERE DATE(on_air_date) >= ?1 and DATE(on_air_date) <= ?2 and del_flg = 0")
     List<Program> findByOnAirDateBeterrn(Date from, Date fo);
 
-    @Query(nativeQuery = true, value = "SELECT p.* FROM program p inner join p_rel b on p.program_id = b.program_id WHERE p.on_air_date >= ?1 and p.on_air_date < ?2 and b.team_id is not null")
-    List<Program> findByOnAirDateTeamId(LocalDateTime ldtFrom, LocalDateTime ldtTo);
+    @Query(nativeQuery = true, value = "SELECT p.* FROM program p inner join p_rel b on p.program_id = b.program_id WHERE p.on_air_date >= ?1 and p.on_air_date < ?2")
+    List<Program> findByOnAirDateBetween(LocalDateTime ldtFrom, LocalDateTime ldtTo);
 
     @Query("SELECT t FROM program t WHERE fct_chk = ?1")
     List<Program> findByFctChk(boolean fct_chk);
@@ -49,15 +49,6 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query(nativeQuery = true, value = "SELECT p.* FROM program p inner join p_rel b on p.program_id = b.program_id WHERE DATE(p.on_air_date) = ?1 and b.team_id = ?2")
     List<Program> findByOnAirDateTeamId(Date date, Long teamId);
-
-    /**
-     * 10日前〜のPMIDのないitemを取得します
-     *
-     * @param teamId
-     * @return
-     */
-    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= now() - interval 10 day and a.pm_id is null")
-    List<Program> findByTeamIdFutureNotDeletedNoPM(Long teamId);
 
     @Query(nativeQuery = true, value = "select b.team_id, count(*) from program a inner join p_rel b on a.program_id = b.program_id where a.del_flg = 0 and a.on_air_date >= CURRENT_DATE and a.pm_id is null and a.del_flg = 0 group by b.team_id")
     List<Object[]> getNumbersOfEachTeamIdFutureNotDeletedNoPM();

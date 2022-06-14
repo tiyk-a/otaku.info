@@ -10,14 +10,10 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
-import otaku.info.entity.PRel;
-import otaku.info.entity.Program;
-import otaku.info.enums.TeamEnum;
-import otaku.info.repository.PRelRepository;
-import otaku.info.service.ProgramService;
+import otaku.info.entity.*;
+import otaku.info.service.PmVerService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,34 +32,18 @@ public class TvAlertTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Autowired
-    ProgramService programService;
-
-    @Autowired
-    PRelRepository pRelRepository;
+    PmVerService pmVerService;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         // これから1時間以内に放送開始し、チームIDも埋まっているレコードを取得する。
-        List<Program> programList = programService.findByOnAirDateTimeTeamId(LocalDateTime.now(), 1);
-        loggerController.printTvAlertTasklet("*** program list " + programList.size());
-        if (programList.size() > 0) {
-            // 嵐のエラーが多いので嵐はちょっと抜くtmp対応
-            List<Long> removeList = new ArrayList<>();
-            for (Program p : programList) {
-                List<PRel> pRelList = pRelRepository.findAllByProgramId(p.getProgram_id());
-                boolean postFlg = pRelList.stream().noneMatch(e -> e.getTeam_id().equals(TeamEnum.get("ARASHI").getId()));
-
-                if (!postFlg) {
-                    removeList.add(p.getProgram_id());
-                }
-            }
-
-            programList.removeIf(e -> removeList.contains(e.getProgram_id()));
-
-            loggerController.printTvAlertTasklet("*** post counts " + programList.size());
+        List<PMVer> pmVerList = pmVerService.findByOnAirDateNotDeleted(LocalDateTime.now(),1);
+        loggerController.printTvAlertTasklet("*** pmVer list " + pmVerList.size());
+        if (pmVerList.size() > 0) {
             // Postする番組の投稿文を作る Map<ProgramId-TeamId, text>
             Map<Long, String> postMap = new HashMap<>();
-            programList.forEach(e -> postMap.putAll(twTextController.tvAlert(e)));
+            pmVerList.forEach(e -> postMap.putAll(twTextController.tvAlert(e)));
+
             // Post
             if (postMap.size() > 0) {
                 for (Map.Entry<Long, String> post : postMap.entrySet()) {
@@ -73,5 +53,4 @@ public class TvAlertTasklet implements Tasklet {
         }
         return RepeatStatus.FINISHED;
     }
-
 }

@@ -54,7 +54,19 @@ public class TwTextController {
     private PRelService pRelService;
 
     @Autowired
+    private PMService pmService;
+
+    @Autowired
+    private PMRelService pmRelService;
+
+    @Autowired
     private PRelMemService pRelMemService;
+
+    @Autowired
+    private PMRelMemService pmRelMemService;
+
+    @Autowired
+    private PmVerService pmVerService;
 
     @Autowired
     private Setting setting;
@@ -117,34 +129,6 @@ public class TwTextController {
 
     /**
      * 未来発売の商品のリマインダー文章を作成します。
-     * Twitter用
-     *
-     * @param itemMaster
-     * @param item
-     * @param teamIdList
-     * @return
-     */
-//    public String futureItemReminder(ItemMaster itemMaster, Item item, List<Long> teamIdList) {
-//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-//        String tags = "";
-//        for (Long teamId : teamIdList) {
-//            tags = tags + " " + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-//        }
-//        String blogUrl = setting.getBlogWebUrl() + "item/" + itemMaster.getItem_m_id();
-//        String title = "";
-//        if (StringUtils.hasText(itemMaster.getTitle())) {
-//            title = itemMaster.getTitle();
-//        } else {
-//            title = item.getTitle().replaceAll("(\\[.*?\\])|(\\/)|(【.*?】)|(\\(.*?\\))|(\\（.*?\\）)", "");
-//            itemMaster.setTitle(title);
-//            // ついでに登録（更新）する
-//            itemMasterService.save(itemMaster);
-//        }
-//        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A詳細はブログへ↓%0A" + blogUrl + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
-//    }
-
-    /**
-     * 未来発売の商品のリマインダー文章を作成します。
      *
      * @param itemMaster
      * @param item
@@ -154,7 +138,6 @@ public class TwTextController {
     public String futureItemReminder(IM itemMaster, Item item, Long teamId) {
         int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
-//        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
         String title = "";
         if (StringUtils.hasText(itemMaster.getTitle())) {
             title = itemMaster.getTitle();
@@ -187,7 +170,6 @@ public class TwTextController {
 
         String str1 = "本日発売！%0A%0A" + im.getTitle() + "%0A" + url;
         // twitterタグ、DB使わないで取れてる
-//        List<Long> teamIdList = iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id());
         String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
     }
@@ -209,7 +191,7 @@ public class TwTextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Long teamId) {
+    public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String teamName = teamService.getTeamName(ele.getKey());
         String result= "";
@@ -220,8 +202,9 @@ public class TwTextController {
         }
 
         String info = "";
-        for (Program p : ele.getValue()) {
-            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+        for (PMVer p : ele.getValue()) {
+            PM pm = pmService.findByPmId(p.getPm_id());
+            info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
         }
 
         // blogへの誘導
@@ -232,17 +215,24 @@ public class TwTextController {
 
     /**
      * 直近のTV番組1件のアラート文章を作ります。
+     * このあと06/13 05:25〜めざましテレビ[デ](フジテレビ)に、なにわ男子が出演します。ぜひご覧ください！#なにわ男子
      *
-     * @param program
+     * <MM/dd HH:mm>から<TITLE>に、<MEMBER || TEAM>が出演します。\n<CHANNEL>\nぜひご覧ください！#<MEMBER || TEAM>
+     * 1 ver1つ投稿する
+     *
+     * @param ver
      * @return Map<TeamId, text>
      */
-    public Map<Long, String> tvAlert(Program program) {
-        String stationName = StationEnum.get(program.getStation_id()).getName();
-        List<Long> teamIdList = pRelService.getTeamIdList(program.getProgram_id());
-
+    public Map<Long, String> tvAlert(PMVer ver) {
         // teamId, null
         Map<Long, String> resultMap = new HashMap<>();
-        // 返却するMapにKey(ProgramId)のみ詰め込みます。
+        PM pm = pmService.findByPmId(ver.getPm_id());
+        List<PMRel> relList = pmRelService.findByPmIdDelFlg(ver.getPm_id(), false);
+        List<Long> relIdList = relList.stream().map(PMRel::getPm_rel_id).collect(Collectors.toList());
+        List<PMRelMem> relMemList = pmRelMemService.findByPmRelIdListDelFlg(relIdList, false);
+        List<Long> teamIdList = relList.stream().map(PMRel::getTeam_id).collect(Collectors.toList());
+
+        // 返却するMapにKey(PmId)のみ詰め込みます。
         if (teamIdList.size() > 0) {
             // Mapのkeyを作り格納
             teamIdList.forEach(e -> resultMap.put(e, null));
@@ -250,20 +240,28 @@ public class TwTextController {
                 List<String> tagList = new ArrayList<>();
                 String teamName = TeamEnum.get(teamId).getMnemonic();
                 tagList.add(teamName);
-                List<PRelMem> pRelMemList = pRelMemService.findByPRelId(teamId);
 
                 String result = "";
 
                 // Format LocalDateTime
-                String formattedDateTime = program.getOn_air_date().format(dtf2);
+                String formattedDateTime = ver.getOn_air_date().format(dtf2);
 
                 // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
-                if (pRelMemList.size() > 0) {
-                    List<String> memNameList = MemberEnum.findMNameListByIdList(pRelMemList.stream().map(PRelMem::getMember_id).collect(Collectors.toList()));
-                    String memberName = String.join("・", memNameList);
-                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + memberName + "が出演します。ぜひご覧ください！";
+                String memberName = "";
+                if (relList.size() > 0) {
+                    for (PMRel rel : relList) {
+                        List<String> tmpList = relMemList.stream()
+                                .filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id()))
+                                .map(e -> MemberEnum.get(e.getMember_id()).getName())
+                                .collect(Collectors.toList());
+                        if (tmpList.size() > 0) {
+                            // 文章用
+                            memberName = String.join("・", tmpList);
+                            // タグ用
+                            tagList.addAll(tmpList);
+                        }
+                    }
 
-                    tagList.addAll(memNameList);
                     if (tagList.size() > 0) {
                         for (String tag : tagList) {
                             if (tag.contains(" ")) {
@@ -272,18 +270,13 @@ public class TwTextController {
                                 tagList.add(removedSpaceName);
                             }
                         }
-                        result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
-                    }
-                } else {
-                    if (!teamName.equals("")) {
-                        if (teamName.contains(" ")) {
-                            teamName = teamName.replaceAll(" ", "");
-                        }
-                        result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" +teamName  + "が出演します。ぜひご覧ください！\n#" + teamName;
-                    } else {
-                        result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に出演情報があります。ぜひご確認ください！";
                     }
                 }
+
+                result = "このあと" + formattedDateTime + "から" + pm.getTitle() + "に"
+                        + (memberName.equals("") ? teamName : memberName) + "が出演します。"
+                        + "\nチャンネル：" + stationService.findById(ver.getStation_id()).getStation_name()
+                        + "\nぜひご覧ください！\n#" + teamName + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
                 resultMap.put(teamId, result);
             }
         }

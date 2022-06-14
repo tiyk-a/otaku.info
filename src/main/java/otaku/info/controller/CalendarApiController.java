@@ -173,8 +173,6 @@ public class CalendarApiController {
      * @throws GeneralSecurityException
      */
     public Event postEventTime(String calendarId, LocalDateTime startDate, LocalDateTime endDate, String summary, String desc, Boolean allDayFlg) throws IOException, GeneralSecurityException {
-//        LocalDateTime startLdt = LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault());
-//        LocalDateTime endLdt = LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault());
         Event event = postEvent(calendarId, startDate, endDate, summary, desc, allDayFlg);
         return event;
     }

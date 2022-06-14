@@ -129,11 +129,6 @@ public class DateUtils {
         }
     }
 
-//    public int getBlogYYYYMMTag(Date date) {
-//        String yyyyMM = sdf1.format(date);
-//        return blogTagService.findBlogTagIdByTagName(yyyyMM);
-//    }
-
     /**
      * 今日の日付（日にちだけ）を返します
      *

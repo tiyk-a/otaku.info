@@ -74,62 +74,6 @@ public enum TeamEnum {
         return Arrays.stream(TeamEnum.values()).filter(e -> e.mnemonic.equals(argName)).findFirst().orElse(null);
     }
 
-//    public static TeamEnum getBySubDomain(String argSubDomain) {
-//        c
-//    }
-
-    /**
-     * 引数のサブドメインからTeamIdを返却します。
-     * 見つからなかった場合は0を返します→総合ブログで扱ってね
-     *
-     * @param argSubDomain
-     * @return
-     */
-//    public static Long findIdBySubDomain(String argSubDomain) {
-//        // teamIdがnullの場合、デフォルト（としてえび）のteamIdを入れる
-//        Long teamId = TeamEnum.ABCZ.getId();
-//        for (TeamEnum e : TeamEnum.values()) {
-//            if (e.getSubDomain().equals(argSubDomain)) {
-//                teamId = e.getId();
-//                break;
-//            }
-//        }
-//        return teamId;
-//    }
-
-    /**
-     * 引数のTeamIdからサブドメインを返却します。
-     * 見つからなかった場合はnullを返します→総合ブログで扱ってね
-     *
-     * @param argId
-     * @return
-     */
-//    public static String findSubDomainById(Long argId) {
-//        return Arrays.stream(TeamEnum.values()).filter(e -> e.id.equals(argId)).findFirst().map(e -> e.getSubDomain()).orElse(null);
-//    }
-
-    /**
-     * IDリストからサブドメインのリストを返します。
-     *
-     * @param teamIdList
-     * @return
-     */
-//    public static List<String> findSubDomainListByIdList(List<Long> teamIdList) {
-//        if (teamIdList == null || teamIdList.size() == 0) {
-//            return new ArrayList<>();
-//        }
-//        return Arrays.stream(TeamEnum.values()).filter(e -> teamIdList.stream().anyMatch(f -> e.getId().equals(f))).map(TeamEnum::getSubDomain).collect(Collectors.toList());
-//    }
-
-    /**
-     * 存在するSubdomainをリストにして返します
-     *
-     * @return
-     */
-//    public static List<String> getAllSubDomain() {
-//        return Arrays.stream(TeamEnum.values()).filter(e -> e.getSubDomain() != null).map(TeamEnum::getSubDomain).distinct().collect(Collectors.toList());
-//    }
-
     /**
      * 引数のTeamIdListからチーム名リストを返却します。
      *
@@ -181,51 +125,4 @@ public enum TeamEnum {
         }
         return resultList;
     }
-
-//    public static String getItemPageId(Long teamId) {
-//        if (teamId == null) {
-//            return "";
-//        }
-//        TeamEnum result = null;
-//        for (TeamEnum e : TeamEnum.values()) {
-//            if (e.getId() != null && e.getId().equals(teamId)) {
-//                result = e;
-//                break;
-//            }
-//        }
-//        assert result != null;
-//        return result.getItemPageId().toString();
-//    }
-
-//    public static String getTvPageId(Long teamId) {
-//        if (teamId == null) {
-//            return "";
-//        }
-//        TeamEnum result = null;
-//        for (TeamEnum e : TeamEnum.values()) {
-//            if (e.getId() != null && e.getId().equals(teamId)) {
-//                result = e;
-//                break;
-//            }
-//        }
-//        assert result != null;
-//        return result.getTvPageId().toString();
-//    }
-
-//    public static String getTvPageIdBySubDomain(String subDomain) {
-//        if (StringUtils.hasText(subDomain)) {
-//            TeamEnum result = null;
-//            for (TeamEnum e : TeamEnum.values()) {
-//                if (e.getId() != null && e.getSubDomain().equals(subDomain)) {
-//                    result = e;
-//                    break;
-//                }
-//            }
-//            assert result != null;
-//            return result.getTvPageId().toString();
-//        } else {
-//            // subDOmainがnull/空欄の場合は総合ブログに投稿する
-//            return "33";
-//        }
-//    }
 }

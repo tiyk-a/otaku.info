@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.api.services.calendar.model.Event;
+import com.sun.istack.Nullable;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,8 +138,8 @@ public class SampleController {
         return "ok";
     }
 
-    @GetMapping("/batch/{id}")
-    public String batch(@PathVariable String id) throws InterruptedException, JSONException {
+    @GetMapping("/batch/{id}/{from}/{to}")
+    public String batch(@PathVariable String id, @PathVariable @Nullable String from, @PathVariable @Nullable String to) throws InterruptedException, JSONException, ParseException {
         int i = Integer.parseInt(id);
         switch (i) {
             case 1:
@@ -149,7 +150,6 @@ public class SampleController {
                 break;
             case 3:
                 blogController.chkWpId();
-//                blogController.chkWpIdByBlog();
                 break;
             case 4:
                 scheduler.run4();
@@ -184,45 +184,28 @@ public class SampleController {
             case 14:
                 // 商品の情報を投稿する
                 logger.debug("---Tmpブログ新商品投稿メソッドSTART---");
-//                List<Item> itemList = itemService.findNotDeleted();
-//                blogController.tmpItemPost(itemList);
                 logger.debug("---Tmpブログ新商品投稿メソッドEND---");
                 break;
             case 15:
                 // irelの重複を解消
                 orderiRel();
-//                orderiRel2();
-//                orderiRel3();
                 break;
             case 16:
                 orderM();
-//                orderM2();
-//                orderM3();
                 break;
             case 18:
-//                managePRel();
+                tmpController.pmMasterMethod(from, to);
                 break;
             case 19:
-//                insertPrice();
+                System.out.println(stationService.getStationNameByEnumDB(7L));
+                System.out.println(stationService.getStationNameByEnumDB(2944L));
                 break;
             case 20:
-//                organizeIm();
                 break;
             case 21:
-//                insertImRel();
                 break;
-//            case 22:
-//                TeamEnum[] list = TeamEnum.values().clone();
-//                Map<String, TeamEnum> map = new HashMap<>();
-//                for (TeamEnum l : list) {
-//                    if (!map.containsKey(l.getSubDomain())) {
-//                        map.put(l.getSubDomain(), l);
-//                    }
-//                }
-//                for (TeamEnum s : map.values()) {
-//                    blogController.insertTags(s);
-//                }
-//                break;
+            case 22:
+                break;
             case 23:
                 modifyStation();
                 logger.debug("残ったstationをdelします");

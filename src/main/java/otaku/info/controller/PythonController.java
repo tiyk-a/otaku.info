@@ -58,7 +58,6 @@ public class PythonController {
      * @return
      * @throws JSONException
      */
-//    public String post(Map<String, String> headers, String json) {
     public String post(Long teamId, String text) throws JSONException {
 
         // Twitter投稿が終わった後にLINE通知するテキストを詰めていくリスト

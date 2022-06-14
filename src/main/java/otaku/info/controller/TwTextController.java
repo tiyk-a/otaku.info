@@ -127,29 +127,6 @@ public class TwTextController {
         return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  url + "%0A" + tags;
     }
 
-//    /**
-//     * 未来発売の商品のリマインダー文章を作成します。
-//     *
-//     * @param itemMaster
-//     * @param item
-//     * @param teamId
-//     * @return
-//     */
-//    public String futureItemReminder(IM itemMaster, Item item, Long teamId) {
-//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-//        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
-//        String title = "";
-//        if (StringUtils.hasText(itemMaster.getTitle())) {
-//            title = itemMaster.getTitle();
-//        } else {
-//            itemMaster.setTitle(item.getTitle());
-//            itemMaster.setBlogNotUpdated(true);
-//            // ついでに登録（更新）する
-//            imService.save(itemMaster);
-//        }
-//        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
-//    }
-
     /**
      * 本日発売の商品のアナウンス文章を作る
      *

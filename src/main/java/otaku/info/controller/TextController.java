@@ -63,6 +63,12 @@ public class TextController {
     private PRelService pRelService;
 
     @Autowired
+    private PMService pmService;
+
+    @Autowired
+    private PMRelService pmRelService;
+
+    @Autowired
     private Setting setting;
 
     private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
@@ -84,33 +90,6 @@ public class TextController {
     }
 
     /**
-     * 本日発売の商品のアナウンス文章を作る
-     *
-     * @param item
-     * @return
-     */
-//    public String releasedItemAnnounce(ItemMaster itemMaster, Item item) {
-//        String url = IMRelService.findByImIdTeamId(itemMaster.getItem_m_id())
-//        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A"
-//                + akansetting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "楽天リンクはこちら↓%0A"
-//                + item.getUrl();
-//        // twitterタグ、DB使わないで取れてる
-//        List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-//        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
-//        return str1 + "%0A" + tags;
-//    }
-//
-//    public String releasedItemAnnounce(ItemMaster itemMaster, Long teamId, Item item) {
-////        String blogUrl = blogDomainGenerator(teamId) + "item/" + itemMaster.getItem_m_id();
-//
-//        String str1 = "【PR】本日発売！%0A%0A" + itemMaster.getTitle() + "%0A" + "詳細はこちら↓%0A" + setting.getBlogWebUrl() + "item/" + IMRelService.getWpIdByItemMId(itemMaster.getItem_m_id()) + "%0A" + "詳細はこちら↓%0A" + item.getUrl();
-//        // twitterタグ、DB使わないで取れてる
-//        List<Long> teamIdList = IMRelService.findTeamIdListByItemMId(itemMaster.getItem_m_id());
-//        String tags = TeamEnum.findTeamNameListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
-//        return str1 + "%0A" + tags;
-//    }
-
-    /**
      * TV出演情報があるグループのTwitter投稿文
      *
      * @param ele Mapから抜き取ったEntry(key=TeamId,value=List<Program>)
@@ -118,7 +97,7 @@ public class TextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<Program>> ele, boolean forToday, Date date, Long teamId) {
+    public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String teamName = teamService.getTeamName(ele.getKey());
         String result= "";
@@ -129,8 +108,9 @@ public class TextController {
         }
 
         String info = "";
-        for (Program p : ele.getValue()) {
-            info = info + dtf1.format(p.getOn_air_date()) + " " + p.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+        for (PMVer p : ele.getValue()) {
+            PM pm = pmService.findByPmId(p.getPm_id());
+            info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
         }
 
         // blogへの誘導
@@ -138,81 +118,6 @@ public class TextController {
         String blog = "一覧はこちら%0A" + blogEnum.getSubDomain() + "pages/" + blogEnum.getTvPageId();
         return result + info + blog;
     }
-
-    /**
-     * 直近のTV番組のアラート文章を作ります。
-     *
-     * @param program
-     * @return Map<ProgramId-TeamId, text>
-     */
-//    public Map<String, String> tvAlert(Program program) {
-//        String stationName = stationService.getStationName(program.getStation_id());
-//        List<Long> teamIdList = pRelService.getTeamIdList(program.getProgram_id());
-//
-//        Map<String, String> resultMap = new HashMap<>();
-//        // 返却するMapにKey(ProgramId)のみ詰め込みます。
-//        if (teamIdList.size() > 0) {
-//            // Mapのkeyを作り格納
-//            teamIdList.forEach(e -> resultMap.put(program.getProgram_id() + "-" + e, null));
-//        }
-//
-//        // Member情報がある場合は情報を集める(TeamIdとMemberNameのDtoリスト)
-//        List<TeamIdMemberNameDto> teamIdMemberNameDtoList = new ArrayList<>();
-//        List<Long> memberIdList = pRelService.getMemberIdList(program.getProgram_id());
-//        for (Long mId : memberIdList) {
-//            TeamIdMemberNameDto dto = memberService.getMapTeamIdMemberName(mId);
-//            if (dto != null && dto.getMember_name() != null) {
-//                teamIdMemberNameDtoList.add(dto);
-//            }
-//        }
-//
-//        // Member情報がある場合、DtoリストからMapへ詰め替えます。<TeamId, MemberIdList>
-//        Map<Long, String> keyMemberMap = new HashMap<>();
-//        if (teamIdMemberNameDtoList.size() > 0) {
-//            for (TeamIdMemberNameDto dto : teamIdMemberNameDtoList) {
-//                if (keyMemberMap.containsKey(dto.getTeam_id())) {
-//                    String v = keyMemberMap.get(dto.getTeam_id());
-//                    keyMemberMap.put(dto.getTeam_id(), v + "・" + dto.getMember_name());
-//                } else {
-//                    keyMemberMap.put(dto.getTeam_id(), dto.getMember_name());
-//                }
-//            }
-//        }
-//
-//        // 返却リストにはKey(ProgramId)しか入っていないので、valueを入れます。
-//        for (Map.Entry<String, String> entry : resultMap.entrySet()) {
-//            String num = entry.getKey();
-//            num = num.replaceAll("^.*-", "");
-//            Long teamId = Long.valueOf(num);
-//            String result = "";
-//
-//            // Format LocalDateTime
-//            String formattedDateTime = program.getOn_air_date().format(dtf2);
-//
-//            // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
-//            if (keyMemberMap.containsKey(teamId)) {
-//                result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" + keyMemberMap.get(teamId) + "が出演します。ぜひご覧ください！";
-//                List<String> tagList = tagService.getTagByMemberNameList(Arrays.asList(keyMemberMap.get(teamId).split("・")));
-//                if (tagList.size() > 0) {
-//                    result = result + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
-//                }
-//            } else {
-//                String teamName = teamService.getTeamName(teamId);
-//                if (!teamName.equals("")) {
-//                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に、" +teamName  + "が出演します。ぜひご覧ください！";
-//                } else {
-//                    result = "このあと" + formattedDateTime + "〜" + program.getTitle() + "(" + stationName + ")に出演情報があります。ぜひご確認ください！";
-//                }
-//
-//                List<String> tagList = tagService.getTagByTeam(teamId);
-//                if (tagList.size() > 0) {
-//                    result = result + "%0A%0A" + tagService.getTagByTeam(teamId).stream().collect(Collectors.joining(" #","#",""));
-//                }
-//            }
-//            resultMap.put(entry.getKey(), result);
-//        }
-//        return resultMap;
-//    }
 
     /**
      * WordPressブログのリリース情報固定ページ表示用のテキストを作成
@@ -412,22 +317,22 @@ public class TextController {
      * TV番組固定ページのテキストを作成。
      * 1つのドメインにポストするProgramリストが日にちごちゃ混ぜで入ってくる
      *
-     * @param programList
+     * @param pmVerList
      * @return
      */
-    public String tvPageText(List<Program> programList, String subDomain) throws ParseException {
-        if (programList.size() == 0) {
+    public String tvPageText(List<PMVer> pmVerList, String subDomain) throws ParseException {
+        if (pmVerList.size() == 0) {
             return "";
         }
 
         String result = "[toc depth='4']";
         // 丁寧にプログラムをソートする（放送日、チーム）
         // 1:日付ごとにまとめる<DateStr, List<Program>>
-        Map<String, List<Program>> datePMap = new TreeMap<>();
-        for (Program p : programList) {
+        Map<String, List<PMVer>> datePMap = new TreeMap<>();
+        for (PMVer p : pmVerList) {
 
             String targetDate = dtf3.format(p.getOn_air_date());
-            List<Program> tmpList;
+            List<PMVer> tmpList;
             if (!datePMap.containsKey(targetDate)) {
                 tmpList = new ArrayList<>();
                 tmpList.add(p);
@@ -441,14 +346,15 @@ public class TextController {
 
         // 2: 日付でまとまったMapの中身を時間で並べ替える
         // 放送局だけの異なる番組をまとめたい<DateStr, Map<title, List<Program>>>
-        Map<String, Map<String, List<Program>>> gatheredMap = new TreeMap<>();
+        Map<String, Map<String, List<PMVer>>> gatheredMap = new TreeMap<>();
         if (datePMap.size() > 0) {
-            for (Map.Entry<String, List<Program>> e : datePMap.entrySet()) {
-                Map<String, List<Program>> tmpMap = new TreeMap<>();
-                List<Program> tmpList;
-                for (Program p : e.getValue()) {
-                    if (tmpMap.containsKey(p.getTitle())) {
-                        tmpList = tmpMap.get(p.getTitle());
+            for (Map.Entry<String, List<PMVer>> e : datePMap.entrySet()) {
+                Map<String, List<PMVer>> tmpMap = new TreeMap<>();
+                List<PMVer> tmpList;
+                for (PMVer p : e.getValue()) {
+                    PM pm = pmService.findByPmId(p.getPm_id());
+                    if (tmpMap.containsKey(pm.getTitle())) {
+                        tmpList = tmpMap.get(pm.getTitle());
                         if (!tmpList.get(0).getOn_air_date().equals(p.getOn_air_date())) {
                             tmpList = new ArrayList<>();
                         }
@@ -456,7 +362,7 @@ public class TextController {
                         tmpList = new ArrayList<>();
                     }
                     tmpList.add(p);
-                    tmpMap.put(p.getTitle(), tmpList);
+                    tmpMap.put(pm.getTitle(), tmpList);
                 }
                 gatheredMap.put(e.getKey(), tmpMap);
             }
@@ -467,16 +373,17 @@ public class TextController {
         Map<String, List<String>> textByDays = new TreeMap<>();
         List<String> textList = new ArrayList<>();
         String h2 = "";
-        for (Map.Entry<String, Map<String, List<Program>>> e : gatheredMap.entrySet()) {
+        for (Map.Entry<String, Map<String, List<PMVer>>> e : gatheredMap.entrySet()) {
 
             // 総合ブログの場合チーム名の取得とかが必要
             String tmp = "";
-            for (Map.Entry<String, List<Program>> p : e.getValue().entrySet()) {
-                Program masterP = p.getValue().get(0);
+            for (Map.Entry<String, List<PMVer>> p : e.getValue().entrySet()) {
+                PMVer masterP = p.getValue().get(0);
+                PM pm = pmService.findByPmId(masterP.getPm_id());
 
                 String teamName = "";
                 if (subDomain.equals("NA")) {
-                    List<Long> pTeamIdList = pRelService.getTeamIdList(masterP.getProgram_id());
+                    List<Long> pTeamIdList = pmRelService.getTeamIdList(masterP.getPm_id());
                     if (pTeamIdList != null && !pTeamIdList.isEmpty() && !pTeamIdList.get(0).equals(0L)) {
                         List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
                         teamName = String.join("/", teamNameList);
@@ -484,18 +391,18 @@ public class TextController {
                 }
 
                 String memberName = "";
-                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getProgram_id());
+                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getPm_id());
                 if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
 
                     List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
                     memberName = String.join("/", memberNameList);
                 }
 
-                String description = StringUtils.hasText(masterP.getDescription()) ? masterP.getDescription() : "";
-                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + masterP.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
+                String description = StringUtils.hasText(pm.getDescription()) ? pm.getDescription() : "";
+                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
 
                 String broad = "<p>放送局：";
-                for (Program r : p.getValue()) {
+                for (PMVer r : p.getValue()) {
                     String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
                     broad = broad + stationName + "<br />";
                 }
@@ -541,7 +448,7 @@ public class TextController {
      * @param plist
      * @return content/ コンテンツ有無フラグ
      */
-    public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<Program> plist) {
+    public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<PMVer> plist) {
         boolean tvContentFlg = true;
 
         String teamName = TeamEnum.get(teamId).getName();
@@ -552,7 +459,8 @@ public class TextController {
 
         // TV
         List<String> pTextList = new ArrayList<>();
-        for (Program p : plist) {
+        for (PMVer p : plist) {
+            PM pm = pmService.findByPmId(p.getPm_id());
             StationEnum e = StationEnum.get(p.getStation_id());
             String stationName = "";
             if (e.equals(StationEnum.NHK)) {
@@ -563,7 +471,7 @@ public class TextController {
             } else {
                 stationName = e.getName();
             }
-            String tmp = dtf1.format(p.getOn_air_date()) + "~ " + p.getTitle() + "(" + stationName + ")";
+            String tmp = dtf1.format(p.getOn_air_date()) + "~ " + pm.getTitle() + "(" + stationName + ")";
             pTextList.add(tmp);
         }
 

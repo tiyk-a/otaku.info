@@ -531,44 +531,6 @@ public class ApiController {
     }
 
     /**
-     * 商品のデータを更新する（画像以外）
-     *
-     * @param id データ更新をする商品のID
-     * @param pForm 更新される新しいデータ
-     * @return Item
-     */
-    @PostMapping("/tv/{teamId}/{id}")
-    public ResponseEntity<Boolean> upTv(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody PForm pForm) {
-        logger.debug("accepted");
-        try {
-            // programの更新
-            Program p = pageTvService.findById(id);
-            p.absorb(pForm);
-            Program p_saved = pageTvService.save(p);
-
-            // prelの更新
-            List<PRel> relList = pRelService.getListByProgramId(id);
-            for (Long[] inner : pForm.getPrel()) {
-                // [p_rel_id, program_id, team_id]の形でデータ入ってる
-                for (PRel rel : relList) {
-                    if (inner[0].equals(rel.getP_rel_id())) {
-                        if (!inner[2].equals(rel.getTeam_id())) {
-                            rel.setTeam_id(inner[2]);
-                            pRelService.save(rel);
-                        }
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.ok(false);
-        }
-        logger.debug("fin");
-        return ResponseEntity.ok(true);
-    }
-
-    /**
      * 指定Teamidの商品を未来発売日順に取得し返す、削除されていない商品のみ。
      *
      * @param id 取得するTeamId

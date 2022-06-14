@@ -124,31 +124,31 @@ public class TwTextController {
             title = im.getTitle();
         }
 
-        return "【PR 発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  url + "%0A" + tags;
+        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  url + "%0A" + tags;
     }
 
-    /**
-     * 未来発売の商品のリマインダー文章を作成します。
-     *
-     * @param itemMaster
-     * @param item
-     * @param teamId
-     * @return
-     */
-    public String futureItemReminder(IM itemMaster, Item item, Long teamId) {
-        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
-        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
-        String title = "";
-        if (StringUtils.hasText(itemMaster.getTitle())) {
-            title = itemMaster.getTitle();
-        } else {
-            itemMaster.setTitle(item.getTitle());
-            itemMaster.setBlogNotUpdated(true);
-            // ついでに登録（更新）する
-            imService.save(itemMaster);
-        }
-        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
-    }
+//    /**
+//     * 未来発売の商品のリマインダー文章を作成します。
+//     *
+//     * @param itemMaster
+//     * @param item
+//     * @param teamId
+//     * @return
+//     */
+//    public String futureItemReminder(IM itemMaster, Item item, Long teamId) {
+//        int diff = dateUtils.dateDiff(new Date(), item.getPublication_date()) + 1;
+//        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
+//        String title = "";
+//        if (StringUtils.hasText(itemMaster.getTitle())) {
+//            title = itemMaster.getTitle();
+//        } else {
+//            itemMaster.setTitle(item.getTitle());
+//            itemMaster.setBlogNotUpdated(true);
+//            // ついでに登録（更新）する
+//            imService.save(itemMaster);
+//        }
+//        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(item.getPublication_date()) + "%0A楽天購入はこちら↓%0A" + item.getUrl() + "%0A%0A" + tags;
+//    }
 
     /**
      * 本日発売の商品のアナウンス文章を作る
@@ -238,8 +238,9 @@ public class TwTextController {
             teamIdList.forEach(e -> resultMap.put(e, null));
             for (Long teamId : teamIdList) {
                 List<String> tagList = new ArrayList<>();
-                String teamName = TeamEnum.get(teamId).getMnemonic();
-                tagList.add(teamName);
+                String teamName = TeamEnum.get(teamId).getName();
+                String mnemonic = TeamEnum.get(teamId).getMnemonic();
+                tagList.add(mnemonic);
 
                 String result = "";
 
@@ -250,15 +251,23 @@ public class TwTextController {
                 String memberName = "";
                 if (relList.size() > 0) {
                     for (PMRel rel : relList) {
-                        List<String> tmpList = relMemList.stream()
+                        List<String> tmpNameList = relMemList.stream()
                                 .filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id()))
                                 .map(e -> MemberEnum.get(e.getMember_id()).getName())
                                 .collect(Collectors.toList());
-                        if (tmpList.size() > 0) {
+                        List<String> tmpMnemonicList = relMemList.stream()
+                                .filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id()))
+                                .map(e -> MemberEnum.get(e.getMember_id()).getMnemonic())
+                                .collect(Collectors.toList());
+
+                        if (tmpNameList.size() > 0) {
                             // 文章用
-                            memberName = String.join("・", tmpList);
+                            memberName = String.join("・", tmpNameList);
+                        }
+
+                        if (tmpMnemonicList.size() > 0) {
                             // タグ用
-                            tagList.addAll(tmpList);
+                            tagList.addAll(tmpMnemonicList);
                         }
                     }
 
@@ -315,22 +324,22 @@ public class TwTextController {
      * TV番組固定ページのテキストを作成。
      * 1つのドメインにポストするProgramリストが日にちごちゃ混ぜで入ってくる
      *
-     * @param programList
+     * @param pmList
      * @return
      */
-    public String tvPageText(List<Program> programList, String subDomain) throws ParseException {
-        if (programList.size() == 0) {
+    public String tvPageText(List<PMVer> pmList, String subDomain) throws ParseException {
+        if (pmList.size() == 0) {
             return "";
         }
 
         String result = "[toc depth='6']";
         // 丁寧にプログラムをソートする（放送日、チーム）
         // 1:日付ごとにまとめる<DateStr, List<Program>>
-        Map<String, List<Program>> datePMap = new TreeMap<>();
-        for (Program p : programList) {
+        Map<String, List<PMVer>> datePMap = new TreeMap<>();
+        for (PMVer p : pmList) {
 
             String targetDate = dtf3.format(p.getOn_air_date());
-            List<Program> tmpList;
+            List<PMVer> tmpList;
             if (!datePMap.containsKey(targetDate)) {
                 tmpList = new ArrayList<>();
                 tmpList.add(p);
@@ -344,14 +353,15 @@ public class TwTextController {
 
         // 2: 日付でまとまったMapの中身を時間で並べ替える
         // 放送局だけの異なる番組をまとめたい<DateStr, Map<title, List<Program>>>
-        Map<String, Map<String, List<Program>>> gatheredMap = new TreeMap<>();
+        Map<String, Map<String, List<PMVer>>> gatheredMap = new TreeMap<>();
         if (datePMap.size() > 0) {
-            for (Map.Entry<String, List<Program>> e : datePMap.entrySet()) {
-                Map<String, List<Program>> tmpMap = new TreeMap<>();
-                List<Program> tmpList;
-                for (Program p : e.getValue()) {
-                    if (tmpMap.containsKey(p.getTitle())) {
-                        tmpList = tmpMap.get(p.getTitle());
+            for (Map.Entry<String, List<PMVer>> e : datePMap.entrySet()) {
+                Map<String, List<PMVer>> tmpMap = new TreeMap<>();
+                List<PMVer> tmpList;
+                for (PMVer p : e.getValue()) {
+                    PM pm = pmService.findByPmId(p.getPm_id());
+                    if (tmpMap.containsKey(pm.getTitle())) {
+                        tmpList = tmpMap.get(pm.getTitle());
                         if (!tmpList.get(0).getOn_air_date().equals(p.getOn_air_date())) {
                             tmpList = new ArrayList<>();
                         }
@@ -359,7 +369,7 @@ public class TwTextController {
                         tmpList = new ArrayList<>();
                     }
                     tmpList.add(p);
-                    tmpMap.put(p.getTitle(), tmpList);
+                    tmpMap.put(pm.getTitle(), tmpList);
                 }
                 gatheredMap.put(e.getKey(), tmpMap);
             }
@@ -370,16 +380,16 @@ public class TwTextController {
         Map<String, List<String>> textByDays = new TreeMap<>();
         List<String> textList = new ArrayList<>();
         String h2 = "";
-        for (Map.Entry<String, Map<String, List<Program>>> e : gatheredMap.entrySet()) {
+        for (Map.Entry<String, Map<String, List<PMVer>>> e : gatheredMap.entrySet()) {
 
             // 総合ブログの場合チーム名の取得とかが必要
             String tmp = "";
-            for (Map.Entry<String, List<Program>> p : e.getValue().entrySet()) {
-                Program masterP = p.getValue().get(0);
+            for (Map.Entry<String, List<PMVer>> p : e.getValue().entrySet()) {
+                PMVer masterP = p.getValue().get(0);
 
                 String teamName = "";
                 if (subDomain.equals("NA")) {
-                    List<Long> pTeamIdList = pRelService.getTeamIdList(masterP.getProgram_id());
+                    List<Long> pTeamIdList = pRelService.getTeamIdList(masterP.getPm_id());
                     if (pTeamIdList != null && !pTeamIdList.isEmpty() && !pTeamIdList.get(0).equals(0L)) {
                         List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
                         teamName = String.join("/", teamNameList);
@@ -387,18 +397,19 @@ public class TwTextController {
                 }
 
                 String memberName = "";
-                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getProgram_id());
+                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getPm_id());
                 if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
 
                     List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
                     memberName = String.join("/", memberNameList);
                 }
 
-                String description = StringUtils.hasText(masterP.getDescription()) ? masterP.getDescription() : "";
-                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + masterP.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
+                PM pm = pmService.findByPmId(masterP.getPm_id());
+                String description = StringUtils.hasText(pm.getDescription()) ? pm.getDescription() : "";
+                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
 
                 String broad = "<p>放送局：";
-                for (Program r : p.getValue()) {
+                for (PMVer r : p.getValue()) {
                     String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
                     broad = broad + stationName + "<br />";
                 }

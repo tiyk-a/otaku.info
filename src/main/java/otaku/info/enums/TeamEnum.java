@@ -30,8 +30,11 @@ public enum TeamEnum {
     private final Long id;
     private final String anniversary;
     private final String kana;
-    // tagNameに利用
+
+    // tagNameに利用する記号やスペースを抜いた名称
     private final String mnemonic;
+
+    // 正式名称
     private final String name;
     private final String tw_id;
     private final String calendarId;

@@ -102,7 +102,11 @@ public enum MemberEnum {
     private final Long id;
     private final Date birthday;
     private final String kana;
+
+    // 正式名称
     private final String name;
+
+    // tagNameに利用する記号やスペースを抜いた名称
     private final String mnemonic;
     private final Long teamId;
 

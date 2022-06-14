@@ -65,6 +65,15 @@ public class BlogController {
     ProgramService programService;
 
     @Autowired
+    PMService pmService;
+
+    @Autowired
+    PMRelService pmRelService;
+
+    @Autowired
+    PmVerService pmVerService;
+
+    @Autowired
     IMService imService;
 
     @Autowired
@@ -755,20 +764,20 @@ public class BlogController {
      */
     public void updateTvPage() throws ParseException {
         // 該当期間内の番組を全て取得
-        List<Program> tmpList = programService.findByOnAirDateBeterrn(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
+        List<PMVer> tmpList = pmVerService.findByOnAirDateNotDeleted(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
 
         // 複数Teamがひもづく場合はそれぞれ投稿するため、Mapにする<ProgramId_TeamId, Program>
-        Map<String, Program> confirmedMap = new TreeMap<>();
+        Map<String, PMVer> confirmedMap = new TreeMap<>();
         if (tmpList.size() > 0) {
-            for (Program p : tmpList) {
-                List<Long> teamIdList = pRelService.getTeamIdList(p.getProgram_id());
+            for (PMVer p : tmpList) {
+                List<Long> teamIdList = pmRelService.getTeamIdList(p.getPm_id());
                 if (teamIdList != null && !teamIdList.isEmpty()) {
                     for (Long teamId : teamIdList) {
                         if (teamId == 0) {
                             continue;
                         }
                         // Mapにする<ProgramId_TeamId, Program>
-                        confirmedMap.put(p.getProgram_id() + "_" + teamId, p);
+                        confirmedMap.put(p.getPm_id() + "_" + teamId, p);
                     }
                 }
             }
@@ -777,12 +786,12 @@ public class BlogController {
         // 1件以上データが見つかったら
         if (confirmedMap.size() > 0) {
             // subDomainでまとめるMap<Subdomain, Map<ProgramId_TeamId, Program>>
-            Map<String, Map<String, Program>> domainMap = new TreeMap<>();
-            for (Map.Entry<String, Program> e : confirmedMap.entrySet()) {
+            Map<String, Map<String, PMVer>> domainMap = new TreeMap<>();
+            for (Map.Entry<String, PMVer> e : confirmedMap.entrySet()) {
                 Long teamId = Long.valueOf(e.getKey().replaceAll("^\\d*_", ""));
                 String subDomain = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId()).getSubDomain();
 
-                Map<String, Program> tmpMap;
+                Map<String, PMVer> tmpMap;
                 if (domainMap.containsKey(subDomain)) {
                     tmpMap = domainMap.get(subDomain);
                 } else {
@@ -795,8 +804,8 @@ public class BlogController {
             // subDomainごとにまとめられたので、それぞれのドメインごとにテキストを作ってあげる
             Map<String, String> resultMap = new TreeMap<>();
             if (domainMap.size() > 0) {
-                for (Map.Entry<String, Map<String, Program>> e : domainMap.entrySet()) {
-                    List<Program> pList = e.getValue().entrySet().stream().map(f -> f.getValue()).collect(Collectors.toList());
+                for (Map.Entry<String, Map<String, PMVer>> e : domainMap.entrySet()) {
+                    List<PMVer> pList = e.getValue().entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
                     String text = textController.tvPageText(pList, e.getKey());
                     resultMap.put(e.getKey(), text);
                 }
@@ -926,7 +935,7 @@ public class BlogController {
 
         for (Long teamId : teamIdList) {
             // 明日の日付で、テレビ一覧画面を作る
-            List<Program> plist = programService.findByOnAirDateTeamId(tmrw, teamId);
+            List<PMVer> plist = pmVerService.findByOnAirDateNotDeletedTeamId(tmrw, teamId);
 
             // 明日の日付で、商品一覧画面を作る
             List<IM> imList = imService.findByTeamIdDate(teamId, tmrw);

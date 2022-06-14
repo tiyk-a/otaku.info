@@ -54,7 +54,15 @@ public class PmVerService {
         return pmVerRepository.findByOnAirDateNotDeleted(dateTime, endTime);
     }
 
+    public List<PMVer> findByOnAirDateNotDeleted(Date sDate, Date eDate) {
+        return pmVerRepository.findByOnAirDateNotDeleted(sDate, eDate);
+    }
+
     public List<PMVer> findByOnAirDateNotDeleted(Date date) {
         return pmVerRepository.findByOnAirDateNotDeleted(date);
+    }
+
+    public List<PMVer> findByOnAirDateNotDeletedTeamId(Date date, Long teamId) {
+        return pmVerRepository.findByOnAirDateNotDeletedTeamId(date, teamId);
     }
 }

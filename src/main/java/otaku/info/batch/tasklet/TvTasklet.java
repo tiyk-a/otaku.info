@@ -60,35 +60,45 @@ public class TvTasklet implements Tasklet {
      */
     private void mainTransaction(List<String> argList, boolean memFlg) throws IOException {
         for (String artist : argList) {
-            boolean nextFlg = true;
-            String urlWithParam = setting.getTvKingdom();
 
-            if (artist.equals("ARASHI")) {
-                artist = "嵐";
+            // TVを集めていいかフラグを用意して確認
+            Boolean executeFlg = true;
+            if (!memFlg) {
+                executeFlg = TeamEnum.get(artist).getAggregateTv();
             }
 
-            String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
+            // TV集めていいなら集める
+            if (executeFlg) {
+                boolean nextFlg = true;
+                String urlWithParam = setting.getTvKingdom();
 
-            urlWithParam += param;
-
-            loggerController.printTvTasklet(artist + "の番組を検索します");
-            while (nextFlg) {
-                // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
-                if (memFlg) {
-                    param = jsopConnect(urlWithParam, artist, MemberEnum.get(artist).getId());
-                } else {
-                    param = jsopConnect(urlWithParam, artist, null);
+                if (artist.equals("ARASHI")) {
+                    artist = "嵐";
                 }
 
-                if (param.equals("")) {
-                    nextFlg = false;
+                String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
+
+                urlWithParam += param;
+
+                loggerController.printTvTasklet(artist + "の番組を検索します");
+                while (nextFlg) {
+                    // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
+                    if (memFlg) {
+                        param = jsopConnect(urlWithParam, artist, MemberEnum.get(artist).getId());
+                    } else {
+                        param = jsopConnect(urlWithParam, artist, null);
+                    }
+
+                    if (param.equals("")) {
+                        nextFlg = false;
+                    }
+                    urlWithParam = setting.getTvKingdom() + param;
                 }
-                urlWithParam = setting.getTvKingdom() + param;
-            }
-            try{
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

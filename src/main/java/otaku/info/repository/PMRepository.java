@@ -29,4 +29,7 @@ public interface PMRepository extends JpaRepository<PM, Long> {
 
     @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date >= current_date and a.del_flg = ?1")
     List<PM> findFutureDelFlg(Boolean delFlg);
+
+    @Query(nativeQuery = true, value = "select a.* from pm a where a.title like %?1% order by pm_id desc limit ?2")
+    List<PM> findByKeyLimit(String key, Integer limit);
 }

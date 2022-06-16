@@ -117,7 +117,7 @@ public class TwTextController {
         if (itemUrl != null && !itemUrl.isEmpty()) {
             url = itemUrl;
         } else {
-            url = "%0Aリンクはこちら↓%0A" + BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
+            url = "%0A%0A" + BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
         }
 
         if (StringUtils.hasText(im.getTitle())) {
@@ -259,9 +259,9 @@ public class TwTextController {
                     }
                 }
 
-                result = "このあと" + formattedDateTime + "から" + pm.getTitle() + "に"
+                result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
                         + (memberName.equals("") ? teamName : memberName) + "が出演します。"
-                        + "\nチャンネル：" + stationService.findById(ver.getStation_id()).getStation_name()
+                        + "\n\nチャンネル：" + stationService.findById(ver.getStation_id()).getStation_name()
                         + "\nぜひご覧ください！\n#" + teamName + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
                 resultMap.put(teamId, result);
             }

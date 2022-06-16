@@ -1675,6 +1675,7 @@ public class ApiController {
     }
 
     /**
+     * IMを検索する
      *
      * @param key
      * @return
@@ -1686,5 +1687,20 @@ public class ApiController {
         }
 
         return ResponseEntity.ok(imService.findByKeyExcludeTeamId(key));
+    }
+
+    /**
+     * PMを検索する
+     *
+     * @param key
+     * @return
+     */
+    @GetMapping("/pm/search")
+    public ResponseEntity<List<PM>> searchOtherPm(@RequestParam("key") String key) {
+        if (key.equals("") ) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(pmService.findByKeyLimit(key, 5));
     }
 }

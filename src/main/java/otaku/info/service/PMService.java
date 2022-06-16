@@ -41,4 +41,8 @@ public class PMService {
     public List<PM> findByTitle(String title) {
         return pmRepository.findByTitle(title);
     }
+
+    public List<PM> findByKeyLimit(String key, Integer limit) {
+        return pmRepository.findByKeyLimit(key, limit);
+    }
 }

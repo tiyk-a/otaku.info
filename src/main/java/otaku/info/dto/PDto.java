@@ -19,4 +19,7 @@ public class PDto {
     private List<PRel> pRelList;
 
     private List<PRelMem> pRelMList;
+
+    /** 関連ありそうなpmを取ってくる"on_air_date title description"を3件くらい */
+    private List<String> relPmList;
 }

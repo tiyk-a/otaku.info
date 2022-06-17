@@ -101,6 +101,9 @@ public class SampleController {
     private PRelMemService pRelMemService;
 
     @Autowired
+    private ImageController imageController;
+
+    @Autowired
     Scheduler scheduler;
 
     /**
@@ -183,8 +186,12 @@ public class SampleController {
                 break;
             case 14:
                 // 商品の情報を投稿する
-                logger.debug("---Tmpブログ新商品投稿メソッドSTART---");
-                logger.debug("---Tmpブログ新商品投稿メソッドEND---");
+                logger.debug("---START---");
+                Font [] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
+                for (i=0;i<fonts.length; i++) {
+                    System.out.println(fonts[i].getName());
+                }
+                logger.debug("---END---");
                 break;
             case 15:
                 // irelの重複を解消
@@ -198,6 +205,7 @@ public class SampleController {
                 break;
             case 19:
                 System.out.println(stationService.getStationNameByEnumDB(7L));
+                imageController.createImage(System.currentTimeMillis() + ".png", "なにわ男子", "関ジャニ∞");
                 System.out.println(stationService.getStationNameByEnumDB(2944L));
                 break;
             case 20:

@@ -104,6 +104,9 @@ public class SampleController {
     private ImageController imageController;
 
     @Autowired
+    private StringUtilsMine stringUtilsMine;
+
+    @Autowired
     Scheduler scheduler;
 
     /**
@@ -209,6 +212,7 @@ public class SampleController {
                 System.out.println(stationService.getStationNameByEnumDB(2944L));
                 break;
             case 20:
+                System.out.println(stringUtilsMine.alphabetTo2BytesAlphabet("関ジャニ∞ABC混ぜてabc"));
                 break;
             case 21:
                 break;

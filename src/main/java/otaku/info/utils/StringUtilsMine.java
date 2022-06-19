@@ -131,4 +131,24 @@ public class StringUtilsMine {
             return Optional.empty();
         }
     }
+
+    /**
+     * 半角アルファベットを全角アルファベットに変換します
+     * http://www7a.biglobe.ne.jp/~java-master/samples/string/HankakuAlphabetToZenkakuAlphabet.html
+     *
+     * @param s
+     * @return
+     */
+    public String alphabetTo2BytesAlphabet(String s) {
+        StringBuffer sb = new StringBuffer(s);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c >= 'a' && c <= 'z') {
+                sb.setCharAt(i, (char)(c - 'a' + 'ａ'));
+            } else if (c >= 'A' && c <= 'Z') {
+                sb.setCharAt(i, (char)(c - 'A' + 'Ａ'));
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -460,7 +460,7 @@ public class ApiController {
             }
 
             // 関連ありそうなPMを集める
-            // 同じ日・時間の同じ放送局のもの（1放送局で複数番組が同時にあるのはおかしい！から
+            // 同じ日の同じ放送局のもの
             List<String> relPmList = new ArrayList<>();
             List<PmFullDto> pmFullDtoList = pmService.findPmFuByllDtoOnAirDateStationId(p.getOn_air_date(), p.getStation_id());
             relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
@@ -468,7 +468,6 @@ public class ApiController {
             // 同じ日・時間の（放送局は違くていい）
             List<PmFullDto> pmFullDtoList2 = pmService.findPmFuByllDtoOnAirDateExStationId(p.getOn_air_date(), p.getStation_id());
             relPmList.addAll(pmFullDtoList2.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
-
 
             pDto.setProgram(p);
             pDto.setPRelList(pRelList);

@@ -4,7 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.PM;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public interface PMRepository extends JpaRepository<PM, Long> {
@@ -33,8 +35,8 @@ public interface PMRepository extends JpaRepository<PM, Long> {
     @Query(nativeQuery = true, value = "select a.* from pm a where a.title like %?1% order by pm_id desc limit ?2")
     List<PM> findByKeyLimit(String key, Integer limit);
 
-    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1 and b.station_id = ?2 order by b.on_air_date desc limit 3")
-    List<Object[]> findPmFuByllDtoOnAirDateStationId(LocalDateTime ldt, Long stationId);
+    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where date(b.on_air_date) = ?1 and b.station_id = ?2 order by b.on_air_date desc limit 3")
+    List<Object[]> findPmFuByllDtoOnAirDateStationId(LocalDate date, Long stationId);
 
     @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1 and b.station_id != ?2 order by b.on_air_date desc limit 3")
     List<Object[]> findPmFuByllDtoOnAirDateExStationId(LocalDateTime ldt, Long stationId);

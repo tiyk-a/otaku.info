@@ -10,10 +10,7 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
@@ -23,6 +20,7 @@ import otaku.info.controller.TvController;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Setting;
+import otaku.info.utils.StringUtilsMine;
 
 @Component
 @StepScope
@@ -35,70 +33,70 @@ public class TvTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Autowired
+    StringUtilsMine stringUtilsMine;
+
+    @Autowired
     Setting setting;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-        loggerController.printTvTasklet("グループごとの検索 START");
+        loggerController.printTvTasklet("グループごと検索 START");
         List<String> teamNameList = Arrays.stream(TeamEnum.values()).map(TeamEnum::getName).collect(Collectors.toList());
-        mainTransaction(teamNameList, false);
-        loggerController.printTvTasklet("グループごとの検索 END");
+        mainTransaction(false);
+        loggerController.printTvTasklet("グループごと検索 END");
 
         loggerController.printTvTasklet("個人検索 START");
-        List<String> memNameList = Arrays.stream(MemberEnum.values()).map(MemberEnum::getName).collect(Collectors.toList());
-        mainTransaction(memNameList, true);
+        mainTransaction(true);
         loggerController.printTvTasklet("個人検索 END");
+        System.out.println("end");
         return RepeatStatus.FINISHED;
     }
 
     /**
      * グループ・個人どちらも検索できるこのクラスのメイン処理
      *
-     * @param argList
+     * @param memFlg
      * @param memFlg
      */
-    private void mainTransaction(List<String> argList, boolean memFlg) throws IOException {
-        for (String artist : argList) {
+    private void mainTransaction(boolean memFlg) throws IOException {
 
-            // TVを集めていいかフラグを用意して確認
-            Boolean executeFlg = true;
-            if (!memFlg) {
-                executeFlg = TeamEnum.get(artist).getAggregateTv();
+        // <Name, Team/Member Id>
+        Map<String, Long> wordMap = null;
+        if (!memFlg) {
+            // 嵐以外のチーム名を入れる
+            // 嵐はヒットが多すぎるので検索停止中
+            wordMap = Arrays.stream(TeamEnum.values()).filter(e -> !e.getId().equals(TeamEnum.ARASHI.getId())).collect(Collectors.toMap(TeamEnum::getName, TeamEnum::getId));
+        } else {
+            wordMap = Arrays.stream(MemberEnum.values()).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getId));
+        }
+
+        for (Map.Entry<String, Long> artist : wordMap.entrySet()) {
+            boolean nextFlg = true;
+            String urlWithParam = setting.getTvKingdom();
+
+            String param = "?stationPlatformId=0&condition.keyword=" + artist.getKey() + "&submit=%E6%A4%9C%E7%B4%A2";
+
+            urlWithParam += param;
+
+            loggerController.printTvTasklet(artist.getKey() + "の番組を検索します");
+            while (nextFlg) {
+                // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
+                if (memFlg) {
+                    param = jsopConnect(urlWithParam, artist.getValue(), null);
+                } else {
+                    param = jsopConnect(urlWithParam, null, artist.getValue());
+                }
+
+                if (param.equals("")) {
+                    nextFlg = false;
+                }
+                urlWithParam = setting.getTvKingdom() + param;
             }
-
-            // TV集めていいなら集める
-            if (executeFlg) {
-                boolean nextFlg = true;
-                String urlWithParam = setting.getTvKingdom();
-
-                if (artist.equals("ARASHI")) {
-                    artist = "嵐";
-                }
-
-                String param = "?stationPlatformId=0&condition.keyword=" + artist + "&submit=%E6%A4%9C%E7%B4%A2";
-
-                urlWithParam += param;
-
-                loggerController.printTvTasklet(artist + "の番組を検索します");
-                while (nextFlg) {
-                    // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
-                    if (memFlg) {
-                        param = jsopConnect(urlWithParam, artist, MemberEnum.get(artist).getId());
-                    } else {
-                        param = jsopConnect(urlWithParam, artist, null);
-                    }
-
-                    if (param.equals("")) {
-                        nextFlg = false;
-                    }
-                    urlWithParam = setting.getTvKingdom() + param;
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -110,27 +108,107 @@ public class TvTasklet implements Tasklet {
      * @return
      * @throws IOException
      */
-    private String jsopConnect(String url, String teamName, Long memId) throws IOException {
-        // URLにアクセスして要素を取ってくる
-        Document document = Jsoup.connect(url).get();
+    private String jsopConnect(String url, Long teamId, Long memberId) {
 
-        // 必要な要素を取り出す
-        Elements elements = document.select("div.utileList");
-        Map<String, String[]> tvMap = new HashMap<>();
-        for (Element e : elements) {
-            // 異なるチャンネルで同じ番組の放送があるため、「詳細」がkey、「タイトル」はvalue[0](被る可能性がある)。value[1]には詳細画面へのURL
-            if (e != null && e.getElementsByTag("h2") != null && e.getElementsByTag("a") != null
-                    && e.getElementsByTag("a").first() != null && e.getElementsByTag("a").first().attr("abs:href") != null
-                    && e.getElementsByClass("utileListProperty") != null) {
-                String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
-                tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
+        Element nextBtn = null;
+
+        try {
+            // URLにアクセスして要素を取ってくる
+            Document document = Jsoup.connect(url).get();
+            // 必要な要素を取り出す
+            Elements elements = document.select("div.utileList");
+            Map<String, String[]> tvMap = new HashMap<>();
+            for (Element e : elements) {
+                // 異なるチャンネルで同じ番組の放送があるため、「詳細」がkey、「タイトル」はvalue[0](被る可能性がある)。value[1]には詳細画面へのURL
+                if (e != null && e.getElementsByTag("h2") != null && e.getElementsByTag("a") != null
+                        && e.getElementsByTag("a").first() != null && e.getElementsByTag("a").first().attr("abs:href") != null
+                        && e.getElementsByClass("utileListProperty") != null) {
+
+                    // キンプリ、NEWS、嵐など関係ないTV情報もヒットしやすいチームの場合、詳細ページも確認し不要なものは排除する。
+                    if (TeamEnum.get(teamId).getChkTvDetailByMemName() != null ) {
+                        String detailPageUrl = e.getElementsByTag("a").first().attr("abs:href");
+                        Boolean res = isValidInfo(detailPageUrl, teamId);
+
+                        // 取得すべきデータじゃなかったらリストに詰めず次に進む
+                        if (!res) {
+                            continue;
+                        }
+                    }
+                    String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
+                    tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
+                }
             }
-        }
-        tvController.tvKingdomSave(tvMap, teamName, memId);
+            tvController.tvKingdomSave(tvMap, teamId, memberId);
 
-        // 次のページがあるか確認する
-        Element nextBtn = document.select("div.listIndexNum").first();
-        // 次ページのパラメタを返却
-        return nextBtn.select("a.linkArrowE").attr("href");
+            // 次のページがあるか確認する
+            nextBtn = document.select("div.listIndexNum").first();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (nextBtn != null) {
+            // 次ページのパラメタを返却
+            return nextBtn.select("a.linkArrowE").attr("href");
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * 正しい情報であることを確認する
+     *
+     * @return
+     */
+    public Boolean isValidInfo(String detailUrl, Long teamId) {
+
+        try {
+            // URLにアクセスして要素を取ってくる
+            Document document = Jsoup.connect(detailUrl).get();
+
+            // 必要な要素を取り出す
+            Elements elements = document.select("p.basicTxt");
+
+            Boolean isValid = false;
+            for (Element e : elements) {
+                System.out.println(e.text());
+
+                // team名からチェックしていいならこの中に入る
+                if (TeamEnum.get(teamId).getChkTvDetailByMemName().equals(false)) {
+                    // 直接チーム名が出てきたらOK
+                    String teamName = TeamEnum.get(teamId).getName();
+                    if (e.text().contains(teamName) || e.text().contains(teamName.replace(" ", ""))) {
+                        isValid = true;
+                        break;
+                    }
+
+                    // 全角でもチェック
+                    String zenkakuTeamName = stringUtilsMine.alphabetTo2BytesAlphabet(teamName);
+                    if (e.text().contains(zenkakuTeamName) || e.text().contains(zenkakuTeamName.replace(" ", ""))) {
+                        isValid = true;
+                        break;
+                    }
+                }
+
+                // メンバー名が出てくるか見る
+                for (MemberEnum me :Arrays.stream(MemberEnum.values()).filter(m -> m.getTeamId().equals(teamId)).collect(Collectors.toList())) {
+                    String memberName = me.getName();
+                    if (e.text().contains(memberName) || e.text().contains(memberName.replace(" ", ""))) {
+                        isValid = true;
+                        break;
+                    }
+
+                    // 全角でもチェック
+                    String zenkakuMemName = stringUtilsMine.alphabetTo2BytesAlphabet(memberName);
+                    if (e.text().contains(zenkakuMemName) || e.text().contains(zenkakuMemName.replace(" ", ""))) {
+                        isValid = true;
+                        break;
+                    }
+                }
+            }
+            return isValid;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

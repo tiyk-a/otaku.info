@@ -56,7 +56,7 @@ public class PMService {
      * @return
      */
     public List<PmFullDto> findPmFuByllDtoOnAirDateStationId(LocalDateTime ldt, Long stationId) {
-        List<Object[]> res = pmRepository.findPmFuByllDtoOnAirDateStationId(ldt, stationId);
+        List<Object[]> res = pmRepository.findPmFuByllDtoOnAirDateStationId(ldt.toLocalDate(), stationId);
         return res.stream().map(PmFullDto::new).collect(Collectors.toList());
     }
 

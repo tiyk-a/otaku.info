@@ -62,9 +62,6 @@ public class SampleController {
     CalendarApiController calendarApiController;
 
     @Autowired
-    YouTubeApiController youTubeApiController;
-
-    @Autowired
     private ItemService itemService;
 
     @Autowired

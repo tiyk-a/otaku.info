@@ -3,7 +3,6 @@ package otaku.info.controller;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -14,11 +13,14 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import otaku.info.service.MessageService;
 import otaku.info.setting.Setting;
+import otaku.info.utils.ServerUtils;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * YouTube APIコントローラ
@@ -31,10 +33,13 @@ import java.util.*;
 public class YouTubeApiController {
 
     @Autowired
+    MessageService messageService;
+
+    @Autowired
     Setting setting;
 
-    /** Global instance of the HTTP transport. */
-    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    @Autowired
+    ServerUtils serverUtils;
 
     /** Global instance of the JSON factory. */
     private static final JsonFactory JSON_FACTORY = new JacksonFactory();
@@ -46,7 +51,14 @@ public class YouTubeApiController {
      * Authorizes user, runs Youtube.Channnels.List get the playlist id associated with uploaded
      * videos, runs YouTube.PlaylistItems.List to get information on each video, and prints out the
      * results.
+     * 常にわかってる情報：自分のchannel ID
+     * 変動する値：その時のlive中のvideo ID
+     * videoIDを取得して、そこからchatIDを取得したい→準備完了
      *
+     * chatIDを元に数秒ごとにloopして最新のコメントを拾ってくる
+     * 拾ったコメントをdbに反映することで描画する文字列を変える
+     *
+     * スパちゃはまだできない
      */
     public void main() throws IOException, GeneralSecurityException {
 
@@ -63,77 +75,71 @@ public class YouTubeApiController {
             youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(
                     "youtube-cmdline-myuploads-sample").build();
 
-            /*
-             * Now that the user is authenticated, the app makes a channel list request to get the
-             * authenticated user's channel. Returned with that data is the playlist id for the uploaded
-             * videos. https://developers.google.com/youtube/v3/docs/channels/list
-             */
-//            YouTube.Videos.List videoRequest = youtube.videos().list("snippet, contentDetails, fileDetails, player, processingDetails, recordingDetails, statistics, status, suggestions, topicDetails");
-            YouTube.Videos.List videoRequest = youtube.videos().list("snippet, contentDetails, player, recordingDetails, statistics, status, topicDetails, liveStreamingDetails");
-//          mine
-            videoRequest.setId("B3H345hBtyk");
+            // 自分のチャンネルのビデオを取得
+            YouTube.Search.List searchRequest = youtube.search().list("id,snippet");
+            searchRequest.setChannelId("UCjL3z_0Eaujk9s8ZZGL3Q_g");
+            searchRequest.setType("video");
+            SearchListResponse searchListResponse = searchRequest.execute();
+            List<SearchResult> videoList = searchListResponse.getItems();
 
-//            hiroyuki
-//            videoRequest.setId("S6sZyK1pjus");
-//            videoRequest.setChart("mostPopular");
-            YouTube.Channels.List channelRequest = youtube.channels().list("contentDetails");
-            channelRequest.setMine(true);
-            /*
-             * Limits the results to only the data we needo which makes things more efficient.
-             */
-            channelRequest.setFields("items/contentDetails,nextPageToken,pageInfo");
-            ChannelListResponse channelResult = channelRequest.execute();
-            VideoListResponse videoResult = videoRequest.execute();
+            String videoId = null;
+            Boolean foundVideoFlg = false;
 
-            /*
-             * Gets the list of channels associated with the user. This sample only pulls the uploaded
-             * videos for the first channel (default channel for user).
-             */
-            List<Channel> channelsList = channelResult.getItems();
-            List<Video> videoList = videoResult.getItems();
-
-            YouTube.LiveChatMessages.List livechatlist = youtube.liveChatMessages().list("Cg0KC0IzSDM0NWhCdHlrKicKGFVDakwzel8wRWF1ams5czhaWkdMM1FfZxILQjNIMzQ1aEJ0eWs", "snippet");
-            LiveChatMessageListResponse chatres = livechatlist.execute();
-            YouTube.SuperChatEvents.List superchatReq = youtube.superChatEvents().list("snippet");
-            SuperChatEventListResponse res = superchatReq.execute();
-            if (channelsList != null) {
-                // Gets user's default channel id (first channel in list).
-                String uploadPlaylistId =
-                        channelsList.get(0).getContentDetails().getRelatedPlaylists().getUploads();
-
-                // List to store all PlaylistItem items associated with the uploadPlaylistId.
-                List<PlaylistItem> playlistItemList = new ArrayList<PlaylistItem>();
-
-                /*
-                 * Now that we have the playlist id for your uploads, we will request the playlistItems
-                 * associated with that playlist id, so we can get information on each video uploaded. This
-                 * is the template for the list call. We call it multiple times in the do while loop below
-                 * (only changing the nextToken to get all the videos).
-                 * https://developers.google.com/youtube/v3/docs/playlistitems/list
-                 */
-                YouTube.PlaylistItems.List playlistItemRequest =
-                        youtube.playlistItems().list("id,contentDetails,snippet");
-                playlistItemRequest.setPlaylistId(uploadPlaylistId);
-
-                // This limits the results to only the data we need and makes things more efficient.
-                playlistItemRequest.setFields(
-                        "items(contentDetails/videoId,snippet/title,snippet/publishedAt),nextPageToken,pageInfo");
-
-                String nextToken = "";
-
-                // Loops over all search page results returned for the uploadPlaylistId.
-                do {
-                    playlistItemRequest.setPageToken(nextToken);
-                    PlaylistItemListResponse playlistItemResult = playlistItemRequest.execute();
-
-                    playlistItemList.addAll(playlistItemResult.getItems());
-
-                    nextToken = playlistItemResult.getNextPageToken();
-                } while (nextToken != null);
-
-                // Prints results.
-                prettyPrint(playlistItemList.size(), playlistItemList.iterator());
+            for (SearchResult video : videoList) {
+                if (video.getSnippet().getLiveBroadcastContent().equals("live")) {
+                    videoId = video.getId().getVideoId();
+                    foundVideoFlg = true;
+                }
             }
+
+            if (foundVideoFlg) {
+                System.out.println("YEAH!!!!!!!!!!!!!!!!!!!!!!!!!");
+                // videoId見つかったので、video情報を取得してchatIdを取得する
+                YouTube.Videos.List videoRequest = youtube.videos().list("snippet, contentDetails, player, recordingDetails, statistics, status, topicDetails, liveStreamingDetails");
+                videoRequest.setId(videoId);
+                List<Video> targetVideoList = videoRequest.execute().getItems();
+
+                String chatId = null;
+                for (Video video : targetVideoList) {
+                    // TODO: if文はちょっと直す必要あり。null以前に要素ない可能性あり
+                    if (video.getLiveStreamingDetails().getActiveLiveChatId() != null) {
+                        chatId = video.getLiveStreamingDetails().getActiveLiveChatId();
+                    }
+                }
+
+                // chatID無事取得できたらチャット取得しに行く
+                if (chatId != null) {
+                    YouTube.LiveChatMessages.List livechatlist = youtube.liveChatMessages().list(chatId, "snippet");
+                    // すでに入ってきたメッセージを保持する<Datetime, Message>
+                    Map<String, String> msgMap = new HashMap<>();
+
+                    while (true) {
+                        List<LiveChatMessage> chatList = livechatlist.execute().getItems();
+
+                        if (chatList.size() > 0 && msgMap.size() != chatList.size()) {
+                            for (LiveChatMessage msg : chatList) {
+                                System.out.println(msg.getSnippet().getPublishedAt().toString());
+                                if (!msgMap.containsKey(msg.getSnippet().getPublishedAt().toString())) {
+                                    String message = msg.getSnippet().getDisplayMessage();
+
+                                    msgMap.put(msg.getSnippet().getPublishedAt().toString(), message);
+                                    messageService.save(message);
+                                    System.out.println(message);
+                                    serverUtils.sleep();
+                                }
+                            }
+//                        chatList.stream().sorted(Comparator.comparing(LiveChatMessage::getId, Comparator.reverseOrder()).collect(Collectors.toList());
+                        }
+
+                        // TODO: スパちゃは有効になったら入れようね
+//                    YouTube.SuperChatEvents.List superchatReq = youtube.superChatEvents().list("snippet");
+//                    SuperChatEventListResponse res = superchatReq.execute();
+                        serverUtils.sleep();
+                    }
+                }
+            }
+
+            System.out.println("*** koko ***");
 
         } catch (GoogleJsonResponseException e) {
             e.printStackTrace();
@@ -142,28 +148,6 @@ public class YouTubeApiController {
 
         } catch (Throwable t) {
             t.printStackTrace();
-        }
-    }
-
-    /*
-     * Method that prints all the PlaylistItems in an Iterator.
-     *
-     * @param size size of list
-     *
-     * @param iterator of Playlist Items from uploaded Playlist
-     */
-    private static void prettyPrint(int size, Iterator<PlaylistItem> playlistEntries) {
-        System.out.println("=============================================================");
-        System.out.println("\t\tTotal Videos Uploaded: " + size);
-        System.out.println("=============================================================\n");
-
-        while (playlistEntries.hasNext()) {
-            PlaylistItem playlistItem = playlistEntries.next();
-            System.out.println(playlistItem);
-            System.out.println(" video name  = " + playlistItem.getSnippet().getTitle());
-            System.out.println(" video id    = " + playlistItem.getContentDetails().getVideoId());
-            System.out.println(" upload date = " + playlistItem.getSnippet().getPublishedAt());
-            System.out.println("\n-------------------------------------------------------------\n");
         }
     }
 }

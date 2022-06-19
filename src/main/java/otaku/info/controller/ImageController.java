@@ -40,7 +40,8 @@ public class ImageController {
 
         Font font = null;
         try {
-            font = new Font("YuppyTC-Regular", Font.BOLD, 100);
+            font = new Font("TakaoGothic", Font.BOLD, 100);
+//            font = new Font("YuppyTC-Regular", Font.BOLD, 100);
         } catch (Exception e) {
             font = new Font("Arial-Black", Font.BOLD, 100);
         }

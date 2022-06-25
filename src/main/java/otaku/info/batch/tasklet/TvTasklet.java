@@ -82,7 +82,7 @@ public class TvTasklet implements Tasklet {
             loggerController.printTvTasklet(artist.getKey() + "の番組を検索します");
             while (nextFlg) {
                 // URLアクセスして要素を取得、次ページアクセスのためのパラメタを返す。
-                if (memFlg) {
+                if (!memFlg) {
                     param = jsopConnect(urlWithParam, artist.getValue(), null);
                 } else {
                     param = jsopConnect(urlWithParam, null, artist.getValue());
@@ -125,7 +125,7 @@ public class TvTasklet implements Tasklet {
                         && e.getElementsByClass("utileListProperty") != null) {
 
                     // キンプリ、NEWS、嵐など関係ないTV情報もヒットしやすいチームの場合、詳細ページも確認し不要なものは排除する。
-                    if (TeamEnum.get(teamId).getChkTvDetailByMemName() != null ) {
+                    if (teamId != null && TeamEnum.get(teamId).getChkTvDetailByMemName() != null ) {
                         String detailPageUrl = e.getElementsByTag("a").first().attr("abs:href");
                         Boolean res = isValidInfo(detailPageUrl, teamId);
 

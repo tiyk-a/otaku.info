@@ -33,6 +33,9 @@ public class TwTextController {
     LineController lineController;
 
     @Autowired
+    RakutenController rakutenController;
+
+    @Autowired
     private TeamService teamService;
 
     @Autowired
@@ -110,21 +113,27 @@ public class TwTextController {
         String url = "";
         IMRel rel = null;
         List<IMRel> tmpList = iMRelService.findByImIdTeamId(im.getIm_id(), teamId);
-        if (!tmpList.isEmpty() && tmpList.size() > 0) {
+        if (!tmpList.isEmpty()) {
             rel = tmpList.get(0);
         }
 
-        if (itemUrl != null && !itemUrl.isEmpty()) {
+        try {
+            url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (itemUrl != null && !itemUrl.isEmpty() && url.equals("")) {
             url = itemUrl;
-        } else {
-            url = "%0A%0A" + BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
+        } else if (url.equals("")) {
+            url = BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
         }
 
         if (StringUtils.hasText(im.getTitle())) {
             title = im.getTitle();
         }
 
-        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  url + "%0A" + tags;
+        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  "%0A%0A" + url + "%0A" + tags;
     }
 
     /**
@@ -213,6 +222,7 @@ public class TwTextController {
         if (teamIdList.size() > 0) {
             // Mapのkeyを作り格納
             teamIdList.forEach(e -> resultMap.put(e, null));
+            // TODO:ここでnullになる
             for (Long teamId : teamIdList) {
                 List<String> tagList = new ArrayList<>();
                 String teamName = TeamEnum.get(teamId).getName();
@@ -251,8 +261,8 @@ public class TwTextController {
                     if (tagList.size() > 0) {
                         for (String tag : tagList) {
                             if (tag.contains(" ")) {
-                                String removedSpaceName = tag.replaceAll(" ", "");
                                 tagList.remove(tag);
+                                String removedSpaceName = tag.replaceAll(" ", "");
                                 tagList.add(removedSpaceName);
                             }
                         }
@@ -262,7 +272,7 @@ public class TwTextController {
                 result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
                         + (memberName.equals("") ? teamName : memberName) + "が出演します。"
                         + "\n\nチャンネル：" + stationService.findById(ver.getStation_id()).getStation_name()
-                        + "\nぜひご覧ください！\n#" + teamName + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
+                        + "\nぜひご覧ください！\n" + "%0A%0A" + tagList.stream().collect(Collectors.joining(" #","#",""));
                 resultMap.put(teamId, result);
             }
         }

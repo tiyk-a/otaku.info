@@ -8,9 +8,11 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.api.SystemParameter;
 import com.google.api.services.calendar.model.Event;
 import com.sun.istack.Nullable;
 import org.apache.log4j.Logger;
+import org.aspectj.apache.bcel.classfile.LocalVariable;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -129,7 +131,6 @@ public class SampleController {
      */
     @GetMapping("/test")
     public String sample1() {
-//        imageController.createImage("test1.png", "日本語のテスト", "楽しみだね！🐶");
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Font[] allFonts = ge.getAllFonts();
 
@@ -137,7 +138,6 @@ public class SampleController {
 
             System.out.println(font.getFontName(Locale.JAPAN));
         }
-//        youTubeApiController.main();
         return "ok";
     }
 
@@ -212,6 +212,7 @@ public class SampleController {
                 System.out.println(stringUtilsMine.alphabetTo2BytesAlphabet("関ジャニ∞ABC混ぜてabc"));
                 break;
             case 21:
+                callError("a", "b");
                 break;
             case 22:
                 break;
@@ -222,6 +223,14 @@ public class SampleController {
                 break;
         }
             return "Done";
+    }
+
+    private void callError(String arg1, String arg2) {
+        try {
+            throw new Exception();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

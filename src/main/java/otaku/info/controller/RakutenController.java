@@ -67,8 +67,6 @@ public class RakutenController {
 
     private final ItemService itemService;
 
-    private static org.springframework.util.StringUtils StringUtilsSpring;
-
     /**
      * 楽天APIにリクエストを投げる
      *
@@ -81,7 +79,7 @@ public class RakutenController {
         try {
             RestTemplate restTemplate = new RestTemplate();
             String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
-            logger.debug("RAKUTEN SEARCH URL: " + finalUrl);
+            logger.debug("RAKUTEN SEARCH URL1: " + finalUrl);
             String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtils.hasText(res)) {
@@ -100,11 +98,15 @@ public class RakutenController {
                 RestTemplate restTemplate = new RestTemplate();
                 String finalUrl = setting.getRakutenApiUrl() + setting.getRakutenApiDefParam() + param;
                 finalUrl = finalUrl.replaceAll("https", "http");
-                logger.debug("RAKUTEN SEARCH URL: " + finalUrl);
-                String res = restTemplate.getForObject(finalUrl, String.class);
+                logger.debug("RAKUTEN SEARCH URL2: " + finalUrl);
 
-                if (StringUtils.hasText(res)) {
-                    jsonObject = jsonUtils.createJsonObject(res, teamId);
+                try {
+                    String res = restTemplate.getForObject(finalUrl, String.class);
+                    if (StringUtils.hasText(res)) {
+                        jsonObject = jsonUtils.createJsonObject(res, teamId);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             } else {
                 logger.debug("想定外のエラーですね");

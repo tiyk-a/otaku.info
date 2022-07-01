@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Item</title>
+</head>
+<body>
+<div th:insert="components/header"></div>
+<div class="flex-profile">
+    <div class="box">
+        <p>koko</p>
+        <p th:text="${'あたなのGitHubのIDは ' + test}"></p>
+        <div th:if="${pAllDto != null}">
+            <p>koko</p>
+            <table class="log-flex">
+                <div th:if="${pAllDto.p != null}">
+                    <tr th:each="p:${pAllDto.p}" th:object="${pAllDto.p}">
+                        <td><b th:text="*{title}"></b></td>
+                    </tr>
+                    <p>kokodayo</p>
+                </div>
+                <div th:if="${pAllDto.pm != null}">
+                    <p>kokodayo</p>
+                </div>
+                <div th:if="${pAllDto.pNumberMap != null}">
+                    <p>kokodayo</p>
+                </div>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -36,15 +36,13 @@ public class FrontController {
 
     @GetMapping("/item/{id}")
     public String getItemTeam(@PathVariable("id") Long teamId, Model model) {
-        ResponseEntity<List<Item>> res = apiController.getItemTeam(teamId);
-        model.addAttribute("test", "testdayo");
-        model.addAttribute("itemList", res.getBody());
+        ResponseEntity<FAllDto> res = apiController.getTop(teamId);
+        model.addAttribute("fAllDto", res.getBody());
         return "item";
     }
 
     @GetMapping("/tv/{id}")
     public String tv(@PathVariable("id") Long teamId, Model model) {
-        model.addAttribute("test", "testdayo");
         ResponseEntity<PAllDto> res = apiController.tvAll(teamId);
         model.addAttribute("pAllDto", res.getBody());
         return "tv";

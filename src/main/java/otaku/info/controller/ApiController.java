@@ -541,19 +541,19 @@ public class ApiController {
         return ResponseEntity.ok(pAllDto);
     }
 
-    /**
-     * 指定Teamidの商品を未来発売日順に取得し返す、削除されていない商品のみ。
-     *
-     * @param id 取得するTeamId
-     * @return Item
-     */
-    @GetMapping("/item/team/{id}")
-    public ResponseEntity<List<Item>> getItemTeam(@PathVariable Long id) {
-        logger.debug("getItemTeam teamId=" + id);
-        List<Item> imList = itemService.findByTeamIdNotDeleted(id);
-        logger.debug("fin");
-        return ResponseEntity.ok(imList);
-    }
+//    /**
+//     * 指定Teamidの商品を未来発売日順に取得し返す、削除されていない商品のみ。
+//     *
+//     * @param id 取得するTeamId
+//     * @return Item
+//     */
+//    @GetMapping("/item/team/{id}")
+//    public ResponseEntity<List<Item>> getItemTeam(@PathVariable Long id) {
+//        logger.debug("getItemTeam teamId=" + id);
+//        List<Item> imList = itemService.findByTeamIdNotDeleted(id);
+//        logger.debug("fin");
+//        return ResponseEntity.ok(imList);
+//    }
 
     /**
      * 指定商品(Item)を新規登録します。

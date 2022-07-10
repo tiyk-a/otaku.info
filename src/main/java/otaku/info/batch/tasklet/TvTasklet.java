@@ -17,6 +17,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import otaku.info.controller.LoggerController;
 import otaku.info.controller.TvController;
+import otaku.info.enums.MemberElimEnum;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Setting;
@@ -134,6 +135,29 @@ public class TvTasklet implements Tasklet {
                             continue;
                         }
                     }
+
+                    // メンバー名が類似別人と一致してる場合、削除
+                    if (memberId != null) {
+                        if (MemberElimEnum.hasElimData(memberId)) {
+                            String detailPageUrl = e.getElementsByTag("a").first().attr("abs:href");
+                            List<String> keywordList = MemberElimEnum.getElimNameList(memberId);
+
+                            Boolean isValidFlg = true;
+                            for (String kw : keywordList) {
+                                Boolean res = isValidInfo(detailPageUrl, kw);
+
+                                // 取得すべきデータじゃなかったらリストに詰めず次に進む
+                                if (!res) {
+                                    isValidFlg = false;
+                                    break;
+                                }
+                            }
+
+                            if (!isValidFlg) {
+                                continue;
+                            }
+                        };
+                    }
                     String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
                     tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);
                 }
@@ -210,5 +234,36 @@ public class TvTasklet implements Tasklet {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * 正しい情報であることを確認する。
+     * 引数2のstringが文章に含まれている場合、false。
+     *
+     * @return
+     */
+    public Boolean isValidInfo(String detailUrl, String keyWord) {
+
+        try {
+            // URLにアクセスして要素を取ってくる
+            Document document = Jsoup.connect(detailUrl).get();
+
+            // 必要な要素を取り出す
+            Elements elements = document.select("p.basicTxt");
+
+            Boolean isValid = true;
+            for (Element e : elements) {
+                System.out.println(e.text());
+
+                if (e.text().contains(keyWord) || e.text().contains(keyWord.replace(" ", ""))) {
+                    isValid = false;
+                    break;
+                }
+            }
+            return isValid;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }

@@ -9,7 +9,6 @@ import otaku.info.repository.PMRepository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,6 +67,11 @@ public class PMService {
      */
     public List<PmFullDto> findPmFuByllDtoOnAirDateExStationId(LocalDateTime ldt, Long stationId) {
         List<Object[]> res = pmRepository.findPmFuByllDtoOnAirDateExStationId(ldt, stationId);
+        return res.stream().map(PmFullDto::new).collect(Collectors.toList());
+    }
+
+    public List<PmFullDto> findByOnAirDateNotDeleted(LocalDateTime ldt) {
+        List<Object[]> res = pmRepository.findByOnAirDateNotDeleted(ldt);
         return res.stream().map(PmFullDto::new).collect(Collectors.toList());
     }
 }

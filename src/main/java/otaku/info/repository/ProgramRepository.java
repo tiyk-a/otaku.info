@@ -41,7 +41,7 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
     @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= CURRENT_DATE order by a.on_air_date asc")
     List<Program> findbyTeamId(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= CURRENT_DATE and a.pm_id is null and a.del_flg = ?2 order by a.on_air_date asc limit ?3")
+    @Query(nativeQuery = true, value = "select a.* from program a inner join p_rel b on a.program_id = b.program_id where b.team_id = ?1 and a.del_flg = 0 and a.on_air_date >= CURRENT_DATE and a.pm_id is null and a.del_flg = ?2 order by a.on_air_date asc, a.title asc limit ?3")
     List<Program> findbyTeamIdPmIdNullDelFlg(Long teamId, Boolean delFlg, Integer limit);
 
     @Query("select t from program t where station_id = ?1")

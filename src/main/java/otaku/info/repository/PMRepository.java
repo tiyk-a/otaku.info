@@ -40,4 +40,7 @@ public interface PMRepository extends JpaRepository<PM, Long> {
 
     @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1 and b.station_id != ?2 order by b.on_air_date desc limit 3")
     List<Object[]> findPmFuByllDtoOnAirDateExStationId(LocalDateTime ldt, Long stationId);
+
+    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1")
+    List<Object[]> findByOnAirDateNotDeleted(LocalDateTime ldt);
 }

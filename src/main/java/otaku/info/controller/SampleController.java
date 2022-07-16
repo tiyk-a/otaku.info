@@ -199,12 +199,13 @@ public class SampleController {
                 orderM();
                 break;
             case 18:
-                tmpController.pmMasterMethod(from, to);
+//                tmpController.pmMasterMethod(from, to);
                 break;
             case 19:
-                System.out.println(stationService.getStationNameByEnumDB(7L));
-                imageController.createImage(System.currentTimeMillis() + ".png", "なにわ男子", "関ジャニ∞");
-                System.out.println(stationService.getStationNameByEnumDB(2944L));
+//                System.out.println(stationService.getStationNameByEnumDB(7L));
+//                imageController.createImage(System.currentTimeMillis() + ".png", "2022/01/12(水)", "King &amp; Prince / King  &amp;  Prince CONCERT TOUR 2021 〜Re: Sense〜 【初回限定盤】  〔DVD〕", "ジャニーズWEST, King & Prince, Kis-My-Ft2");
+                imageController.createImage(System.currentTimeMillis() + ".png", "2022/01/12(水)", "8BEAT", "関ジャニ∞");
+                System.out.println("end");
                 break;
             case 20:
                 System.out.println(stringUtilsMine.alphabetTo2BytesAlphabet("関ジャニ∞ABC混ぜてabc"));

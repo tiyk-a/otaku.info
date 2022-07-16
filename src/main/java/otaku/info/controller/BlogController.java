@@ -439,7 +439,7 @@ public class BlogController {
 
         // 画像生成して投稿して画像IDゲットして、で？
         // 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
-        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), String.join(",", teamNameMap.keySet()));
+        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), itemMaster.getTitle(), String.join(",", teamNameMap.keySet()));
 
         // ひとまずcontentを作る。後でSEO対策のinner_imageを詰める（サイトごと）
         String content = textController.blogReleaseItemsText(Collections.singletonMap(itemMaster, itemList), null);

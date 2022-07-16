@@ -1,5 +1,6 @@
 package otaku.info.form;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -24,6 +25,7 @@ public class IMVerForm {
 
     private Long wp_id;
 
+    @JsonFormat(pattern="yyyy/MM/dd")
     private Date publication_date;
 
     private String amazon_image;

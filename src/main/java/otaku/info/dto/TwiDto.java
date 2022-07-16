@@ -18,7 +18,11 @@ public class TwiDto {
 
     public String title;
 
-    public String url;
+    public String amazon_url;
+
+    public String rakuten_url;
+
+    public String blog_url;
 
     public Date publication_date;
 

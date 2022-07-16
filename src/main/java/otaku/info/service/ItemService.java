@@ -169,5 +169,20 @@ public class ItemService {
         }
         return mappedResult;
     }
+
+    public List<String> getRakutenUrl(Long imId) {
+        return itemRepository.getRakutenUrlByImId(imId);
+    }
+
+    /**
+     * IMIDとSiteIdで該当itemを取得する
+     *
+     * @param imId
+     * @param siteId
+     * @return
+     */
+    public List<Item> findByImIdSiteId(Long imId, Long siteId) {
+        return itemRepository.findByImIdSiteId(imId, siteId);
+    }
 }
 

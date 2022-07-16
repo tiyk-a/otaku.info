@@ -8,11 +8,9 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.api.SystemParameter;
 import com.google.api.services.calendar.model.Event;
 import com.sun.istack.Nullable;
 import org.apache.log4j.Logger;
-import org.aspectj.apache.bcel.classfile.LocalVariable;
 import org.codehaus.jettison.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -212,7 +210,8 @@ public class SampleController {
                 System.out.println(stringUtilsMine.alphabetTo2BytesAlphabet("関ジャニ∞ABC混ぜてabc"));
                 break;
             case 21:
-                callError("a", "b");
+                Boolean flg = rakutenController.isExpiredUrl("https://item.rakuten.co.jp/hmvjapan/12218786/?scid=af_pc_etc&sc2id=af_101_0_0");
+                System.out.println(flg);
                 break;
             case 22:
                 break;
@@ -226,11 +225,7 @@ public class SampleController {
     }
 
     private void callError(String arg1, String arg2) {
-        try {
-            throw new Exception();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        arg1.equals("test");
     }
 
     /**

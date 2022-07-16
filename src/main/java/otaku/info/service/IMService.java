@@ -9,6 +9,7 @@ import otaku.info.repository.IMRepository;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -20,6 +21,10 @@ public class IMService {
 
     public IM save(IM im) {
         return imRepository.save(im);
+    }
+
+    public List<IM> saveAll(List<IM> imList) {
+        return imRepository.saveAll(imList);
     }
 
     public List<IM> findByTeamIdFuture(Long teamId) {
@@ -83,5 +88,15 @@ public class IMService {
 
     public List<IM> findFuture() {
         return imRepository.findFuture();
+    }
+
+    /**
+     * 引数teamidの直近1件のレコードを取得する
+     * アフィリURLがあるもの優先
+     * @param teamId
+     * @return
+     */
+    public Optional<IM> findUpcomingImWithUrls(Long teamId) {
+        return imRepository.findUpcomingImWithUrls(teamId);
     }
 }

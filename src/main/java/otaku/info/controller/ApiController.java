@@ -42,6 +42,9 @@ public class ApiController {
     CalendarApiController calendarApiController;
 
     @Autowired
+    RakutenController rakutenController;
+
+    @Autowired
     ItemService itemService;
 
     @Autowired
@@ -808,6 +811,11 @@ public class ApiController {
                 if (im.getIm_id() != null && !im.getIm_id().equals(0L)) {
                     im.setBlogNotUpdated(true);
                     updFlg = true;
+                }
+
+                // rakuten urlを入れる(yahoo由来で楽天URLがわからない場合は入れない。バッチで夜に入れてもらう)
+                if (item.getSite_id().equals(1)) {
+                    im.setRakuten_url(item.getUrl());
                 }
 
                 // wordpressでエラーになる記号を処理し、設定し直す

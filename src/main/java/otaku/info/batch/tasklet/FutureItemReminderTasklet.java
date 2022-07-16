@@ -87,7 +87,7 @@ public class FutureItemReminderTasklet implements Tasklet {
                 List<Item> rakutenList = itemList.stream().filter(e -> e.getSite_id().equals(1)).collect(Collectors.toList());
                 findRakutenFlg = rakutenList.size() == 0;
                 if (!findRakutenFlg) {
-                    rakutenUrl = rakutenController.findAvailableRakutenUrl(rakutenList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamEnum.getId());
+                    rakutenUrl = rakutenController.getUrlByItemCodeList(rakutenList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamEnum.getId());
                 } else {
                     rakutenUrl = rakutenController.findRakutenUrl(im.getTitle(), teamEnum.getId());
                 }

@@ -97,4 +97,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      */
     @Query(nativeQuery = true, value = "select b.team_id, count(*) from item a inner join i_rel b on a.item_id = b.item_id where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null group by b.team_id")
     List<Object[]> getNumbersOfEachTeamIdFutureNotDeletedNoIM();
+
+    @Query(nativeQuery = true, value = "select url from item where im_id = ?1 and url like '%rakuten%' order by item_id asc limit 10")
+    List<String> getRakutenUrlByImId(Long imId);
+
+    @Query(nativeQuery = true, value = "select * from item where im_id = ?1 and site_id = ?2")
+    List<Item> findByImIdSiteId(Long imId, Long siteId);
 }

@@ -122,7 +122,7 @@ public class PublishAnnounceTasklet implements Tasklet {
      */
     private void post(IM im, Long teamId, List<Long> teamIdList) throws JSONException, InterruptedException {
         List<Item> itemList = itemService.findByMasterId(im.getIm_id());
-        String rakutenUrl = rakutenController.findAvailableRakutenUrl(itemList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamId);
+        String rakutenUrl = rakutenController.getUrlByItemCodeList(itemList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamId);
         // text作ってポストする
         String text = twTextController.releasedItemAnnounce(im, teamIdList, rakutenUrl);
         pythonController.post(teamId, text);

@@ -78,17 +78,6 @@ public class TextController {
     private final DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("MM/dd HH:mm");
     private final DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-   /**
-     * Twitterポスト用のメッセージを作成します。
-     *
-     * @param twiDto
-     * @return
-     */
-    public String twitter(TwiDto twiDto) {
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
-        return "【PR】新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + twiDto.getUrl() + "%0A" + tags;
-    }
-
     /**
      * TV出演情報があるグループのTwitter投稿文
      *

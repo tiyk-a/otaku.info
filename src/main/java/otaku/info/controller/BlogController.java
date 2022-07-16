@@ -591,11 +591,24 @@ public class BlogController {
                         if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
                             logger.debug(itemMaster.getTitle());
                             url = blogEnum.getSubDomain() + "blog/" + rel.getWp_id();
+
+                            // amazon url
+                            String a_url = "";
+                            if (!itemMaster.getAmazon_image().equals("")) {
+                                a_url = stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse("");
+                            }
+
+                            // rakuten url
+                            String r_url = rakutenController.getRakutenUrl(itemMaster.getIm_id());
+
                             List<String> memNameList = memList.stream().filter(g -> g.getIm_rel_id().equals(rel.getIm_rel_id())).map(f -> memberService.getMemberName(f.getMember_id())).collect(Collectors.toList());
-                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), url, itemMaster.getPublication_date(), null, teamId, memNameList);
-                            // TEST:temporaryアマゾンImageがあればそれを入れてあげるようにする
+                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), a_url, r_url, url, itemMaster.getPublication_date(), null, teamId, memNameList);
+
+                            twiDto.setRakuten_url(rakutenController.findRakutenUrl(itemMaster.getTitle(), teamId));
+                            twiDto.setBlog_url(url);
+
                             if (itemMaster.getAmazon_image() != null) {
-                                twiDto.setUrl(stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(url));
+                                twiDto.setAmazon_url(stringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(url));
                             }
 
                             String result;

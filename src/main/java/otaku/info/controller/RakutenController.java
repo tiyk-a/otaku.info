@@ -3,8 +3,8 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -14,9 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.entity.AffeliUrl;
 import otaku.info.entity.IM;
-import otaku.info.entity.IRel;
 import otaku.info.entity.Item;
 import otaku.info.service.AffeliUrlService;
 import otaku.info.service.IMService;
@@ -28,8 +26,6 @@ import otaku.info.utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 楽天アフェリエイトへ商品情報を取りに行くコントローラー
@@ -187,22 +183,21 @@ public class RakutenController {
         String availableUrl = "";
 
         for (String key : itemCodeList) {
-            String parameter = "&itemCode=" + key + "&elements=availability%2CaffiliateUrl" + setting.getRakutenAffiliId();
+            String parameter = "&itemCode=" + key + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter, teamId);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject != null && jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
                 logger.debug("詳細が取得できたのでデータを詰めます");
                 JSONArray jsonArray = jsonObject.getJSONArray("Items");
                 for (int i=0; i<jsonArray.length();i++) {
-                    if (Integer.parseInt(jsonArray.getJSONObject(i).getString("availability")) == 1) {
-                        availableUrl = jsonArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", "");
-                        break;
-                    }
+                    availableUrl = jsonArray.getJSONObject(i).getString("affiliateUrl").replaceAll("^\"|\"$", "");
+                    break;
                 }
             }
         }
         return availableUrl;
     }
+
     /**
      * 楽天アフィリンクの更新を行います
      *
@@ -210,92 +205,150 @@ public class RakutenController {
      */
     public boolean updateUrl() throws InterruptedException {
         // 更新チェックが必要な商品を集める(未来100日以内の商品)
-        List<IM> itemMasterList = imService.findBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(20), false);
-        Map<IM, List<Item>> itemMasterMap = itemMasterList.stream().collect(Collectors.toMap(e -> e, e -> itemService.findByMasterId(e.getIm_id()).stream().filter(f -> iRelService.findByItemId(f.getItem_id()) != null && !iRelService.findByItemId(f.getItem_id()).isEmpty() && !f.isDel_flg() && f.getSite_id().equals(1)).collect(Collectors.toList())));
+        List<IM> imList = imService.findBetweenDelFlg(dateUtils.getToday(), dateUtils.daysAfterToday(30), false);
+        List<IM> updateImList = new ArrayList<>();
 
-        // 更新チェックを行う
-        List<Item> targetList = new ArrayList<>();
-        for (List<Item> itemList : itemMasterMap.values()) {
-            List<Item> tmpList = itemList.stream().filter(e -> updateTarget(e.getUrl())).collect(Collectors.toList());
-            if (tmpList.size() > 0) {
-                targetList.addAll(tmpList);
-            }
-        }
+        for (IM im : imList) {
+            Boolean isExpiredUrl = false;
+            if (im.getRakuten_url() != null) {
+                // IMに楽天URLが設定あるなら、それがリンク切れかチェックする
+                isExpiredUrl = isExpiredUrl(im.getRakuten_url());
+            } else {
+                // IMに楽天URLが設定ないなら、ひもづくItemに有効な楽天URLがあるかチェックする
+                List<Item> itemList = itemService.findByImIdSiteId(im.getIm_id(), 1L);
 
-        List<Item> updateList = new ArrayList<>();
-        List<Item> delItemList = new ArrayList<>();
-        List<AffeliUrl> affeliUrlList = new ArrayList<>();
+                // itemからimが更新できたか確認するフラグ
+                Boolean imUpdated = false;
+                for (Item item : itemList) {
+                    isExpiredUrl = isExpiredUrl(item.getUrl());
 
-        // ターゲットがあれば更新
-        for (Item item : targetList) {
-            String parameter = "&itemCode=" + item.getItem_code() + "&elements=affiliateUrl&" + setting.getRakutenAffiliId();
-            List<IRel> rel = iRelService.findByItemId(item.getItem_id());
-            JSONObject jsonObject = request(parameter, rel.get(0).getTeam_id());
-            try {
-                if (jsonObject.has("Items") && JsonUtils.isJsonArray(jsonObject.get("Items"))) {
-                    String affiliateUrl = jsonObject.getJSONArray("Items").getJSONObject(0).getJSONObject("Item").getString("affiliateUrl").replaceAll("^\"|\"$", "");
-
-                    // 新しいアフィリURLを見つけられた場合はアフィリURLテーブルに古いURLを登録したいのでリストに追加しておく
-                    affeliUrlList.add(new AffeliUrl(null, item.getIm_id(), item.getUrl(), null, null));
-
-                    item.setUrl(affiliateUrl);
-                    updateList.add(item);
-                } else if (!jsonObject.has("Items")) {
-                    item.setDel_flg(true);
-                    delItemList.add(item);
+                    if (!isExpiredUrl) {
+                        // リンク切れしてないURLが見つかったらそれをIMにセットしてあげる
+                        im.setRakuten_url(item.getUrl());
+                        updateImList.add(im);
+                        imUpdated = true;
+                        break;
+                    }
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
+
+                // itemからIMが更新されてない場合、IMで楽天URL検索が必要なのでフラグをセット
+                if (!imUpdated) {
+                    isExpiredUrl = true;
+                }
+            }
+
+            // 楽天URLの更新が必要ならばIMの楽天URLを更新する。itemの方は更新しない
+            if (isExpiredUrl) {
+                String url = getRakutenUrl(im.getTitle());
+                if (!url.equals("")) {
+                    im.setRakuten_url(url);
+                    updateImList.add(im);
+                }
             }
         }
 
-        if (updateList.size() > 0) {
-            // 更新リストが0以上の長さの場合、アフィリURLリストも0以上のはずなため、ここで上書かれる古いアフィリURLを登録する
-            affeliUrlService.saveAll(affeliUrlList);
-
-            // 完了したら更新した商品を更新する
-            itemService.saveAll(updateList);
+        if (updateImList.size() > 0) {
+            imService.saveAll(updateImList);
         }
 
-        // 更新楽天商品アフィリエイトURLが見つからなかった場合、商品のdel_flgをtrueにしたものを更新する
-        if (delItemList.size() > 0) {
-            itemService.saveAll(delItemList);
-        }
         return true;
     }
 
     /**
-     * 楽天アフィ更新のチェックメソッド
+     * 引数URLの楽天アフィリリンクが陸切れではないかチェックする。
+     * リンク更新が必要な場合、trueを返却
      *
      * @param url
      * @return
      */
-    public boolean updateTarget(String url) {
+    public boolean isExpiredUrl(String url) {
         try {
             // URLにアクセスして要素を取ってくる
             Document d = Jsoup.connect(url).get();
             Elements e = d.getElementsByTag("title");
             return e.text().contains("エラー") || d.text().contains("現在ご購入いただけません") || d.text().contains("ページが表示できません");
+        } catch (HttpStatusException e) {
+            return true;
         } catch (Exception e) {
             logger.debug("*** updateTarget() エラーです " + url + "***");
             logger.debug(e);
             e.printStackTrace();
+            return true;
         }
-        return false;
     }
 
     /**
-     * 引数のItemリストから今もavailableな楽天URLを1つ返します
+     * 引数imidのimに
      *
-     * @param itemCodeList
+     * @param imId
      * @return
+     * @throws InterruptedException
      */
-    public String findAvailableRakutenUrl(List<String> itemCodeList, Long teamId) throws InterruptedException {
+    public String getRakutenUrl(Long imId) throws InterruptedException {
 
-        String url = getUrlByItemCodeList(itemCodeList, teamId);
-        if (url.equals("")) {
-
+        if (imId == null) {
+            return "";
         }
+
+        IM im = imService.findById(imId);
+        if (im.getRakuten_url() != null && !im.getRakuten_url().equals("")) {
+            // imの楽天URL
+            Boolean updateTarget = isExpiredUrl(im.getRakuten_url());
+            if (!updateTarget) {
+                return im.getRakuten_url();
+            }
+        }
+
+        List<String> urlList = itemService.getRakutenUrl(imId);
+        for (String url : urlList) {
+            Boolean updateTarget = isExpiredUrl(url);
+            if (!updateTarget) {
+                im.setRakuten_url(url);
+                imService.save(im);
+                return url;
+            }
+        }
+
+        // どのアイテムもinvalidだったら、最新のURLを取得しないといけない
+//        String itemCode = urlList.get(0).replaceAll("https://hb.afl.rakuten.co.jp/hgc/g00qtaz9.1sojv97f.g00qtaz9.1sojw7e3/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2F", "");
+//        itemCode = itemCode.replaceAll("%2F&m=http.*$", "");
+//        List<String> codeList = new ArrayList<>();
+//        codeList.add(itemCode);
+//        String url = getUrlByItemCodeList(codeList, 0L);
+//        im.setRakuten_url(url);
+
+        List<String> kwList = new ArrayList<>();
+        kwList.add(im.getTitle());
+        String tmp = im.getTitle().replaceAll("\\(.*?\\)", "");
+        kwList.add(tmp);
+
+        List<String> codeList = search(kwList, 0L);
+        String url = getUrlByItemCodeList(codeList, 0L);
+
+        if (!url.equals("")) {
+            im.setRakuten_url(url);
+            imService.save(im);
+        }
+        return url;
+    }
+
+    /**
+     * 引数textで楽天検索→商品のアフィリURLを返します
+     *
+     * @param text
+     * @return
+     * @throws InterruptedException
+     */
+    public String getRakutenUrl(String text) throws InterruptedException {
+
+        List<String> kwList = new ArrayList<>();
+        kwList.add(text);
+        String tmp = text.replaceAll("\\(.*?\\)", "");
+        kwList.add(tmp);
+
+        List<String> codeList = search(kwList, 0L);
+        String url = getUrlByItemCodeList(codeList, 0L);
+
         return url;
     }
 
@@ -314,7 +367,7 @@ public class RakutenController {
         String url = "";
 
         if (itemCodeList.size() > 0) {
-            url = findAvailableRakutenUrl(itemCodeList, teamId);
+            url = getUrlByItemCodeList(itemCodeList, teamId);
         }
         return url;
     }

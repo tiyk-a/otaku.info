@@ -6,6 +6,7 @@ import otaku.info.entity.IM;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface IMRepository extends JpaRepository<IM, Long> {
 
@@ -45,4 +46,7 @@ public interface IMRepository extends JpaRepository<IM, Long> {
 
     @Query("select t from im t where publication_date >= CURRENT_DATE and del_flg = 0")
     List<IM> findFuture();
+
+    @Query(nativeQuery = true, value = "select * from im a inner join im_rel b on a.im_id = b.im_id where a.del_flg = 0 and a.publication_date => CURRENT_DATE and a.amazon_image is not null order by a.publication_date asc limit 1")
+    Optional<IM> findUpcomingImWithUrls(Long teamId);
 }

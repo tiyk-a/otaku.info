@@ -6,7 +6,6 @@ import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import otaku.info.dto.TwiDto;
 import otaku.info.entity.*;
 import otaku.info.enums.*;
 import otaku.info.service.*;
@@ -71,7 +70,7 @@ public class TextController {
     @Autowired
     private Setting setting;
 
-    private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
+    private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日(E)");
     private final SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
     private final SimpleDateFormat sdf3 = new SimpleDateFormat("yyyy/MM/dd");
     private final DateTimeFormatter dtf1 = DateTimeFormatter.ofPattern("hh:mm");
@@ -154,7 +153,6 @@ public class TextController {
     public String blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap, String imagePath) {
         String result = "";
 
-        logger.debug("blogReleaseItemsTextの中です");
         logger.debug("itemMasterListMap.size=" + itemMasterListMap.size());
         // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
         for (Map.Entry<IM, List<Item>> entry : itemMasterListMap.entrySet()) {
@@ -195,66 +193,61 @@ public class TextController {
             if (imagePath == null) {
                 seoImage = "<figure class='wp-block-image size-large'><img src='***INNER_IMAGE***' alt='' class='wp-image-6736'/></figure>";
             } else {
-                seoImage = "PARAM_IMAGE";
+//                seoImage = "PARAM_IMAGE";
+                seoImage = imagePath;
             }
 
             List<String> verTxtList = new ArrayList<>();
             String txt = "";
             if (verList.size() > 0) {
                 for (ImVer ver : verList) {
-                    txt = ver.getVer_name() + "\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
+                    txt = "<h3>" + ver.getVer_name() + "</h3>\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
                     verTxtList.add(txt);
                 }
             } else {
-                txt = itemMaster.getTitle() + "\n" + "[rakuten search='" + itemMaster.getTitle() + "' kw='" + itemMaster.getTitle() + "' amazon=1 rakuten=1 yahoo=1]";
+                txt = "<h3>" + itemMaster.getTitle() + "</h3>\n" + "[rakuten search='" + itemMaster.getTitle() + "' kw='" + itemMaster.getTitle() + "' amazon=1 rakuten=1 yahoo=1]";
+                verTxtList.add(txt);
             }
 
             String pubDate = sdf1.format(itemMaster.getPublication_date());
-            String publicationDateStr = "<h6>発売日</h6>" + "<p>" + pubDate + "</p>";
+            String publicationDateStr = "<h3>発売日は" + pubDate + "</h3>";
 
             // SEO対策：external linkとしてグループの公式サイトのリンク
-            String externalLink = "";
+            String seoLink = "";
             for (String teamName : teamNameList) {
-                String tmpLink = TeamEnum.get(teamName).getOfficialSite();
-                tmpLink = "<a href='" + tmpLink + "'><p>" + teamName + "公式サイト</p></a>";
-                if (externalLink.isBlank()) {
-                    externalLink = tmpLink;
-                } else {
-                    String tmp = externalLink;
-                    externalLink = tmp + "<br />" + tmpLink;
-                }
-            }
 
-            // SEO対策：internal linkとしてグループの公式サイトのリンク
-            String internalLink = "";
-            for (String teamName : teamNameList) {
+                // internalリンクを作る
                 TeamEnum teamEnum = TeamEnum.get(teamName);
-                String tmpLink = teamEnum.getInternalTop();
-
-                if (tmpLink == null) {
-                    tmpLink = "<a href='" + BlogEnum.get(teamEnum.getBlogEnumId()).getSubDomain() + "'><p>" + teamName + "トップ</p></a>";
+                String internalTop = teamEnum.getInternalTop();
+                if (internalTop == null || internalTop.equals("")) {
+                    internalTop = "<p>" + teamName + "の情報まとめは<a href='" + BlogEnum.get(teamEnum.getBlogEnumId()).getSubDomain() + "'>こちら</a></p>";
                 } else {
-                    tmpLink = "<a href='" + tmpLink + "'><p>" + teamName + "トップ</p></a>";
+                    internalTop = "<p>" + teamName + "の情報まとめは<a href='" + internalTop + "'>こちら</a></p>";
                 }
 
-                if (internalLink.isBlank()) {
-                    internalLink = tmpLink;
+                // externalリンクを作る。末尾にinternalリンクをつけてあげる
+                String tmpLink = TeamEnum.get(teamName).getOfficialSite();
+                tmpLink = "<h2>" + teamName + "公式サイト</h2><p>" + teamName + "の公式サイトは<a href='" + tmpLink + "'>こちら</a></p>" + internalTop;
+                if (seoLink.isBlank()) {
+                    seoLink = tmpLink;
                 } else {
-                    String tmp = internalLink;
-                    internalLink = tmp + "<br />" + tmpLink;
+                    String tmp = seoLink;
+                    seoLink = tmp + tmpLink;
                 }
             }
 
-            String text = String.join("\n", h2, publicationDateStr, seoImage, itemMaster.getAmazon_image(), String.join("\n", verTxtList), externalLink, internalLink);
+            String text = String.join("\n", h2, publicationDateStr, seoImage, itemMaster.getAmazon_image(), String.join("\n", verTxtList), seoLink);
             // 返却に追加
             result = result + "\n" + text;
         }
 
         // SEO対策のため画像を入れる(第二引数がある場合)
-        String seoImage = "";
-        if (imagePath != null) {
-            result.replaceAll("PARAM_IMAGE", imagePath);
-        }
+//        if (imagePath != null) {
+//            result.replaceAll("PARAM_IMAGE", imagePath);
+//        } else {
+//            // 引数に画像ない時も仕方ないからパラメータをから文字で置き換えてあげる
+//            result.replaceAll("PARAM_IMAGE", "");
+//        }
 
         return result;
     }

@@ -7,7 +7,7 @@ $ mvn package -Drun.jvmArguments="-Dfile.encoding=UTF-8"
 
 ### Java Run
 ```
-$
+$ nohup java -jar -Duser.language=ja -Duser.country=JP -Dfile.encoding=UTF-8 -Dspring.profiles.active=pro info-0.0.1-SNAPSHOT.jar & >> app.log
 ```
 
 ### 機能

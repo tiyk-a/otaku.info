@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import otaku.info.dto.*;
 import otaku.info.entity.*;
+import otaku.info.enums.BlogEnum;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
@@ -857,7 +858,7 @@ public class ApiController {
                             }
 
                             // imrelの登録
-                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false));
+                            IMRel imRel = imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false, null));
                         }
                     } else {
                         // IM更新の場合
@@ -912,7 +913,7 @@ public class ApiController {
                                     }
 
                                     // imrelの登録
-                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false));
+                                    imRelService.save(new IMRel(null, im.getIm_id(), Long.valueOf(rel.get(2)), null, null, eventId, null, null, false, null));
                                 }
                             }
                         }
@@ -950,7 +951,7 @@ public class ApiController {
                                 }
 
                                 // imrelの登録
-                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false));
+                                targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false, null));
                             }
 
                             imRelMemService.save(new IMRelMem(null, targetImRel.getIm_rel_id(), Long.valueOf(imrelm.get(2)), null, null, false));
@@ -995,7 +996,7 @@ public class ApiController {
                                     }
 
                                     // imrelの登録
-                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false));
+                                    targetImRel = imRelService.save(new IMRel(null, im.getIm_id(), tmpTeamId, null, null, eventId, null, null, false, null));
                                 }
 
                                 // 既存でimrelmemの登録がないか確認
@@ -1511,7 +1512,7 @@ public class ApiController {
                 }
 
                 if (newRelFlg) {
-                    IMRel newRel = new IMRel(null, imrel.get(1).longValue(), imrel.get(2).longValue(), null, null, TeamEnum.get(imrel.get(2).longValue()).getCalendarId(), null, null, false);
+                    IMRel newRel = new IMRel(null, imrel.get(1).longValue(), imrel.get(2).longValue(), null, null, TeamEnum.get(imrel.get(2).longValue()).getCalendarId(), null, null, false, null);
                     imRelService.save(newRel);
                 }
             }
@@ -1729,4 +1730,47 @@ public class ApiController {
 
         return ResponseEntity.ok(pmService.findByKeyLimit(key, 5));
     }
+
+    /**
+     * IMのWPアイキャッチをAmazon画像で更新する
+     * パラメタで更新したいIMを選択して。すでにAmazonImageがある場合に使える
+     *
+     * @param imId
+     * @return
+     */
+    @GetMapping("/im/eye")
+    public ResponseEntity<Boolean> setEyeCatch(@RequestParam("id") Long imId) {
+        if (imId.equals("") ) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            IM im = imService.findById(imId);
+            List<IMRel> relList = imRelService.findByItemMId(imId);
+            for (IMRel rel : relList) {
+                blogController.tmpEyeCatchAmazonSet(im, rel);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+
+        return ResponseEntity.ok(true);
+    }
+
+    /**
+     * IMのWPアイキャッチをまとめてAmazon画像で更新する
+     * パラメタで更新したいIMを選択して。すでにAmazonImageがある場合に使える
+     *
+     * @param imIdArr
+     * @return
+     */
+//    @PostMapping("/im/eyeBundle")
+//    public ResponseEntity<Boolean> setEyeCatchBundle(@Valid @RequestBody Long[] imIdArr) {
+//
+//        for (Long imId : imIdArr) {
+//            setEyeCatch(imId);
+//        }
+//
+//        return ResponseEntity.ok(true);
+//    }
 }

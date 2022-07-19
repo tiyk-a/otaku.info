@@ -28,6 +28,10 @@ import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -585,6 +589,33 @@ public class BlogController {
                         resMap.put(itemMaster.getIm_id(), blogId);
                     }
 
+                    // アイキャッチ
+                    String eyeCatchImage = "";
+                    String amazonImagePath = "";
+                    if (itemMaster.getAmazon_image() != null) {
+                        eyeCatchImage = textController.shapeEyeCatchAmazonImage(itemMaster.getAmazon_image());
+                        if (!eyeCatchImage.equals("")) {
+                            amazonImagePath = serverUtils.availablePath("amazon_" + itemMaster.getIm_id());
+
+                            // アマゾン画像を取得しにローカル保存
+                            try (InputStream in = new URL(eyeCatchImage).openStream()) {
+                                Files.copy(in, Paths.get(amazonImagePath));
+                            } catch (Exception ex) {
+                                System.out.println("Amazon画像取得失敗のためアイキャッチ画像の設定ができません");
+                                ex.printStackTrace();
+                                break;
+                            }
+                        } else {
+                            System.out.println("Amazon_imageがないのでamazon_image取得ができません");
+                            System.out.println(itemMaster.getAmazon_image());
+                        }
+                    }
+
+                    if (amazonImagePath.equals("")) {
+                        amazonImagePath = imageUrl;
+                    }
+                    loadMedia(amazonImagePath, blogEnum, wpId, rel);
+
                     // 新規ブログ投稿で未来商品の場合はTwitterポストします
                     if (newPostFlg) {
                         logger.debug("🕊ブログ投稿のお知らせ");
@@ -802,6 +833,7 @@ public class BlogController {
             Map<String, Map<String, PMVer>> domainMap = new TreeMap<>();
             for (Map.Entry<String, PMVer> e : confirmedMap.entrySet()) {
                 Long teamId = Long.valueOf(e.getKey().replaceAll("^\\d*_", ""));
+                // TODO: nullになる
                 String subDomain = BlogEnum.get(TeamEnum.get(teamId).getBlogEnumId()).getSubDomain();
 
                 Map<String, PMVer> tmpMap;
@@ -1136,5 +1168,106 @@ public class BlogController {
             }
         }
         return tagIdList;
+    }
+
+    /**
+     * wordpressに画像をポストし、投稿アイキャッチにも設定します
+     *
+     * @param imageUrl　postする画像パス
+     * @param blogEnum
+     * @param wpId
+     */
+    public void loadMedia(String imageUrl, BlogEnum blogEnum, Long wpId, IMRel rel) {
+
+        if (StringUtils.hasText(imageUrl)) {
+            System.out.println("メディアポスト:" + imageUrl);
+            Map<Integer, String> map = requestMedia(response, rel.getTeam_id(), imageUrl);
+            System.out.println("ポスト完了");
+
+            // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
+            Integer imageId = null;
+            for (Map.Entry<Integer, String> elem : map.entrySet()) {
+                imageId = elem.getKey();
+            }
+            String res = setMedia(wpId, imageId, blogEnum);
+            Integer featuredMedia = extractMedia(res);
+            if (featuredMedia != 0) {
+                rel.setWp_eye_catch_id(featuredMedia);
+                iMRelService.save(rel);
+            }
+        }
+    }
+
+    /**
+     * 投稿にアイキャッチメディアを設定し、更新します。
+     *
+     * @param wpId
+     * @param imageId
+     */
+    private String setMedia(Long wpId, Integer imageId, BlogEnum blogEnum) {
+        String url = blogEnum.getSubDomain() + setting.getBlogApiPath() + "posts/" + wpId;
+
+        HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("featured_media", imageId);
+
+        HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
+        return request(url, request, HttpMethod.POST, "setMedia()");
+    }
+
+    /**
+     * アイキャッチメディアがある場合、画像IDを返却します。
+     * ない場合、0
+     *
+     * @param text
+     * @return
+     */
+    private Integer extractMedia(String text) {
+        JSONObject jsonObject = new JSONObject(text);
+        if (jsonObject.get("featured_media") != null) {
+            return Integer.parseInt(jsonObject.get("featured_media").toString().replaceAll("^\"|\"$", ""));
+        }
+        return 0;
+    }
+
+    /**
+     * 既存IMでまだアマゾンアイキャッチない商品について、アイキャッチをセットするtmp method
+     * 成功か失敗かを返す
+     *
+     * @param itemMaster
+     * @return
+     */
+    public boolean tmpEyeCatchAmazonSet (IM itemMaster, IMRel rel) {
+        // アイキャッチ
+        String eyeCatchImage = "";
+        String amazonImagePath = "";
+        if (itemMaster.getAmazon_image() != null) {
+            eyeCatchImage = textController.shapeEyeCatchAmazonImage(itemMaster.getAmazon_image());
+            if (!eyeCatchImage.equals("")) {
+                amazonImagePath = serverUtils.availablePath("amazon_" + itemMaster.getIm_id());
+
+                // アマゾン画像を取得しにローカル保存
+                try (InputStream in = new URL(eyeCatchImage).openStream()) {
+                    Files.copy(in, Paths.get(amazonImagePath));
+                } catch (Exception ex) {
+                    System.out.println("Amazon画像取得失敗のためアイキャッチ画像の設定ができません");
+                    ex.printStackTrace();
+                    return false;
+                }
+            } else {
+                System.out.println("Amazon_imageがないのでamazon_image取得ができません");
+                System.out.println(itemMaster.getAmazon_image());
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        if (!amazonImagePath.equals("")) {
+            loadMedia(amazonImagePath, BlogEnum.get(rel.getTeam_id()), rel.getWp_id(), rel);
+        } else {
+            return false;
+        }
+        return  true;
     }
 }

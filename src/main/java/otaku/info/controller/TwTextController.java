@@ -118,7 +118,8 @@ public class TwTextController {
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 
         if (memIdList != null && memIdList.size() > 0) {
-            tags = tags + String.join(" #" + memIdList);
+            List<String> menNameList = memIdList.stream().map(e -> MemberEnum.get(e).getMnemonic().replaceAll(" ", "")).collect(Collectors.toList());
+            tags = tags + String.join(" #" + menNameList);
         }
 
         String title = "";
@@ -145,7 +146,7 @@ public class TwTextController {
             title = im.getTitle();
         }
 
-        return "【発売まで" + diff + "日】%0A%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) +  "%0A%0A" + url + "%0A" + tags;
+        return "【発売まで" + diff + "日】%0A" + title + "%0A発売日：" + sdf1.format(im.getPublication_date()) + "%0A" + tags + "%0A%0A" + url;
     }
 
     /**

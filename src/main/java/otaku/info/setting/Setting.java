@@ -37,4 +37,5 @@ public class Setting {
     private String calendarCredential;
     private String generatedImage;
     private String youtuberedential;
+    private String imageItem;
 }

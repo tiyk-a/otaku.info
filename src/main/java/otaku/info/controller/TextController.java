@@ -17,6 +17,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -541,5 +543,28 @@ public class TextController {
         // 記号は切り取る
         result = result.replaceAll("!", "");
         return result;
+    }
+
+    /**
+     * amazon_imageから画像パスを引き抜き、"https:"をつけて返します
+     *
+     * @param amazonUrl
+     * @return
+     */
+    public String shapeEyeCatchAmazonImage(String amazonUrl) {
+
+        // 正規表現パターンを作成
+        Pattern p = Pattern.compile("\\/\\/ws-fe.+?(?=\")");
+
+        // マッチング
+        Matcher m = p.matcher(amazonUrl);
+
+        // 先頭からマッチングを繰り返す（ここでは一回しかマッチしない）
+        if (m.find()) {
+            String tmp = m.group(0);
+            String finalPath = tmp.replace("_SL160", "_SL230");
+            return "https:" + finalPath;
+        }
+        return "";
     }
 }

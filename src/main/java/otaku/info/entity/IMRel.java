@@ -51,4 +51,8 @@ public class IMRel implements Serializable {
 
     @Column(columnDefinition = "Boolean default false")
     private Boolean del_flg;
+
+    /** アイキャッチ画像のID */
+    @Column(nullable = true)
+    private Integer wp_eye_catch_id;
 }

@@ -16,6 +16,8 @@ public class PDto {
 
     private Program program;
 
+    private String station_name;
+
     private List<PRel> pRelList;
 
     private List<PRelMem> pRelMList;

@@ -201,4 +201,25 @@ public class DateUtils {
         String strDate = dateFormat.format(date);
         return strDate;
     }
+
+    /**
+     * StringからDateに変換して返す
+     *
+     * @param strDate
+     * @param format
+     * @return
+     * @throws ParseException
+     */
+    public Date stringToDate(String strDate, String format) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.parse(strDate);
+    }
+
+    public LocalDateTime stringToLocalDateTime(String strDate, String format) {
+        //DateTimeFormatterクラスのオブジェクトを生成
+        DateTimeFormatter dtFt = DateTimeFormatter.ofPattern(format);
+        //String型の日付からLocalDateTimeクラスのオブジェクトを生成
+        LocalDateTime datePar = LocalDateTime.parse(strDate, dtFt);
+        return datePar;
+    }
 }

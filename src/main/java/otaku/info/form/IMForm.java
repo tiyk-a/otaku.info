@@ -21,7 +21,7 @@ public class IMForm {
 
     private String item_caption;
 
-    private Date publication_date;
+    private String publication_date;
 
     private Integer price;
 

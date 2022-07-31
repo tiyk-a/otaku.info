@@ -138,4 +138,8 @@ public enum MemberEnum {
     public static List<String> findMNameListByIdList(List<Long> mIdList) {
         return Arrays.stream(MemberEnum.values()).filter(e -> mIdList.stream().anyMatch(f ->(e.id.equals(f)))).map(MemberEnum::getName).collect(Collectors.toList());
     }
+
+    public static  List<Long> findMemIdListByTeamId(Long teamId) {
+        return Arrays.stream(MemberEnum.values()).filter(e -> e.getTeamId().equals(teamId)).map(e -> e.getId()).collect(Collectors.toList());
+    }
 }

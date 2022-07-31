@@ -7,9 +7,11 @@ import otaku.info.enums.StationEnum;
 import otaku.info.repository.StationRepository;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -60,11 +62,48 @@ public class StationService {
         return stationRepository.findAll();
     }
 
+    /**
+     * 引数stringからstationを検索します
+     *
+     * @param name
+     * @return
+     */
     public List<Station> findByName(String name) {
-        return stationRepository.findByName(name);
+        List<Station> stationList = new ArrayList<>();
+
+        // Enumから検索
+        List<StationEnum> stationEnumList = Arrays.stream(StationEnum.values()).filter(e -> e.getName().contains(name) && e.getId() != null).collect(Collectors.toList());
+
+        if (stationEnumList.size() > 0) {
+            stationList.addAll(convertByEnum(stationEnumList));
+            List<Long> idList = stationEnumList.stream().map(e -> e.getId()).collect(Collectors.toList());
+            stationList.addAll(stationRepository.findByNameExceptIdList(name, idList));
+        } else {
+            stationList.addAll(stationRepository.findByName(name));
+        }
+
+        // 10件のみ返す
+        return stationList.stream().filter(e -> e.getStation_id() != null).limit(10).collect(Collectors.toList());
     }
 
     public Station findById(Long stationId) {
         return stationRepository.findById(stationId).orElse(null);
+    }
+
+    private Station convertByEnum(StationEnum se) {
+        Station s = new Station();
+        s.setStation_name(se.getName());
+        s.setStation_id(s.getStation_id());
+        return s;
+    }
+
+    /**
+     * リストで渡されてきたEnumをStationエンティティに変換します
+     *
+     * @param stationEnumList
+     * @return
+     */
+    private List<Station> convertByEnum(List<StationEnum> stationEnumList) {
+        return stationEnumList.stream().map(e -> convertByEnum(e)).collect(Collectors.toList());
     }
 }

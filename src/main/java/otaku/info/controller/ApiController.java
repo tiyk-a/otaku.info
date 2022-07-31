@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import java.math.BigInteger;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import lombok.AllArgsConstructor;
 import otaku.info.dto.*;
 import otaku.info.entity.*;
-import otaku.info.enums.BlogEnum;
 import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.error.MyMessageException;
@@ -27,6 +27,7 @@ import otaku.info.form.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
 @RestController
@@ -106,7 +107,19 @@ public class ApiController {
     DelCalService delCalService;
 
     @Autowired
+    RegularPmService regularPmService;
+
+    @Autowired
+    RegPmStationService regPmStationService;
+
+    @Autowired
+    CastService castService;
+
+    @Autowired
     DateUtils dateUtils;
+
+    @Autowired
+    ServerUtils serverUtils;
 
     @Autowired
     TextController textController;
@@ -117,20 +130,27 @@ public class ApiController {
     /**
      * 各グループ画面用のデータ取得メソッド
      *
-     * @param id
+     * @param teamIdStr
      * @return
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<FAllDto> getTop(@PathVariable Long id) {
+    @GetMapping("/{teamIdStr}")
+    public ResponseEntity<FAllDto> getTop(@PathVariable String teamIdStr) {
         logger.debug("accepted");
 
+        Long teamId = 0L;
+        if (teamIdStr == null || stringUtilsMine.isNumeric(teamIdStr)) {
+            teamId = Long.parseLong(teamIdStr);
+        } else {
+            teamId = 17L;
+        }
+
         // IMがない未来のItemを取得する（他チームで登録されてれば取得しない）
-        List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(id);
+        List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(teamId);
 
         // 未来/WPIDがnullのIMを取得する
-        List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(id);
-        List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(id);
-        List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(id);
+        List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(teamId);
+        List<Item> itemList1 = itemService.findByTeamIdFutureNotDeletedWIM(teamId);
+        List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(teamId);
 
         logger.debug("accepted");
         FAllDto dto = new FAllDto();
@@ -344,10 +364,18 @@ public class ApiController {
      * @return Item
      */
     @PostMapping("/im/{teamId}/{id}")
-    public ResponseEntity<FIMDto> upIm(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody IMForm imForm) {
+    public ResponseEntity<FIMDto> upIm(@PathVariable Long teamId, @PathVariable Long id, @Valid @RequestBody IMForm imForm) throws ParseException {
         logger.debug("accepted");
         IM im = imService.findById(id);
-        im.absorb(imForm);
+
+        if (imForm.getTitle() != null && !imForm.getTitle().isEmpty()) {
+            im.setTitle(imForm.getTitle());
+        }
+
+        if (imForm.getPublication_date() != null) {
+            im.setPublication_date(dateUtils.stringToDate(imForm.getPublication_date(), "yyyy/MM/dd"));
+        }
+
         im.setBlogNotUpdated(true);
         IM imUpdated = imService.save(im);
 
@@ -436,9 +464,17 @@ public class ApiController {
      *
      * @return リスト
      */
-    @GetMapping("/tv/{id}")
-    public ResponseEntity<PAllDto> tvAll(@PathVariable("id") Long teamId) {
+    @GetMapping("/tv/{teamIdStr}")
+    public ResponseEntity<PAllDto> tvAll(@PathVariable String teamIdStr) {
         logger.debug("accepted");
+
+        Long teamId = null;
+        if (teamIdStr == null || stringUtilsMine.isNumeric(teamIdStr)) {
+            teamId = Long.parseLong(teamIdStr);
+        } else {
+            teamId = 17L;
+        }
+
         PAllDto pAllDto = new PAllDto();
 
         // PMのないprogramだけを集める
@@ -483,6 +519,7 @@ public class ApiController {
             pDto.setProgram(p);
             pDto.setPRelList(pRelList);
             pDto.setPRelMList(pRelMemList);
+            pDto.setStation_name(stationService.findById(p.getStation_id()).getStation_name());
             pDtoList.add(pDto);
             pDto.setRelPmList(relPmList);
         }
@@ -544,12 +581,99 @@ public class ApiController {
         // 返却リストに入れる
         pAllDto.setPm(pmDtoList);
 
+        // regular_pmを入れる
+        List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
+        pAllDto.setRegPmList(regPmList);
+
         // 各チームごとに未確認のprogram数を取得しセット
         Map<BigInteger, BigInteger> numberMap = programService.getNumbersOfEachTeamIdFutureNotDeletedNoPM();
         pAllDto.setPNumberMap(numberMap);
 
         logger.debug("fin");
         return ResponseEntity.ok(pAllDto);
+    }
+
+    /**
+     * RegPmを新規登録します
+     *
+     * @return Boolean
+     */
+    @PostMapping("/pm/reg/new")
+    public ResponseEntity<Boolean> addRegPm(@RequestBody Map<String, Object> input) {
+
+        if (!input.containsKey("title") || !input.containsKey("tm_id_arr")) {
+            return ResponseEntity.ok(false);
+        }
+
+        RegularPM regPm = null;;
+
+        // reg_pmの登録
+        String title = input.get("title").toString();
+        if (!regularPmService.existData(title)) {
+            RegularPM newRegPm = new RegularPM();
+            newRegPm.setTitle(title);
+            regPm = regularPmService.save(newRegPm);
+        }
+
+        // castの登録
+        if (regPm != null) {
+            try {
+                List<Integer> castArr = (List<Integer>) input.get("tm_id_arr");
+                List<Cast> saveList = new ArrayList<>();
+
+                for (Integer sta : castArr) {
+                    Long l = new Long(sta);
+                    if (!castService.existData(regPm.getRegular_pm_id(), l)) {
+                        Cast cast = new Cast();
+                        cast.setRegular_pm_id(regPm.getRegular_pm_id());
+                        cast.setTm_id(l);
+                        saveList.add(cast);
+                    }
+                }
+
+                if (saveList.size() > 0) {
+                    castService.saveAll(saveList);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 放送局の登録
+        if (input.containsKey("station_id_arr") && regPm != null) {
+            try {
+                List<Integer> castArr = (List<Integer>) input.get("station_id_arr");
+                List<RegPmStation> saveList = new ArrayList<>();
+
+                for (Integer sta : castArr) {
+                    Long l = new Long(sta);
+                    if (!regPmStationService.existData(regPm.getRegular_pm_id(), l)) {
+                        RegPmStation regPmStation = new RegPmStation();
+                        regPmStation.setRegular_pm_id(regPm.getRegular_pm_id());
+                        regPmStation.setStation_id(l);
+                        saveList.add(regPmStation);
+                    }
+                }
+
+                if (saveList.size() > 0) {
+                    regPmStationService.saveAll(saveList);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
+     * キーワードから放送局を検索します
+     *
+     * @param key
+     * @return
+     */
+    @GetMapping("/pm/search/sta")
+    public ResponseEntity<List<Station>>  searchStation(@RequestParam("key") String key) {
+        return ResponseEntity.ok(stationService.findByName(key));
     }
 
 //    /**
@@ -809,6 +933,12 @@ public class ApiController {
 
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(imVerForm, im);
+
+                // 日付をstringからDateにして詰める
+                if (!imVerForm.getPublication_date().equals("")) {
+                    im.setPublication_date(dateUtils.stringToDate(imVerForm.getPublication_date(), "yyyy/MM/dd"));
+                }
+
                 if (im.getIm_id() != null && !im.getIm_id().equals(0L)) {
                     im.setBlogNotUpdated(true);
                     updFlg = true;
@@ -1041,6 +1171,101 @@ public class ApiController {
     }
 
     /**
+     * regular_pmの登録・更新
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/tv/saveReg")
+    public ResponseEntity<Boolean> addNewRegPm(@Valid @RequestBody RegPmForm regPmForm) throws ParseException {
+        if (regPmForm == null || regPmForm.getTitle().equals("")) {
+            logger.info("RegPmFormの中身が不足でregular_pm登録できません");
+            return ResponseEntity.ok(false);
+        }
+
+        // 既存データがないかチェック
+        Boolean existData = regularPmService.existData(regPmForm.getTitle());
+        RegularPM regPm = new RegularPM();
+        if (!existData) {
+            // 新規データの場合
+            regPm = new RegularPM();
+        } else {
+            // 既存データがある場合
+            regPm = regularPmService.findById(regPmForm.getRegular_pm_id());
+        }
+
+        if (regPm != null) {
+            BeanUtils.copyProperties(regPmForm, regPm);
+
+            // 日付をstringからDateにして詰める
+            if (!regPmForm.getStart_date().equals("")) {
+                regPm.setStart_date(dateUtils.stringToLocalDateTime(regPmForm.getStart_date(), "yyyy/MM/dd hh:mm"));
+            }
+
+            List<Cast> existCastList = castService.findByRegPmId(regPm.getRegular_pm_id());
+            List<Cast> castList = new ArrayList<>();
+            for (Cast c : regPmForm.getCasts()) {
+                Cast cast = new Cast();
+
+                Boolean existCastFlg = existCastList.stream().anyMatch(e -> e.getTm_id().equals(c.getTm_id()));
+                if (!existData || !existCastFlg) {
+                    // regpm自体がないか、regpmはあるけどcastがない場合は処理する
+                    // メンバー
+                    if (c.getTm_id() >= 30L) {
+                       // 所属チームのデータがないかチェック
+                        MemberEnum me = MemberEnum.get(c.getTm_id());
+                        Boolean existTeamFlg = existCastList.stream().anyMatch(e -> e.getTm_id().equals(me.getTeamId()));
+                        if (!existTeamFlg) {
+                            BeanUtils.copyProperties(c, cast);
+                            castList.add(cast);
+                        }
+                    } else {
+                        // チームの場合
+                        Boolean existTeamFlg = existCastList.stream().anyMatch(e -> e.getTm_id().equals(c.getTm_id()));
+                        if (!existTeamFlg) {
+                            // 既存チームデータがない場合、登録判定に進む
+                            // チームのメンバーIDリストを作る
+                            List<Long> memIdList = MemberEnum.findMemIdListByTeamId(c.getTm_id());
+
+                            Boolean existMemFlg = memIdList.stream().anyMatch(e -> existCastList.stream().anyMatch(f -> e.equals(f.getTm_id())));
+                            Boolean candMemFlg = memIdList.stream().anyMatch(e -> Arrays.asList(regPmForm.getCasts()).stream().anyMatch(f -> e.equals(f.getTm_id())));
+
+                            if (existMemFlg) {
+                                // 既存メンバー登録があったらメンバー登録を削除、チーム登録
+                                for (Cast c1 : existCastList) {
+                                    // メンバーの場合
+                                    if (c1.getTm_id() >= 30L && MemberEnum.get(c1.getTm_id()).getTeamId().equals(c.getTm_id())) {
+                                        c1.setDel_flg(true);
+                                        castList.add(c1);
+                                    }
+                                }
+                                BeanUtils.copyProperties(c, cast);
+                                castList.add(cast);
+                            } else if (candMemFlg) {
+                                // フォーム内にメンバーがあったらメンバーを削除、チーム登録
+                                for (Cast c1 : existCastList) {
+                                    // メンバーの場合
+                                    if (c1.getTm_id() >= 30L && MemberEnum.get(c1.getTm_id()).getTeamId().equals(c.getTm_id())) {
+                                        c1.setDel_flg(true);
+                                        castList.add(c1);
+                                    }
+                                }
+
+                                // メンバー登録ないのでそのままチーム登録する
+                                BeanUtils.copyProperties(c, cast);
+                                castList.add(cast);
+                            }
+                        }
+                    }
+                }
+            }
+            if (castList.size() > 0) {
+                castService.saveAll(castList);
+            }
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
      * PM+付随データを登録します。すでにPMがある場合は更新
      *
      * @return Boolean true: success / false: failed
@@ -1067,6 +1292,7 @@ public class ApiController {
 
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(pmVerForm, pm);
+
                 if (pm.getPm_id() != null && !pm.getPm_id().equals(0L)) {
                     updFlg = true;
                 }
@@ -1216,7 +1442,6 @@ public class ApiController {
 
             PMVer targetVer = null;
             if (pmVerList == null || pmVerList.size() == 0) {
-                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                 targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
             } else {
                 if (pmVerList.stream().noneMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {

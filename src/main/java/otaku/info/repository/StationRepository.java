@@ -19,4 +19,13 @@ public interface StationRepository extends JpaRepository<Station, Long> {
 
     @Query("select t from station t")
     List<Station> findAll();
+
+    /**
+     * 引数idListに入っていないstationのリストを返却します
+     *
+     * @param stationIdList
+     * @return
+     */
+    @Query("select t from station t where station_name like %?1% and station_id not in ?2")
+    List<Station> findByNameExceptIdList(String name, List<Long> stationIdList);
 }

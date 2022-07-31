@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
-import otaku.info.form.IMForm;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -56,16 +55,6 @@ public class IM implements Comparable<IM> {
     /** 楽天のアフィリURL。verは無視してとりあえず入れる */
     @Column(nullable = true)
     private String rakuten_url;
-
-    public IM absorb(IMForm imForm) {
-        if (imForm.getTitle() != null && !imForm.getTitle().isEmpty()) {
-            this.setTitle(imForm.getTitle());
-        }
-        if (imForm.getPublication_date() != null) {
-            this.setPublication_date(imForm.getPublication_date());
-        }
-        return this;
-    }
 
     @Override
     public int compareTo(IM target) {

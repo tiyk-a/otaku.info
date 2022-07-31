@@ -16,6 +16,9 @@ public class PMVerForm {
 
     private Long pm_id;
 
+    /** 週次とかの番組の場合 */
+    private Long regular_pm_id;
+
     private Long teamId;
 
     // [prelId, programId, teamId, pmrelですかフラグ(1=true)]

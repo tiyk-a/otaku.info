@@ -14,4 +14,7 @@ public interface CastRepository extends JpaRepository<Cast, Long> {
 
     @Query(nativeQuery = true, value = "SELECT count(*) FROM cast c WHERE regular_pm_id = ?1 and tm_id = ?2")
     int existData(Long regPmId, Long tmId);
+
+    @Query(nativeQuery = true, value = "SELECT c.tm_id FROM cast c where c.regular_pm_id = ?1")
+    List<Long> findIdListByRegPmId(Long regPmId);
 }

@@ -2,7 +2,6 @@ package otaku.info.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import otaku.info.entity.RegularPM;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class PAllDto {
     // 確認済みのPMリスト
     private List<PMDto> pm;
 
-    private List<RegularPM> regPmList;
+    private List<RegPMDto> regPmList;
 
     // 各チームの未チェックID件数
     private Map<BigInteger, BigInteger> pNumberMap;

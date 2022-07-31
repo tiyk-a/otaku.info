@@ -583,7 +583,15 @@ public class ApiController {
 
         // regular_pmを入れる
         List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
-        pAllDto.setRegPmList(regPmList);
+        List<RegPMDto> regPMDtoList = new ArrayList<>();
+        for (RegularPM regPm : regPmList) {
+            RegPMDto regPMDto = new RegPMDto();
+            regPMDto.setRegularPM(regPm);
+            regPMDto.setCastList(castService.findIdListByRegPmId(regPm.getRegular_pm_id()));
+            regPMDto.setStationList(regPmStationService.findStationIdListByReguPmId(regPm.getRegular_pm_id()));
+            regPMDtoList.add(regPMDto);
+        }
+        pAllDto.setRegPmList(regPMDtoList);
 
         // 各チームごとに未確認のprogram数を取得しセット
         Map<BigInteger, BigInteger> numberMap = programService.getNumbersOfEachTeamIdFutureNotDeletedNoPM();

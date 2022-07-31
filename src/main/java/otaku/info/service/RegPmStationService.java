@@ -33,4 +33,8 @@ public class RegPmStationService {
     public Boolean existData(Long regPmId, Long stationId) {
         return regPmStationRepository.existData(regPmId, stationId) > 0;
     }
+
+    public List<Long> findStationIdListByReguPmId(Long regPmId) {
+        return regPmStationRepository.findStationIdListByReguPmId(regPmId);
+    }
 }

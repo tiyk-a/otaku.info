@@ -34,4 +34,8 @@ public class CastService {
     public Boolean existData(Long regPmId, Long tmId) {
         return castRepository.existData(regPmId, tmId) > 0;
     }
+
+    public List<Long> findIdListByRegPmId(Long regPmId) {
+        return castRepository.findIdListByRegPmId(regPmId);
+    }
 }

@@ -588,7 +588,7 @@ public class ApiController {
             RegPMDto regPMDto = new RegPMDto();
             regPMDto.setRegularPM(regPm);
             regPMDto.setCastList(castService.findIdListByRegPmId(regPm.getRegular_pm_id()));
-            regPMDto.setStationList(regPmStationService.findStationIdListByReguPmId(regPm.getRegular_pm_id()));
+            regPMDto.setStationMap(regPmStationService.findStationIdListByReguPmId(regPm.getRegular_pm_id()));
             regPMDtoList.add(regPMDto);
         }
         pAllDto.setRegPmList(regPMDtoList);
@@ -613,7 +613,7 @@ public class ApiController {
             return ResponseEntity.ok(false);
         }
 
-        RegularPM regPm = null;;
+        RegularPM regPm = null;
 
         // reg_pmの登録
         String title = input.get("title").toString();

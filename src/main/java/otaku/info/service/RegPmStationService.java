@@ -6,7 +6,10 @@ import otaku.info.entity.RegPmStation;
 import otaku.info.repository.RegPmStationRepository;
 
 import javax.transaction.Transactional;
+import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -34,7 +37,15 @@ public class RegPmStationService {
         return regPmStationRepository.existData(regPmId, stationId) > 0;
     }
 
-    public List<Long> findStationIdListByReguPmId(Long regPmId) {
-        return regPmStationRepository.findStationIdListByReguPmId(regPmId);
+    public Map<Long, String> findStationIdListByReguPmId(Long regPmId) {
+        Map<Long, String> resMap = new HashMap<>();
+
+        List<Object[]> res = regPmStationRepository.findStationIdListByReguPmId(regPmId);
+        for (Object[] obj : res ) {
+            BigInteger stationId = (BigInteger) obj[0];
+            String stationName = (String) obj[1];
+            resMap.put(stationId.longValue(), stationName);
+        }
+        return resMap;
     }
 }

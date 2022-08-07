@@ -1,9 +1,7 @@
 package otaku.info.form;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -15,13 +13,11 @@ public class IMVerForm {
 
     private Long teamId;
 
-    // [irelId, itemId, teamId, imrelですかフラグ(1=true)]
-    private List<List<Integer>> imrel;
-
-    // [irelMId, irelId, memberId, imrelMですかフラグ(1=true)]
-    private List<List<Integer>> imrelm;
-
     private String title;
+
+    private String teamArr;
+
+    private String memArr;
 
     private Long wp_id;
 

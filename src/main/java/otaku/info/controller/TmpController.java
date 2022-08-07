@@ -10,16 +10,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
-import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
-import otaku.info.utils.DateUtils;
-import otaku.info.utils.ItemUtils;
 import otaku.info.utils.JsonUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,54 +33,6 @@ public class TmpController {
 
     @Autowired
     BlogController blogController;
-
-    @Autowired
-    TextController textController;
-
-    @Autowired
-    ItemService itemService;
-
-    @Autowired
-    ProgramService programService;
-
-    @Autowired
-    IRelService iRelService;
-
-    @Autowired
-    IMRelService imRelService;
-
-    @Autowired
-    PRelService pRelService;
-
-    @Autowired
-    BlogTagService blogTagService;
-
-    @Autowired
-    IMRelService IMRelService;
-
-    @Autowired
-    DateUtils dateUtils;
-
-    @Autowired
-    ItemUtils itemUtils;
-
-    @Autowired
-    JsonUtils jsonUtils;
-
-    @Autowired
-    PRelMemService pRelMemService;
-
-    @Autowired
-    PMService pmService;
-
-    @Autowired
-    PmVerService pmVerService;
-
-    @Autowired
-    PMRelService pmRelService;
-
-    @Autowired
-    PMRelMemService pmRelMemService;
 
     /**
      * Program -> PM, Pm related tables tmp method

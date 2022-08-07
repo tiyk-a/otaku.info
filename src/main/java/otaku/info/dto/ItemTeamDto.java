@@ -2,8 +2,6 @@ package otaku.info.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import otaku.info.entity.IRel;
-import otaku.info.entity.IRelMem;
 import otaku.info.entity.Item;
 
 import java.util.List;
@@ -14,9 +12,6 @@ public class ItemTeamDto {
 
     private Item item;
 
-    private List<IRel> relList;
-
-    protected List<IRelMem> relMemList;
-
+    // TODO: これ必要？
     private List<Long> memIdList;
 }

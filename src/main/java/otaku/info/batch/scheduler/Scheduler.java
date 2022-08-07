@@ -66,9 +66,9 @@ public class Scheduler {
     @Qualifier("blogUpdateJob")
     private Job blogUpdateJob;
 
-    @Autowired
-    @Qualifier("blogCatchupJob")
-    private Job blogCatchupJob;
+//    @Autowired
+//    @Qualifier("blogCatchupJob")
+//    private Job blogCatchupJob;
 
     /**
      * Twitterファボ
@@ -217,24 +217,24 @@ public class Scheduler {
         logger.debug("--- run7: TV番組投稿処理 END ---");
     }
 
-    @Scheduled(cron = "${cron.blogCatchup}")
-    public void run8() {
-        logger.debug("--- run8: IMブログ投稿キャッチアップ START ---");
-        Long startTime = System.currentTimeMillis();
-        Map<String, JobParameter> confMap = new HashMap<>();
-        confMap.put("run8", new JobParameter(System.currentTimeMillis()));
-        JobParameters jobParameters = new JobParameters(confMap);
-        try {
-            jobLauncher.run(blogCatchupJob, jobParameters);
-        }catch (Exception ex) {
-            logger.debug(ex.getMessage());
-            lineController.post("run8: IMブログ投稿キャッチアップ" + ex.getMessage());
-        }
-        Long endTime = System.currentTimeMillis();
-        Long diff = endTime - startTime;
-        logger.debug("run8: " + diff);
-        logger.debug("--- run8: IMブログ投稿キャッチアップ END ---");
-    }
+//    @Scheduled(cron = "${cron.blogCatchup}")
+//    public void run8() {
+//        logger.debug("--- run8: IMブログ投稿キャッチアップ START ---");
+//        Long startTime = System.currentTimeMillis();
+//        Map<String, JobParameter> confMap = new HashMap<>();
+//        confMap.put("run8", new JobParameter(System.currentTimeMillis()));
+//        JobParameters jobParameters = new JobParameters(confMap);
+//        try {
+//            jobLauncher.run(blogCatchupJob, jobParameters);
+//        }catch (Exception ex) {
+//            logger.debug(ex.getMessage());
+//            lineController.post("run8: IMブログ投稿キャッチアップ" + ex.getMessage());
+//        }
+//        Long endTime = System.currentTimeMillis();
+//        Long diff = endTime - startTime;
+//        logger.debug("run8: " + diff);
+//        logger.debug("--- run8: IMブログ投稿キャッチアップ END ---");
+//    }
 
     @Scheduled(cron = "${cron.tvAlert}")
     public void run9() {

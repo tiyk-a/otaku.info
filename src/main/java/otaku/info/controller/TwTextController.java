@@ -15,7 +15,6 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 import otaku.info.utils.StringUtilsMine;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,16 +29,7 @@ public class TwTextController {
     private DateUtils dateUtils;
 
     @Autowired
-    LineController lineController;
-
-    @Autowired
     RakutenController rakutenController;
-
-    @Autowired
-    private TeamService teamService;
-
-    @Autowired
-    private MemberService memberService;
 
     @Autowired
     private StationService stationService;
@@ -48,25 +38,10 @@ public class TwTextController {
     private IMService imService;
 
     @Autowired
-    private IMRelService iMRelService;
-
-    @Autowired
-    private IMRelMemService imRelMemService;
-
-    @Autowired
-    private PRelService pRelService;
+    private BlogPostService blogPostService;
 
     @Autowired
     private PMService pmService;
-
-    @Autowired
-    private PMRelService pmRelService;
-
-    @Autowired
-    private PRelMemService pRelMemService;
-
-    @Autowired
-    private PMRelMemService pmRelMemService;
 
     @Autowired
     private PmVerService pmVerService;
@@ -97,7 +72,7 @@ public class TwTextController {
             memTag = String.join(" #", twiDto.getMemList());
         }
 
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic() + memTag;
+        String tags = String.join("#", twiDto.getTeamNameList()) + " " + memTag;
 
         // URL
         String a_url = "";
@@ -113,22 +88,18 @@ public class TwTextController {
         return "新商品の情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + a_url + r_url + "%0A" + tags;
     }
 
-    public String futureItemReminder(IM im, Long teamId, String itemUrl, List<Long> memIdList) {
+    public String futureItemReminder(IM im, Long teamId, String itemUrl) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 
-        if (memIdList != null && memIdList.size() > 0) {
-            List<String> menNameList = memIdList.stream().map(e -> MemberEnum.get(e).getMnemonic().replaceAll(" ", "")).collect(Collectors.toList());
+        if (im.getMemArr() != null && !im.getMemArr().equals("")) {
+            List<String> menNameList = StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(e -> MemberEnum.get(e).getMnemonic().replaceAll(" ", "")).collect(Collectors.toList());
             tags = tags + String.join(" #" + menNameList);
         }
 
+        BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId());
         String title = "";
         String url = "";
-        IMRel rel = null;
-        List<IMRel> tmpList = iMRelService.findByImIdTeamId(im.getIm_id(), teamId);
-        if (!tmpList.isEmpty()) {
-            rel = tmpList.get(0);
-        }
 
         try {
             url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
@@ -139,7 +110,7 @@ public class TwTextController {
         if (itemUrl != null && !itemUrl.isEmpty() && url.equals("")) {
             url = itemUrl;
         } else if (url.equals("")) {
-            url = BlogEnum.get(teamId).getSubDomain() + "blog/" + rel.getWp_id();
+            url = BlogEnum.get(teamId).getSubDomain() + "blog/" + blogPost.getWp_id();
         }
 
         if (StringUtils.hasText(im.getTitle())) {
@@ -153,11 +124,10 @@ public class TwTextController {
      * 本日発売の商品のアナウンス文章を作る
      *
      * @param im
-     * @param teamIdList
      * @param r_url
      * @return
      */
-    public String releasedItemAnnounce(IM im, List<Long> teamIdList, String r_url) {
+    public String releasedItemAnnounce(IM im, String r_url) {
 
         String a_url = "";
 
@@ -172,7 +142,7 @@ public class TwTextController {
         String str1 = "本日発売！%0A%0A" + im.getTitle() + "%0A" + a_url + r_url;
 
         // twitterタグ、DB使わないで取れてる
-        String tags = TeamEnum.findMnemonicListByTeamIdList(teamIdList).stream().collect(Collectors.joining(" #","#",""));
+        String tags = TeamEnum.findMnemonicListByTeamIdList(StringUtilsMine.stringToLongList(im.getTeamArr())).stream().collect(Collectors.joining(" #","#",""));
         return str1 + "%0A" + tags;
     }
 
@@ -192,7 +162,7 @@ public class TwTextController {
         if (result.length() + memberName.length() < 135) {
             result = memberName + "君の新商品情報です！%0A%0A" + twiDto.getTitle() + "%0A発売日：" + sdf1.format(twiDto.getPublication_date()) + "%0A" + a_url + r_url;
         }
-        String tags = "#" + TeamEnum.get(twiDto.getTeam_id()).getMnemonic();
+        String tags = String.join("#", twiDto.getTeamNameList());
         return result + "%0A%0A" + tags + "%0A#" + memberName;
     }
 
@@ -206,7 +176,7 @@ public class TwTextController {
      */
     public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
-        String teamName = teamService.getTeamName(ele.getKey());
+        String teamName = TeamEnum.get(teamId).getName();
         String result= "";
         if (!teamName.equals("")) {
             result = dateStr + "の" + teamName + "のTV出演情報です。%0A%0A";
@@ -241,12 +211,9 @@ public class TwTextController {
         // teamId, null
         Map<Long, String> resultMap = new HashMap<>();
         PM pm = pmService.findByPmId(ver.getPm_id());
-        List<PMRel> relList = pmRelService.findByPmIdDelFlg(ver.getPm_id(), false);
-        List<Long> relIdList = relList.stream().map(PMRel::getPm_rel_id).collect(Collectors.toList());
-        List<PMRelMem> relMemList = pmRelMemService.findByPmRelIdListDelFlg(relIdList, false);
-        List<Long> teamIdList = relList.stream().map(PMRel::getTeam_id).collect(Collectors.toList());
 
         // 返却するMapにKey(PmId)のみ詰め込みます。
+        List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
         if (teamIdList.size() > 0) {
             // Mapのkeyを作り格納
             teamIdList.forEach(e -> resultMap.put(e, null));
@@ -264,22 +231,18 @@ public class TwTextController {
 
                 // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
                 String memberName = "";
-                if (relList.size() > 0) {
-                    for (PMRel rel : relList) {
-                        List<String> tmpNameList = relMemList.stream().filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id())).map(e -> MemberEnum.get(e.getMember_id()).getName())
-                                .collect(Collectors.toList());
-                        List<String> tmpMnemonicList = relMemList.stream().filter(e -> e.getPm_rel_id().equals(rel.getPm_rel_id())).map(e -> MemberEnum.get(e.getMember_id()).getMnemonic())
-                                .collect(Collectors.toList());
+                if (pm.getMemArr() != null && !pm.getMemArr().equals("")) {
+                    List<String> tmpNameList = TeamEnum.findTeamNameListByTeamIdList(StringUtilsMine.stringToLongList(pm.getTeamArr()));
+                    List<String> tmpMnemonicList = MemberEnum.findMNameListByIdList(StringUtilsMine.stringToLongList(pm.getMemArr()));
 
-                        if (tmpNameList.size() > 0) {
-                            // 文章用
-                            memberName = String.join("・", tmpNameList);
-                        }
+                    if (tmpNameList.size() > 0) {
+                        // 文章用
+                        memberName = String.join("・", tmpNameList);
+                    }
 
-                        if (tmpMnemonicList.size() > 0) {
-                            // タグ用
-                            tagList.addAll(tmpMnemonicList);
-                        }
+                    if (tmpMnemonicList.size() > 0) {
+                        // タグ用
+                        tagList.addAll(tmpMnemonicList);
                     }
 
                     if (tagList.size() > 0) {

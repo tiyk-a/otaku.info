@@ -26,15 +26,31 @@ public class PMCalService {
         return pmCalRepository.saveAll(calList);
     }
 
-    public List<PMCal> findByVerIdListRelIdListDelFlg(List<Long> verIdList, List<Long> relIdList, @Nullable Boolean delFlg) {
+//    /**
+//     * 使用なし
+//     *
+//     * @param verIdList
+//     * @param relIdList
+//     * @param delFlg
+//     * @return
+//     */
+//    public List<PMCal> findByVerIdListRelIdListDelFlg(List<Long> verIdList, List<Long> relIdList, @Nullable Boolean delFlg) {
+//        if (delFlg == null) {
+//            return pmCalRepository.findByVerIdListRelIdList(verIdList, relIdList);
+//        } else {
+//            return pmCalRepository.findByVerIdListRelIdListDelFlg(verIdList, relIdList, delFlg);
+//        }
+//    }
+
+    public List<PMCal> findByVerIdListTeamIdListDelFlg(List<Long> verIdList, List<Long> teamIdList, @Nullable Boolean delFlg) {
         if (delFlg == null) {
-            return pmCalRepository.findByVerIdListRelIdList(verIdList, relIdList);
+            return pmCalRepository.findByVerIdListTeamIdList(verIdList, teamIdList);
         } else {
-            return pmCalRepository.findByVerIdListRelIdListDelFlg(verIdList, relIdList, delFlg);
+            return pmCalRepository.findByVerIdListTeamIdListDelFlg(verIdList, teamIdList, delFlg);
         }
     }
 
-    public PMCal findByVerIdRelIdDelFlg(Long verId, Long relId, Boolean delFlg) {
-        return pmCalRepository.findByVerIdRelIdDelFlg(verId, relId, delFlg).orElse(null);
-    }
+//    public PMCal findByVerIdRelIdDelFlg(Long verId, Long relId, Boolean delFlg) {
+//        return pmCalRepository.findByVerIdRelIdDelFlg(verId, relId, delFlg).orElse(null);
+//    }
 }

@@ -18,7 +18,6 @@ import otaku.info.entity.IM;
 import otaku.info.entity.Item;
 import otaku.info.service.AffeliUrlService;
 import otaku.info.service.IMService;
-import otaku.info.service.IRelService;
 import otaku.info.service.ItemService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -56,9 +55,6 @@ public class RakutenController {
     AffeliUrlService affeliUrlService;
 
     @Autowired
-    IRelService iRelService;
-
-    @Autowired
     JsonUtils jsonUtils;
 
     private final ItemService itemService;
@@ -79,7 +75,7 @@ public class RakutenController {
             String res = restTemplate.getForObject(finalUrl, String.class);
 
             if (StringUtils.hasText(res)) {
-                jsonObject = jsonUtils.createJsonObject(res, teamId);
+                jsonObject = jsonUtils.createJsonObject(res, teamId, null);
             }
             serverUtils.sleep();
         } catch (Exception e) {
@@ -99,7 +95,7 @@ public class RakutenController {
                 try {
                     String res = restTemplate.getForObject(finalUrl, String.class);
                     if (StringUtils.hasText(res)) {
-                        jsonObject = jsonUtils.createJsonObject(res, teamId);
+                        jsonObject = jsonUtils.createJsonObject(res, teamId, null);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -151,6 +147,7 @@ public class RakutenController {
         List<Item> resultList = new ArrayList<>();
 
         for (String key : itemCodeList) {
+            // koko
             String parameter = "&itemCode=" + key + "&elements=itemCaption%2CitemName%2CitemPrice%2CaffiliateUrl&sort=-updateTimestamp&" + setting.getRakutenAffiliId();
             JSONObject jsonObject = request(parameter, teamId);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす

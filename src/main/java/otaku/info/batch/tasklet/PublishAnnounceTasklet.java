@@ -12,19 +12,18 @@ import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.RakutenController;
 import otaku.info.controller.TwTextController;
-import otaku.info.entity.IMRel;
-import otaku.info.entity.IMRelMem;
-import otaku.info.entity.Item;
 import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
-import otaku.info.service.IMRelMemService;
-import otaku.info.service.IMRelService;
 import otaku.info.service.IMService;
 import otaku.info.service.ItemService;
+import otaku.info.utils.StringUtilsMine;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+/**
+ * 出版通知処理
+ *
+ */
 @Component
 @StepScope
 public class PublishAnnounceTasklet implements Tasklet {
@@ -47,12 +46,6 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Autowired
     IMService imService;
 
-    @Autowired
-    IMRelService IMRelService;
-
-    @Autowired
-    IMRelMemService imRelMemService;
-
     /**
      *
      * @param contribution
@@ -67,31 +60,26 @@ public class PublishAnnounceTasklet implements Tasklet {
         Integer postCount = 0;
 
         for (IM itemMaster : imList) {
-            List<IMRel> relList = IMRelService.findByItemMId(itemMaster.getIm_id());
 
             // general twitter用のチーム・メンバーリストを用意→まとめてポスト
             Long teamIdHead = null;
             List<Long> teamIdList = new ArrayList<>();
-            List<Long> memIdList = new ArrayList<>();
+            List<Long> memIdList = StringUtilsMine.stringToLongList(itemMaster.getMemArr());
 
-            if (relList.size() > 0) {
+            if (itemMaster.getTeamArr() != null && !itemMaster.getTeamArr().equals("")) {
 
-                for (IMRel rel : relList) {
-                    List<IMRelMem> memList = imRelMemService.findByImRelIdNotDeleted(rel.getIm_rel_id());
+                for (Long teamId : StringUtilsMine.stringToLongList(itemMaster.getTeamArr())) {
 
                     // general twitter使うチームならリストにGU追加して終わり。自分のtwあるならポストに向かう
-                    if (TeamEnum.get(rel.getTeam_id()).getTw_id().equals("")) {
+                    if (TeamEnum.get(teamId).getTw_id().equals("")) {
                         if (teamIdHead == null) {
-                            teamIdHead = rel.getTeam_id();
+                            teamIdHead = teamId;
                         }
-                        teamIdList.add(rel.getTeam_id());
-                        if (memList != null && memList.size() > 0) {
-                            memIdList.addAll(memList.stream().map(IMRelMem::getMember_id).collect(Collectors.toList()));
-                        }
+                        teamIdList.add(teamId);
                     } else {
                         List<Long> teamIdList2 = new ArrayList<>();
-                        teamIdList2.add(rel.getTeam_id());
-                        post(itemMaster, rel.getTeam_id(), teamIdList2);
+                        teamIdList2.add(teamId);
+                        post(itemMaster, teamId, teamIdList2);
                         ++postCount;
                     }
                 }
@@ -121,10 +109,18 @@ public class PublishAnnounceTasklet implements Tasklet {
      * @throws InterruptedException
      */
     private void post(IM im, Long teamId, List<Long> teamIdList) throws JSONException, InterruptedException {
-        List<Item> itemList = itemService.findByMasterId(im.getIm_id());
-        String rakutenUrl = rakutenController.getUrlByItemCodeList(itemList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamId);
+
+        String url = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
+        if (url == null) {
+            if (im.getRakuten_url().equals("")) {
+                url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
+            } else {
+                url = im.getRakuten_url();
+            }
+        }
+
         // text作ってポストする
-        String text = twTextController.releasedItemAnnounce(im, teamIdList, rakutenUrl);
+        String text = twTextController.releasedItemAnnounce(im, url);
         pythonController.post(teamId, text);
     }
 }

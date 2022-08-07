@@ -26,8 +26,19 @@ public class PMCal {
     @Column(nullable = false)
     private Long pm_ver_id;
 
-    @Column(nullable = false)
+    /**
+     * 不要とする
+     *
+     */
+    @Column(nullable = true)
     private Long pm_rel_id;
+
+    /**
+     * pm_rel_idの代わりに使用する
+     *
+     */
+    @Column(nullable = false)
+    private Long team_id;
 
     @Column(nullable = false)
     private boolean del_flg;

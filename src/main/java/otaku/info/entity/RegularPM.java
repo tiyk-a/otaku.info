@@ -37,6 +37,12 @@ public class RegularPM {
     @Column(nullable = true)
     private LocalDateTime end_date;
 
+    @Column(nullable = true)
+    private String teamArr;
+
+    @Column(nullable = true)
+    private String memArr;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

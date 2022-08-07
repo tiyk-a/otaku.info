@@ -28,7 +28,7 @@ public class TwiDto {
 
     public Date reserve_due;
 
-    public Long team_id;
+    public List<String> teamNameList;
 
     public List<String> memList;
 }

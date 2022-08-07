@@ -2,8 +2,6 @@ package otaku.info.form;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * Program -> PM登録のためにフロントから使うフォーム
  * 1 programずつ。
@@ -19,21 +17,26 @@ public class PMVerForm {
     /** 週次とかの番組の場合 */
     private Long regular_pm_id;
 
-    private Long teamId;
+    private String teamArr;
 
-    // [prelId, programId, teamId, pmrelですかフラグ(1=true)]
-    private List<List<Integer>> pmrel;
-
-    // [prelMId, prelId, memberId, pmrelMですかフラグ(1=true)]
-    private List<List<Integer>> pmrelm;
+    private String memArr;
 
     private String title;
 
     private String description;
+
+    /**
+     * v_id: e.pm_v_id,
+     * on_air_date: e.on_air_date,
+     * station_name: e.station_name,
+     * del_flg: e.del_flg
+     */
+    private Object[] verList;
 
     private String on_air_date;
 
     private Long station_id;
 
     private boolean del_flg;
+
 }

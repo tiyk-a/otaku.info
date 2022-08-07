@@ -3,7 +3,6 @@ package otaku.info.dto;
 import lombok.Data;
 import otaku.info.entity.*;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,11 +12,6 @@ import java.util.Map;
 public class RegPMDto {
 
     private RegularPM regularPM;
-
-    /**
-     * CastからIDだけ引き抜いて格納
-     */
-    private List<Long> castList;
 
     /**
      * RegPmStationからIDだけ引き抜いて格納

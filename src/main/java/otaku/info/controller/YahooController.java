@@ -14,7 +14,6 @@ import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
 import otaku.info.utils.JsonUtils;
-import otaku.info.utils.ServerUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.text.ParseException;
@@ -36,9 +35,6 @@ public class YahooController {
     Setting setting;
 
     @Autowired
-    ServerUtils serverUtils;
-
-    @Autowired
     JsonUtils jsonUtils;
 
     HttpServletResponse response;
@@ -52,8 +48,6 @@ public class YahooController {
      * @return
      */
     public String request(String url, HttpEntity<String> request, HttpMethod method) {
-
-//        response.setHeader("Cache-Control", "no-cache");
 
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -87,7 +81,7 @@ public class YahooController {
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> request = new HttpEntity<>(jo.toString(), headers);
             String res = request(parameter, request, HttpMethod.GET);
-            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId, null);
             //JSON形式をクラスオブジェクトに変換。クラスオブジェクトの中から必要なものだけを取りだす
             if (jsonObject.has("hits") && JsonUtils.isJsonArray(jsonObject.get("hits"))) {
                 JSONArray itemArray = jsonObject.getJSONArray("hits");
@@ -151,7 +145,7 @@ public class YahooController {
             if (!StringUtils.hasText(res)) {
                 return new ArrayList<>();
             }
-            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId);
+            JSONObject jsonObject = jsonUtils.createJsonObject(res, teamId, null);
             if (jsonObject.has("result") && jsonObject.getJSONObject("result").has("phrases")) {
                 JSONArray jsonArray = jsonObject.getJSONObject("result").getJSONArray("phrases");
                 if(jsonArray.length() > 0) {

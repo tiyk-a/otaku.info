@@ -3,8 +3,8 @@ package otaku.info.dto;
 import lombok.Getter;
 import lombok.Setter;
 import otaku.info.entity.ErrorJson;
+import otaku.info.entity.Item;
 
-import java.math.BigInteger;
 import java.util.Map;
 import java.util.List;
 
@@ -18,7 +18,7 @@ import java.util.List;
 public class FAllDto {
 
     // IMがないItemを詰める
-    private List<ItemTeamDto> i;
+    private List<Item> i;
 
     // IMを集める
     private List<FIMDto> im;
@@ -26,5 +26,5 @@ public class FAllDto {
     private List<ErrorJson> errJ;
 
     // 各チームの未チェックID件数
-    private Map<BigInteger, BigInteger> itemNumberMap;
+    private Map<Long, Integer> itemNumberMap;
 }

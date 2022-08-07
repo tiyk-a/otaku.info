@@ -9,13 +9,8 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.service.MemberService;
-import otaku.info.service.ProgramService;
-import otaku.info.service.StationService;
-import otaku.info.service.TeamService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
-import otaku.info.utils.DateUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -33,21 +28,6 @@ public class PythonController {
     final Logger twLog = Log4jUtils.newFileLogger("PythonControllerTw", "Twitter.log");
 
     @Autowired
-    private final ProgramService programService;
-
-    @Autowired
-    private final StationService stationService;
-
-    @Autowired
-    private final TeamService teamService;
-
-    @Autowired
-    private final MemberService memberService;
-
-    @Autowired
-    private final DateUtils dateUtils;
-
-    @Autowired
     private final Setting setting;
 
     /**
@@ -61,12 +41,12 @@ public class PythonController {
     public String post(Long teamId, String text) throws JSONException {
 
         // Twitter投稿が終わった後にLINE通知するテキストを詰めていくリスト
-        List<String> lineList = new ArrayList<>();
+//        List<String> lineList = new ArrayList<>();
 
         // 開発環境の場合Twitterに投稿しない
         logger.debug("Env: " + setting.getTest());
         if (setting.getTest() != null && setting.getTest().equals("dev")) {
-            lineList.add(text + " ■teamId=" + teamId);
+//            lineList.add(text + " ■teamId=" + teamId);
             twLog.debug("teamId:" + teamId + "■" + text);
         } else {
             if (teamId != null && StringUtils.hasText(text)) {
@@ -93,7 +73,7 @@ public class PythonController {
                     e.printStackTrace();
                 }
 
-                lineList.add(text + " ■teamId=" + teamId);
+//                lineList.add(text + " ■teamId=" + teamId);
                 twLog.debug("teamId:" + teamId + "■" + text);
             }
         }

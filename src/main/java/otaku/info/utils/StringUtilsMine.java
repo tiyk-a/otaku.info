@@ -4,12 +4,10 @@ import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * 文字列操作
@@ -122,7 +120,7 @@ public class StringUtilsMine {
      * @param imAmazonImage
      * @return
      */
-    public Optional<String> getAmazonLinkFromCard(String imAmazonImage) {
+    public static Optional<String> getAmazonLinkFromCard(String imAmazonImage) {
         // propertiesに定数は用意したんだけどSettingインポートするとファイル依存ができてしまって困るのでそのまま文字列入れてる
         String url = imAmazonImage.replace("<a target=\"_blank\"  href=\"", "").replace("\"><img border=\"0\" src=\"//ws-fe.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=JP&ASIN=B09GYY4M9H&ServiceVersion=20070822&ID=AsinImage&WS=1&Format=_SL250_&tag=tiyk8ank-22\" ></a>", "");
         if (url.startsWith("https://www.amazon.co.jp/") && !url.contains("\"")) {
@@ -168,5 +166,113 @@ public class StringUtilsMine {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 引数1の文字列末尾に引数2をカンマ区切りで追加し配列の形にします
+     *
+     * @param str1
+     * @param str2
+     * @return
+     */
+    public static String addToStringArr(String str1, String str2) {
+        String res = "";
+
+        if (str1 == null || str1.equals("")) {
+            res = str2;
+        } else {
+            List<String> tmpList = stringToStrList(str1);
+            if (!tmpList.contains(str2)) {
+                tmpList.add(str2);
+            }
+            res = tmpList.toString();
+        }
+        return res;
+    }
+
+    /**
+     * 引数1の文字列末尾に引数2をカンマ区切りで追加し配列の形にします
+     * (引数1の配列に引数2が存在しない場合のみ)
+     *
+     * @param str1
+     * @param num
+     * @return
+     */
+    public static String addToStringArr(String str1, Number num) {
+        String res = "";
+
+        if (str1 == null || str1.equals("")) {
+            res = num.toString();
+        } else {
+            List<Long> tmpList = stringToLongList(str1);
+            if (!tmpList.contains(num)) {
+                tmpList.add((long) num);
+            }
+            res = tmpList.toString();
+        }
+        return res;
+    }
+
+    /**
+     * 引数1と引数2のカンマ区切りのstring配列を比較し、要素が一致しているか判定します
+     *
+     * @param str1
+     * @param str2
+     * @return
+     */
+    public static boolean sameElementArrays(String str1, String str2) {
+        String[] arr1 = str1.split(",");
+        String[] arr2 = str2.split(",");
+
+        if (arr1.length != arr2.length) {
+            return false;
+        }
+
+        for (String s1 : arr1) {
+            if (Arrays.stream(arr2).noneMatch(e -> e.equals(s1))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 引数1と引数2を比較し、引数1に含まれていない引数2の要素をStringで返します
+     *
+     * @param str1
+     * @param str2
+     * @return
+     */
+    public static String elemsToSave(String str1, String str2) {
+        String[] arr1 = str1.split(",");
+        String[] arr2 = str2.split(",");
+        String res = "";
+
+        for (String s2 : arr2) {
+            if (Arrays.stream(arr1).noneMatch(a -> a.equals(s2))) {
+                res = addToStringArr(res, s2);
+            }
+        }
+        return res;
+    }
+
+    /**
+     *
+     * @param str
+     * @return
+     */
+    public static List<Long> stringToLongList(String str) {
+        String[] arr = str.split(",");
+        return Arrays.stream(arr).map(e -> Long.parseLong(e)).collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @param str
+     * @return
+     */
+    public static List<String> stringToStrList(String str) {
+        String[] arr = str.split(",");
+        return Arrays.stream(arr).collect(Collectors.toList());
     }
 }

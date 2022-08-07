@@ -1,7 +1,6 @@
 package otaku.info.form;
 
 import lombok.Data;
-import otaku.info.entity.Cast;
 
 /**
  * Regular_PM登録に使うフォーム
@@ -12,6 +11,10 @@ public class RegPmForm {
 
     private Long regular_pm_id;
 
+    private String teamArr;
+
+    private String memArr;
+
     private String title;
 
     private String description;
@@ -20,5 +23,4 @@ public class RegPmForm {
 
     private String end_date;
 
-    private Cast[] casts;
 }

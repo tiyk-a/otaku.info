@@ -8,16 +8,10 @@ import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.service.ItemService;
-import otaku.info.service.ProgramService;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
-import otaku.info.utils.JsonUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -31,20 +25,7 @@ public class LineController {
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("LineController");
 
     @Autowired
-    ItemService itemService;
-
-    @Autowired
-    ProgramService programService;
-
-    @Autowired
-    JsonUtils jsonUtils;
-
-    @Autowired
     Setting setting;
-
-    final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-
-    final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     /**
      * LINEにポストします。

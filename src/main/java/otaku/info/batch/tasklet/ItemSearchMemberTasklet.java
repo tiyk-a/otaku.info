@@ -15,6 +15,10 @@ import otaku.info.service.MemberService;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * メンバー個人の商品検索処理
+ *
+ */
 @Component
 @StepScope
 public class ItemSearchMemberTasklet implements Tasklet {
@@ -41,7 +45,7 @@ public class ItemSearchMemberTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         List<MemberSearchDto> dtoList = new ArrayList<>();
-        memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
+        memberService.findAllMember().forEach(e -> dtoList.add(e.convertToMemberSearchDto()));
         for (MemberSearchDto dto : dtoList) {
             loggerController.printItemSearchMemberTasklet("***** SEARCH: " + dto.getMember_name() + "*****");
             sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id(), 1L);

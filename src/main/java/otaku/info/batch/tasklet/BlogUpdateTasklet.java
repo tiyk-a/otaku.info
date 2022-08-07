@@ -11,8 +11,6 @@ import otaku.info.controller.BlogController;
 import otaku.info.controller.LoggerController;
 import otaku.info.enums.BlogEnum;
 
-import java.util.List;
-
 /**
  * ブログ固定ページを更新します
  * ①商品ページ（トップ）
@@ -35,9 +33,9 @@ public class BlogUpdateTasklet implements Tasklet {
         loggerController.printBlogUpdateTasklet("①固定商品ページ");
 //        logger.debug(System.getProperty("user.name"));
 //        // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。
-        List<String> domainList = BlogEnum.getAllSubdomain();
-        for (String subDomain : domainList) {
-            blogController.addNextMonthTag(subDomain);
+        BlogEnum[] blogEnumArr = BlogEnum.values();
+        for (BlogEnum blogEnum : blogEnumArr) {
+            blogController.addNextMonthTag(blogEnum);
         }
         // 近日発売新商品情報を更新
         try {
@@ -56,8 +54,8 @@ public class BlogUpdateTasklet implements Tasklet {
         loggerController.printBlogUpdateTasklet("②固定TV出演情報ページ完了");
         loggerController.printBlogUpdateTasklet("③明日の1日の予定投稿");
         try {
-            for (String subDomain : domainList) {
-                blogController.createDailySchedulePost(subDomain);
+            for (BlogEnum blogEnum : blogEnumArr) {
+                blogController.createDailySchedulePost(blogEnum);
             }
         } catch (Exception e) {
             e.printStackTrace();

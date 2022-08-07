@@ -15,10 +15,6 @@ public class PMDto {
 
     private PM pm;
 
-    private List<PMRel> relList;
-
-    private List<PMRelMem> relMemList;
-
     private List<PMVerDto> verList;
 
     private Timestamp created_at;

@@ -11,15 +11,12 @@ import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.RakutenController;
 import otaku.info.controller.TwTextController;
-import otaku.info.entity.Item;
 import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
-import otaku.info.service.IMRelMemService;
 import otaku.info.service.IMService;
-import otaku.info.service.ItemService;
+import otaku.info.utils.StringUtilsMine;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @StepScope
@@ -38,13 +35,7 @@ public class FutureItemReminderTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Autowired
-    ItemService itemService;
-
-    @Autowired
     IMService imService;
-
-    @Autowired
-    IMRelMemService imRelMemService;
 
     /**
      * TODO: 日数ではなくteamごとに件数指定で取得、全チームの情報を流すように変更します。
@@ -77,24 +68,18 @@ public class FutureItemReminderTasklet implements Tasklet {
         for (IM im : imList) {
 
             // メンバー名を取得
-            List<Long> memIdList = imRelMemService.findMemIdListByImId(im.getIm_id());
+            List<Long> memIdList = StringUtilsMine.stringToLongList(im.getMemArr());
 
             String rakutenUrl = "";
-            List<Item> itemList = itemService.findByMasterId(im.getIm_id());
-            Boolean findRakutenFlg = false;
-            if (itemList != null && itemList.size() > 0) {
-                // tweetするときは楽天のアフィリURLに飛ばしたいため①IMにひもづくitemがyahooしかないなら、楽天で検索しURLを取得する②楽天のURLは有効であるか確認してから投稿する
-                List<Item> rakutenList = itemList.stream().filter(e -> e.getSite_id().equals(1)).collect(Collectors.toList());
-                findRakutenFlg = rakutenList.size() == 0;
-                if (!findRakutenFlg) {
-                    rakutenUrl = rakutenController.getUrlByItemCodeList(rakutenList.stream().map(Item::getItem_code).collect(Collectors.toList()), teamEnum.getId());
-                } else {
-                    rakutenUrl = rakutenController.findRakutenUrl(im.getTitle(), teamEnum.getId());
-                }
+            if (im.getRakuten_url() == null || im.getRakuten_url().equals("")) {
+                rakutenUrl = rakutenController.findRakutenUrl(im.getTitle(), teamEnum.getId());
+            } else {
+                rakutenUrl = im.getRakuten_url();
             }
+
             String text = "";
             if (rakutenUrl != null) {
-                text = twTextController.futureItemReminder(im, teamEnum.getId(), rakutenUrl, memIdList);
+                text = twTextController.futureItemReminder(im, teamEnum.getId(), im.getRakuten_url());
                 pythonController.post(teamEnum.getId(), text);
                 ++postCount;
             }

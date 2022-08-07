@@ -12,6 +12,7 @@ import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -52,22 +53,10 @@ public class TextController {
     private IMService imService;
 
     @Autowired
-    private IMRelService iMRelService;
-
-    @Autowired
     private ImVerService imVerService;
 
     @Autowired
-    private IMRelMemService imRelMemService;
-
-    @Autowired
-    private PRelService pRelService;
-
-    @Autowired
     private PMService pmService;
-
-    @Autowired
-    private PMRelService pmRelService;
 
     @Autowired
     private Setting setting;
@@ -112,19 +101,20 @@ public class TextController {
     /**
      * WordPressブログのリリース情報固定ページ表示用のテキストを作成
      *
-     * @param todayMap
-     * @param futureMap
+     * @param todayImList
+     * @param futureImList
+     * @param subDomain
      * @return
      */
-    public String blogUpdateReleaseItems(Map<IM, List<Item>> todayMap, Map<IM, List<Item>> futureMap, String subDomain) {
+    public String blogUpdateReleaseItems(List<IM> todayImList, List<IM> futureImList, String subDomain) {
 
         String imagePath = subDomain + BlogEnum.findBySubdomain(subDomain).getScheduleImagePath();
 
         String result = "[toc depth='4']";
 
         // 今日の/先1週間の商品ごとの文章を作る(List<商品のテキスト>)
-        String todaysElems = todayMap == null ? null : blogReleaseItemsText(todayMap, imagePath);
-        String futureElems = futureMap == null ? null : blogReleaseItemsText(futureMap, imagePath);
+        String todaysElems = todayImList.size() > 0 ? blogReleaseItemsText(todayImList, imagePath) : null;
+        String futureElems = futureImList.size() > 0 ? blogReleaseItemsText(futureImList, imagePath) : null;
 
         // 本日発売の商品
         if (todaysElems != null) {
@@ -149,31 +139,25 @@ public class TextController {
      * 商品ブログ投稿文章
      * SEO対策のためにトップに自分で作った画像を入れる
      *
-     * @param itemMasterListMap
+     * @param imList
+     * @param imagePath
      * @return
      */
-    public String blogReleaseItemsText(Map<IM, List<Item>> itemMasterListMap, String imagePath) {
+    public String blogReleaseItemsText(List<IM> imList, String imagePath) {
         String result = "";
 
-        logger.debug("itemMasterListMap.size=" + itemMasterListMap.size());
+        logger.debug("imList.size=" + imList.size());
         // マスター商品ごとにテキストを作り返却リストに入れる(Itemリストのサイズが0以上のマスタ商品をタイトルでソート)。
-        for (Map.Entry<IM, List<Item>> entry : itemMasterListMap.entrySet()) {
-            IM itemMaster = entry.getKey();
+        for (IM im : imList) {
 
-            String date = dateUtils.getDay(itemMaster.getPublication_date());
-            String publicationDate = sdf1.format(itemMaster.getPublication_date()) + "(" + date + ")";
+            String date = dateUtils.getDay(im.getPublication_date());
+            String publicationDate = sdf1.format(im.getPublication_date()) + "(" + date + ")";
 
-            List<ImVer> verList = imVerService.findByImId(itemMaster.getIm_id());
+            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
 
-            // チーム名が空だった場合正確性に欠けるため、続きの処理には進まず次の商品に進む
-            if (iMRelService.findTeamIdListByItemMId(itemMaster.getIm_id()) == null) {
-                continue;
-            }
-
-            List<IMRel> relList = iMRelService.findByItemMId(itemMaster.getIm_id());
-            List<String> teamNameList = relList.stream().map(e -> TeamEnum.get(e.getTeam_id()).getName()).collect(Collectors.toList());
+            List<String> teamNameList = StringUtilsMine.stringToLongList(im.getTeamArr()).stream().map(e -> TeamEnum.get(e).getName()).collect(Collectors.toList());
             String teamNameUnited = String.join(" ", teamNameList);
-            List<Long> memList = imRelMemService.findMemIdListByImId(itemMaster.getIm_id());
+            List<Long> memList = StringUtilsMine.stringToLongList(im.getMemArr());
 
             // h2で表示したい商品のタイトルを生成
             String h2 = "";
@@ -181,14 +165,14 @@ public class TextController {
             if (memList != null && memList.size() > 0) {
                 // メンバー名もある場合はこちら
                 List<String> memNameList = memList.stream().map(e -> MemberEnum.get(e).getName()).collect(Collectors.toList());
-                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memNameList), itemMaster.getTitle());
+                h2 = String.join(" ", publicationDate, teamNameUnited, String.join(" ", memNameList), im.getTitle());
             } else {
                 // メンバー名ない場合はこちら
-                h2 = String.join(" ", publicationDate, teamNameUnited, itemMaster.getTitle());
+                h2 = String.join(" ", publicationDate, teamNameUnited, im.getTitle());
             }
 
             // htmlタグ付与
-            h2 = "<h2 id=id_" + itemMaster.getIm_id() + ">" + h2 + "</h2>";
+            h2 = "<h2 id=id_" + im.getIm_id() + ">" + h2 + "</h2>";
 
             // SEO対策のため画像を入れる
             String seoImage = "";
@@ -203,15 +187,15 @@ public class TextController {
             String txt = "";
             if (verList.size() > 0) {
                 for (ImVer ver : verList) {
-                    txt = "<h3>" + ver.getVer_name() + "</h3>\n" + "[rakuten search='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' kw='" + itemMaster.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
+                    txt = "<h3>" + ver.getVer_name() + "</h3>\n" + "[rakuten search='" + im.getTitle() + " " + ver.getVer_name() + "' kw='" + im.getTitle() + " " + ver.getVer_name() + "' amazon=1 rakuten=1 yahoo=1]";
                     verTxtList.add(txt);
                 }
             } else {
-                txt = "<h3>" + itemMaster.getTitle() + "</h3>\n" + "[rakuten search='" + itemMaster.getTitle() + "' kw='" + itemMaster.getTitle() + "' amazon=1 rakuten=1 yahoo=1]";
+                txt = "<h3>" + im.getTitle() + "</h3>\n" + "[rakuten search='" + im.getTitle() + "' kw='" + im.getTitle() + "' amazon=1 rakuten=1 yahoo=1]";
                 verTxtList.add(txt);
             }
 
-            String pubDate = sdf1.format(itemMaster.getPublication_date());
+            String pubDate = sdf1.format(im.getPublication_date());
             String publicationDateStr = "<h3>発売日は" + pubDate + "</h3>";
 
             // SEO対策：external linkとしてグループの公式サイトのリンク
@@ -238,7 +222,7 @@ public class TextController {
                 }
             }
 
-            String text = String.join("\n", h2, publicationDateStr, seoImage, itemMaster.getAmazon_image(), String.join("\n", verTxtList), seoLink);
+            String text = String.join("\n", h2, publicationDateStr, seoImage, im.getAmazon_image(), String.join("\n", verTxtList), seoLink);
             // 返却に追加
             result = result + "\n" + text;
         }
@@ -367,18 +351,22 @@ public class TextController {
 
                 String teamName = "";
                 if (subDomain.equals("NA")) {
-                    List<Long> pTeamIdList = pmRelService.getTeamIdList(masterP.getPm_id());
-                    if (pTeamIdList != null && !pTeamIdList.isEmpty() && !pTeamIdList.get(0).equals(0L)) {
+                    String[] pTeamIdArr = pm.getTeamArr().split(",");
+//                    List<Long> pTeamIdList = pmRelService.getTeamIdList(masterP.getPm_id());
+                    if (pTeamIdArr != null && pTeamIdArr.length > 0 && Long.parseLong(pTeamIdArr[0]) != (0L)) {
+                        List<Long> pTeamIdList = Arrays.stream(pTeamIdArr).map(Long::parseLong).collect(Collectors.toList());
                         List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
                         teamName = String.join("/", teamNameList);
                     }
                 }
 
                 String memberName = "";
-                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getPm_id());
-                if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
-
-                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memberIdList);
+                String[] pMemIdArr = pm.getMemArr().split(",");
+//                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getPm_id());
+//                if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
+                if (pMemIdArr != null && pMemIdArr.length > 0 && Long.parseLong(pMemIdArr[0]) != (0L)) {
+                    List<Long> pMemIdList = Arrays.stream(pMemIdArr).map(Long::parseLong).collect(Collectors.toList());
+                    List<String> memberNameList = MemberEnum.findMNameListByIdList(pMemIdList);
                     memberName = String.join("/", memberNameList);
                 }
 

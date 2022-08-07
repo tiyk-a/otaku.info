@@ -56,6 +56,12 @@ public class IM implements Comparable<IM> {
     @Column(nullable = true)
     private String rakuten_url;
 
+    @Column(nullable = true)
+    private String teamArr;
+
+    @Column(nullable = true)
+    private String memArr;
+
     @Override
     public int compareTo(IM target) {
         if (this.getIm_id() < target.getIm_id()) {

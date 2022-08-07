@@ -1,14 +1,14 @@
 package otaku.info.service;
 
-import java.math.BigInteger;
 import java.util.*;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Item;
+import otaku.info.enums.TeamEnum;
 import otaku.info.repository.ItemRepository;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import javax.transaction.Transactional;
 
@@ -22,9 +22,6 @@ import javax.transaction.Transactional;
 public class ItemService {
 
     private final DateUtils dateUtils;
-
-    @Autowired
-    IRelService iRelService;
 
     private final ItemRepository itemRepository;
 
@@ -107,7 +104,7 @@ public class ItemService {
      * @return
      */
     public List<Item> findSimilarItemList(Item item) {
-        List<Long> teamIdList = iRelService.getTeamIdListByItemId(item.getItem_id());
+        List<Long> teamIdList = StringUtilsMine.stringToLongList(item.getTeamArr());
         List<Item> resultList = new ArrayList<>();
 
         // それぞれのteamIdでマスタ商品の登録がある商品を探す
@@ -159,13 +156,11 @@ public class ItemService {
      *
      * @return
      */
-    public Map<BigInteger, BigInteger> getNumbersOfEachTeamIdFutureNotDeletedNoIM() {
-        Map<BigInteger, BigInteger> mappedResult = new HashMap<>();
-        List<Object[]> queryResult = itemRepository.getNumbersOfEachTeamIdFutureNotDeletedNoIM();
-        for (Object[] obj : queryResult ) {
-            BigInteger teamId = (BigInteger) obj[0];
-            BigInteger num = (BigInteger) obj[1];
-            mappedResult.put(teamId, num);
+    public Map<Long, Integer> getNumbersOfEachTeamIdFutureNotDeletedNoIM() {
+        Map<Long, Integer> mappedResult = new HashMap<>();
+        for (TeamEnum teamEnum : TeamEnum.values()) {
+            int i = itemRepository.getNumberOfTeamIdFutureNotDeletedNoIM(teamEnum.getId());
+            mappedResult.put(teamEnum.getId(), i);
         }
         return mappedResult;
     }

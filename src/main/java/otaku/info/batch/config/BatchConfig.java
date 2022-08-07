@@ -32,7 +32,7 @@ class BatchConfig {
     private final TvTasklet tvTasklet;
     private final TwFavTasklet twFavTasklet;
     private final TwFolBTasklet twFolBTasklet;
-    private final CalendarCatchupTasklet calendarCatchupTasklet;
+//    private final CalendarCatchupTasklet calendarCatchupTasklet;
 
     @Bean
     Step itemSearchStep() {
@@ -191,20 +191,20 @@ class BatchConfig {
                 .build();
     }
 
-    @Bean
-    Step calendarCatchupStep() {
-        return stepBuilderFactory.get("calendarCatchupStep")
-                .tasklet(calendarCatchupTasklet)
-                .build();
-    }
+//    @Bean
+//    Step calendarCatchupStep() {
+//        return stepBuilderFactory.get("calendarCatchupStep")
+//                .tasklet(calendarCatchupTasklet)
+//                .build();
+//    }
 
-    @Bean
-    Job blogCatchupJob() {
-        return this.jobBuilderFactory.get("blogCatchupJob").incrementer(new RunIdIncrementer())
-                .start(blogCatchupStep())
-                .next(calendarCatchupStep())
-                .build();
-    }
+//    @Bean
+//    Job blogCatchupJob() {
+//        return this.jobBuilderFactory.get("blogCatchupJob").incrementer(new RunIdIncrementer())
+//                .start(blogCatchupStep())
+//                .next(calendarCatchupStep())
+//                .build();
+//    }
 
     @Bean
     Step twFavStep() {

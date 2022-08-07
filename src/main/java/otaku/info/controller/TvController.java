@@ -13,6 +13,7 @@ import otaku.info.enums.MemberEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
+import otaku.info.utils.StringUtilsMine;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -36,31 +37,10 @@ public class TvController  {
     private final PMService pmService;
 
     @Autowired
-    private final TeamService teamService;
-
-    @Autowired
-    private final TextController textController;
-
-    @Autowired
-    private final PythonController pythonController;
-
-    @Autowired
-    private final MemberService memberService;
-
-    @Autowired
     private final StationService stationService;
 
     @Autowired
-    private final PRelService pRelService;
-
-    @Autowired
     private final PmVerService pmVerService;
-
-    @Autowired
-    private final PMRelService pmRelService;
-
-    @Autowired
-    private final PRelMemService pRelMemService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -94,7 +74,7 @@ public class TvController  {
         // マップのvalueに情報を追加していく
         for (PMVer ver : verList) {
             // マップからグループIDの要素のvalueに情報を追加して
-            List<Long> teamIdList = pmRelService.getTeamIdList(ver.getPm_id());
+            List<Long> teamIdList = StringUtilsMine.stringToLongList(pmService.findByPmId(ver.getPm_id()).getTeamArr());
 
             if (teamIdList != null && !teamIdList.isEmpty()) {
                 for (Long teamId : teamIdList) {
@@ -172,29 +152,19 @@ public class TvController  {
             if (isExisting) {
                 // 内容が同じProgramを取得
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
-                PRel rel = pRelService.findByProgramIdTeamId(existingP.getProgram_id(), teamId);
-                if (rel == null) {
-                    PRel newRel = new PRel(null, existingP.getProgram_id(), teamId, null, null);
-                    rel = pRelService.save(newRel);
-                }
+                String teamArr = existingP.getTeamArr();
+                teamArr = StringUtilsMine.addToStringArr(teamArr, teamId);
+                existingP.setTeamArr(teamArr);
 
-                if (memId != null) {
-                    List<PRelMem> relMemList = pRelMemService.findByPRelId(rel.getP_rel_id());
-                    boolean existsMem = relMemList.stream().anyMatch(f -> f.getMember_id().equals(memId));
-                    if (!existsMem) {
-                        PRelMem newMem = new PRelMem(null, rel.getP_rel_id(), memId, null, null);
-                        pRelMemService.save(newMem);
-                    }
-                }
+                String memArr = existingP.getMemArr();
+                memArr = StringUtilsMine.addToStringArr(memArr, memId);
+                existingP.setMemArr(memArr);
+                programService.save(existingP);
             } else {
                 // 既存登録がなければ新規登録します。
-                Program savedP = programService.save(program);
-                PRel rel = new PRel(null, savedP.getProgram_id(), teamId, null, null);
-                PRel savedRel = pRelService.save(rel);
-                if (memId != null) {
-                    PRelMem relMem = new PRelMem(null, savedRel.getP_rel_id(), memId, null, null);
-                    pRelMemService.save(relMem);
-                }
+                program.setTeamArr(teamId.toString());
+                program.setMemArr(memId.toString());
+                programService.save(program);
                 logger.debug("TV番組を登録：" + program.toString());
             }
         }
@@ -224,61 +194,62 @@ public class TvController  {
         return resultArr;
     }
 
-    /**
-     * 2つの番組が完全に同じか確認する。
-     * Title, Station_id, On_air_dateで比較元番組を取得しているため、この3項目はこのメソッド内でチェックしない。
-     *
-     * @param existingP
-     * @param description
-     * @param teamIdList
-     * @param memberIdList
-     * @return
-     */
-    private boolean isTotallySame(Program existingP, String description, List<Long> teamIdList, List<Long> memberIdList) {
-
-        // 簡単なものから確認してreturnしていく
-        // description
-        if (existingP.getDescription() == null) {
-            if (description != null) {
-                return false;
-            }
-        } else {
-            if (!existingP.getDescription().equals(description)) {
-                return false;
-            }
-        }
-
-        // member_id
-        List<Long> eMemberIdList = pRelService.getMemberIdList(existingP.getProgram_id());
-        if (memberIdList == null) {
-            if (eMemberIdList != null) {
-                return false;
-            }
-        } else {
-            if (eMemberIdList == null || memberIdList.size() != eMemberIdList.size()) {
-                return false;
-            }
-            for (Long memberId : memberIdList) {
-                if (eMemberIdList.stream().noneMatch(e -> e.equals(memberId))) {
-                    return false;
-                }
-            }
-        }
-
-        // team_id
-        List<Long> eTeamIdList = pRelService.getTeamIdList(existingP.getProgram_id());
-        if (teamIdList == null) {
-            return eTeamIdList == null;
-        } else {
-            if (eTeamIdList == null || teamIdList.size() != eTeamIdList.size()) {
-                return false;
-            }
-            for (Long teamId : teamIdList) {
-                if (eTeamIdList.stream().noneMatch(e -> e.equals(teamId))) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+//    /**
+//     * 2つの番組が完全に同じか確認する。
+//     * Title, Station_id, On_air_dateで比較元番組を取得しているため、この3項目はこのメソッド内でチェックしない。
+//     *
+//     * @param existingP
+//     * @param description
+//     * @param teamIdList
+//     * @param memberIdList
+//     * @return
+//     */
+//    private boolean isTotallySame(Program existingP, String description, List<Long> teamIdList, List<Long> memberIdList) {
+//
+//        // 簡単なものから確認してreturnしていく
+//        // description
+//        if (existingP.getDescription() == null) {
+//            if (description != null) {
+//                return false;
+//            }
+//        } else {
+//            if (!existingP.getDescription().equals(description)) {
+//                return false;
+//            }
+//        }
+//
+//
+//        // member_id
+//        List<Long> eMemberIdList = pRelService.getMemberIdList(existingP.getProgram_id());
+//        if (memberIdList == null) {
+//            if (eMemberIdList != null) {
+//                return false;
+//            }
+//        } else {
+//            if (eMemberIdList == null || memberIdList.size() != eMemberIdList.size()) {
+//                return false;
+//            }
+//            for (Long memberId : memberIdList) {
+//                if (eMemberIdList.stream().noneMatch(e -> e.equals(memberId))) {
+//                    return false;
+//                }
+//            }
+//        }
+//
+//        // team_id
+//        List<Long> eTeamIdList = pRelService.getTeamIdList(existingP.getProgram_id());
+//        if (teamIdList == null) {
+//            return eTeamIdList == null;
+//        } else {
+//            if (eTeamIdList == null || teamIdList.size() != eTeamIdList.size()) {
+//                return false;
+//            }
+//            for (Long teamId : teamIdList) {
+//                if (eTeamIdList.stream().noneMatch(e -> e.equals(teamId))) {
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+//    }
 }

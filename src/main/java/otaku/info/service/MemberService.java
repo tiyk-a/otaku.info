@@ -3,7 +3,6 @@ package otaku.info.service;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import otaku.info.entity.Member;
 import otaku.info.enums.MemberEnum;
 
 import javax.transaction.Transactional;
@@ -22,8 +21,8 @@ public class MemberService {
      *
      * @return
      */
-    public List<Member> findAllMember() {
-        return Arrays.stream(MemberEnum.values()).map(MemberEnum::convertToEntity).collect(Collectors.toList());
+    public List<MemberEnum> findAllMember() {
+        return Arrays.stream(MemberEnum.values()).collect(Collectors.toList());
     }
 
     /**

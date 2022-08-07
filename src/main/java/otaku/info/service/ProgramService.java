@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import otaku.info.entity.Program;
+import otaku.info.enums.TeamEnum;
 import otaku.info.repository.ProgramRepository;
 
 import javax.transaction.Transactional;
@@ -19,8 +20,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class ProgramService  {
 
-    @Autowired
-    PRelService pRelService;
+//    @Autowired
+//    PRelService pRelService;
 
     private final ProgramRepository programRepository;
 
@@ -81,13 +82,11 @@ public class ProgramService  {
         return programRepository.findByOnAirDateTeamId(date, teamId);
     }
 
-    public Map<BigInteger, BigInteger> getNumbersOfEachTeamIdFutureNotDeletedNoPM() {
-        Map<BigInteger, BigInteger> mappedResult = new HashMap<>();
-        List<Object[]> queryResult = programRepository.getNumbersOfEachTeamIdFutureNotDeletedNoPM();
-        for (Object[] obj : queryResult ) {
-            BigInteger teamId = (BigInteger) obj[0];
-            BigInteger num = (BigInteger) obj[1];
-            mappedResult.put(teamId, num);
+    public Map<Long, Integer> getNumbersOfEachTeamIdFutureNotDeletedNoPM() {
+        Map<Long, Integer> mappedResult = new HashMap<>();
+        for (TeamEnum teamEnum : TeamEnum.values()) {
+            int i = programRepository.getNumberOfTeamIdFutureNotDeletedNoPM(teamEnum.getId());
+            mappedResult.put(teamEnum.getId(), i);
         }
         return mappedResult;
     }

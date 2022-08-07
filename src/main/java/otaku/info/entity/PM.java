@@ -8,7 +8,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 /**
  * PM (Program Master)
@@ -34,6 +33,12 @@ public class PM implements Comparable<PM> {
 
     @Column(nullable = false)
     private boolean del_flg;
+
+    @Column(nullable = true)
+    private String teamArr;
+
+    @Column(nullable = true)
+    private String memArr;
 
     @CreationTimestamp
     @Column(nullable = true)

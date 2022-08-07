@@ -9,13 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.BlogController;
 import otaku.info.controller.LoggerController;
-import otaku.info.entity.IMRel;
+import otaku.info.entity.BlogPost;
 import otaku.info.entity.IM;
-import otaku.info.service.IMRelService;
+import otaku.info.enums.TeamEnum;
+import otaku.info.service.BlogPostService;
 import otaku.info.service.IMService;
+import otaku.info.utils.StringUtilsMine;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * データが揃ってるのにブログポストされてないIMがあったら投稿してあげる
@@ -32,10 +33,10 @@ public class BlogCatchupTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Autowired
-    IMService imService;
+    BlogPostService blogPostService;
 
     @Autowired
-    IMRelService imRelService;
+    IMService imService;
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
@@ -43,9 +44,13 @@ public class BlogCatchupTasklet implements Tasklet {
         List<IM> imList = imService.findFuture();
 
         for (IM im : imList) {
-            List<IMRel> relList = imRelService.findByItemMId(im.getIm_id()).stream().filter(e -> e.getWp_id() == null).collect(Collectors.toList());
-            if (relList.size() > 0) {
-                blogController.postOrUpdate(im);
+            if (im.getTeamArr() != null) {
+                for (Long teamId : StringUtilsMine.stringToLongList(im.getTeamArr())) {
+                    BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId());
+                    if (blogPost.getWp_id() == null) {
+                        blogController.postOrUpdate(im);
+                    }
+                }
             }
         }
         return RepeatStatus.FINISHED;

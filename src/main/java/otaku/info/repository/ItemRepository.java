@@ -4,7 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import otaku.info.entity.Item;
 
-import java.util.Map;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +48,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where wp_id is not null and updated_at >= ?1")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.publication_date = ?2 and im_id is not null")
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.publication_date = ?2 and im_id is not null")
     List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
     @Query("select t from Item t where im_id = ?1")
@@ -67,7 +66,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("select t from Item t where im_id is null and publication_date >= CURRENT_DATE")
     List<Item> findByMIdNullFuture();
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0")
+    /**
+     * select * from im where FIND_IN_SET(32, mem_arr);
+     * @param teamId
+     * @return
+     */
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0")
     List<Item> findByTeamIdNotDeleted(Long teamId);
 
     /**
@@ -75,10 +79,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
     List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from item a inner join i_rel b on a.item_id = b.item_id where b.team_id = ?1 and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")
     List<Item> findByTeamIdFutureNotDeletedWIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from item a where a.publication_date >= CURRENT_DATE and a.del_flg = 0 and a.im_id is null")
@@ -95,8 +99,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * 各チームのitem数（未来で削除されていなくてIMIDがないもの
      * @return
      */
-    @Query(nativeQuery = true, value = "select b.team_id, count(*) from item a inner join i_rel b on a.item_id = b.item_id where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null group by b.team_id")
-    List<Object[]> getNumbersOfEachTeamIdFutureNotDeletedNoIM();
+    @Query(nativeQuery = true, value = "count(*) from item a where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null and FIND_IN_SET(?1, team_arr)")
+    int getNumberOfTeamIdFutureNotDeletedNoIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select url from item where im_id = ?1 and url like '%rakuten%' order by item_id asc limit 10")
     List<String> getRakutenUrlByImId(Long imId);

@@ -17,6 +17,10 @@ import otaku.info.service.TeamService;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * チーム名で商品検索を行う
+ *
+ */
 @Component
 @StepScope
 public class ItemSearchTasklet implements Tasklet {

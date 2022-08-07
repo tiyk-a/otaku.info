@@ -66,7 +66,7 @@ public class YahooItemSearchTasklet implements Tasklet {
         loggerController.printYahooItemSearchTasklet("--- 新商品検索（個人） START ---");
         try {
             List<MemberSearchDto> dtoList = new ArrayList<>();
-            memberService.findAllMember().forEach(e -> dtoList.add(e.convertToDto()));
+            memberService.findAllMember().forEach(e -> dtoList.add(e.convertToMemberSearchDto()));
             for (MemberSearchDto dto : dtoList) {
                 loggerController.printYahooItemSearchTasklet("***** SEARCH: " + dto.getMember_name() + "*****");
                 sampleController.searchItem(dto.getTeam_id(), dto.getMember_name(), dto.getMember_id(), 1L);

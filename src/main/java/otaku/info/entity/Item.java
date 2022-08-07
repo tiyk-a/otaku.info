@@ -60,6 +60,12 @@ public class Item {
     @Column(nullable = true)
     private Long im_id;
 
+    @Column(nullable = true)
+    private String teamArr;
+
+    @Column(nullable = true)
+    private String memArr;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

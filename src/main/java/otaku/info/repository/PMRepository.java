@@ -6,7 +6,6 @@ import otaku.info.entity.PM;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 public interface PMRepository extends JpaRepository<PM, Long> {
@@ -14,13 +13,16 @@ public interface PMRepository extends JpaRepository<PM, Long> {
     @Query("select t from pm t where pm_id = ?1")
     PM findByPmId(Long pmId);
 
+    @Query("select t from pm t where pm_id in ?1")
+    List<PM> findbyPmIdList(List<Long> pmIdList);
+
     /**
      * 未来のpmで有効なものだけ取ってくる
      *
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id inner join pm_rel c on a.pm_id = c.pm_id where c.team_id = ?1 and b.on_air_date >= CURRENT_DATE and a.del_flg = 0 and b.del_flg = 0 and c.del_flg = 0 order by b.on_air_date asc")
+    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where FIND_IN_SET(?1, team_arr) and b.on_air_date >= CURRENT_DATE and a.del_flg = 0 and b.del_flg = 0 order by b.on_air_date asc")
     List<PM> findByTeamIdFuture(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where a.title = ?1 and b.on_air_date = ?2")

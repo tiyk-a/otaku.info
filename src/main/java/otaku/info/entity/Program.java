@@ -41,6 +41,12 @@ public class Program {
     @Column(nullable = false)
     private boolean del_flg;
 
+    @Column(nullable = true)
+    private String teamArr;
+
+    @Column(nullable = true)
+    private String memArr;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

@@ -1,7 +1,7 @@
 package otaku.info.enums;
 
 import lombok.Getter;
-import otaku.info.entity.Member;
+import otaku.info.dto.MemberSearchDto;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -119,10 +119,6 @@ public enum MemberEnum {
         this.teamId = teamId;
     }
 
-    public Member convertToEntity() {
-        return new Member( this.id,  this.teamId, this.name, this.kana, this.mnemonic, this.birthday, null, null);
-    }
-
     public static MemberEnum get(Long argId) {
         return Arrays.stream(MemberEnum.values()).filter(e -> e.id.equals(argId)).findFirst().orElse(null);
     }
@@ -141,5 +137,18 @@ public enum MemberEnum {
 
     public static  List<Long> findMemIdListByTeamId(Long teamId) {
         return Arrays.stream(MemberEnum.values()).filter(e -> e.getTeamId().equals(teamId)).map(e -> e.getId()).collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @return
+     */
+    public MemberSearchDto convertToMemberSearchDto() {
+        MemberSearchDto dto = new MemberSearchDto();
+        dto.setTeam_id(this.getTeamId());
+        dto.setMember_id(this.getId());
+        dto.setTeam_name(TeamEnum.get(this.getTeamId()).getName());
+        dto.setMember_name(this.getName());
+        return dto;
     }
 }

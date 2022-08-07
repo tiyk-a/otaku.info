@@ -28,6 +28,10 @@ public class PMService {
         return pmRepository.findByPmId(pmId);
     }
 
+    public List<PM> findbyPmIdList(List<Long> pmIdList) {
+        return pmRepository.findbyPmIdList(pmIdList);
+    }
+
     public List<PM> findFutureDelFlg(Boolean delFlg) {
         return pmRepository.findFutureDelFlg(delFlg);
     }

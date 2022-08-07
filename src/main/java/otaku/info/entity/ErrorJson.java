@@ -20,8 +20,17 @@ public class ErrorJson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long errj_id;
 
-    @Column(nullable = false)
+    /**
+     * teamIdかblogIdどちらかを必ず入れること
+     */
+    @Column(nullable = true)
     private Long team_id;
+
+    /**
+     * teamIdかblogIdどちらかを必ず入れること
+     */
+    @Column(nullable = true)
+    private Long blog_id;
 
     @Column(nullable = false)
     private String json;

@@ -1,9 +1,11 @@
 package otaku.info.controller;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
 import otaku.info.entity.*;
-import otaku.info.enums.MemberEnum;
 import otaku.info.form.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -43,27 +44,6 @@ public class ApiPmController {
     PmVerService pmVerService;
 
     @Autowired
-    PRelService pRelService;
-
-    @Autowired
-    PMRelService pmRelService;
-
-    @Autowired
-    PRelMemService pRelMemService;
-
-    @Autowired
-    PMRelMemService pmRelMemService;
-
-    @Autowired
-    PMCalService pmCalService;
-
-    @Autowired
-    PageTvService pageTvService;
-
-    @Autowired
-    TeamService teamService;
-
-    @Autowired
     StationService stationService;
 
     @Autowired
@@ -74,9 +54,6 @@ public class ApiPmController {
 
     @Autowired
     RegPmStationService regPmStationService;
-
-    @Autowired
-    CastService castService;
 
     @Autowired
     DateUtils dateUtils;
@@ -151,31 +128,22 @@ public class ApiPmController {
         if (!regularPmService.existData(title)) {
             RegularPM newRegPm = new RegularPM();
             newRegPm.setTitle(title);
-            regPm = regularPmService.save(newRegPm);
-        }
 
-        // castの登録
-        if (regPm != null) {
-            try {
-                List<Integer> castArr = (List<Integer>) input.get("tm_id_arr");
-                List<Cast> saveList = new ArrayList<>();
-
-                for (Integer sta : castArr) {
-                    Long l = new Long(sta);
-                    if (!castService.existData(regPm.getRegular_pm_id(), l)) {
-                        Cast cast = new Cast();
-                        cast.setRegular_pm_id(regPm.getRegular_pm_id());
-                        cast.setTm_id(l);
-                        saveList.add(cast);
-                    }
+            List<Integer> castArr = (List<Integer>) input.get("tm_id_arr");
+            String teamStr = "";
+            String memStr = "";
+            for (Integer sta : castArr) {
+                Long l = new Long(sta);
+                if (l < 30L) {
+                    teamStr = StringUtilsMine.addToStringArr(teamStr, l);
+                } else {
+                    memStr = StringUtilsMine.addToStringArr(memStr, l);
                 }
-
-                if (saveList.size() > 0) {
-                    castService.saveAll(saveList);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+
+            newRegPm.setTeamArr(teamStr);
+            newRegPm.setMemArr(memStr);
+            regPm = regularPmService.save(newRegPm);
         }
 
         // 放送局の登録
@@ -240,97 +208,59 @@ public class ApiPmController {
             updPmFlg = true;
         }
 
+        if (!StringUtilsMine.sameElementArrays(form.getTeamArr(), pm.getTeamArr())) {
+            pm.setTeamArr(form.getTeamArr());
+            updPmFlg = true;
+        }
+
+        if (!StringUtilsMine.sameElementArrays(form.getMemArr(), pm.getMemArr())) {
+            pm.setMemArr(form.getMemArr());
+            updPmFlg = true;
+        }
+
         if (updPmFlg) {
             pmService.save(pm);
         }
 
-
-        // pmrel
-        List<PMRel> relList = pmRelService.findByPmIdDelFlg(pm.getPm_id(), null);
-        List<PMRel> updRelList = new ArrayList<>();
-        for (List<Integer> rel : form.getPmrel()) {
-            PMRel targetRel = null;
-            if (rel.get(0) != null && relList.stream().anyMatch(e -> e.getPm_rel_id().equals(rel.get(0).longValue()))) {
-                // 既存のrelがあるならそれを更新
-                targetRel = relList.stream().filter(e -> e.getPm_rel_id().equals(rel.get(0).longValue())).findFirst().get();
-                if (!targetRel.getTeam_id().equals(rel.get(2).longValue())) {
-                    targetRel.setTeam_id(rel.get(2).longValue());
-                }
-            } else if (relList.stream().noneMatch(e -> e.getTeam_id().equals(rel.get(2).longValue()))) {
-                // 既存がなければ新規作成
-                targetRel = new PMRel(null, rel.get(1).longValue(), rel.get(2).longValue(), null, null, false);
-            }
-
-            if (targetRel != null) {
-                updRelList.add(targetRel);
-            }
-        }
-
-        // pmrel更新対象があれば更新
-        if (updRelList.size() > 0) {
-            pmRelService.saveAll(updRelList);
-        }
-
-        // pmrelm
-        List<PMRelMem> updMemList = new ArrayList<>();
-        for (List<Integer> relMem : form.getPmrelm()) {
-            PMRelMem targetMem = null;
-            if (relMem.get(0) != null) {
-                // IDがある場合元データを取得
-                targetMem = pmRelMemService.findByPmRelMemId(relMem.get(0).longValue());
-
-                if (!targetMem.getPm_rel_id().equals(relMem.get(1).longValue()) ) {
-                    targetMem.setPm_rel_id(relMem.get(1).longValue());
-                }
-
-                if (!targetMem.getMember_id().equals(relMem.get(2).longValue())) {
-                    targetMem.setMember_id(relMem.get(2).longValue());
-                }
-            } else {
-                // IDがない場合要素からデータを確認
-                targetMem = pmRelMemService.findByPmIdMemId(pm.getPm_id(), relMem.get(2).longValue());
-                if (targetMem == null) {
-                    Long relId = null;
-                    if (relMem.get(1) == null) {
-                        Long teamId = MemberEnum.get(relMem.get(2).longValue()).getTeamId();
-                        relId = pmRelService.findByPmIdTeamId(pm.getPm_id(), teamId).getPm_rel_id();
-                    } else {
-                        relId = relMem.get(1).longValue();
-                    }
-                    targetMem = new PMRelMem(null, relId, relMem.get(2).longValue(), null, null, false);
-                }
-            }
-
-            if (targetMem != null) {
-                updMemList.add(targetMem);
-            }
-        }
-
-        if (updMemList.size() > 0) {
-            pmRelMemService.saveAll(updMemList);
-        }
-
         // pmver
-//        List<PMVer> updVList = new ArrayList<>();
-//        for (PMVerDto verDto : form.getVerlist()) {
-//            PMVer targetVer = null;
-//            if (verDto.getPm_v_id() != null) {
-//                // 元データがある場合
-//                targetVer = pmVerService.findById(verDto.getPm_v_id());
-//                BeanUtils.copyProperties(verDto, targetVer);
-//            } else {
-//                // 元データがない場合
-//                targetVer = new PMVer(null, pm.getPm_id(), verDto.getOn_air_date(), verDto.getStation_id(), false, null, null);
-//            }
-//
-//            if (targetVer != null) {
-//                updVList.add(targetVer);
-//            }
-//        }
+        List<PMVer> updVList = new ArrayList<>();
+        for (Object verObj : form.getVerList()) {
+            PMVer ver = new PMVer();
 
-//        if (updVList.size() > 0) {
-//            pmVerService.saveAll(updVList);
-//        }
+            Map<String, Object> map = new ObjectMapper().convertValue(verObj, Map.class);
+            if (map.containsKey("v_id")) {
+                ver = pmVerService.findById((Long) map.get("v_id"));
+            }
+
+            ver.setPm_id(pm.getPm_id());
+
+            if (map.containsKey("on_air_date")) {
+                String dateStr = (String) map.get("on_air_date");
+                LocalDateTime localDateTime = dateUtils.stringToLocalDateTime(dateStr, "YYYY-MM-DD HH:mm");
+                ver.setOn_air_date(localDateTime);
+            }
+
+            if (map.containsKey("station_name")) {
+                String stationName = (String) map.get("station_name");
+                List<Station> stationList = stationService.findByName(stationName);
+
+                if (stationList.size() > 0) {
+                    ver.setStation_id(stationList.get(0).getStation_id());
+                }
+            }
+
+            if (map.containsKey("del_flg")) {
+                ver.setDel_flg((boolean) map.get("del_flg"));
+            }
+
+            if (ver.getOn_air_date() != null) {
+                updVList.add(ver);
+            }
+        }
+
+        if (updVList.size() > 0) {
+            pmVerService.saveAll(updVList);
+        }
 
         logger.debug("fin");
         return ResponseEntity.ok(true);

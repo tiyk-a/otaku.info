@@ -166,8 +166,6 @@ public class TmpController {
                             memArr = StringUtilsMine.addToStringArr(memArr, pRelMem.getMember_id());
                         }
                     }
-                    mysql> select distinct team_arr, count(*) from pm group by team_arr;
-                    mysql> select distinct team_arr, count(*) from im group by team_arr;
 
 
 

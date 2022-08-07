@@ -21,6 +21,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(nativeQuery = true, value = "SELECT * FROM Item i WHERE publication_date >= '2022-01-01' and team_arr is null limit 50")
     List<Item> tmpMethod();
 
+    @Query(nativeQuery = true, value = "SELECT * FROM Item i WHERE publication_date < '2022-01-01' and team_arr is null limit 50")
+    List<Item> tmpMethod2();
+
     @Query("SELECT item_code FROM Item WHERE item_code IN ?1")
     List<String> findItemCodeList(List<String> itemCodelist);
 

@@ -13,6 +13,9 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query(nativeQuery = true, value = "SELECT * FROM im t WHERE publication_date >= '2022-01-01' and del_flg = 0 and team_arr is null limit 50")
     List<IM> tmpMethod();
 
+    @Query(nativeQuery = true, value = "SELECT * FROM im t WHERE publication_date < '2022-01-01' and del_flg = 0 and team_arr is null limit 50")
+    List<IM> tmpMethod2();
+
     @Query(nativeQuery = true, value = "select * from im t where FIND_IN_SET(?1, team_arr) and t.publication_date >= CURRENT_DATE and t.del_flg = false")
     List<IM> findByTeamIdFuture(Long teamId);
 

@@ -18,13 +18,14 @@ import java.util.Map;
 @AllArgsConstructor
 public class ProgramService  {
 
-//    @Autowired
-//    PRelService pRelService;
-
     private final ProgramRepository programRepository;
 
     public List<Program> tmpMethod() {
         return programRepository.tmpMethod();
+    }
+
+    public List<Program> tmpMethod2() {
+        return programRepository.tmpMethod2();
     }
 
     public Program save(Program program) {

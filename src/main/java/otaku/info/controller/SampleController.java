@@ -175,7 +175,8 @@ public class SampleController {
                 tmpController.insertTeamMem();
                 break;
             case 16:
-//                orderM();
+                // rel->masterテーブルにteam/memデータを移動tmpメソッド(~2022)
+                tmpController.insertTeamMemOld();
                 break;
             case 18:
 //                tmpController.moveTo(from, to);

@@ -29,6 +29,10 @@ public class ItemService {
         return itemRepository.tmpMethod();
     }
 
+    public List<Item> tmpMethod2() {
+        return itemRepository.tmpMethod2();
+    }
+
     public Item save(Item item) {
         if (!hasData(item.getItem_code())) {
             return itemRepository.saveAndFlush(item);

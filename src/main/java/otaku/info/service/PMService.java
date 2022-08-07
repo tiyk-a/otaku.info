@@ -24,8 +24,16 @@ public class PMService {
         return pmRepository.tmpMethod();
     }
 
+    public List<PM> tmpMethod2() {
+        return pmRepository.tmpMethod2();
+    }
+
     public PM save(PM pm) {
         return pmRepository.save(pm);
+    }
+
+    public List<PM> saveAll(List<PM> pmList) {
+        return pmRepository.saveAll(pmList);
     }
 
     public PM findByPmId(Long pmId) {

@@ -10,6 +10,11 @@ import java.util.List;
 
 public interface PMRepository extends JpaRepository<PM, Long> {
 
+    @Query(nativeQuery = true, value = "select t.* from pm t " +
+            "inner join pm_ver a on t.pm_id = a.pm_id " +
+            "where a.on_air_date >= '2022-01-01' and t.team_arr is null limit 50")
+    List<PM> tmpMethod();
+
     @Query("select t from pm t where pm_id = ?1")
     PM findByPmId(Long pmId);
 

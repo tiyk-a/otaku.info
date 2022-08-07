@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
+import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.JsonUtils;
@@ -29,10 +30,191 @@ public class TmpController {
     Setting setting;
 
     @Autowired
+    ItemService itemService;
+
+    @Autowired
+    IRelService iRelService;
+
+    @Autowired
+    IRelMemService iRelMemService;
+
+    @Autowired
+    IMService imService;
+
+    @Autowired
+    IMRelService imRelService;
+
+    @Autowired
+    IMRelMemService imRelMemService;
+
+    @Autowired
+    ProgramService programService;
+
+    @Autowired
+    PRelService pRelService;
+
+    @Autowired
+    PRelMemService pRelMemService;
+
+    @Autowired
+    PMService pmService;
+
+    @Autowired
+    PMRelService pmRelService;
+
+    @Autowired
+    PMRelMemService pmRelMemService;
+
+    @Autowired
     RakutenController rakutenController;
 
     @Autowired
     BlogController blogController;
+
+    /**
+     * relテーブルの削除処理
+     * 各マスターテーブルにteam/memberデータをinsert
+     */
+    public void insertTeamMem() {
+
+        System.out.println("Item start!");
+        // item
+        Boolean continueItemFlg = true;
+        int count = 0;
+        while (continueItemFlg) {
+            count ++;
+            List<Item> itemList = itemService.tmpMethod();
+            if (itemList.size() > 0) {
+                for (Item item : itemList) {
+                    // **teamの処理
+                    String teamArr = "";
+                    // **memberの処理
+                    String memArr = "";
+
+                    List<IRel> iRelList = iRelService.findByItemId(item.getItem_id());
+                    for (IRel iRel : iRelList) {
+                        teamArr = StringUtilsMine.addToStringArr(teamArr, iRel.getTeam_id());
+
+                        List<IRelMem> iRelMemList = iRelMemService.findByIRelId(iRel.getI_rel_id());
+                        for (IRelMem iRelMem : iRelMemList) {
+                            memArr = StringUtilsMine.addToStringArr(memArr, iRelMem.getMember_id());
+                        }
+                    }
+                    item.setTeamArr(teamArr);
+                    item.setMemArr(memArr);
+                }
+                System.out.println("Item: " + count);
+            } else {
+                continueItemFlg = false;
+            }
+            System.out.println("Item end!");
+        }
+
+        System.out.println("IM start!");
+        // im
+        Boolean continueImFlg = true;
+        int count1 = 0;
+        while (continueImFlg) {
+            count1 ++;
+            List<IM> imList = imService.tmpMethod();
+            if (imList.size() > 0) {
+                for (IM im : imList) {
+                    // **teamの処理
+                    String teamArr = "";
+                    // **memberの処理
+                    String memArr = "";
+
+                    List<IMRel> imRelList = imRelService.findByItemMId(im.getIm_id());
+                    for (IMRel imRel : imRelList) {
+                        teamArr = StringUtilsMine.addToStringArr(teamArr, imRel.getTeam_id());
+
+                        List<IMRelMem> imRelMemList = imRelMemService.findByImRelId(imRel.getIm_rel_id());
+                        for (IMRelMem imRelMem : imRelMemList) {
+                            memArr = StringUtilsMine.addToStringArr(memArr, imRelMem.getMember_id());
+                        }
+                    }
+                    im.setTeamArr(teamArr);
+                    im.setMemArr(memArr);
+                }
+                System.out.println("IM: " + count1);
+            } else {
+                continueImFlg = false;
+            }
+            System.out.println("IM end!");
+        }
+
+        System.out.println("Program start!");
+        //program
+        Boolean continuePFlg = true;
+        int count2 = 0;
+        while (continuePFlg) {
+            count2 ++;
+            List<Program> programList = programService.tmpMethod();
+            if (programList.size() > 0) {
+                for (Program program : programList) {
+                    // **teamの処理
+                    String teamArr = "";
+                    // **memberの処理
+                    String memArr = "";
+
+                    List<PRel> pRelList = pRelService.tmpMethod(program.getProgram_id());
+                    for (PRel pRel : pRelList) {
+                        teamArr = StringUtilsMine.addToStringArr(teamArr, pRel.getTeam_id());
+
+                        List<PRelMem> pRelMemList = pRelMemService.findByPRelId(pRel.getP_rel_id());
+                        for (PRelMem pRelMem : pRelMemList) {
+                            memArr = StringUtilsMine.addToStringArr(memArr, pRelMem.getMember_id());
+                        }
+                    }
+                    mysql> select distinct team_arr, count(*) from pm group by team_arr;
+                    mysql> select distinct team_arr, count(*) from im group by team_arr;
+
+
+
+                    program.setTeamArr(teamArr);
+                    program.setMemArr(memArr);
+                }
+                System.out.println("Program: " + count2);
+            } else {
+                continuePFlg = false;
+            }
+            System.out.println("Program end!");
+        }
+
+        System.out.println("PM start!");
+        //pm
+        Boolean continuePmFlg = true;
+        int count3 = 0;
+        while (continuePmFlg) {
+            count3 ++;
+            List<PM> pmList = pmService.tmpMethod();
+            if (pmList.size() > 0) {
+                for (PM pm : pmList) {
+                    // **teamの処理
+                    String teamArr = "";
+                    // **memberの処理
+                    String memArr = "";
+
+                    List<PMRel> pmRelList = pmRelService.findByPmIdDelFlg(pm.getPm_id(), false);
+                    for (PMRel pmRel : pmRelList) {
+                        teamArr = StringUtilsMine.addToStringArr(teamArr, pmRel.getTeam_id());
+
+                        List<PMRelMem> pmRelMems = pmRelMemService.findByPRelIdDelFlg(pmRel.getPm_rel_id(), null);
+                        for (PMRelMem pmRelMem : pmRelMems) {
+                            memArr = StringUtilsMine.addToStringArr(memArr, pmRelMem.getMember_id());
+                        }
+                    }
+                    pm.setTeamArr(teamArr);
+                    pm.setMemArr(memArr);
+                }
+                System.out.println("PM: " + count3);
+            } else {
+                continuePmFlg = false;
+            }
+            System.out.println("PM end!");
+        }
+        System.out.println("ALL END!");
+    }
 
     /**
      * Program -> PM, Pm related tables tmp method

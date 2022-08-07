@@ -20,6 +20,10 @@ public class PMService {
     @Autowired
     PMRepository pmRepository;
 
+    public List<PM> tmpMethod() {
+        return pmRepository.tmpMethod();
+    }
+
     public PM save(PM pm) {
         return pmRepository.save(pm);
     }

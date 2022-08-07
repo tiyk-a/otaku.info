@@ -19,6 +19,10 @@ public class IMService {
     @Autowired
     IMRepository imRepository;
 
+    public List<IM> tmpMethod() {
+        return imRepository.tmpMethod();
+    }
+
     public IM save(IM im) {
         return imRepository.save(im);
     }

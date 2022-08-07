@@ -11,6 +11,9 @@ import java.util.Optional;
 
 public interface ProgramRepository extends JpaRepository<Program, Long> {
 
+    @Query(nativeQuery = true, value = "select * from program t where DATE(on_air_date) >= '2022-01-01' and team_arr is null")
+    List<Program> tmpMethod();
+
     @Query("select t from program t where program_id = ?1")
     Optional<Program> findByPId(Long programId);
 

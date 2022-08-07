@@ -25,7 +25,7 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
-    public List<String> tmpMethod() {
+    public List<Item> tmpMethod() {
         return itemRepository.tmpMethod();
     }
 

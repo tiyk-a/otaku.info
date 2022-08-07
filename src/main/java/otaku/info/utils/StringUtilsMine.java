@@ -185,7 +185,7 @@ public class StringUtilsMine {
             if (!tmpList.contains(str2)) {
                 tmpList.add(str2);
             }
-            res = tmpList.toString();
+            res = strListToString(tmpList);
         }
         return res;
     }
@@ -208,7 +208,7 @@ public class StringUtilsMine {
             if (!tmpList.contains(num)) {
                 tmpList.add((long) num);
             }
-            res = tmpList.toString();
+            res = longListToString(tmpList);
         }
         return res;
     }
@@ -257,6 +257,7 @@ public class StringUtilsMine {
     }
 
     /**
+     * Stringを「,」で分割しリストにします
      *
      * @param str
      * @return
@@ -274,5 +275,35 @@ public class StringUtilsMine {
     public static List<String> stringToStrList(String str) {
         String[] arr = str.split(",");
         return Arrays.stream(arr).collect(Collectors.toList());
+    }
+
+    public static String strListToString(List<String> strList) {
+        StringBuilder builder = new StringBuilder();
+        boolean fstElem = true;
+        for (String value : strList) {
+            if (fstElem) {
+                builder.append(value);
+                fstElem = false;
+            } else {
+                builder.append(",");
+                builder.append(value);
+            }
+        }
+        return builder.toString();
+    }
+
+    public static String longListToString(List<Long> longList) {
+        StringBuilder builder = new StringBuilder();
+        boolean fstElem = true;
+        for (Long value : longList) {
+            if (fstElem) {
+                builder.append(value);
+                fstElem = false;
+            } else {
+                builder.append(",");
+                builder.append(value);
+            }
+        }
+        return builder.toString();
     }
 }

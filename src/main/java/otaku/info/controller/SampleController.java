@@ -171,8 +171,8 @@ public class SampleController {
                 logger.debug("---END---");
                 break;
             case 15:
-                // irelの重複を解消
-//                orderiRel();
+                // rel->masterテーブルにteam/memデータを移動tmpメソッド
+                tmpController.insertTeamMem();
                 break;
             case 16:
 //                orderM();

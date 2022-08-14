@@ -175,11 +175,11 @@ public class SampleController {
                 break;
             case 15:
                 // rel->masterテーブルにteam/memデータを移動tmpメソッド
-                tmpController.insertTeamMem();
+//                tmpController.insertTeamMem();
                 break;
             case 16:
                 // rel->masterテーブルにteam/memデータを移動tmpメソッド(~2022)
-                tmpController.insertTeamMemOld();
+//                tmpController.insertTeamMemOld();
                 break;
             case 17:
                 String s = textController.getTagSlug("Hey! Say Jump");
@@ -187,7 +187,7 @@ public class SampleController {
                 System.out.println("koko");
                 break;
             case 18:
-                tmpController.insertBlogPost();
+//                tmpController.insertBlogPost();
 //                tmpController.moveTo(from, to);
                 break;
             case 19:

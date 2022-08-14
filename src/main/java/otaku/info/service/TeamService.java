@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import otaku.info.entity.Team;
 import otaku.info.enums.TeamEnum;
 
 import javax.transaction.Transactional;
@@ -18,15 +17,6 @@ import javax.transaction.Transactional;
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
 @AllArgsConstructor
 public class TeamService {
-
-    /**
-     * 全チームデータを返します。
-     *
-     * @return
-     */
-    public List<Team> findAllTeam() {
-        return Arrays.stream(TeamEnum.values()).map(TeamEnum::convertToEntity).collect(Collectors.toList());
-    }
 
     /**
      * 引数のIDを持つチーム名を返します。

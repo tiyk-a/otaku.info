@@ -52,19 +52,19 @@ public class PublishAnnounceTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         List<IM> imList = imService.findReleasedItemList();
-        loggerController.printPublishAnnounceTasklet("itemMasterList size: " + imList.size());
+        loggerController.printPublishAnnounceTasklet("imlist size: " + imList.size());
         Integer postCount = 0;
 
-        for (IM itemMaster : imList) {
+        for (IM im : imList) {
 
             // general twitter用のチーム・メンバーリストを用意→まとめてポスト
             Long teamIdHead = null;
             List<Long> teamIdList = new ArrayList<>();
-            List<Long> memIdList = StringUtilsMine.stringToLongList(itemMaster.getMemArr());
+            List<Long> memIdList = StringUtilsMine.stringToLongList(im.getMemArr());
 
-            if (itemMaster.getTeamArr() != null && !itemMaster.getTeamArr().equals("")) {
+            if (im.getTeamArr() != null && !im.getTeamArr().equals("")) {
 
-                for (Long teamId : StringUtilsMine.stringToLongList(itemMaster.getTeamArr())) {
+                for (Long teamId : StringUtilsMine.stringToLongList(im.getTeamArr())) {
 
                     // general twitter使うチームならリストにGU追加して終わり。自分のtwあるならポストに向かう
                     if (TeamEnum.get(teamId).getTw_id().equals("")) {
@@ -75,14 +75,14 @@ public class PublishAnnounceTasklet implements Tasklet {
                     } else {
                         List<Long> teamIdList2 = new ArrayList<>();
                         teamIdList2.add(teamId);
-                        post(itemMaster, teamId, teamIdList2);
+                        post(im, teamId, teamIdList2);
                         ++postCount;
                     }
                 }
 
                 // general twitterへのポストが必要な時、ポストする
                 if (teamIdList.size() > 0) {
-                    post(itemMaster, teamIdHead, teamIdList);
+                    post(im, teamIdHead, teamIdList);
                 }
             }
 

@@ -331,11 +331,11 @@ public class BlogController {
      * IMだけ渡されるので、その子の持つteamを確認して、
      * teamのサブドメインを確認して、サブドメインの数だけ投稿が必要
      */
-    public Map<Long, Long> postOrUpdate(IM itemMaster) throws InterruptedException {
+    public Map<Long, Long> postOrUpdate(IM im) throws InterruptedException {
         Map<Long, Long> resMap = new TreeMap<>();
 
-        logger.debug("postOrUpdateです。IMid：" + itemMaster.getIm_id());
-        List<Long> teamIdList = StringUtilsMine.stringToLongList(itemMaster.getTeamArr());
+        logger.debug("postOrUpdateです。IMid：" + im.getIm_id());
+        List<Long> teamIdList = StringUtilsMine.stringToLongList(im.getTeamArr());
 
         // どのブログにどのTeamの投稿が必要かを全てもつ
         Map<BlogEnum, List<TeamEnum>> blogEnumTeamEnumMap = new HashMap<>();
@@ -356,15 +356,15 @@ public class BlogController {
 
         // <TagName, TeamId>
         Map<String, Long> teamNameMap = teamService.findTeamNameByIdList(teamIdList);
-        String title = textController.createBlogTitle(itemMaster.getPublication_date(), itemMaster.getTitle());
+        String title = textController.createBlogTitle(im.getPublication_date(), im.getTitle());
 
         // 画像生成して投稿して画像IDゲットして、で？
         // 画像はここで生成、ポストするのはそれぞれのサイトなのでim_relが出てきてから
-        String imageUrl = imageController.createImage(itemMaster.getIm_id() + ".png", textController.dateToString(itemMaster.getPublication_date()), itemMaster.getTitle(), String.join(",", teamNameMap.keySet()));
+        String imageUrl = imageController.createImage(im.getIm_id() + ".png", textController.dateToString(im.getPublication_date()), im.getTitle(), String.join(",", teamNameMap.keySet()));
 
         // ひとまずcontentを作る。後でSEO対策のinner_imageを詰める（サイトごと）
         List<IM> tmpImList = new ArrayList<>();
-        tmpImList.add(itemMaster);
+        tmpImList.add(im);
         String content = textController.blogReleaseItemsText(tmpImList, imageUrl);
 
         // generalBlogの有無、対応の有無を管理(なし=1,あり・未対応==2,あり・対応済み=3)
@@ -393,7 +393,7 @@ public class BlogController {
             }
 
             // ここ、既存データ見つからない場合は新規BlogPostオブジェクト作って返す
-            BlogPost blogPost = blogPostService.findByImIdBlogEnumId(itemMaster.getIm_id(), blogEnum.getId());
+            BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), blogEnum.getId());
             Boolean generalBlogFlg = blogEnum.equals(BlogEnum.MAIN);
 
             // inner_imageがまだ投稿されていない場合は投稿していく
@@ -414,7 +414,7 @@ public class BlogController {
             blogPost.setTeam_arr(teamIdList1);
 
             // memberが入ってなかったら入れてあげる
-            String memArr = itemMaster.getMemArr();
+            String memArr = im.getMemArr();
             if (memArr != null && !memArr.equals("")) {
                 String tmpMem = "";
                 for (Long memId : StringUtilsMine.stringToLongList(memArr)) {
@@ -426,7 +426,7 @@ public class BlogController {
             }
 
             if (blogPost.getIm_id() == null) {
-                blogPost.setIm_id(itemMaster.getIm_id());
+                blogPost.setIm_id(im.getIm_id());
             }
 
             // 登録・更新どちらの場合でも、inner_imageがないなら投稿して用意
@@ -468,7 +468,7 @@ public class BlogController {
                 jsonObject.put("categories", cat);
 
                 // 年月を追加
-                String yyyyMM = dateUtils.getYYYYMM(itemMaster.getPublication_date());
+                String yyyyMM = dateUtils.getYYYYMM(im.getPublication_date());
 
                 // 年月のタグなのでそのsubdomainのgeneralなidをteamidに入れる
                 System.out.println("addTagIfNotExistsを呼ぶ");
@@ -479,8 +479,8 @@ public class BlogController {
                 }
 
                 // member名を追加
-                if (itemMaster.getMemArr() != null && !itemMaster.getMemArr().equals("")) {
-                    teamNameMap.putAll(StringUtilsMine.stringToLongList(itemMaster.getMemArr()).stream().map(MemberEnum::get).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getTeamId)));
+                if (im.getMemArr() != null && !im.getMemArr().equals("")) {
+                    teamNameMap.putAll(StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(MemberEnum::get).collect(Collectors.toMap(MemberEnum::getName, MemberEnum::getTeamId)));
                 }
 
                 List<Long> list = findBlogTagIdListByTagNameListTeamId(teamNameMap);
@@ -500,9 +500,9 @@ public class BlogController {
 
                 jsonObject.put("content", content);
 
-                if (itemMaster.getAmazon_image() != null) {
+                if (im.getAmazon_image() != null) {
                     JSONObject jsonObjectIn = new JSONObject();
-                    jsonObjectIn.put("amazon_image", itemMaster.getAmazon_image());
+                    jsonObjectIn.put("amazon_image", im.getAmazon_image());
                     jsonObject.put("meta", jsonObjectIn);
                 }
 
@@ -521,7 +521,7 @@ public class BlogController {
 
                 // ここで投稿
                 try {
-                    logger.debug("ブログ投稿します:" + url + " :imId:" + itemMaster.getIm_id());
+                    logger.debug("ブログ投稿します:" + url + " :imId:" + im.getIm_id());
                     String res = request(url, request, HttpMethod.POST, "postOrUpdate()");
                     JSONObject jo = jsonUtils.createJsonObject(res, teamIdList.get(0), blogEnum.getId());
                     if (jo.get("id") != null) {
@@ -529,16 +529,16 @@ public class BlogController {
 
                         blogPost.setWp_id(blogId);
                         logger.debug("Blog posted: " + url + "\n" + content + "\n" + blogId);
-                        resMap.put(itemMaster.getIm_id(), blogId);
+                        resMap.put(im.getIm_id(), blogId);
                     }
 
                     // アイキャッチ
                     String eyeCatchImage = "";
                     String amazonImagePath = "";
-                    if (itemMaster.getAmazon_image() != null) {
-                        eyeCatchImage = textController.shapeEyeCatchAmazonImage(itemMaster.getAmazon_image());
+                    if (im.getAmazon_image() != null) {
+                        eyeCatchImage = textController.shapeEyeCatchAmazonImage(im.getAmazon_image());
                         if (!eyeCatchImage.equals("")) {
-                            amazonImagePath = serverUtils.availablePath("amazon_" + itemMaster.getIm_id());
+                            amazonImagePath = serverUtils.availablePath("amazon_" + im.getIm_id());
 
                             // アマゾン画像を取得しにローカル保存
                             try (InputStream in = new URL(eyeCatchImage).openStream()) {
@@ -550,7 +550,7 @@ public class BlogController {
                             }
                         } else {
                             System.out.println("Amazon_imageがないのでamazon_image取得ができません");
-                            System.out.println(itemMaster.getAmazon_image());
+                            System.out.println(im.getAmazon_image());
                         }
                     }
 
@@ -558,7 +558,7 @@ public class BlogController {
                         amazonImagePath = imageUrl;
                     }
 
-                    Integer eyeCatchId = loadMedia(amazonImagePath, itemMaster, blogPost);
+                    Integer eyeCatchId = loadMedia(amazonImagePath, im, blogPost);
 
                     if (eyeCatchId != null) {
                         blogPost.setWp_eye_catch_id(eyeCatchId);
@@ -568,28 +568,28 @@ public class BlogController {
                     // 新規ブログ投稿で未来商品の場合はTwitterポストします
                     if (newPostFlg) {
                         logger.debug("🕊ブログ投稿のお知らせ");
-                        if (itemMaster.getPublication_date() != null && itemMaster.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
-                            logger.debug(itemMaster.getTitle());
+                        if (im.getPublication_date() != null && im.getPublication_date().after(Date.from(LocalDateTime.now().atZone(ZoneId.of("Asia/Tokyo")).toInstant()))) {
+                            logger.debug(im.getTitle());
                             url = blogEnum.getSubDomain() + "blog/" + blogPost.getWp_id();
 
                             // amazon url
                             String a_url = "";
-                            if (!itemMaster.getAmazon_image().equals("")) {
-                                a_url = StringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse("");
+                            if (!im.getAmazon_image().equals("")) {
+                                a_url = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
                             }
 
                             // rakuten url
-                            String r_url = rakutenController.getRakutenUrl(itemMaster.getIm_id());
+                            String r_url = rakutenController.getRakutenUrl(im.getIm_id());
 
-                            List<String> memNameList = StringUtilsMine.stringToLongList(itemMaster.getMemArr()).stream().map(f -> MemberEnum.get(f).getName()).collect(Collectors.toList());
-                            List<String> teamNameList = StringUtilsMine.stringToLongList(itemMaster.getTeamArr()).stream().map(e -> TeamEnum.get(e).getName()).collect(Collectors.toList());
-                            TwiDto twiDto = new TwiDto(itemMaster.getTitle(), a_url, r_url, url, itemMaster.getPublication_date(), null, teamNameList, memNameList);
+                            List<String> memNameList = StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(f -> MemberEnum.get(f).getName()).collect(Collectors.toList());
+                            List<String> teamNameList = StringUtilsMine.stringToLongList(im.getTeamArr()).stream().map(e -> TeamEnum.get(e).getName()).collect(Collectors.toList());
+                            TwiDto twiDto = new TwiDto(im.getTitle(), a_url, r_url, url, im.getPublication_date(), null, teamNameList, memNameList);
 
-                            twiDto.setRakuten_url(rakutenController.findRakutenUrl(itemMaster.getTitle(), teamIdList.get(0)));
+                            twiDto.setRakuten_url(rakutenController.findRakutenUrl(im.getTitle(), teamIdList.get(0)));
                             twiDto.setBlog_url(url);
 
-                            if (itemMaster.getAmazon_image() != null) {
-                                twiDto.setAmazon_url(StringUtilsMine.getAmazonLinkFromCard(itemMaster.getAmazon_image()).orElse(url));
+                            if (im.getAmazon_image() != null) {
+                                twiDto.setAmazon_url(StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(url));
                             }
 
                             String result;
@@ -599,7 +599,7 @@ public class BlogController {
                                 pythonController.post(teamIdList.get(0), result);
                         } else {
                             logger.debug("❌🕊未来商品ではないので投稿なし");
-                            logger.debug(itemMaster.getTitle() + "発売日：" + itemMaster.getPublication_date());
+                            logger.debug(im.getTitle() + "発売日：" + im.getPublication_date());
                         }
                     } else {
                         logger.debug("❌🕊ブログ更新なのでTweetはありません");
@@ -1146,17 +1146,17 @@ public class BlogController {
      * 既存IMでまだアマゾンアイキャッチない商品について、アイキャッチをセットするtmp method
      * 成功か失敗かを返す
      *
-     * @param itemMaster
+     * @param im
      * @return
      */
-    public boolean tmpEyeCatchAmazonSet(IM itemMaster) {
+    public boolean tmpEyeCatchAmazonSet(IM im) {
         // アイキャッチ
         String eyeCatchImage = "";
         String amazonImagePath = "";
-        if (itemMaster.getAmazon_image() != null) {
-            eyeCatchImage = textController.shapeEyeCatchAmazonImage(itemMaster.getAmazon_image());
+        if (im.getAmazon_image() != null) {
+            eyeCatchImage = textController.shapeEyeCatchAmazonImage(im.getAmazon_image());
             if (!eyeCatchImage.equals("")) {
-                amazonImagePath = serverUtils.availablePath("amazon_" + itemMaster.getIm_id());
+                amazonImagePath = serverUtils.availablePath("amazon_" + im.getIm_id());
 
                 // アマゾン画像を取得しにローカル保存
                 try (InputStream in = new URL(eyeCatchImage).openStream()) {
@@ -1168,7 +1168,7 @@ public class BlogController {
                 }
             } else {
                 System.out.println("Amazon_imageがないのでamazon_image取得ができません");
-                System.out.println(itemMaster.getAmazon_image());
+                System.out.println(im.getAmazon_image());
                 return false;
             }
         } else {
@@ -1176,10 +1176,10 @@ public class BlogController {
         }
 
         if (!amazonImagePath.equals("")) {
-            List<BlogPost> blogPostList = blogPostService.findByImId(itemMaster.getIm_id());
+            List<BlogPost> blogPostList = blogPostService.findByImId(im.getIm_id());
             List<BlogPost> updateList = new ArrayList<>();
             for (BlogPost blogPost : blogPostList) {
-                Integer featuredId = loadMedia(amazonImagePath, itemMaster, blogPost);
+                Integer featuredId = loadMedia(amazonImagePath, im, blogPost);
                 blogPost.setWp_eye_catch_id(featuredId);
                 updateList.add(blogPost);
             }

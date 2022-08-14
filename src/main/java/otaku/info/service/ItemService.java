@@ -119,8 +119,8 @@ public class ItemService {
         return resultList;
     }
 
-    public List<Item> findByMasterId(Long itemMasterId) {
-        return itemRepository.findByMasterId(itemMasterId);
+    public List<Item> findByMasterId(Long imId) {
+        return itemRepository.findByMasterId(imId);
     }
 
     public List<Item> gatherItems(Long itemMId) {

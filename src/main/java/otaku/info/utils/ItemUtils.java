@@ -92,7 +92,7 @@ public class ItemUtils {
         }
 
         // 該当しそうなマスタ商品を探す
-        // 結果を詰める[itemMasterId, 1st check score, 2nd check score]
+        // 結果を詰める[imId, 1st check score, 2nd check score]
         Set<Long[]> resultSet = new HashSet<>();
         for (Map.Entry<Long, List<Item>> e : masterItemMap.entrySet()) {
 

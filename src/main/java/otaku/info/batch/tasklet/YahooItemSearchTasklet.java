@@ -10,14 +10,10 @@ import org.springframework.stereotype.Component;
 import otaku.info.controller.LoggerController;
 import otaku.info.controller.SampleController;
 import otaku.info.dto.MemberSearchDto;
-import otaku.info.entity.Team;
+import otaku.info.enums.TeamEnum;
 import otaku.info.service.MemberService;
-import otaku.info.service.TeamService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @StepScope
@@ -28,9 +24,6 @@ public class YahooItemSearchTasklet implements Tasklet {
 
     @Autowired
     LoggerController loggerController;
-
-    @Autowired
-    TeamService teamService;
 
     @Autowired
     MemberService memberService;
@@ -46,9 +39,9 @@ public class YahooItemSearchTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         try {
-            List<Team> teamList = teamService.findAllTeam();
+            List<TeamEnum> teamList = Arrays.asList(TeamEnum.values());
             Map<Long, String> artistMap = new HashMap<Long, String>();
-            teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
+            teamList.forEach(t -> artistMap.put(t.getId(), t.getName()));
             for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
                 loggerController.printYahooItemSearchTasklet("***** START: " + artist.getValue() + "*****");
                 sampleController.searchItem(artist.getKey(), artist.getValue(), 0L, 2L);

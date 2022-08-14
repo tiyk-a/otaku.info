@@ -41,9 +41,6 @@ public class TextController {
     private ItemService itemService;
 
     @Autowired
-    private TeamService teamService;
-
-    @Autowired
     private MemberService memberService;
 
     @Autowired
@@ -57,6 +54,9 @@ public class TextController {
 
     @Autowired
     private PMService pmService;
+
+    @Autowired
+    RegularPmService regularPmService;
 
     @Autowired
     private Setting setting;
@@ -78,7 +78,7 @@ public class TextController {
      */
     public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
-        String teamName = teamService.getTeamName(ele.getKey());
+        String teamName = TeamEnum.get(ele.getKey()).getName();
         String result= "";
         if (!teamName.equals("")) {
             result = dateStr + "の" + teamName + "のTV出演情報です。%0A%0A";
@@ -268,7 +268,7 @@ public class TextController {
 
     /**
      * ブログタイトルを作成します。
-     * itemMasterからの発売日とタイトルを引数に想定
+     * IMからの発売日とタイトルを引数に想定
      *
      * @param publicationDate
      * @param title
@@ -348,30 +348,49 @@ public class TextController {
             for (Map.Entry<String, List<PMVer>> p : e.getValue().entrySet()) {
                 PMVer masterP = p.getValue().get(0);
                 PM pm = pmService.findByPmId(masterP.getPm_id());
+                RegularPM regularPM = regularPmService.findById(pm.getPm_id());
 
                 String teamName = "";
-                if (subDomain.equals("NA")) {
-                    String[] pTeamIdArr = pm.getTeamArr().split(",");
-//                    List<Long> pTeamIdList = pmRelService.getTeamIdList(masterP.getPm_id());
-                    if (pTeamIdArr != null && pTeamIdArr.length > 0 && Long.parseLong(pTeamIdArr[0]) != (0L)) {
-                        List<Long> pTeamIdList = Arrays.stream(pTeamIdArr).map(Long::parseLong).collect(Collectors.toList());
-                        List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
-                        teamName = String.join("/", teamNameList);
-                    }
+
+                // regularPmがある場合はteam名を入れてあげる
+                if (regularPM != null) {
+                    List<Long> teamIdList = StringUtilsMine.stringToLongList(regularPM.getTeamArr());
+                    List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(teamIdList);
+                    teamName = String.join("/", teamNameList);
+                }
+
+                String[] pTeamIdArr = pm.getTeamArr().split(",");
+                if (pTeamIdArr.length > 0 && Long.parseLong(pTeamIdArr[0]) != (0L)) {
+                    List<Long> pTeamIdList = Arrays.stream(pTeamIdArr).map(Long::parseLong).collect(Collectors.toList());
+                    List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(pTeamIdList);
+                    teamName = String.join("/", teamNameList);
                 }
 
                 String memberName = "";
+
+                // regularPmがある場合はmem名を入れてあげる
+                if (regularPM != null) {
+                    List<Long> memIdList = StringUtilsMine.stringToLongList(regularPM.getMemArr());
+                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memIdList);
+                    teamName = String.join("/", memberNameList);
+                }
+
                 String[] pMemIdArr = pm.getMemArr().split(",");
-//                List<Long> memberIdList = pRelService.getMemberIdList(masterP.getPm_id());
-//                if (memberIdList != null && !memberIdList.isEmpty() && memberIdList.get(0) != null && !memberIdList.get(0).equals(0L)) {
                 if (pMemIdArr != null && pMemIdArr.length > 0 && Long.parseLong(pMemIdArr[0]) != (0L)) {
                     List<Long> pMemIdList = Arrays.stream(pMemIdArr).map(Long::parseLong).collect(Collectors.toList());
                     List<String> memberNameList = MemberEnum.findMNameListByIdList(pMemIdList);
                     memberName = String.join("/", memberNameList);
                 }
 
-                String description = StringUtils.hasText(pm.getDescription()) ? pm.getDescription() : "";
-                tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6><br /><p>番組概要：" + description + "</p>";
+                if (regularPM != null) {
+                    String description = StringUtils.hasText(regularPM.getDescription()) ? regularPM.getDescription() + "\n" + pm.getDescription() : pm.getDescription();
+                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + regularPM.getTitle() + " " + pm.getTitle() + "</h6>" +
+                            "<br /><p>番組概要：" + description + "</p>";
+                } else {
+                    String description = pm.getDescription();
+                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6>" +
+                            "<br /><p>番組概要：" + description + "</p>";
+                }
 
                 String broad = "<p>放送局：";
                 for (PMVer r : p.getValue()) {
@@ -435,7 +454,7 @@ public class TextController {
             PM pm = pmService.findByPmId(p.getPm_id());
             StationEnum e = StationEnum.get(p.getStation_id());
             String stationName = "";
-            if (e.equals(StationEnum.NHK)) {
+            if (e == null) {
                 Station s = stationService.findById(p.getStation_id());
                 if (s != null) {
                     stationName = s.getStation_name();
@@ -527,9 +546,11 @@ public class TextController {
         // 大文字は小文字に
         String result = source.toLowerCase();
         // スペースは切り取る
-        result = result.replaceAll("", result);
+        result = result.replaceAll(" ", "");
+        result = result.replaceAll("　", "");
         // 記号は切り取る
         result = result.replaceAll("!", "");
+        result = result.replaceAll("！", "");
         return result;
     }
 

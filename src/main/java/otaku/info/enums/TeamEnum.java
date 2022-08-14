@@ -1,7 +1,6 @@
 package otaku.info.enums;
 
 import lombok.Getter;
-import otaku.info.entity.Team;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,10 +59,6 @@ public enum TeamEnum {
         this.internalTop = internalTop;
         this.blogEnumId = blogEnumId;
         this.chkTvDetailByMemName = chkTvDetailByMemName;
-    }
-
-    public Team convertToEntity() {
-        return new Team(this.id, this.name, this.kana, this.mnemonic, this.anniversary, this.tw_id, null, null);
     }
 
     public static TeamEnum get(Long argId) {

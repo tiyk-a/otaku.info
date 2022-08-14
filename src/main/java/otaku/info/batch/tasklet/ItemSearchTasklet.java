@@ -1,5 +1,7 @@
 package otaku.info.batch.tasklet;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.batch.core.StepContribution;
@@ -11,11 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import otaku.info.controller.LoggerController;
 import otaku.info.controller.SampleController;
-import otaku.info.entity.Team;
-import otaku.info.service.TeamService;
+import otaku.info.enums.TeamEnum;
 
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * チーム名で商品検索を行う
@@ -31,9 +31,6 @@ public class ItemSearchTasklet implements Tasklet {
     @Autowired
     LoggerController loggerController;
 
-    @Autowired
-    TeamService teamService;
-
     /**
      * 楽天新商品を検索します。
      *
@@ -44,9 +41,9 @@ public class ItemSearchTasklet implements Tasklet {
      */
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        List<Team> teamList = teamService.findAllTeam();
+        List<TeamEnum> teamList = Arrays.asList(TeamEnum.values());
         Map<Long, String> artistMap = new HashMap<Long, String>();
-        teamList.forEach(t -> artistMap.put(t.getTeam_id(), t.getTeam_name()));
+        teamList.forEach(t -> artistMap.put(t.getId(), t.getName()));
         for (Map.Entry<Long, String> artist : artistMap.entrySet()) {
             loggerController.printItemSearchTasklet("***** START: " + artist.getValue() + "*****");
             sampleController.searchItem(artist.getKey(), artist.getValue(), 0L, 1L);

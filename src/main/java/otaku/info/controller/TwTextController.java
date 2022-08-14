@@ -44,6 +44,9 @@ public class TwTextController {
     private PMService pmService;
 
     @Autowired
+    private RegularPmService regularPmService;
+
+    @Autowired
     private PmVerService pmVerService;
 
     @Autowired
@@ -187,7 +190,16 @@ public class TwTextController {
         String info = "";
         for (PMVer p : ele.getValue()) {
             PM pm = pmService.findByPmId(p.getPm_id());
-            info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+            RegularPM regularPM = null;
+            if (pm.getRegular_pm_id() != null) {
+                regularPM = regularPmService.findById(pm.getRegular_pm_id());
+            }
+
+            if (regularPM == null) {
+                info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+            } else {
+                info = info + dtf1.format(p.getOn_air_date()) + " " + regularPM.getTitle() + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+            }
         }
 
         // blogへの誘導
@@ -204,79 +216,109 @@ public class TwTextController {
      * 1 ver1つ投稿する
      * ついでに発売前商品とかのIMリンクを表示
      *
-     * @param ver
+     * @param verList
      * @return Map<TeamId, text>
      */
-    public Map<Long, String> tvAlert(PMVer ver) {
-        // teamId, null
-        Map<Long, String> resultMap = new HashMap<>();
-        PM pm = pmService.findByPmId(ver.getPm_id());
+    public String tvAlert(List<PMVer> verList) {
+        String result = "";
 
-        // 返却するMapにKey(PmId)のみ詰め込みます。
+        PM pm = pmService.findByPmId(verList.get(0).getPm_id());
+        RegularPM regularPM = regularPmService.findById(pm.getPm_id());
+
         List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
-        if (teamIdList.size() > 0) {
-            // Mapのkeyを作り格納
-            teamIdList.forEach(e -> resultMap.put(e, null));
-            // TODO:ここでnullになる
-            for (Long teamId : teamIdList) {
-                List<String> tagList = new ArrayList<>();
-                String teamName = TeamEnum.get(teamId).getName();
-                String mnemonic = TeamEnum.get(teamId).getMnemonic();
-                tagList.add(mnemonic);
+        List<String> tagList = new ArrayList<>();
 
-                String result = "";
+        String teamName = "";
+        for (Long teamId : teamIdList) {
+            // チーム名をセット
+            String tmp = TeamEnum.get(teamId).getName();
+            if (teamName.equals("")) {
+                teamName = tmp;
+            } else {
+                teamName = teamName + "、" + tmp;
+            }
 
-                // Format LocalDateTime
-                String formattedDateTime = ver.getOn_air_date().format(dtf2);
+            // タグにチーム名をセット
+            tagList.add(tmp);
+        }
 
-                // Member情報のあるTeamの場合/ないTeamの場合で文章とタグが異なります。
-                String memberName = "";
-                if (pm.getMemArr() != null && !pm.getMemArr().equals("")) {
-                    List<String> tmpNameList = TeamEnum.findTeamNameListByTeamIdList(StringUtilsMine.stringToLongList(pm.getTeamArr()));
-                    List<String> tmpMnemonicList = MemberEnum.findMNameListByIdList(StringUtilsMine.stringToLongList(pm.getMemArr()));
+        List<Long> memIdList = StringUtilsMine.stringToLongList(pm.getMemArr());
 
-                    if (tmpNameList.size() > 0) {
-                        // 文章用
-                        memberName = String.join("・", tmpNameList);
-                    }
+        String memName = "";
+        for (Long memId : memIdList) {
+            // mem名をセット
+            String tmp = MemberEnum.get(memId).getName();
+            if (memName.equals("")) {
+                memName = tmp;
+            } else {
+                memName = memName + "、" + tmp;
+            }
 
-                    if (tmpMnemonicList.size() > 0) {
-                        // タグ用
-                        tagList.addAll(tmpMnemonicList);
-                    }
+            // タグにメンバー名をセット
+            tagList.add(MemberEnum.get(memId).getMnemonic());
+        }
 
-                    if (tagList.size() > 0) {
-                        for (String tag : tagList) {
-                            if (tag.contains(" ")) {
-                                tagList.remove(tag);
-                                String removedSpaceName = tag.replaceAll(" ", "");
-                                tagList.add(removedSpaceName);
-                            }
-                        }
-                    }
+        // team&mem名を合わせる
+        String names = "";
+        if (!teamName.equals("") && !memName.equals("")) {
+            names = teamName + "、" + memName;
+        } else if (!teamName.equals("") && memName.equals("")) {
+            names = teamName;
+        } else if (teamName.equals("") && !memName.equals("")) {
+            names = memName;
+        }
+
+        if (tagList.size() > 0) {
+            for (String tag : tagList) {
+                if (tag.contains(" ")) {
+                    tagList.remove(tag);
+                    String removedSpaceName = tag.replaceAll(" ", "");
+                    tagList.add(removedSpaceName);
                 }
-
-                IM im = imService.findUpcomingImWithUrls(teamId).orElse(null);
-
-                String a_url = "";
-                if (!im.getAmazon_image().equals("")) {
-                    a_url = "Amazon:" + stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
-                }
-
-                String r_url = "";
-//                if () {
-//
-//                }
-
-                result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
-                        + (memberName.equals("") ? teamName : memberName) + "が出演します。"
-                        + "\n\nチャンネル：" + stationService.findById(ver.getStation_id()).getStation_name()
-                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
-                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？%0A" + a_url;
-                resultMap.put(teamId, result);
             }
         }
-        return resultMap;
+
+        // Format LocalDateTime
+        String formattedDateTime = verList.get(0).getOn_air_date().format(dtf2);
+
+        String stationName = "";
+        for (PMVer ver : verList) {
+            String tmp = stationService.findById(ver.getStation_id()).getStation_name();
+            if (stationName.equals("")) {
+                stationName = tmp;
+            } else {
+                stationName = stationName + "\n" + tmp;
+            }
+        }
+
+        IM im = imService.findUpcomingImWithUrls(teamIdList.get(0)).orElse(null);
+
+        String a_url = "";
+        if (im != null && im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
+            a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
+        }
+
+        String r_url = "";
+//          if () {
+//
+//          }
+
+        if (im != null) {
+            if (regularPM == null) {
+                result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
+                        + names + "が出演します。"
+                        + "\n\nチャンネル：" + stationName
+                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
+                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？%0A" + a_url;
+            } else {
+                result = "このあと" + formattedDateTime + "から『" + regularPM.getTitle() + " " + pm.getTitle() + "』に"
+                        + names + "が出演します。"
+                        + "\n\nチャンネル：" + stationName
+                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
+                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "はこちらから！%0A" + a_url;
+            }
+        }
+        return result;
     }
 
     /**

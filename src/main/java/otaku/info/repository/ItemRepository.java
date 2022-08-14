@@ -55,7 +55,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
     @Query("select t from item t where im_id = ?1")
-    List<Item> findByMasterId(Long itemMasterId);
+    List<Item> findByMasterId(Long imId);
 
     @Query("select t from item t where im_id = ?1")
     List<Item> gatherItems(Long itemMId);

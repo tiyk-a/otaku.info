@@ -10,8 +10,8 @@ import java.util.List;
 
 /**
  * Front Item Master Dto
- * chiharu-front(React.js)で使用するItemMasterのDTOです。
- * Teamごとに画面表示してる。Wpidとか合わせて表示したいからItemMasterだけだと不足するので。
+ * chiharu-front(React.js)で使用するimのDTOです。
+ * Teamごとに画面表示してる。Wpidとか合わせて表示したいからimだけだと不足するので。
  */
 @Getter
 @Setter

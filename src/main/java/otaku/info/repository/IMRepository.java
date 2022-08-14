@@ -16,10 +16,13 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query(nativeQuery = true, value = "SELECT * FROM im t WHERE publication_date < '2022-01-01' and del_flg = 0 and team_arr is null limit 50")
     List<IM> tmpMethod2();
 
+    @Query(nativeQuery = true, value = "select a.* from im a where a.team_arr is not null and a.publication_date >= '2022-01-01' and a.del_flg = 0 and not exists ( select * from blog_post b where a.im_id = b.im_id)")
+    List<IM> tmpMethod3();
+
     @Query(nativeQuery = true, value = "select * from im t where FIND_IN_SET(?1, team_arr) and t.publication_date >= CURRENT_DATE and t.del_flg = false")
     List<IM> findByTeamIdFuture(Long teamId);
 
-    @Query(nativeQuery = true, value = "select t.* from im t inner join blog_post b on t.im_id = b.im_id where FIND_IN_SET(?1, team_arr) and (t.publication_date >= CURRENT_DATE or b.wp_id is null) and t.del_flg = false")
+    @Query(nativeQuery = true, value = "select a.* from im a where FIND_IN_SET(?1, a.team_arr) and a.publication_date >= CURRENT_DATE and a.del_flg = false and not exists ( select * from blog_post b where a.im_id = b.im_id)")
     List<IM> findByTeamIdFutureOrWpIdNull(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from im where FIND_IN_SET(?1, team_arr) and publication_date > CURRENT_DATE AND ((DATEDIFF(publication_date, CURRENT_DATE) <= 8)  OR (DATEDIFF(publication_date, CURRENT_DATE) % 5 = 0)) order by publication_date")

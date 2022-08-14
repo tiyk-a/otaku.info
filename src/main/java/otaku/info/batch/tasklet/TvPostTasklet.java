@@ -37,7 +37,7 @@ public class TvPostTasklet implements Tasklet {
         Calendar calToday = Calendar.getInstance();
         Calendar calTmrw = Calendar.getInstance();
         calTmrw.add(Calendar.DATE, 1);
-        List<PMVer> pmVerList = new ArrayList<>();
+        List<PMVer> pmVerList;
         int postCount = 0;
 
         // 本日の情報を取得するのか、明日の情報を取得するのかフラグ

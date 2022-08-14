@@ -86,9 +86,6 @@ public class BlogController {
     TeamService teamService;
 
     @Autowired
-    MemberService memberService;
-
-    @Autowired
     BlogPostService blogPostService;
 
     @Autowired
@@ -384,6 +381,8 @@ public class BlogController {
             }
         }
 
+        List<BlogPost> blogPostList = new ArrayList<>();
+
         // ここからブログごとに処理。必要なところは投稿・更新する
         for (Map.Entry<BlogEnum, List<TeamEnum>> blogData : blogEnumTeamEnumMap.entrySet()) {
             BlogEnum blogEnum = blogData.getKey();
@@ -393,17 +392,9 @@ public class BlogController {
                 continue;
             }
 
-//            TeamEnum teamEnum = targetTeamEnumList.get(0);
-
             // ここ、既存データ見つからない場合は新規BlogPostオブジェクト作って返す
             BlogPost blogPost = blogPostService.findByImIdBlogEnumId(itemMaster.getIm_id(), blogEnum.getId());
             Boolean generalBlogFlg = blogEnum.equals(BlogEnum.MAIN);
-
-            // このblogがgeneralBlogで、処理が完了していたら飛ばす
-            // TODO:おそらくこの判定にはもう入らない
-            if (generalBlogFlg && generalBlogHandle.equals(3)) {
-                continue;
-            }
 
             // inner_imageがまだ投稿されていない場合は投稿していく
             String imagePath = "";
@@ -413,6 +404,29 @@ public class BlogController {
             if (blogPost.getBlog_post_id() != null) {
                 wpId = blogPost.getWp_id();
                 imagePath = blogPost.getInner_image();
+            }
+
+            // teamが入ってなかったら入れてあげる
+            String teamIdList1 = blogPost.getTeam_arr();
+            for (TeamEnum teamEnum : targetTeamEnumList) {
+                teamIdList1 = StringUtilsMine.addToStringArr(teamIdList1, teamEnum.getId());
+            }
+            blogPost.setTeam_arr(teamIdList1);
+
+            // memberが入ってなかったら入れてあげる
+            String memArr = itemMaster.getMemArr();
+            if (memArr != null && !memArr.equals("")) {
+                String tmpMem = "";
+                for (Long memId : StringUtilsMine.stringToLongList(memArr)) {
+                    if (targetTeamEnumList.stream().anyMatch(e -> e.equals(TeamEnum.get(MemberEnum.get(memId).getTeamId())))) {
+                        tmpMem = StringUtilsMine.addToStringArr(tmpMem, memId);
+                    }
+                }
+                blogPost.setMem_arr(tmpMem);
+            }
+
+            if (blogPost.getIm_id() == null) {
+                blogPost.setIm_id(itemMaster.getIm_id());
             }
 
             // 登録・更新どちらの場合でも、inner_imageがないなら投稿して用意
@@ -427,6 +441,11 @@ public class BlogController {
 
                 // blogPostにset inner image
                 blogPost.setInner_image(imagePath);
+            }
+
+            // BlogEnumが異なるときは設定してあげる
+            if (blogPost.getBlog_enum_id() == null || blogPost.getBlog_enum_id().equals("") || !blogPost.getBlog_enum_id().equals(blogEnum.getId())) {
+                blogPost.setBlog_enum_id(blogEnum.getId());
             }
 
             // blogポストに向かう
@@ -538,8 +557,14 @@ public class BlogController {
                     if (amazonImagePath.equals("")) {
                         amazonImagePath = imageUrl;
                     }
-                    loadMedia(amazonImagePath, itemMaster);
 
+                    Integer eyeCatchId = loadMedia(amazonImagePath, itemMaster, blogPost);
+
+                    if (eyeCatchId != null) {
+                        blogPost.setWp_eye_catch_id(eyeCatchId);
+                    }
+
+                    blogPostList.add(blogPost);
                     // 新規ブログ投稿で未来商品の場合はTwitterポストします
                     if (newPostFlg) {
                         logger.debug("🕊ブログ投稿のお知らせ");
@@ -590,6 +615,10 @@ public class BlogController {
             if (generalBlogFlg) {
                 generalBlogHandle = 3;
             }
+        }
+
+        if (blogPostList.size() > 0) {
+            blogPostService.saveAll(blogPostList);
         }
 
         logger.debug("postOrUpdate終わり");
@@ -738,7 +767,6 @@ public class BlogController {
         // どのブログにどのTeamの投稿が必要かを全てもつ
         Map<BlogEnum, List<TeamEnum>> blogEnumTeamEnumMap = new HashMap<>();
         for (PM pm : pmList) {
-            // TODO: 12:11ここから続き！
             List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
             for (Long teamId : teamIdList) {
                 List<TeamEnum> teamEnumList;
@@ -1061,41 +1089,25 @@ public class BlogController {
      *
      * @param imageUrl 　postする画像パス
      */
-    public void loadMedia(String imageUrl, IM im) {
+    public Integer loadMedia(String imageUrl, IM im, BlogPost blogPost) {
+        Integer featuredMedia = null;
 
         if (StringUtils.hasText(imageUrl)) {
-            List<Long> blogEnumIdList = new ArrayList<>();
-            List<BlogPost> blogPostList = new ArrayList<>();
+            Long wpId = blogPost.getWp_id();
+            BlogEnum blogEnum = BlogEnum.get(blogPost.getBlog_enum_id());
+            System.out.println("メディアポスト:" + imageUrl);
+            Map<Integer, String> map = requestMedia(response, blogEnum, imageUrl);
+            System.out.println("ポスト完了");
 
-            for (Long teamId : StringUtilsMine.stringToLongList(im.getTeamArr())) {
-                BlogEnum blogEnum = BlogEnum.get(teamId);
-
-                if (!blogEnumIdList.contains(blogEnum.getId())) {
-                    BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), blogEnum.getId());
-                    Long wpId = blogPost.getWp_id();
-                    System.out.println("メディアポスト:" + imageUrl);
-                    Map<Integer, String> map = requestMedia(response, blogEnum, imageUrl);
-                    System.out.println("ポスト完了");
-
-                    // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
-                    Integer imageId = null;
-                    for (Map.Entry<Integer, String> elem : map.entrySet()) {
-                        imageId = elem.getKey();
-                    }
-                    String res = setMedia(wpId, imageId, blogEnum);
-                    Integer featuredMedia = extractMedia(res);
-                    if (featuredMedia != 0) {
-                        blogPost.setWp_eye_catch_id(featuredMedia);
-                        blogPostList.add(blogPost);
-                    }
-                    blogEnumIdList.add(blogEnum.getId());
-                }
+            // 無事アップロードできてたらブログ投稿にアイキャッチを設定してあげる
+            Integer imageId = null;
+            for (Map.Entry<Integer, String> elem : map.entrySet()) {
+                imageId = elem.getKey();
             }
-
-            if (blogPostList.size() > 0) {
-                blogPostService.saveAll(blogPostList);
-            }
+            String res = setMedia(wpId, imageId, blogEnum);
+            featuredMedia = extractMedia(res);
         }
+        return featuredMedia;
     }
 
     /**
@@ -1164,7 +1176,17 @@ public class BlogController {
         }
 
         if (!amazonImagePath.equals("")) {
-            loadMedia(amazonImagePath, itemMaster);
+            List<BlogPost> blogPostList = blogPostService.findByImId(itemMaster.getIm_id());
+            List<BlogPost> updateList = new ArrayList<>();
+            for (BlogPost blogPost : blogPostList) {
+                Integer featuredId = loadMedia(amazonImagePath, itemMaster, blogPost);
+                blogPost.setWp_eye_catch_id(featuredId);
+                updateList.add(blogPost);
+            }
+
+            if (updateList.size() > 0) {
+                blogPostService.saveAll(updateList);
+            }
         } else {
             return false;
         }

@@ -221,6 +221,14 @@ public class StringUtilsMine {
      * @return
      */
     public static boolean sameElementArrays(String str1, String str2) {
+        if ((str1 == null || str1.equals("")) && (str2 == null || str2.equals(""))) {
+            return true;
+        }
+
+        if ((str1 == null || str1.equals("")) || (str2 == null || str2.equals(""))) {
+            return false;
+        }
+
         String[] arr1 = str1.split(",");
         String[] arr2 = str2.split(",");
 
@@ -263,8 +271,12 @@ public class StringUtilsMine {
      * @return
      */
     public static List<Long> stringToLongList(String str) {
-        String[] arr = str.split(",");
-        return Arrays.stream(arr).map(e -> Long.parseLong(e)).collect(Collectors.toList());
+        if (str != null && !str.equals("")) {
+            String[] arr = str.split(",");
+            return Arrays.stream(arr).map(e -> Long.parseLong(e)).collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -273,8 +285,12 @@ public class StringUtilsMine {
      * @return
      */
     public static List<String> stringToStrList(String str) {
-        String[] arr = str.split(",");
-        return Arrays.stream(arr).collect(Collectors.toList());
+        if (str != null && !str.equals("")) {
+            String[] arr = str.split(",");
+            return Arrays.stream(arr).collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public static String strListToString(List<String> strList) {

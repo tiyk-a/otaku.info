@@ -17,11 +17,11 @@ import java.util.List;
  * 商品テーブル
  *
  */
-@Entity(name = "Item")
+@Entity(name = "item")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Item")
+@Table(name = "item")
 public class Item {
 
     @Id

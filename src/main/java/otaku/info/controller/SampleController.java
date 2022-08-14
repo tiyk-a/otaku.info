@@ -39,6 +39,9 @@ public class SampleController {
     final Logger logger = Log4jUtils.newConsoleCsvAllLogger("SampleController");
 
     @Autowired
+    TextController textController;
+
+    @Autowired
     private RakutenController rakutenController;
 
     @Autowired
@@ -178,7 +181,13 @@ public class SampleController {
                 // rel->masterテーブルにteam/memデータを移動tmpメソッド(~2022)
                 tmpController.insertTeamMemOld();
                 break;
+            case 17:
+                String s = textController.getTagSlug("Hey! Say Jump");
+                System.out.println(s);
+                System.out.println("koko");
+                break;
             case 18:
+                tmpController.insertBlogPost();
 //                tmpController.moveTo(from, to);
                 break;
             case 19:

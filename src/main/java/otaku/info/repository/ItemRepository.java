@@ -15,58 +15,58 @@ import java.util.Optional;
  */
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    @Query("SELECT COUNT(*) FROM Item WHERE ITEM_CODE = ?1")
+    @Query("SELECT COUNT(*) FROM item WHERE ITEM_CODE = ?1")
     Long hasItemCode(String itemCode);
 
-    @Query(nativeQuery = true, value = "SELECT * FROM Item i WHERE publication_date >= '2022-01-01' and team_arr is null limit 50")
+    @Query(nativeQuery = true, value = "SELECT * FROM item i WHERE publication_date >= '2022-01-01' and team_arr is null limit 50")
     List<Item> tmpMethod();
 
-    @Query(nativeQuery = true, value = "SELECT * FROM Item i WHERE publication_date < '2022-01-01' and team_arr is null limit 50")
+    @Query(nativeQuery = true, value = "SELECT * FROM item i WHERE publication_date < '2022-01-01' and team_arr is null limit 50")
     List<Item> tmpMethod2();
 
-    @Query("SELECT item_code FROM Item WHERE item_code IN ?1")
+    @Query("SELECT item_code FROM item WHERE item_code IN ?1")
     List<String> findItemCodeList(List<String> itemCodelist);
 
-    @Query("SELECT t FROM Item t WHERE publication_date > CURRENT_DATE AND publication_date < ?1 and del_flg = 0")
+    @Query("SELECT t FROM item t WHERE publication_date > CURRENT_DATE AND publication_date < ?1 and del_flg = 0")
     List<Item> findFutureItemByDate(Date date);
 
-    @Query("SELECT t FROM Item t WHERE publication_date = CURRENT_DATE and del_flg = 0")
+    @Query("SELECT t FROM item t WHERE publication_date = CURRENT_DATE and del_flg = 0")
     List<Item> findReleasedItemList();
 
-    @Query("SELECT t FROM Item t WHERE fct_chk = ?1")
+    @Query("SELECT t FROM item t WHERE fct_chk = ?1")
     List<Item> findByFctChk(boolean isFctChked);
 
-    @Query("SELECT item_id FROM Item WHERE item_id in ?1 and del_flg = ?2")
+    @Query("SELECT item_id FROM item WHERE item_id in ?1 and del_flg = ?2")
     List<Long> getNotDeletedItemIdList(List<Long> idList, boolean del_flg);
 
-    @Query("SELECT COUNT(*) FROM Item WHERE item_id = ?1 and publication_date != ?2")
+    @Query("SELECT COUNT(*) FROM item WHERE item_id = ?1 and publication_date != ?2")
     Long getItemIdListNotUpdated(Long itemId, Date publicationDate);
 
-    @Query("SELECT t FROM Item t WHERE item_code = ?1")
+    @Query("SELECT t FROM item t WHERE item_code = ?1")
     Optional<Item> findByItemCode(String itemCode);
 
-    @Query("SELECT t FROM Item t WHERE del_flg = ?1 and publication_date > '2021-09-01' and publication_date < '2021-09-10'")
+    @Query("SELECT t FROM item t WHERE del_flg = ?1 and publication_date > '2021-09-01' and publication_date < '2021-09-10'")
     List<Item> findByDelFlg(boolean delFlg);
 
-    @Query("select t from Item t where wp_id is not null and updated_at >= ?1")
+    @Query("select t from item t where wp_id is not null and updated_at >= ?1")
     List<Item> findWpIdNotNullUpdatedAt(Date from);
 
     @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.publication_date = ?2 and im_id is not null")
     List<Item> findSimilarItemList(Long teamId, Date publicationDate);
 
-    @Query("select t from Item t where im_id = ?1")
+    @Query("select t from item t where im_id = ?1")
     List<Item> findByMasterId(Long itemMasterId);
 
-    @Query("select t from Item t where im_id = ?1")
+    @Query("select t from item t where im_id = ?1")
     List<Item> gatherItems(Long itemMId);
 
-    @Query("select count(*) from Item where item_code = ?1 and site_id = ?2")
+    @Query("select count(*) from item where item_code = ?1 and site_id = ?2")
     int isRegistered(String code, Integer siteId);
 
-    @Query("select t from Item t where item_code = ?1")
+    @Query("select t from item t where item_code = ?1")
     List<Item> isRegistered(String code);
 
-    @Query("select t from Item t where im_id is null and publication_date >= CURRENT_DATE")
+    @Query("select t from item t where im_id is null and publication_date >= CURRENT_DATE")
     List<Item> findByMIdNullFuture();
 
     /**
@@ -102,7 +102,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * 各チームのitem数（未来で削除されていなくてIMIDがないもの
      * @return
      */
-    @Query(nativeQuery = true, value = "count(*) from item a where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null and FIND_IN_SET(?1, team_arr)")
+    @Query(nativeQuery = true, value = "select count(*) from item a where a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null and FIND_IN_SET(?1, team_arr)")
     int getNumberOfTeamIdFutureNotDeletedNoIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select url from item where im_id = ?1 and url like '%rakuten%' order by item_id asc limit 10")

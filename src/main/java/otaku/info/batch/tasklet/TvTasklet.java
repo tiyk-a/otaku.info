@@ -156,7 +156,7 @@ public class TvTasklet implements Tasklet {
                             if (!isValidFlg) {
                                 continue;
                             }
-                        };
+                        }
                     }
                     String[] valueArr = {e.getElementsByTag("h2").text(), e.getElementsByTag("a").first().attr("abs:href")};
                     tvMap.put(e.getElementsByClass("utileListProperty").text(), valueArr);

@@ -53,9 +53,6 @@ public class ApiPmController {
     RegularPmService regularPmService;
 
     @Autowired
-    RegPmStationService regPmStationService;
-
-    @Autowired
     DateUtils dateUtils;
 
     @Autowired
@@ -121,8 +118,6 @@ public class ApiPmController {
             return ResponseEntity.ok(false);
         }
 
-        RegularPM regPm = null;
-
         // reg_pmの登録
         String title = input.get("title").toString();
         if (!regularPmService.existData(title)) {
@@ -143,31 +138,16 @@ public class ApiPmController {
 
             newRegPm.setTeamArr(teamStr);
             newRegPm.setMemArr(memStr);
-            regPm = regularPmService.save(newRegPm);
-        }
-
-        // 放送局の登録
-        if (input.containsKey("station_id_arr") && regPm != null) {
-            try {
-                List<Integer> castArr = (List<Integer>) input.get("station_id_arr");
-                List<RegPmStation> saveList = new ArrayList<>();
-
-                for (Integer sta : castArr) {
-                    Long l = new Long(sta);
-                    if (!regPmStationService.existData(regPm.getRegular_pm_id(), l)) {
-                        RegPmStation regPmStation = new RegPmStation();
-                        regPmStation.setRegular_pm_id(regPm.getRegular_pm_id());
-                        regPmStation.setStation_id(l);
-                        saveList.add(regPmStation);
-                    }
+            // 放送局の登録
+            if (input.containsKey("station_id_arr")) {
+                try {
+                    List<Long> stationIdList = (List<Long>) input.get("station_id_arr");
+                    newRegPm.setStationArr(StringUtilsMine.longListToString(stationIdList));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-                if (saveList.size() > 0) {
-                    regPmStationService.saveAll(saveList);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+            regularPmService.save(newRegPm);
         }
         return ResponseEntity.ok(true);
     }
@@ -195,7 +175,7 @@ public class ApiPmController {
         logger.debug("accepted");
 
         // pm
-        PM pm =pmService.findByPmId(id);
+        PM pm = pmService.findByPmId(id);
         Boolean updPmFlg = false;
 
         if (!form.getTitle().equals(pm.getTitle())) {
@@ -205,6 +185,11 @@ public class ApiPmController {
 
         if (!form.getDescription().equals(pm.getDescription())) {
             pm.setDescription(form.getDescription());
+            updPmFlg = true;
+        }
+
+        if (!form.getRegular_pm_id().equals(pm.getRegular_pm_id())) {
+            pm.setRegular_pm_id(form.getRegular_pm_id());
             updPmFlg = true;
         }
 

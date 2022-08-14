@@ -3,6 +3,7 @@ package otaku.info.controller;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +11,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
+import otaku.info.enums.BlogEnum;
+import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -70,6 +74,59 @@ public class TmpController {
 
     @Autowired
     BlogController blogController;
+
+    @Autowired
+    BlogPostService blogPostService;
+
+    public void insertBlogPost() {
+        Boolean flg = true;
+        while (flg) {
+            List<IM> imList = imService.tmpMethod3();
+            if (imList.size() > 0) {
+                for (IM im : imList) {
+                    List<BlogPost> blogPostList = new ArrayList<>();
+
+                    List<Long> teamIdList = StringUtilsMine.stringToLongList(im.getTeamArr());
+                    List<Long> blogEnumList = new ArrayList<>();
+
+                    for (Long teamId : teamIdList) {
+                        TeamEnum teamEnum = TeamEnum.get(teamId);
+                        if (teamEnum != null) {
+                            if (!blogEnumList.contains(teamEnum.getBlogEnumId())) {
+                                blogEnumList.add(teamEnum.getBlogEnumId());
+                            }
+                        }
+
+                    }
+                    for (Long blogEnumId : blogEnumList) {
+                        BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), blogEnumId);
+                        if (blogPost.getBlog_post_id() == null) {
+                            List<IMRel> relList = imRelService.findByItemMId(im.getIm_id());
+                            List<IMRel> relSelectedList = relList.stream().filter(e -> TeamEnum.get(e.getTeam_id()).getBlogEnumId().equals(blogEnumId)).collect(Collectors.toList());
+                            blogPost.setBlog_enum_id(blogEnumId);
+                            if (relSelectedList.size() > 0) {
+                                blogPost.setWp_id(relSelectedList.get(0).getWp_id());
+                                blogPost.setInner_image(relSelectedList.get(0).getInner_image());
+                                blogPost.setWp_eye_catch_id(relSelectedList.get(0).getWp_eye_catch_id());
+                            }
+                            blogPost.setIm_id(im.getIm_id());
+                            List<Long> tmp = teamIdList.stream().filter(e -> TeamEnum.get(e).getBlogEnumId().equals(blogEnumId)).collect(Collectors.toList());
+                            blogPost.setTeam_arr(StringUtilsMine.longListToString(tmp));
+                            List<Long> tmp2 = StringUtilsMine.stringToLongList(im.getMemArr()).stream().filter(e -> TeamEnum.get(MemberEnum.get(e).getTeamId()).getBlogEnumId().equals(blogEnumId)).collect(Collectors.toList());
+                            blogPost.setMem_arr(StringUtilsMine.longListToString(tmp2));
+                            blogPostList.add(blogPost);
+                        }
+                    }
+
+                    if (blogPostList.size() > 0) {
+                        blogPostService.saveAll(blogPostList);
+                    }
+                }
+            } else {
+                flg = false;
+            }
+        }
+    }
 
     /**
      * relテーブルの削除処理2022のデータ

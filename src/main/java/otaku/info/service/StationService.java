@@ -7,10 +7,7 @@ import otaku.info.enums.StationEnum;
 import otaku.info.repository.StationRepository;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,5 +102,24 @@ public class StationService {
      */
     private List<Station> convertByEnum(List<StationEnum> stationEnumList) {
         return stationEnumList.stream().map(e -> convertByEnum(e)).collect(Collectors.toList());
+    }
+
+    public Map<Long, String> findStationIdNameMap(List<Long> stationIdList) {
+        Map<Long, String> resMap = new HashMap<>();
+
+        for (Long stationId : stationIdList) {
+            String stationName = "";
+            StationEnum stationEnum = StationEnum.get(stationId);
+            if (stationEnum == null) {
+                Station station = stationRepository.findById(stationId).orElse(null);
+                if (station != null) {
+                    stationName = station.getStation_name();
+                }
+            } else {
+                stationName = stationEnum.getName();
+            }
+            resMap.put(stationId, stationName);
+        }
+        return resMap;
     }
 }

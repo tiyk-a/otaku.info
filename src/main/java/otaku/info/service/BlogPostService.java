@@ -19,6 +19,10 @@ public class BlogPostService {
         return blogPostRepository.saveAll(blogPostList);
     }
 
+    public List<BlogPost> findByImId(Long imId) {
+        return blogPostRepository.findByImId(imId);
+    }
+
     /**
      * 既存データ見つからない場合はnewオブジェクト返します
      *

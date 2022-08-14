@@ -43,6 +43,9 @@ public class RegularPM {
     @Column(nullable = true)
     private String memArr;
 
+    @Column(nullable = true)
+    private String stationArr;
+
     @CreationTimestamp
     @Column(nullable = true)
     private Timestamp created_at;

@@ -55,9 +55,6 @@ public class ApiTvController {
     RegularPmService regularPmService;
 
     @Autowired
-    RegPmStationService regPmStationService;
-
-    @Autowired
     DateUtils dateUtils;
 
     @Autowired
@@ -177,7 +174,7 @@ public class ApiTvController {
         for (RegularPM regPm : regPmList) {
             RegPMDto regPMDto = new RegPMDto();
             regPMDto.setRegularPM(regPm);
-            regPMDto.setStationMap(regPmStationService.findStationIdListByReguPmId(regPm.getRegular_pm_id()));
+            regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
             regPMDtoList.add(regPMDto);
         }
         pAllDto.setRegPmList(regPMDtoList);
@@ -255,6 +252,10 @@ public class ApiTvController {
 
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(pmVerForm, pm);
+
+                if (regularPM != null) {
+                    pm.setRegular_pm_id(regularPM.getRegular_pm_id());
+                }
 
                 // wordpressでエラーになる記号を処理し、設定し直す
                 pm.setTitle(textController.replaceSignals(pm.getTitle()));

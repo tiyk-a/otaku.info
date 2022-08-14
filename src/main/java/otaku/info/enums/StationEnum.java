@@ -134,8 +134,7 @@ public enum StationEnum {
                 return e;
             }
         }
-        // defはNHKにしてみる
-        return StationEnum.NHK;
+        return null;
     }
 
     public static StationEnum get(String name) {

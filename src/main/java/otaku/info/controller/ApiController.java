@@ -1,13 +1,11 @@
 package otaku.info.controller;
 
-import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.*;
 
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -324,8 +322,28 @@ public class ApiController {
                 im = imService.findById(imVerForm.getIm_id());
             }
 
-            // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
-            BeanUtils.copyProperties(imVerForm, im);
+            if ((im.getAmazon_image() == null || im.getAmazon_image().equals(""))
+                    && (imVerForm.getAmazon_image() != null && !imVerForm.getAmazon_image().equals(""))) {
+                im.setAmazon_image(imVerForm.getAmazon_image());
+            }
+
+            // team
+            if (imVerForm.getTeamArr() != null && !imVerForm.getTeamArr().equals("")) {
+                String tmp = "";
+                for (Long teamId : StringUtilsMine.stringToLongList(imVerForm.getTeamArr())) {
+                    tmp = StringUtilsMine.addToStringArr(im.getTeamArr(), teamId);
+                }
+                im.setTeamArr(tmp);
+            }
+
+            // mem
+            if (imVerForm.getMemArr() != null && !imVerForm.getMemArr().equals("")) {
+                String tmp = "";
+                for (Long memId : StringUtilsMine.stringToLongList(imVerForm.getMemArr())) {
+                    tmp = StringUtilsMine.addToStringArr(im.getMemArr(), memId);
+                }
+                im.setMemArr(tmp);
+            }
 
             // 日付をstringからDateにして詰める
             if (!imVerForm.getPublication_date().equals("")) {
@@ -342,7 +360,7 @@ public class ApiController {
             }
 
             // wordpressでエラーになる記号を処理し、設定し直す
-            im.setTitle(textController.replaceSignals(im.getTitle()));
+            im.setTitle(textController.replaceSignals(imVerForm.getTitle()));
 
             IM savedIm = imService.save(im);
 

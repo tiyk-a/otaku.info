@@ -27,6 +27,10 @@ public class IMService {
         return imRepository.tmpMethod2();
     }
 
+    public List<IM> tmpMethod3() {
+        return imRepository.tmpMethod3();
+    }
+
     public IM save(IM im) {
         return imRepository.save(im);
     }

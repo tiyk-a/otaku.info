@@ -25,6 +25,10 @@ public class PM implements Comparable<PM> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pm_id;
 
+    /** 週次とかの番組の場合 */
+    @Column(nullable = true)
+    private Long regular_pm_id;
+
     @Column(nullable = true)
     private String title;
 

@@ -32,7 +32,7 @@ public interface PMRepository extends JpaRepository<PM, Long> {
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where FIND_IN_SET(?1, team_arr) and b.on_air_date >= CURRENT_DATE and a.del_flg = 0 and b.del_flg = 0 order by b.on_air_date asc")
+    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where FIND_IN_SET(?1, a.team_arr) and b.on_air_date >= CURRENT_DATE and a.del_flg = 0 and b.del_flg = 0 order by b.on_air_date asc")
     List<PM> findByTeamIdFuture(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where a.title = ?1 and b.on_air_date = ?2")

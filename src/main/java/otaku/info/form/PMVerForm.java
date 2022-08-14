@@ -33,6 +33,9 @@ public class PMVerForm {
      */
     private Object[] verList;
 
+    /**
+     * verに登録される
+     */
     private String on_air_date;
 
     private Long station_id;

@@ -15,7 +15,6 @@ import otaku.info.controller.TwTextController;
 import otaku.info.entity.IM;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.IMService;
-import otaku.info.service.ItemService;
 import otaku.info.utils.StringUtilsMine;
 
 import java.util.*;
@@ -39,9 +38,6 @@ public class PublishAnnounceTasklet implements Tasklet {
 
     @Autowired
     LoggerController loggerController;
-
-    @Autowired
-    ItemService itemService;
 
     @Autowired
     IMService imService;

@@ -20,6 +20,9 @@ public interface PMRepository extends JpaRepository<PM, Long> {
             "where a.on_air_date < '2022-01-01' and t.team_arr is null limit 50")
     List<PM> tmpMethod2();
 
+    @Query(nativeQuery = true, value = "SELECT * FROM pm i WHERE team_arr like '%[%' or mem_arr like '%[%'")
+    List<PM> findbyInvalidArr();
+
     @Query("select t from pm t where pm_id = ?1")
     PM findByPmId(Long pmId);
 

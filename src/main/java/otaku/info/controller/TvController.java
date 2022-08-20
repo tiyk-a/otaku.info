@@ -154,16 +154,16 @@ public class TvController  {
                 Program existingP = programService.findByIdentity(program.getTitle(), program.getStation_id(), program.getOn_air_date());
                 String teamArr = existingP.getTeamArr();
                 teamArr = StringUtilsMine.addToStringArr(teamArr, teamId);
-                existingP.setTeamArr(teamArr);
+                existingP.setTeamArr(StringUtilsMine.removeBrackets(teamArr));
 
                 String memArr = existingP.getMemArr();
                 memArr = StringUtilsMine.addToStringArr(memArr, memId);
-                existingP.setMemArr(memArr);
+                existingP.setMemArr(StringUtilsMine.removeBrackets(memArr));
                 programService.save(existingP);
             } else {
                 // 既存登録がなければ新規登録します。
-                program.setTeamArr(teamId.toString());
-                program.setMemArr(memId.toString());
+                program.setTeamArr(StringUtilsMine.removeBrackets(teamId.toString()));
+                program.setMemArr(StringUtilsMine.removeBrackets(memId.toString()));
                 programService.save(program);
                 logger.debug("TV番組を登録：" + program.toString());
             }

@@ -222,7 +222,7 @@ public class TextController {
                 }
             }
 
-            String text = String.join("\n", h2, publicationDateStr, seoImage, im.getAmazon_image(), String.join("\n", verTxtList), seoLink);
+            String text = String.join("\n", h2, publicationDateStr, seoImage, String.join("\n", verTxtList), seoLink);
             // 返却に追加
             result = result + "\n" + text;
         }

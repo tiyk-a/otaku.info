@@ -19,6 +19,9 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query(nativeQuery = true, value = "select a.* from im a where a.team_arr is not null and a.publication_date >= '2022-01-01' and a.del_flg = 0 and not exists ( select * from blog_post b where a.im_id = b.im_id)")
     List<IM> tmpMethod3();
 
+    @Query(nativeQuery = true, value = "SELECT * FROM im i WHERE team_arr like '%[%' or mem_arr like '%[%'")
+    List<IM> findbyInvalidArr();
+
     @Query(nativeQuery = true, value = "select * from im t where FIND_IN_SET(?1, team_arr) and t.publication_date >= CURRENT_DATE and t.del_flg = false")
     List<IM> findByTeamIdFuture(Long teamId);
 

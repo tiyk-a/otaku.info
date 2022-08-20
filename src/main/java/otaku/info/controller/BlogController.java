@@ -502,7 +502,8 @@ public class BlogController {
 
                 if (im.getAmazon_image() != null) {
                     JSONObject jsonObjectIn = new JSONObject();
-                    jsonObjectIn.put("amazon_image", im.getAmazon_image());
+                    String amazon = im.getAmazon_image().replaceAll("\"", "\'");
+                    jsonObjectIn.put("amazon_image", amazon);
                     jsonObject.put("meta", jsonObjectIn);
                 }
 

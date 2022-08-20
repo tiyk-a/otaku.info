@@ -31,6 +31,10 @@ public class IMService {
         return imRepository.tmpMethod3();
     }
 
+    public List<IM> findbyInvalidArr() {
+        return imRepository.findbyInvalidArr();
+    }
+
     public IM save(IM im) {
         return imRepository.save(im);
     }

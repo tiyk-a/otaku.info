@@ -28,6 +28,10 @@ public class ProgramService  {
         return programRepository.tmpMethod2();
     }
 
+    public List<Program> findbyInvalidArr() {
+        return programRepository.findbyInvalidArr();
+    }
+
     public Program save(Program program) {
         return programRepository.save(program);
     }

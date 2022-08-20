@@ -174,6 +174,7 @@ public class SampleController {
                 logger.debug("---END---");
                 break;
             case 15:
+                tmpController.adjustArr();
                 // rel->masterテーブルにteam/memデータを移動tmpメソッド
 //                tmpController.insertTeamMem();
                 break;
@@ -355,14 +356,14 @@ public class SampleController {
                     if (teamId!= null && !teamId.equals(0L)) {
                         List<Long> teamList = new ArrayList<>();
                         teamList.add(teamId);
-                        item.setTeamArr(teamList.toString());
+                        item.setTeamArr(StringUtilsMine.removeBrackets(teamList.toString()));
                     }
 
                     // memArr追加
                     if (memberId!= null && !memberId.equals(0L)) {
                         List<Long> memList = new ArrayList<>();
                         memList.add(memberId);
-                        item.setMemArr(memList.toString());
+                        item.setMemArr(StringUtilsMine.removeBrackets(memList.toString()));
                     }
 
                     // チームで削除チェック（チーム）合致orメンバーで削除チェック（メンバー）合致なら削除リストに追加

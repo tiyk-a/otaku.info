@@ -50,6 +50,65 @@ public class TmpController {
     @Autowired
     BlogPostService blogPostService;
 
+    public void adjustArr() {
+        // teamArr
+        List<Item> itemList = itemService.findbyInvalidArr();
+        List<Item> updateItemList = new ArrayList<>();
+        for (Item item : itemList) {
+            if (item.getTeamArr() != null && item.getTeamArr().contains("[")) {
+                item.setTeamArr(StringUtilsMine.removeBrackets(item.getTeamArr()));
+            }
+
+            if (item.getMemArr() != null && item.getMemArr().contains("[")) {
+                item.setMemArr(StringUtilsMine.removeBrackets(item.getMemArr()));
+            }
+            updateItemList.add(item);
+        }
+
+        List<IM> imList = imService.findbyInvalidArr();
+        List<IM> updateImList = new ArrayList<>();
+        for (IM im : imList) {
+            if (im.getTeamArr() != null && im.getTeamArr().contains("[")) {
+                im.setTeamArr(StringUtilsMine.removeBrackets(im.getTeamArr()));
+            }
+
+            if (im.getMemArr() != null && im.getMemArr().contains("[")) {
+                im.setMemArr(StringUtilsMine.removeBrackets(im.getMemArr()));
+            }
+            updateImList.add(im);
+        }
+
+        List<Program> programList = programService.findbyInvalidArr();
+        List<Program> updatePList = new ArrayList<>();
+        for (Program im : programList) {
+            if (im.getTeamArr() != null && im.getTeamArr().contains("[")) {
+                im.setTeamArr(StringUtilsMine.removeBrackets(im.getTeamArr()));
+            }
+
+            if (im.getOn_air_date() != null && im.getMemArr().contains("[")) {
+                im.setMemArr(StringUtilsMine.removeBrackets(im.getMemArr()));
+            }
+            updatePList.add(im);
+        }
+
+        List<PM> pmList = pmService.findbyInvalidArr();
+        List<PM> updatePmList = new ArrayList<>();
+        for (PM im : pmList) {
+            if (im.getTeamArr() != null && im.getTeamArr().contains("[")) {
+                im.setTeamArr(StringUtilsMine.removeBrackets(im.getTeamArr()));
+            }
+
+            if (im.getMemArr() != null && im.getMemArr().contains("[")) {
+                im.setMemArr(StringUtilsMine.removeBrackets(im.getMemArr()));
+            }
+            updatePmList.add(im);
+        }
+
+        itemService.saveAll(updateItemList);
+        imService.saveAll(updateImList);
+        programService.saveAll(updatePList);
+        pmService.saveAll(updatePmList);
+    }
 //    public void insertBlogPost() {
 //        Boolean flg = true;
 //        while (flg) {

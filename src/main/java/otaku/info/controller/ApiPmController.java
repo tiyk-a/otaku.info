@@ -136,8 +136,8 @@ public class ApiPmController {
                 }
             }
 
-            newRegPm.setTeamArr(teamStr);
-            newRegPm.setMemArr(memStr);
+            newRegPm.setTeamArr(StringUtilsMine.removeBrackets(teamStr));
+            newRegPm.setMemArr(StringUtilsMine.removeBrackets(memStr));
             // 放送局の登録
             if (input.containsKey("station_id_arr")) {
                 try {
@@ -194,12 +194,12 @@ public class ApiPmController {
         }
 
         if (!StringUtilsMine.sameElementArrays(form.getTeamArr(), pm.getTeamArr())) {
-            pm.setTeamArr(form.getTeamArr());
+            pm.setTeamArr(StringUtilsMine.removeBrackets(form.getTeamArr()));
             updPmFlg = true;
         }
 
         if (!StringUtilsMine.sameElementArrays(form.getMemArr(), pm.getMemArr())) {
-            pm.setMemArr(form.getMemArr());
+            pm.setMemArr(StringUtilsMine.removeBrackets(form.getMemArr()));
             updPmFlg = true;
         }
 
@@ -290,5 +290,20 @@ public class ApiPmController {
         }
 
         return ResponseEntity.ok(pmService.findByKeyLimit(key, 5));
+    }
+
+    /**
+     * IMを検索する
+     *
+     * @param key
+     * @return
+     */
+    @GetMapping("/searchReg")
+    public ResponseEntity<List<RegularPM>> searchRegPm(@RequestParam("key") String key) {
+        if (key.equals("") ) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(regularPmService.findByKeyLimit(key, 10L));
     }
 }

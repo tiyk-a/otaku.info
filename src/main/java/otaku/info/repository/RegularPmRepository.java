@@ -13,4 +13,7 @@ public interface RegularPmRepository extends JpaRepository<RegularPM, Long> {
 
     @Query(nativeQuery = true, value = "SELECT p.* FROM regular_pm p where FIND_IN_SET(?1, team_arr)")
     List<RegularPM> findByTeamId(Long teamId);
+
+    @Query(nativeQuery = true, value = "select * from regular_pm where title like %?1% limit ?2")
+    List<RegularPM> findByKeyLimit(String key, Long limit);
 }

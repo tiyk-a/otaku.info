@@ -33,6 +33,10 @@ public class ItemService {
         return itemRepository.tmpMethod2();
     }
 
+    public List<Item> findbyInvalidArr() {
+        return itemRepository.findbyInvalidArr();
+    }
+
     public Item save(Item item) {
         if (!hasData(item.getItem_code())) {
             return itemRepository.saveAndFlush(item);

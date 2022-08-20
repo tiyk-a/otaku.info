@@ -24,6 +24,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query(nativeQuery = true, value = "SELECT * FROM item i WHERE publication_date < '2022-01-01' and team_arr is null limit 50")
     List<Item> tmpMethod2();
 
+    @Query(nativeQuery = true, value = "SELECT * FROM item i WHERE team_arr like '%[%' or mem_arr like '%[%'")
+    List<Item> findbyInvalidArr();
+
     @Query("SELECT item_code FROM item WHERE item_code IN ?1")
     List<String> findItemCodeList(List<String> itemCodelist);
 
@@ -82,7 +85,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and a.publication_date >= now() - interval 10 day and a.im_id is null")
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and a.publication_date >= CURRENT_DATE and a.im_id is null")
     List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")

@@ -333,7 +333,7 @@ public class ApiController {
                 for (Long teamId : StringUtilsMine.stringToLongList(imVerForm.getTeamArr())) {
                     tmp = StringUtilsMine.addToStringArr(im.getTeamArr(), teamId);
                 }
-                im.setTeamArr(tmp);
+                im.setTeamArr(StringUtilsMine.removeBrackets(tmp));
             }
 
             // mem
@@ -342,7 +342,7 @@ public class ApiController {
                 for (Long memId : StringUtilsMine.stringToLongList(imVerForm.getMemArr())) {
                     tmp = StringUtilsMine.addToStringArr(im.getMemArr(), memId);
                 }
-                im.setMemArr(tmp);
+                im.setMemArr(StringUtilsMine.removeBrackets(tmp));
             }
 
             // 日付をstringからDateにして詰める
@@ -527,7 +527,7 @@ public class ApiController {
 
             if (!StringUtilsMine.sameElementArrays(imVerForm.getTeamArr(), im.getTeamArr())) {
                 logger.info("IMのTeamArr変更");
-                im.setTeamArr(imVerForm.getTeamArr());
+                im.setTeamArr(StringUtilsMine.removeBrackets(imVerForm.getTeamArr()));
                 updatedFlg = true;
             } else {
                 logger.info("IMのTeamArr変更ではありません");
@@ -535,7 +535,7 @@ public class ApiController {
 
             if (!StringUtilsMine.sameElementArrays(imVerForm.getMemArr(), im.getMemArr())) {
                 logger.info("IMのMemArr変更");
-                im.setMemArr(imVerForm.getMemArr());
+                im.setMemArr(StringUtilsMine.removeBrackets(imVerForm.getMemArr()));
                 updatedFlg = true;
             } else {
                 logger.info("IMのMemArr変更ではありません");

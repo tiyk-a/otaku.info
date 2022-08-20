@@ -36,4 +36,8 @@ public class RegularPmService {
     public List<RegularPM> findByTeamId(Long teamId) {
        return regularPmRepository.findByTeamId(teamId);
     }
+
+    public List<RegularPM> findByKeyLimit(String key, Long limit) {
+        return regularPmRepository.findByKeyLimit(key, limit);
+    }
 }

@@ -322,4 +322,16 @@ public class StringUtilsMine {
         }
         return builder.toString();
     }
+
+    /**
+     * teamArr, memArrに使うことを想定、飛んできた文字列に[]がついてると良くないのでぬく
+     *
+     * @param target
+     * @return
+     */
+    public static String removeBrackets(String target) {
+        String res = target.replaceAll("\\[", "");
+        String res2 = res.replaceAll("\\]", "");
+        return res2;
+    }
 }

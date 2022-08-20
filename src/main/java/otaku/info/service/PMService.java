@@ -28,6 +28,10 @@ public class PMService {
         return pmRepository.tmpMethod2();
     }
 
+    public List<PM> findbyInvalidArr() {
+        return pmRepository.findbyInvalidArr();
+    }
+
     public PM save(PM pm) {
         return pmRepository.save(pm);
     }

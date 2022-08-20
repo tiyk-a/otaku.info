@@ -281,7 +281,7 @@ public class ApiTvController {
                 } else {
                     teamArr = StringUtilsMine.elemsToSave(regularPM.getTeamArr(), pmVerForm.getTeamArr());
                 }
-                pm.setTeamArr(teamArr);
+                pm.setTeamArr(StringUtilsMine.removeBrackets(teamArr));
             }
 
             // メンバーの登録を行います
@@ -292,7 +292,7 @@ public class ApiTvController {
                 } else {
                     memArr = StringUtilsMine.elemsToSave(regularPM.getMemArr(), pmVerForm.getMemArr());
                 }
-                pm.setTeamArr(memArr);
+                pm.setMemArr(StringUtilsMine.removeBrackets(memArr));
             }
 
             // programのpm_idを登録します

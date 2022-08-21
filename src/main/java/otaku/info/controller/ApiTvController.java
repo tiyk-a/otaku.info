@@ -39,8 +39,8 @@ public class ApiTvController {
     @Autowired
     PMService pmService;
 
-    @Autowired
-    PmVerService pmVerService;
+//    @Autowired
+//    PmVerService pmVerService;
 
     @Autowired
     PMCalService pmCalService;
@@ -51,8 +51,8 @@ public class ApiTvController {
     @Autowired
     DelCalService delCalService;
 
-    @Autowired
-    RegularPmService regularPmService;
+//    @Autowired
+//    RegularPmService regularPmService;
 
     @Autowired
     DateUtils dateUtils;
@@ -149,22 +149,22 @@ public class ApiTvController {
                 dto.setPm(pm);
 
                 // verを取ってくる
-                List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
-                List<PMVerDto> verDtoList = new ArrayList<>();
-                for (PMVer ver : pmVerList) {
-                    // 放送局名を取得
-                    String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
-                    PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
-                    verDtoList.add(pmVerDto);
-                }
-                dto.setVerList(verDtoList);
+//                List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
+//                List<PMVerDto> verDtoList = new ArrayList<>();
+//                for (PMVer ver : pmVerList) {
+//                    // 放送局名を取得
+//                    String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
+//                    PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
+//                    verDtoList.add(pmVerDto);
+//                }
+//                dto.setVerList(verDtoList);
 
-                // verの放送局が放送局マップに存在しない場合、追加する
-                for (PMVer v : pmVerList) {
-                    if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
-                        stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
-                    }
-                }
+//                // verの放送局が放送局マップに存在しない場合、追加する
+//                for (PMVer v : pmVerList) {
+//                    if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
+//                        stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
+//                    }
+//                }
 
                 // リストに入れる
                 pmDtoList.add(dto);
@@ -172,16 +172,16 @@ public class ApiTvController {
             // 返却リストに入れる
             pAllDto.setPm(pmDtoList);
 
-            // regular_pmを入れる
-            List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
-            List<RegPMDto> regPMDtoList = new ArrayList<>();
-            for (RegularPM regPm : regPmList) {
-                RegPMDto regPMDto = new RegPMDto();
-                regPMDto.setRegularPM(regPm);
-                regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
-                regPMDtoList.add(regPMDto);
-            }
-            pAllDto.setRegPmList(regPMDtoList);
+//            // regular_pmを入れる
+//            List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
+//            List<RegPMDto> regPMDtoList = new ArrayList<>();
+//            for (RegularPM regPm : regPmList) {
+//                RegPMDto regPMDto = new RegPMDto();
+//                regPMDto.setRegularPM(regPm);
+//                regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
+//                regPMDtoList.add(regPMDto);
+//            }
+//            pAllDto.setRegPmList(regPMDtoList);
         }
 
         // 各チームごとに未確認のprogram数を取得しセット
@@ -192,38 +192,38 @@ public class ApiTvController {
         return ResponseEntity.ok(pAllDto);
     }
 
-    /**
-     * regular_pmの登録・更新
-     *
-     * @return Boolean true: success / false: failed
-     */
-    @PostMapping("/saveReg")
-    public ResponseEntity<Boolean> addNewRegPm(@Valid @RequestBody RegPmForm regPmForm) {
-        if (regPmForm == null || regPmForm.getTitle().equals("")) {
-            logger.info("RegPmFormの中身が不足でregular_pm登録できません");
-            return ResponseEntity.ok(false);
-        }
-
-        // 既存データがないかチェック
-        Boolean existData = regularPmService.existData(regPmForm.getTitle());
-        RegularPM regPm;
-        if (!existData) {
-            // 新規データの場合
-            regPm = new RegularPM();
-        } else {
-            // 既存データがある場合
-            regPm = regularPmService.findById(regPmForm.getRegular_pm_id());
-        }
-
-        BeanUtils.copyProperties(regPmForm, regPm);
-
-        // 日付をstringからDateにして詰める
-        if (!regPmForm.getStart_date().equals("")) {
-            regPm.setStart_date(dateUtils.stringToLocalDateTime(regPmForm.getStart_date(), "yyyy/MM/dd hh:mm"));
-        }
-
-        return ResponseEntity.ok(true);
-    }
+//    /**
+//     * regular_pmの登録・更新
+//     *
+//     * @return Boolean true: success / false: failed
+//     */
+//    @PostMapping("/saveReg")
+//    public ResponseEntity<Boolean> addNewRegPm(@Valid @RequestBody RegPmForm regPmForm) {
+//        if (regPmForm == null || regPmForm.getTitle().equals("")) {
+//            logger.info("RegPmFormの中身が不足でregular_pm登録できません");
+//            return ResponseEntity.ok(false);
+//        }
+//
+//        // 既存データがないかチェック
+//        Boolean existData = regularPmService.existData(regPmForm.getTitle());
+//        RegularPM regPm;
+//        if (!existData) {
+//            // 新規データの場合
+//            regPm = new RegularPM();
+//        } else {
+//            // 既存データがある場合
+//            regPm = regularPmService.findById(regPmForm.getRegular_pm_id());
+//        }
+//
+//        BeanUtils.copyProperties(regPmForm, regPm);
+//
+//        // 日付をstringからDateにして詰める
+//        if (!regPmForm.getStart_date().equals("")) {
+//            regPm.setStart_date(dateUtils.stringToLocalDateTime(regPmForm.getStart_date(), "yyyy/MM/dd hh:mm"));
+//        }
+//
+//        return ResponseEntity.ok(true);
+//    }
 
     /**
      * PM+付随データを登録します。すでにPMがある場合は更新
@@ -238,15 +238,15 @@ public class ApiTvController {
         try {
             PM pm;
             Program program = programService.findByPId(pmVerForm.getProgram_id());
-            RegularPM regularPM = null;
+//            RegularPM regularPM = null;
 
             if (program == null) {
                 return ResponseEntity.ok(false);
             }
 
-            if (pmVerForm.getRegular_pm_id() != null) {
-                regularPM = regularPmService.findById(pmVerForm.getRegular_pm_id());
-            }
+//            if (pmVerForm.getRegular_pm_id() != null) {
+//                regularPM = regularPmService.findById(pmVerForm.getRegular_pm_id());
+//            }
 
             // pm_idが入っていたらverだけ追加処理処理、入っていなかったらpm新規登録とあればver追加処理、と判断（ここではpmのタイトル変更などはできない）
             // まずはpm
@@ -258,9 +258,9 @@ public class ApiTvController {
                 // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
                 BeanUtils.copyProperties(pmVerForm, pm);
 
-                if (regularPM != null) {
-                    pm.setRegular_pm_id(regularPM.getRegular_pm_id());
-                }
+//                if (regularPM != null) {
+//                    pm.setRegular_pm_id(regularPM.getRegular_pm_id());
+//                }
 
                 // wordpressでエラーになる記号を処理し、設定し直す
                 pm.setTitle(textController.replaceSignals(pm.getTitle()));
@@ -281,22 +281,22 @@ public class ApiTvController {
             // チームの登録を行います
             if (pmVerForm.getTeamArr() != null && !pmVerForm.getTeamArr().equals("")) {
                 String teamArr = "";
-                if (regularPM == null) {
+//                if (regularPM == null) {
                     teamArr = pmVerForm.getTeamArr();
-                } else {
-                    teamArr = StringUtilsMine.elemsToSave(regularPM.getTeamArr(), pmVerForm.getTeamArr());
-                }
+//                } else {
+//                    teamArr = StringUtilsMine.elemsToSave(regularPM.getTeamArr(), pmVerForm.getTeamArr());
+//                }
                 pm.setTeamArr(StringUtilsMine.removeBrackets(teamArr));
             }
 
             // メンバーの登録を行います
             if (pmVerForm.getMemArr() != null && !pmVerForm.getMemArr().equals("")) {
                 String memArr = "";
-                if (regularPM == null) {
+//                if (regularPM == null) {
                     memArr = pmVerForm.getMemArr();
-                } else {
-                    memArr = StringUtilsMine.elemsToSave(regularPM.getMemArr(), pmVerForm.getMemArr());
-                }
+//                } else {
+//                    memArr = StringUtilsMine.elemsToSave(regularPM.getMemArr(), pmVerForm.getMemArr());
+//                }
                 pm.setMemArr(StringUtilsMine.removeBrackets(memArr));
             }
 
@@ -306,32 +306,32 @@ public class ApiTvController {
             programService.save(program);
 
             // verがあれば登録します
-            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), null);
+//            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), null);
 
-            PMVer targetVer = null;
-            if (pmVerList == null || pmVerList.size() == 0) {
-                targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
-            } else {
-                if (pmVerList.stream().noneMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
-                    targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
-                } else if (pmVerList.stream().anyMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
-                    targetVer = pmVerList.stream().filter(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date())).findFirst().get();
-                    if (targetVer.getDel_flg().equals(true)) {
-                        targetVer.setDel_flg(false);
-                    } else {
-                        targetVer = null;
-                    }
-                }
-            }
+//            PMVer targetVer = null;
+//            if (pmVerList == null || pmVerList.size() == 0) {
+//                targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
+//            } else {
+//                if (pmVerList.stream().noneMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
+//                    targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
+//                } else if (pmVerList.stream().anyMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
+//                    targetVer = pmVerList.stream().filter(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date())).findFirst().get();
+//                    if (targetVer.getDel_flg().equals(true)) {
+//                        targetVer.setDel_flg(false);
+//                    } else {
+//                        targetVer = null;
+//                    }
+//                }
+//            }
 
-            if (targetVer != null) {
-                pmVerService.save(targetVer);
-            }
+//            if (targetVer != null) {
+//                pmVerService.save(targetVer);
+//            }
 
             // カレンダーを登録・更新する
             // 既存カレンダーデータ取得する
-            List<PMVer> verList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), true);
-            List<Long> verIdList = verList.stream().map(e -> e.getPm_v_id()).collect(Collectors.toList());
+//            List<PMVer> verList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), true);
+//            List<Long> verIdList = verList.stream().map(e -> e.getPm_v_id()).collect(Collectors.toList());
 
             // TODO: calendar更新
 //            List<PMCal> pmCalList = pmCalService.findByVerIdListTeamIdListDelFlg(verIdList, , false);
@@ -396,22 +396,22 @@ public class ApiTvController {
      * @param pm
      * @return
      */
-    public CalendarInsertDto setGCalDatePm(PM pm, PMVer ver) {
-        CalendarInsertDto dto = new CalendarInsertDto();
-
-        dto.setTitle(pm.getTitle());
-
-        LocalDateTime startDate = ver.getOn_air_date();
-        LocalDateTime endDate = ver.getOn_air_date();
-
-        dto.setStartDateTime(startDate);
-        dto.setEndDateTime(endDate);
-
-        dto.setDesc(pm.getDescription());
-
-        dto.setAllDayFlg(false);
-        return dto;
-    }
+//    public CalendarInsertDto setGCalDatePm(PM pm, PMVer ver) {
+//        CalendarInsertDto dto = new CalendarInsertDto();
+//
+//        dto.setTitle(pm.getTitle());
+//
+//        LocalDateTime startDate = ver.getOn_air_date();
+//        LocalDateTime endDate = ver.getOn_air_date();
+//
+//        dto.setStartDateTime(startDate);
+//        dto.setEndDateTime(endDate);
+//
+//        dto.setDesc(pm.getDescription());
+//
+//        dto.setAllDayFlg(false);
+//        return dto;
+//    }
 
     /**
      * Program一括削除

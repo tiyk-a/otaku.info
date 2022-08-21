@@ -70,8 +70,8 @@ public class BlogController {
     @Autowired
     PMService pmService;
 
-    @Autowired
-    PmVerService pmVerService;
+//    @Autowired
+//    PmVerService pmVerService;
 
     @Autowired
     IMService imService;
@@ -760,46 +760,21 @@ public class BlogController {
      * TV番組の固定ページを更新(送信先ブログごとにまとめる)
      */
     public void updateTvPage() throws ParseException {
-        // 該当期間内の番組を全て取得
-        List<PMVer> tmpList = pmVerService.findByOnAirDateNotDeleted(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
-        List<Long> pmIdList = tmpList.stream().map(PMVer::getPm_id).distinct().collect(Collectors.toList());
-        List<PM> pmList = pmService.findbyPmIdList(pmIdList);
-
-        // どのブログにどのTeamの投稿が必要かを全てもつ
-        Map<BlogEnum, List<TeamEnum>> blogEnumTeamEnumMap = new HashMap<>();
-        for (PM pm : pmList) {
-            List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
-            for (Long teamId : teamIdList) {
-                List<TeamEnum> teamEnumList;
-                TeamEnum teamEnum = TeamEnum.get(teamId);
-                if (!blogEnumTeamEnumMap.containsKey(BlogEnum.get(teamEnum.getBlogEnumId()))) {
-                    teamEnumList = new ArrayList<>();
-                } else {
-                    teamEnumList = blogEnumTeamEnumMap.get(BlogEnum.get(teamEnum.getBlogEnumId()));
-                }
-
-                teamEnumList.add(teamEnum);
-                blogEnumTeamEnumMap.put(BlogEnum.get(teamEnum.getBlogEnumId()), teamEnumList);
-            }
-        }
-
         // subDomainごとにまとめられたので、それぞれのドメインごとにテキストを作ってあげる
         Map<BlogEnum, String> resultMap = new TreeMap<>();
-        if (blogEnumTeamEnumMap.size() > 0) {
-            for (Map.Entry<BlogEnum, List<TeamEnum>> e : blogEnumTeamEnumMap.entrySet()) {
-                List<Long> targetTeamIdList = e.getValue().stream().map(TeamEnum::getId).collect(Collectors.toList());
-                // このブログに該当するpmverを全部引き抜きリストにする
-                List<PM> targetPmList = pmList.stream().filter(f -> targetTeamIdList.contains(f.getPm_id())).collect(Collectors.toList());
 
-                List<PMVer> verList = new ArrayList<>();
-                for (PMVer ver : tmpList) {
-                    if (targetPmList.stream().anyMatch(f -> f.getPm_id().equals(ver.getPm_id()))) {
-                        verList.add(ver);
-                    }
-                }
-                String text = textController.tvPageText(verList, e.getKey().getSubDomain());
-                resultMap.put(e.getKey(), text);
-            }
+        // 該当期間内の番組を全て取得
+//        List<PM> tmpList = pmService.findByOnAirDateNotDeleted(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
+//        List<Long> pmIdList = tmpList.stream().map(PM::getPm_id).distinct().collect(Collectors.toList());
+        List<PM> pmList = pmService.findByOnAirDateNotDeleted(dateUtils.daysAfterToday(0), dateUtils.daysAfterToday(6));
+
+        // どのブログにどのTeamの投稿が必要かを全てもつ
+        for (TeamEnum teamEnum : TeamEnum.values()) {
+            BlogEnum blogEnum = BlogEnum.get(teamEnum.getBlogEnumId());
+
+            List<PM> teamPmList = pmList.stream().filter(e -> StringUtilsMine.stringToLongList(e.getTeamArr()).contains(teamEnum.getId())).collect(Collectors.toList());
+            String text = textController.tvPageText(teamPmList, blogEnum.getSubDomain());
+            resultMap.put(blogEnum, text);
         }
 
         // テキストを用意できた時だけページを更新する
@@ -910,7 +885,7 @@ public class BlogController {
 
         for (Long teamId : teamIdList) {
             // 明日の日付で、テレビ一覧画面を作る
-            List<PMVer> plist = pmVerService.findByOnAirDateNotDeletedTeamId(tmrw, teamId);
+            List<PM> plist = pmService.findByOnAirDateNotDeletedTeamId(tmrw, teamId);
 
             // 明日の日付で、商品一覧画面を作る
             List<IM> imList = imService.findByTeamIdDate(teamId, tmrw);

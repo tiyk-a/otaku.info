@@ -9,6 +9,7 @@ import otaku.info.repository.PMRepository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -93,5 +94,22 @@ public class PMService {
     public List<PmFullDto> findByOnAirDateNotDeleted(LocalDateTime ldt) {
         List<Object[]> res = pmRepository.findByOnAirDateNotDeleted(ldt);
         return res.stream().map(PmFullDto::new).collect(Collectors.toList());
+    }
+
+    public List<PM> findByOnAirDateNotDeleted(Date date) {
+        return pmRepository.findByOnAirDateNotDeleted(date);
+    }
+
+    public List<PM> findByOnAirDateNotDeleted(LocalDateTime dateTime, Integer hour) {
+        LocalDateTime endTime = dateTime.plusHours(hour);
+        return pmRepository.findByOnAirDateNotDeleted(dateTime, endTime);
+    }
+
+    public List<PM> findByOnAirDateNotDeleted(Date sDate, Date eDate) {
+        return pmRepository.findByOnAirDateNotDeleted(sDate, eDate);
+    }
+
+    public List<PM> findByOnAirDateNotDeletedTeamId(Date date, Long teamId) {
+        return pmRepository.findByOnAirDateNotDeletedTeamId(date, teamId);
     }
 }

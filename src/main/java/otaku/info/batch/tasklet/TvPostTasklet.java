@@ -12,7 +12,7 @@ import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TvController;
 import otaku.info.controller.TwTextController;
-import otaku.info.entity.PMVer;
+import otaku.info.entity.PM;
 
 import java.util.*;
 
@@ -37,7 +37,9 @@ public class TvPostTasklet implements Tasklet {
         Calendar calToday = Calendar.getInstance();
         Calendar calTmrw = Calendar.getInstance();
         calTmrw.add(Calendar.DATE, 1);
-        List<PMVer> pmVerList;
+//        List<PMVer> pmVerList;
+        List<PM> pmList;
+
         int postCount = 0;
 
         // 本日の情報を取得するのか、明日の情報を取得するのかフラグ
@@ -45,18 +47,18 @@ public class TvPostTasklet implements Tasklet {
 
         if (forToday) {
             // バッチ実行時間が午前の場合（朝一番を想定）、その日のTV情報を取得する。
-            pmVerList = tvController.getTvList(new Date());
+            pmList = tvController.getTvList(new Date());
         } else {
             // バッチ実行時間が午後の場合（夜を想定）、次の日のTV情報を取得する。
-            pmVerList = tvController.getTvList(calTmrw.getTime());
+            pmList = tvController.getTvList(calTmrw.getTime());
         }
 
-        // 全てのグループIDが入ったMap<TeamId, List<Program>>
-        if (pmVerList.size() > 0) {
-            Map<Long, List<PMVer>> tvListMapByGroup = tvController.mapByGroup(pmVerList);
+        // 全てのグループIDが入ったMap<TeamId, List<PM>>
+        if (pmList.size() > 0) {
+            Map<Long, List<PM>> tvListMapByGroup = tvController.mapByGroup(pmList);
 
             // Mapの要素１つずつ（=1グループずつ）投稿へ進める
-            for (Map.Entry<Long, List<PMVer>> ele : tvListMapByGroup.entrySet()) {
+            for (Map.Entry<Long, List<PM>> ele : tvListMapByGroup.entrySet()) {
                 String text = "";
 
                 if (ele.getValue().size() > 0) {

@@ -5,7 +5,6 @@ import org.apache.lucene.search.spell.JaroWinklerDistance;
 import org.apache.lucene.search.spell.LevensteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import otaku.info.entity.*;
 import otaku.info.enums.*;
 import otaku.info.service.*;
@@ -55,8 +54,8 @@ public class TextController {
     @Autowired
     private PMService pmService;
 
-    @Autowired
-    RegularPmService regularPmService;
+//    @Autowired
+//    RegularPmService regularPmService;
 
     @Autowired
     private Setting setting;
@@ -76,7 +75,7 @@ public class TextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
+    public String tvPost(Map.Entry<Long, List<PM>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String teamName = TeamEnum.get(ele.getKey()).getName();
         String result= "";
@@ -87,9 +86,9 @@ public class TextController {
         }
 
         String info = "";
-        for (PMVer p : ele.getValue()) {
-            PM pm = pmService.findByPmId(p.getPm_id());
-            info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+        for (PM pm : ele.getValue()) {
+//            PM pm = pmService.findByPmId(p.getPm_id());
+            info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(pm.getStation_id()) + ")%0A";
         }
 
         // blogへの誘導
@@ -285,22 +284,22 @@ public class TextController {
      * TV番組固定ページのテキストを作成。
      * 1つのドメインにポストするProgramリストが日にちごちゃ混ぜで入ってくる
      *
-     * @param pmVerList
+     * @param pmList
      * @return
      */
-    public String tvPageText(List<PMVer> pmVerList, String subDomain) throws ParseException {
-        if (pmVerList.size() == 0) {
+    public String tvPageText(List<PM> pmList, String subDomain) throws ParseException {
+        if (pmList.size() == 0) {
             return "";
         }
 
         String result = "[toc depth='4']";
         // 丁寧にプログラムをソートする（放送日、チーム）
         // 1:日付ごとにまとめる<DateStr, List<Program>>
-        Map<String, List<PMVer>> datePMap = new TreeMap<>();
-        for (PMVer p : pmVerList) {
+        Map<String, List<PM>> datePMap = new TreeMap<>();
+        for (PM p : pmList) {
 
             String targetDate = dtf3.format(p.getOn_air_date());
-            List<PMVer> tmpList;
+            List<PM> tmpList;
             if (!datePMap.containsKey(targetDate)) {
                 tmpList = new ArrayList<>();
                 tmpList.add(p);
@@ -314,22 +313,22 @@ public class TextController {
 
         // 2: 日付でまとまったMapの中身を時間で並べ替える
         // 放送局だけの異なる番組をまとめたい<DateStr, Map<title, List<Program>>>
-        Map<String, Map<String, List<PMVer>>> gatheredMap = new TreeMap<>();
+        Map<String, Map<String, List<PM>>> gatheredMap = new TreeMap<>();
         if (datePMap.size() > 0) {
-            for (Map.Entry<String, List<PMVer>> e : datePMap.entrySet()) {
-                Map<String, List<PMVer>> tmpMap = new TreeMap<>();
-                List<PMVer> tmpList;
-                for (PMVer p : e.getValue()) {
-                    PM pm = pmService.findByPmId(p.getPm_id());
+            for (Map.Entry<String, List<PM>> e : datePMap.entrySet()) {
+                Map<String, List<PM>> tmpMap = new TreeMap<>();
+                List<PM> tmpList;
+                for (PM pm : e.getValue()) {
+//                    PM pm = pmService.findByPmId(p.getPm_id());
                     if (tmpMap.containsKey(pm.getTitle())) {
                         tmpList = tmpMap.get(pm.getTitle());
-                        if (!tmpList.get(0).getOn_air_date().equals(p.getOn_air_date())) {
+                        if (!tmpList.get(0).getOn_air_date().equals(pm.getOn_air_date())) {
                             tmpList = new ArrayList<>();
                         }
                     } else {
                         tmpList = new ArrayList<>();
                     }
-                    tmpList.add(p);
+                    tmpList.add(pm);
                     tmpMap.put(pm.getTitle(), tmpList);
                 }
                 gatheredMap.put(e.getKey(), tmpMap);
@@ -341,23 +340,23 @@ public class TextController {
         Map<String, List<String>> textByDays = new TreeMap<>();
         List<String> textList = new ArrayList<>();
         String h2 = "";
-        for (Map.Entry<String, Map<String, List<PMVer>>> e : gatheredMap.entrySet()) {
+        for (Map.Entry<String, Map<String, List<PM>>> e : gatheredMap.entrySet()) {
 
             // 総合ブログの場合チーム名の取得とかが必要
             String tmp = "";
-            for (Map.Entry<String, List<PMVer>> p : e.getValue().entrySet()) {
-                PMVer masterP = p.getValue().get(0);
-                PM pm = pmService.findByPmId(masterP.getPm_id());
-                RegularPM regularPM = regularPmService.findById(pm.getPm_id());
+            for (Map.Entry<String, List<PM>> p : e.getValue().entrySet()) {
+                PM pm = p.getValue().get(0);
+//                PM pm = pmService.findByPmId(masterP.getPm_id());
+//                RegularPM regularPM = regularPmService.findById(pm.getPm_id());
 
                 String teamName = "";
 
                 // regularPmがある場合はteam名を入れてあげる
-                if (regularPM != null) {
-                    List<Long> teamIdList = StringUtilsMine.stringToLongList(regularPM.getTeamArr());
-                    List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(teamIdList);
-                    teamName = String.join("/", teamNameList);
-                }
+//                if (regularPM != null) {
+//                    List<Long> teamIdList = StringUtilsMine.stringToLongList(regularPM.getTeamArr());
+//                    List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(teamIdList);
+//                    teamName = String.join("/", teamNameList);
+//                }
 
                 String[] pTeamIdArr = pm.getTeamArr().split(",");
                 if (pTeamIdArr.length > 0 && Long.parseLong(pTeamIdArr[0]) != (0L)) {
@@ -369,11 +368,11 @@ public class TextController {
                 String memberName = "";
 
                 // regularPmがある場合はmem名を入れてあげる
-                if (regularPM != null) {
-                    List<Long> memIdList = StringUtilsMine.stringToLongList(regularPM.getMemArr());
-                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memIdList);
-                    teamName = String.join("/", memberNameList);
-                }
+//                if (regularPM != null) {
+//                    List<Long> memIdList = StringUtilsMine.stringToLongList(regularPM.getMemArr());
+//                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memIdList);
+//                    teamName = String.join("/", memberNameList);
+//                }
 
                 String[] pMemIdArr = pm.getMemArr().split(",");
                 if (pMemIdArr != null && pMemIdArr.length > 0 && Long.parseLong(pMemIdArr[0]) != (0L)) {
@@ -382,18 +381,18 @@ public class TextController {
                     memberName = String.join("/", memberNameList);
                 }
 
-                if (regularPM != null) {
-                    String description = StringUtils.hasText(regularPM.getDescription()) ? regularPM.getDescription() + "\n" + pm.getDescription() : pm.getDescription();
-                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + regularPM.getTitle() + " " + pm.getTitle() + "</h6>" +
-                            "<br /><p>番組概要：" + description + "</p>";
-                } else {
+//                if (regularPM != null) {
+//                    String description = StringUtils.hasText(regularPM.getDescription()) ? regularPM.getDescription() + "\n" + pm.getDescription() : pm.getDescription();
+//                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + regularPM.getTitle() + " " + pm.getTitle() + "</h6>" +
+//                            "<br /><p>番組概要：" + description + "</p>";
+//                } else {
                     String description = pm.getDescription();
-                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6>" +
+                    tmp = tmp + "</br ><h6>" + dtf1.format(pm.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6>" +
                             "<br /><p>番組概要：" + description + "</p>";
-                }
+//                }
 
                 String broad = "<p>放送局：";
-                for (PMVer r : p.getValue()) {
+                for (PM r : p.getValue()) {
                     String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
                     broad = broad + stationName + "<br />";
                 }
@@ -439,7 +438,7 @@ public class TextController {
      * @param plist
      * @return content/ コンテンツ有無フラグ
      */
-    public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<PMVer> plist) {
+    public Map<String, Boolean> createDailySchedulePost(Long teamId, Date tmrw, Map<IM, List<ImVer>> imMap, List<PM> plist) {
         boolean tvContentFlg = true;
 
         String teamName = TeamEnum.get(teamId).getName();
@@ -450,19 +449,19 @@ public class TextController {
 
         // TV
         List<String> pTextList = new ArrayList<>();
-        for (PMVer p : plist) {
-            PM pm = pmService.findByPmId(p.getPm_id());
-            StationEnum e = StationEnum.get(p.getStation_id());
+        for (PM pm : plist) {
+//            PM pm = pmService.findByPmId(p.getPm_id());
+            StationEnum e = StationEnum.get(pm.getStation_id());
             String stationName = "";
             if (e == null) {
-                Station s = stationService.findById(p.getStation_id());
+                Station s = stationService.findById(pm.getStation_id());
                 if (s != null) {
                     stationName = s.getStation_name();
                 }
             } else {
                 stationName = e.getName();
             }
-            String tmp = dtf1.format(p.getOn_air_date()) + "~ " + pm.getTitle() + "(" + stationName + ")";
+            String tmp = dtf1.format(pm.getOn_air_date()) + "~ " + pm.getTitle() + "(" + stationName + ")";
             pTextList.add(tmp);
         }
 

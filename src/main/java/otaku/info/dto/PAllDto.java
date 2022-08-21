@@ -20,7 +20,7 @@ public class PAllDto {
     // 確認済みのPMリスト
     private List<PMDto> pm;
 
-    private List<RegPMDto> regPmList;
+//    private List<RegPMDto> regPmList;
 
     // 各チームの未チェックID件数
     private Map<Long, Integer> pNumberMap;

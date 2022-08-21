@@ -43,11 +43,11 @@ public class TwTextController {
     @Autowired
     private PMService pmService;
 
-    @Autowired
-    private RegularPmService regularPmService;
+//    @Autowired
+//    private RegularPmService regularPmService;
 
-    @Autowired
-    private PmVerService pmVerService;
+//    @Autowired
+//    private PmVerService pmVerService;
 
     @Autowired
     private Setting setting;
@@ -177,7 +177,7 @@ public class TwTextController {
      * @param date 情報の日付
      * @return
      */
-    public String tvPost(Map.Entry<Long, List<PMVer>> ele, boolean forToday, Date date, Long teamId) {
+    public String tvPost(Map.Entry<Long, List<PM>> ele, boolean forToday, Date date, Long teamId) {
         String dateStr = forToday ? "今日(" + sdf2.format(date) + ")" : "明日(" + sdf2.format(date) + ")";
         String teamName = TeamEnum.get(teamId).getName();
         String result= "";
@@ -188,18 +188,18 @@ public class TwTextController {
         }
 
         String info = "";
-        for (PMVer p : ele.getValue()) {
-            PM pm = pmService.findByPmId(p.getPm_id());
-            RegularPM regularPM = null;
-            if (pm.getRegular_pm_id() != null) {
-                regularPM = regularPmService.findById(pm.getRegular_pm_id());
-            }
+        for (PM pm : ele.getValue()) {
+//            PM pm = pmService.findByPmId(p.getPm_id());
+//            RegularPM regularPM = null;
+//            if (pm.getRegular_pm_id() != null) {
+//                regularPM = regularPmService.findById(pm.getRegular_pm_id());
+//            }
 
-            if (regularPM == null) {
-                info = info + dtf1.format(p.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
-            } else {
-                info = info + dtf1.format(p.getOn_air_date()) + " " + regularPM.getTitle() + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
-            }
+//            if (regularPM == null) {
+                info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(pm.getStation_id()) + ")%0A";
+//            } else {
+//                info = info + dtf1.format(p.getOn_air_date()) + " " + regularPM.getTitle() + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
+//            }
         }
 
         // blogへの誘導
@@ -216,14 +216,14 @@ public class TwTextController {
      * 1 ver1つ投稿する
      * ついでに発売前商品とかのIMリンクを表示
      *
-     * @param verList
+     * @param pm
      * @return Map<TeamId, text>
      */
-    public String tvAlert(List<PMVer> verList) {
+    public String tvAlert(PM pm) {
         String result = "";
 
-        PM pm = pmService.findByPmId(verList.get(0).getPm_id());
-        RegularPM regularPM = regularPmService.findById(pm.getPm_id());
+//        PM pm = pmService.findByPmId(verList.get(0).getPm_id());
+//        RegularPM regularPM = regularPmService.findById(pm.getPm_id());
 
         List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
         List<String> tagList = new ArrayList<>();
@@ -279,17 +279,17 @@ public class TwTextController {
         }
 
         // Format LocalDateTime
-        String formattedDateTime = verList.get(0).getOn_air_date().format(dtf2);
+        String formattedDateTime = pm.getOn_air_date().format(dtf2);
 
         String stationName = "";
-        for (PMVer ver : verList) {
-            String tmp = stationService.findById(ver.getStation_id()).getStation_name();
-            if (stationName.equals("")) {
-                stationName = tmp;
-            } else {
-                stationName = stationName + "\n" + tmp;
-            }
-        }
+//        for (PMVer ver : verList) {
+        stationName = stationService.findById(pm.getStation_id()).getStation_name();
+//            if (stationName.equals("")) {
+//                stationName = tmp;
+//            } else {
+//                stationName = stationName + "\n" + tmp;
+//            }
+//        }
 
         IM im = imService.findUpcomingImWithUrls(teamIdList.get(0)).orElse(null);
 
@@ -304,19 +304,19 @@ public class TwTextController {
 //          }
 
         if (im != null) {
-            if (regularPM == null) {
+//            if (regularPM == null) {
                 result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
                         + names + "が出演します。"
                         + "\n\nチャンネル：" + stationName
                         + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
                         + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？%0A" + a_url;
-            } else {
-                result = "このあと" + formattedDateTime + "から『" + regularPM.getTitle() + " " + pm.getTitle() + "』に"
-                        + names + "が出演します。"
-                        + "\n\nチャンネル：" + stationName
-                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
-                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "はこちらから！%0A" + a_url;
-            }
+//            } else {
+//                result = "このあと" + formattedDateTime + "から『" + regularPM.getTitle() + " " + pm.getTitle() + "』に"
+//                        + names + "が出演します。"
+//                        + "\n\nチャンネル：" + stationName
+//                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
+//                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "はこちらから！%0A" + a_url;
+//            }
         }
         return result;
     }

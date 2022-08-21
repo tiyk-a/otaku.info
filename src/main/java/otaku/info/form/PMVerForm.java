@@ -14,8 +14,8 @@ public class PMVerForm {
 
     private Long pm_id;
 
-    /** 週次とかの番組の場合 */
-    private Long regular_pm_id;
+//    /** 週次とかの番組の場合 */
+//    private Long regular_pm_id;
 
     private String teamArr;
 

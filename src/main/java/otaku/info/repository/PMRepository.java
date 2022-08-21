@@ -6,6 +6,7 @@ import otaku.info.entity.PM;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public interface PMRepository extends JpaRepository<PM, Long> {
@@ -58,4 +59,16 @@ public interface PMRepository extends JpaRepository<PM, Long> {
 
     @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1")
     List<Object[]> findByOnAirDateNotDeleted(LocalDateTime ldt);
+
+    @Query(nativeQuery = true, value = "select t.* from pm t where DATE(on_air_date) = ?1 and del_flg = 0")
+    List<PM> findByOnAirDateNotDeleted(Date date);
+
+    @Query(nativeQuery = true, value = "select t.* from pm t where on_air_date >= ?1 and on_air_date < ?2 and del_flg = 0")
+    List<PM> findByOnAirDateNotDeleted(LocalDateTime dateTime, LocalDateTime endTime);
+
+    @Query(nativeQuery = true, value = "select t.* from pm t where DATE(on_air_date) >= ?1 and DATE(on_air_date) <= ?2 and del_flg = 0")
+    List<PM> findByOnAirDateNotDeleted(Date sDate, Date eDate);
+
+    @Query(nativeQuery = true, value = "select t.* from pm t where DATE(on_air_date) = ?1 and t.del_flg = 0 and FIND_IN_SET(?2, team_arr)")
+    List<PM> findByOnAirDateNotDeletedTeamId(Date date, Long teamId);
 }

@@ -39,8 +39,8 @@ public class TvController  {
     @Autowired
     private final StationService stationService;
 
-    @Autowired
-    private final PmVerService pmVerService;
+//    @Autowired
+//    private final PmVerService pmVerService;
 
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
@@ -55,38 +55,41 @@ public class TvController  {
      * @param date
      * @return
      */
-    public List<PMVer> getTvList(Date date) {
-        return pmVerService.findByOnAirDateNotDeleted(date);
+    public List<PM> getTvList(Date date) {
+        return pmService.findByOnAirDateNotDeleted(date);
     }
 
     /**
-     * 番組リストをグループごとにマップして返却します。
+     * PMリストをteamIdごとにマップして返却します。
      *
      * @param verList
      * @return
      */
-    public Map<Long, List<PMVer>>  mapByGroup(List<PMVer> verList) {
-        Map<Long, List<PMVer>> tvListMapByGroup = new HashMap<>();
+    public Map<Long, List<PM>>  mapByGroup(List<PM> pmList) {
+        // teamId, List<PM>
+        Map<Long, List<PM>> tvListMapByGroup = new HashMap<>();
 
         // 全グループIDを取得して、それぞれを空プログラムリストを値としてMapに入れる。Mapサイズはここで完成。
-        Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
+//        Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
 
         // マップのvalueに情報を追加していく
-        for (PMVer ver : verList) {
+        for (PM pm : pmList) {
             // マップからグループIDの要素のvalueに情報を追加して
-            List<Long> teamIdList = StringUtilsMine.stringToLongList(pmService.findByPmId(ver.getPm_id()).getTeamArr());
+            List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
 
             if (teamIdList != null && !teamIdList.isEmpty()) {
                 for (Long teamId : teamIdList) {
-                    List<PMVer> list = tvListMapByGroup.get(teamId);
-                    if (list != null && !list.isEmpty()) {
-                        list.add(ver);
-                        tvListMapByGroup.put(teamId, list);
+                    List<PM> tmpList;
+                    if (tvListMapByGroup.containsKey(teamId)) {
+                        tmpList = tvListMapByGroup.get(teamId);
+                    } else {
+                        tmpList = new ArrayList<>();
                     }
+                    tmpList.add(pm);
+                    tvListMapByGroup.put(teamId, tmpList);
                 }
             }
         }
-
         return tvListMapByGroup;
     }
 

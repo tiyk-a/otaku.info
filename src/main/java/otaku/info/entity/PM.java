@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * PM (Program Master)
@@ -43,6 +44,12 @@ public class PM implements Comparable<PM> {
 
     @Column(nullable = true)
     private String memArr;
+
+    @Column(nullable = true)
+    private LocalDateTime on_air_date;
+
+    @Column(nullable = false)
+    private Long station_id;
 
     @CreationTimestamp
     @Column(nullable = true)

@@ -75,109 +75,114 @@ public class ApiTvController {
     public ResponseEntity<PAllDto> tvAll(@PathVariable String teamIdStr) {
         logger.debug("accepted");
 
-        Long teamId = null;
-        if (teamIdStr == null || stringUtilsMine.isNumeric(teamIdStr)) {
+        Long teamId = 0L;
+        if (StringUtilsMine.isNumeric(teamIdStr)) {
             teamId = Long.parseLong(teamIdStr);
-        } else {
-            teamId = 17L;
+        }
+
+        // teamIdが不正値だったらチームごとの件数だけ取得して返す
+        boolean skipItemFlg = false;
+        if (teamId < 6 || teamId > 21) {
+            skipItemFlg = true;
         }
 
         PAllDto pAllDto = new PAllDto();
+        if (!skipItemFlg) {
+            // PMのないprogramだけを集める
+            List<PDto> pDtoList = new ArrayList<>();
+            List<Program> pList = null;
 
-        // PMのないprogramだけを集める
-        List<PDto> pDtoList = new ArrayList<>();
-        List<Program> pList = null;
+            if (teamId == null || teamId == 5) {
+                // teamId不正の場合
+                return ResponseEntity.ok(null);
+            } else {
+                // チーム指定が適切に入っていればそのチームのを返す
+                // 10レコードまで取得
+                pList = programService.findbyTeamIdPmIdNullDelFlg(teamId, false, 10);
+            }
 
-        if (teamId == null || teamId == 5) {
-            // teamId不正の場合
-            return ResponseEntity.ok(null);
-        } else {
-            // チーム指定が適切に入っていればそのチームのを返す
-            // 10レコードまで取得
-            pList = programService.findbyTeamIdPmIdNullDelFlg(teamId, false, 10);
-        }
+            for (Program p : pList) {
+                PDto pDto = new PDto();
 
-        for (Program p : pList) {
-            PDto pDto = new PDto();
-
-            // 関連ありそうなPMを集める
-            // 同じ日の同じ放送局のもの
-            List<String> relPmList = new ArrayList<>();
+                // 関連ありそうなPMを集める
+                // 同じ日の同じ放送局のもの
+                List<String> relPmList = new ArrayList<>();
 //            List<PmFullDto> relPmList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
 //            relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
 
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
-            List<PmFullDto> pmFullDtoList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
-            relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+                List<PmFullDto> pmFullDtoList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
+                relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
 
 //            List<PmFullDto> pmFullDtoList = pmService.findPmFuByllDtoOnAirDateStationId(p.getOn_air_date(), p.getStation_id());
 //            relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().format(dateTimeFormatter) + " " + e.getTitle() + " " + e.getDescription()).collect(Collectors.toList()));
 
-            // 同じ日・時間の（放送局は違くていい）
+                // 同じ日・時間の（放送局は違くていい）
 //            List<PmFullDto> pmFullDtoList2 = pmService.findPmFuByllDtoOnAirDateExStationId(p.getOn_air_date(), p.getStation_id());
 //            relPmList.addAll(pmFullDtoList2.stream().map(e -> e.getOnAirDate().format(dateTimeFormatter) + " " + e.getTitle() + " " + e.getDescription()).collect(Collectors.toList()));
 
-            pDto.setProgram(p);
-            pDto.setStation_name(stationService.findById(p.getStation_id()).getStation_name());
-            pDtoList.add(pDto);
-            pDto.setRelPmList(relPmList);
-        }
-
-        pAllDto.setP(pDtoList);
-
-        // PMの方をつめる
-        List<PMDto> pmDtoList = new ArrayList<>();
-        // 放送局のマップ
-        HashMap<Long, String> stationMap = new HashMap<>();
-
-        // 全チームデータ取得の場合
-        List<PM> pmList = null;
-        if (teamId == null || teamId == 5) {
-            pmList = pmService.findFutureDelFlg(false);
-        } else {
-            // チーム指定が適切に入っていればそのチームのを返す
-            pmList = pmService.findByTeamIdFuture(teamId);
-        }
-
-        // PMの付随データを探しにいく
-        for (PM pm : pmList) {
-            PMDto dto = new PMDto();
-            dto.setPm(pm);
-
-            // verを取ってくる
-            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
-            List<PMVerDto> verDtoList = new ArrayList<>();
-            for (PMVer ver : pmVerList) {
-                // 放送局名を取得
-                String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
-                PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
-                verDtoList.add(pmVerDto);
+                pDto.setProgram(p);
+                pDto.setStation_name(stationService.findById(p.getStation_id()).getStation_name());
+                pDtoList.add(pDto);
+                pDto.setRelPmList(relPmList);
             }
-            dto.setVerList(verDtoList);
 
-            // verの放送局が放送局マップに存在しない場合、追加する
-            for (PMVer v : pmVerList) {
-                if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
-                    stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
+            pAllDto.setP(pDtoList);
+
+            // PMの方をつめる
+            List<PMDto> pmDtoList = new ArrayList<>();
+            // 放送局のマップ
+            HashMap<Long, String> stationMap = new HashMap<>();
+
+            // 全チームデータ取得の場合
+            List<PM> pmList = null;
+            if (teamId == null || teamId == 5) {
+                pmList = pmService.findFutureDelFlg(false);
+            } else {
+                // チーム指定が適切に入っていればそのチームのを返す
+                pmList = pmService.findByTeamIdFuture(teamId);
+            }
+
+            // PMの付随データを探しにいく
+            for (PM pm : pmList) {
+                PMDto dto = new PMDto();
+                dto.setPm(pm);
+
+                // verを取ってくる
+                List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
+                List<PMVerDto> verDtoList = new ArrayList<>();
+                for (PMVer ver : pmVerList) {
+                    // 放送局名を取得
+                    String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
+                    PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
+                    verDtoList.add(pmVerDto);
                 }
+                dto.setVerList(verDtoList);
+
+                // verの放送局が放送局マップに存在しない場合、追加する
+                for (PMVer v : pmVerList) {
+                    if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
+                        stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
+                    }
+                }
+
+                // リストに入れる
+                pmDtoList.add(dto);
             }
+            // 返却リストに入れる
+            pAllDto.setPm(pmDtoList);
 
-            // リストに入れる
-            pmDtoList.add(dto);
+            // regular_pmを入れる
+            List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
+            List<RegPMDto> regPMDtoList = new ArrayList<>();
+            for (RegularPM regPm : regPmList) {
+                RegPMDto regPMDto = new RegPMDto();
+                regPMDto.setRegularPM(regPm);
+                regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
+                regPMDtoList.add(regPMDto);
+            }
+            pAllDto.setRegPmList(regPMDtoList);
         }
-        // 返却リストに入れる
-        pAllDto.setPm(pmDtoList);
-
-        // regular_pmを入れる
-        List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
-        List<RegPMDto> regPMDtoList = new ArrayList<>();
-        for (RegularPM regPm : regPmList) {
-            RegPMDto regPMDto = new RegPMDto();
-            regPMDto.setRegularPM(regPm);
-            regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
-            regPMDtoList.add(regPMDto);
-        }
-        pAllDto.setRegPmList(regPMDtoList);
 
         // 各チームごとに未確認のprogram数を取得しセット
         Map<Long, Integer> numberMap = programService.getNumbersOfEachTeamIdFutureNotDeletedNoPM();

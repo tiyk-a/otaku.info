@@ -79,36 +79,43 @@ public class ApiController {
         FAllDto dto = new FAllDto();
 
         Long teamId = 0L;
-        if (teamIdStr == null || stringUtilsMine.isNumeric(teamIdStr)) {
+        if (StringUtilsMine.isNumeric(teamIdStr)) {
             teamId = Long.parseLong(teamIdStr);
-        } else {
-            teamId = 17L;
         }
 
-        // IMがない未来のItemを取得する（他チームで登録されてれば取得しない）
-        List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(teamId);
+        // teamIdが不正値だったらチームごとの件数だけ取得して返す
+        boolean skipItemFlg = false;
+        if (teamId < 6 || teamId > 21) {
+            skipItemFlg = true;
+        }
 
-        // 未来/WPIDがnullのIMを取得する
-        List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(teamId);
-        List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(teamId);
+        if (!skipItemFlg) {
+            // IMがない未来のItemを取得する
+            List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(teamId);
 
-        // IMリスト
-        List<FIMDto> fimDtoList = new ArrayList<>();
-        for (IM im : imList) {
-            FIMDto imDto = new FIMDto();
-            imDto.setIm(im);
+            // 未来有効でWPIDがnullのIMを取得する
+            List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(teamId);
+            List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(teamId);
 
-            // verも追加
-            List<ImVer> verList = imVerService.findByImId(im.getIm_id());
-            imDto.setVerList(verList);
-            fimDtoList.add(imDto);
+            // IMリスト
+            List<FIMDto> fimDtoList = new ArrayList<>();
+            for (IM im : imList) {
+                FIMDto imDto = new FIMDto();
+                imDto.setIm(im);
+
+                // verも追加
+                List<ImVer> verList = imVerService.findByImId(im.getIm_id());
+                imDto.setVerList(verList);
+                fimDtoList.add(imDto);
+            }
+
+            dto.setI(itemList);
+            dto.setIm(fimDtoList);
+            dto.setErrJ(errorJsonList);
         }
 
         // 各チームのIMなし未来のitem件数を取得しDTOにセットします<TeamId, numberOfItems>
         Map<Long, Integer> numberMap = itemService.getNumbersOfEachTeamIdFutureNotDeletedNoIM();
-        dto.setI(itemList);
-        dto.setIm(fimDtoList);
-        dto.setErrJ(errorJsonList);
         dto.setItemNumberMap(numberMap);
         logger.debug("fin");
         return ResponseEntity.ok(dto);

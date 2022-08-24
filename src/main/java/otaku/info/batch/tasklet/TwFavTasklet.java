@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.controller.LineController;
 import otaku.info.controller.LoggerController;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Setting;
@@ -32,6 +33,9 @@ public class TwFavTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Autowired
+    LineController lineController;
+
+    @Autowired
     Setting setting;
 
     @Override
@@ -51,13 +55,14 @@ public class TwFavTasklet implements Tasklet {
         loggerController.printTwFavTasklet("ジャニTwitter Fav END");
 
         loggerController.printTwFavTasklet("ジャニ以外Twitter Fav START");
-        // 100: @LjtYdg, 101: @ChiccaSalak, 102: @BlogChicca, 103: @Berry_chicca
+        // 100: @LjtYdg, 101: @ChiccaSalak, 102: @BlogChicca, 103: @Berry_chicca, 104: @gutz_da_ze__
         Map<Integer, String> idMap = new HashMap<>() {
             {
                 put(100, "");
                 put(101, "");
                 put(102, "");
                 put(103, "");
+                put(104, "");
             }
         };
 
@@ -70,6 +75,7 @@ public class TwFavTasklet implements Tasklet {
             loggerController.printTwFavTasklet("teamId=" + entry.getKey() + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFavTasklet("ジャニ以外Twitter Fav END");
+        lineController.post("ファボの処理が走りました");
         return RepeatStatus.FINISHED;
     }
 }

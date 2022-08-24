@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import otaku.info.controller.LineController;
 import otaku.info.controller.LoggerController;
 import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Setting;
@@ -30,6 +31,9 @@ public class TwFolBTasklet implements Tasklet {
 
     @Autowired
     LoggerController loggerController;
+
+    @Autowired
+    LineController lineController;
 
     @Autowired
     Setting setting;
@@ -53,7 +57,7 @@ public class TwFolBTasklet implements Tasklet {
 
         loggerController.printTwFolBTasklet("ジャニ以外Twitter Follow Back START");
         // 100: @LjtYdg, 101: @ChiccaSalak, 102: @BlogChicca, 103: @Berry_chicca
-        int[] idArr = {100, 101, 102, 103};
+        int[] idArr = {100, 101, 102, 103, 104};
         List<Integer> idList = Arrays.stream(idArr).boxed().collect(Collectors.toList());
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
@@ -64,6 +68,7 @@ public class TwFolBTasklet implements Tasklet {
             loggerController.printTwFolBTasklet("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFolBTasklet("ジャニ以外Twitter Follow Back END");
+        lineController.post("フォロバの処理が走りました");
         return RepeatStatus.FINISHED;
     }
 }

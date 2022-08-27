@@ -21,6 +21,7 @@ public class GlobalErrorHandler {
 
     @ExceptionHandler(Exception.class)
     public void exceptionHandler(Exception e) {
+        System.out.println("Global Error Handlerです");
         e.printStackTrace();
         if (setting.getTest() != null && !setting.getTest().equals("dev")) {
             lineController.post("😨Error:" + System.currentTimeMillis() + ":" + Arrays.toString(e.getStackTrace()).substring(0,200));

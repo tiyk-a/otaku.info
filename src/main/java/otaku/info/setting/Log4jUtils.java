@@ -76,6 +76,7 @@ public class Log4jUtils {
         try {
             logger = newLogger(name, new DailyRollingFileAppender(layout, fileName, "'.'yyyy-MM-dd"), Level.ALL);
         } catch (Exception e) {
+            System.out.println("Log4Jのエラー");
             e.printStackTrace();
         }
         return logger;

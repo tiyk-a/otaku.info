@@ -21,7 +21,7 @@ public class Setting {
     private String naniwaApiPw;
     private String kinpriApiPw;
     private String tvKingdom;
-    private String pythonTwitter;
+    private String pyTwi2;
     private String lineUrl;
     private String rakutenApiUrl;
     private String rakutenAffiliId;

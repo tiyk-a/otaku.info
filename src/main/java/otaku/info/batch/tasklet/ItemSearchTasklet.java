@@ -51,6 +51,7 @@ public class ItemSearchTasklet implements Tasklet {
             try{
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                loggerController.printItemSearchTasklet("チーム検索エラー");
                 e.printStackTrace();
             }
         }

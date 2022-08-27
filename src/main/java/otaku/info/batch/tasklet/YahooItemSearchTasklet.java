@@ -49,10 +49,12 @@ public class YahooItemSearchTasklet implements Tasklet {
                 try{
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
+                    loggerController.printYahooItemSearchTasklet("Yahoo検索エラー");
                     e.printStackTrace();
                 }
             }
         } catch (Exception e) {
+            loggerController.printYahooItemSearchTasklet("Yahoo検索エラー");
             e.printStackTrace();
         }
 
@@ -67,10 +69,12 @@ public class YahooItemSearchTasklet implements Tasklet {
                 try{
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
+                    loggerController.printYahooItemSearchTasklet("Yahoo検索エラー");
                     e.printStackTrace();
                 }
             }
         } catch (Exception e) {
+            loggerController.printYahooItemSearchTasklet("Yahoo検索エラー");
             e.printStackTrace();
         }
         loggerController.printYahooItemSearchTasklet("--- 新商品検索（個人） END ---");

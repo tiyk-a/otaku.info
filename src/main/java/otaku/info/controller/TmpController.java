@@ -1150,6 +1150,7 @@ public class TmpController {
                 }
             } catch (Exception e) {
                 flg = false;
+                logger.error("Tmp Controllerエラー");
                 e.printStackTrace();
             }
             ++n;
@@ -1289,6 +1290,7 @@ public class TmpController {
                 }
             } catch (Exception e) {
                 nextFlg = false;
+                logger.error("Tmp Controllerエラー");
                 e.printStackTrace();
             }
         }
@@ -1345,6 +1347,7 @@ public class TmpController {
                     }
                 }
             } catch (Exception e) {
+                logger.error("Tmp Controllerエラー");
                 e.printStackTrace();
             }
         }

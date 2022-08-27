@@ -247,6 +247,7 @@ public class ApiController {
             im.setDel_flg(true);
             imService.save(im);
         } catch (Exception e) {
+            logger.error("APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -285,6 +286,7 @@ public class ApiController {
                 itemService.save(item);
             }
         } catch (Exception e) {
+            logger.error("APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -336,20 +338,20 @@ public class ApiController {
 
             // team
             if (imVerForm.getTeamArr() != null && !imVerForm.getTeamArr().equals("")) {
-                String tmp = "";
+                String teamArr = im.getTeamArr();
                 for (Long teamId : StringUtilsMine.stringToLongList(imVerForm.getTeamArr())) {
-                    tmp = StringUtilsMine.addToStringArr(im.getTeamArr(), teamId);
+                    teamArr = StringUtilsMine.addToStringArr(teamArr, teamId);
                 }
-                im.setTeamArr(StringUtilsMine.removeBrackets(tmp));
+                im.setTeamArr(StringUtilsMine.removeBrackets(teamArr));
             }
 
             // mem
             if (imVerForm.getMemArr() != null && !imVerForm.getMemArr().equals("")) {
-                String tmp = "";
+                String memArr = im.getMemArr();
                 for (Long memId : StringUtilsMine.stringToLongList(imVerForm.getMemArr())) {
-                    tmp = StringUtilsMine.addToStringArr(im.getMemArr(), memId);
+                    memArr = StringUtilsMine.addToStringArr(memArr, memId);
                 }
-                im.setMemArr(StringUtilsMine.removeBrackets(tmp));
+                im.setMemArr(StringUtilsMine.removeBrackets(memArr));
             }
 
             // 日付をstringからDateにして詰める
@@ -413,6 +415,7 @@ public class ApiController {
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
+            logger.error("APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -616,6 +619,7 @@ public class ApiController {
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
+            logger.error("APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -663,6 +667,7 @@ public class ApiController {
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
+            logger.error("APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }

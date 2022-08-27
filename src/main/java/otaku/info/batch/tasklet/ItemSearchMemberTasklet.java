@@ -53,6 +53,7 @@ public class ItemSearchMemberTasklet implements Tasklet {
             try{
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                loggerController.printItemSearchMemberTasklet("メンバー検索エラー");
                 e.printStackTrace();
             }
         }

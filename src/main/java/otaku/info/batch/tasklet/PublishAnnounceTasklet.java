@@ -89,6 +89,7 @@ public class PublishAnnounceTasklet implements Tasklet {
             try{
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                loggerController.printPublishAnnounceTasklet("アナウンスエラー");
                 e.printStackTrace();
             }
         }

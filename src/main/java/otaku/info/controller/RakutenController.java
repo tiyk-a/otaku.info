@@ -98,6 +98,7 @@ public class RakutenController {
                         jsonObject = jsonUtils.createJsonObject(res, teamId, null);
                     }
                 } catch (Exception ex) {
+                    logger.error("restTemplateのエラーです");
                     ex.printStackTrace();
                 }
             } else {
@@ -268,7 +269,6 @@ public class RakutenController {
             return true;
         } catch (Exception e) {
             logger.debug("*** updateTarget() エラーです " + url + "***");
-            logger.debug(e);
             e.printStackTrace();
             return true;
         }

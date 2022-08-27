@@ -19,7 +19,7 @@ public class AopAll {
             Object result = joinPoint.proceed();
             System.out.println("[Around]メソッド終了:" + joinPoint.getSignature());
             return result;
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.out.println("[Around]メソッド異常終了:" + joinPoint.getSignature());
             // メソッドの引数の名前
             // 例. [id, name, age]
@@ -33,8 +33,10 @@ public class AopAll {
             // 例. id=001 name=Alice age=18
             for (int i = 0; i < methodArgNames2.length; i++) {
                 System.out.print(methodArgNames2[i] + "=" + String.valueOf(methodArgValues2[i]) + " ");
+//                System.out.print(methodArgNames2[i] + "=" + methodArgValues2[i] + " ");
             }
             System.out.print("\n");
+            System.out.println("AOPです");
             e.printStackTrace();
             throw e;
         }

@@ -384,6 +384,7 @@ public class ApiTvController {
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
+            logger.error("TV APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }

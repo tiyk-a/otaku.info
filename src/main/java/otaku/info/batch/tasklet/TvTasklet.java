@@ -97,6 +97,7 @@ public class TvTasklet implements Tasklet {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                loggerController.printTvTasklet("TV検索エラー");
                 e.printStackTrace();
             }
         }
@@ -167,6 +168,7 @@ public class TvTasklet implements Tasklet {
             // 次のページがあるか確認する
             nextBtn = document.select("div.listIndexNum").first();
         } catch (Exception e) {
+            loggerController.printTvTasklet("TV検索エラー");
             e.printStackTrace();
         }
 
@@ -231,6 +233,7 @@ public class TvTasklet implements Tasklet {
             }
             return isValid;
         } catch (Exception e) {
+            loggerController.printTvTasklet("TV検索エラー");
             e.printStackTrace();
         }
         return false;
@@ -262,6 +265,7 @@ public class TvTasklet implements Tasklet {
             }
             return isValid;
         } catch (Exception e) {
+            loggerController.printTvTasklet("TV検索エラー");
             e.printStackTrace();
         }
         return true;

@@ -41,6 +41,7 @@ public class BlogUpdateTasklet implements Tasklet {
         try {
             blogController.updateReleaseItems();
         } catch (Exception e) {
+            loggerController.printBlogUpdateTasklet("商品更新エラー");
             e.printStackTrace();
         }
         loggerController.printBlogUpdateTasklet("①固定商品ページ完了");
@@ -49,6 +50,7 @@ public class BlogUpdateTasklet implements Tasklet {
         try {
             blogController.updateTvPage();
         } catch (Exception e) {
+            loggerController.printBlogUpdateTasklet("テレビ更新エラー");
             e.printStackTrace();
         }
         loggerController.printBlogUpdateTasklet("②固定TV出演情報ページ完了");
@@ -58,6 +60,7 @@ public class BlogUpdateTasklet implements Tasklet {
                 blogController.createDailySchedulePost(blogEnum);
             }
         } catch (Exception e) {
+            loggerController.printBlogUpdateTasklet("予定更新エラー");
             e.printStackTrace();
         }
         loggerController.printBlogUpdateTasklet("③明日の1日の予定投稿完了");

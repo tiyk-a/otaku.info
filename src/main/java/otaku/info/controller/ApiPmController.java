@@ -76,6 +76,7 @@ public class ApiPmController {
                 apiTvController.newPMyVer(pmVerForm);
             }
         } catch (Exception e) {
+            logger.error("PM APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -98,6 +99,7 @@ public class ApiPmController {
             logger.debug("fin");
             pmService.save(pm);
         } catch (Exception e) {
+            logger.error("PM APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
@@ -270,6 +272,7 @@ public class ApiPmController {
             logger.debug("fin");
             return ResponseEntity.ok(true);
         } catch (Exception e) {
+            logger.error("PM APIエラー");
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }

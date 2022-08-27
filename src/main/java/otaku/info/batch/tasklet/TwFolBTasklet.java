@@ -50,7 +50,7 @@ public class TwFolBTasklet implements Tasklet {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             loggerController.printTwFolBTasklet("teamId=" + teamId + "のフォロバ中");
-            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + teamId, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twFolB?teamId=" + teamId, String.class);
             loggerController.printTwFolBTasklet("teamId=" + teamId + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFolBTasklet("ジャニTwitter Follow Back END");
@@ -64,7 +64,7 @@ public class TwFolBTasklet implements Tasklet {
 
         for (Integer id : idList) {
             loggerController.printTwFolBTasklet("teamId=" + id + "のフォロバ中");
-            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twFolB?teamId=" + id, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twFolB?teamId=" + id, String.class);
             loggerController.printTwFolBTasklet("teamId=" + id + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFolBTasklet("ジャニ以外Twitter Follow Back END");

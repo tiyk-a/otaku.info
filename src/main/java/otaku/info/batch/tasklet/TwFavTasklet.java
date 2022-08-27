@@ -49,7 +49,7 @@ public class TwFavTasklet implements Tasklet {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ中");
-            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twSearch?q=" + TeamEnum.get(teamId).getMnemonic() + "&teamId=" + teamId, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twSearch?q=" + TeamEnum.get(teamId).getMnemonic() + "&teamId=" + teamId, String.class);
             loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFavTasklet("ジャニTwitter Fav END");
@@ -71,7 +71,7 @@ public class TwFavTasklet implements Tasklet {
 
         for (Map.Entry<Integer, String> entry : idMap.entrySet()) {
             loggerController.printTwFavTasklet("teamId=" + entry.getKey() + "のフォロバ中");
-            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPythonTwitter() + "twSearch?q=" + entry.getValue() + "&teamId=" + entry.getKey(), String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twSearch?q=" + entry.getValue() + "&teamId=" + entry.getKey(), String.class);
             loggerController.printTwFavTasklet("teamId=" + entry.getKey() + "のフォロバ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFavTasklet("ジャニ以外Twitter Fav END");

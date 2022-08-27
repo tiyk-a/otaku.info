@@ -155,6 +155,7 @@ public class BlogController {
                     blogTagService.saveAll(blogTagList);
                 }
             } catch (Exception ex) {
+                logger.error("ブログエラー");
                 ex.printStackTrace();
             }
         }
@@ -301,6 +302,7 @@ public class BlogController {
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
+                logger.error("ブログエラー");
                 e.printStackTrace();
             }
             result = responseEntity.getBody();
@@ -317,6 +319,7 @@ public class BlogController {
             } else if (e instanceof HttpClientErrorException.BadRequest) {
                 throw new HttpClientErrorException(HttpStatus.BAD_REQUEST);
             } else {
+                logger.error("ブログエラー");
                 e.printStackTrace();
             }
             result = "";
@@ -606,6 +609,7 @@ public class BlogController {
                         logger.debug("❌🕊ブログ更新なのでTweetはありません");
                     }
                 } catch (Exception ex) {
+                    logger.error("ブログエラー");
                     ex.printStackTrace();
                 }
             } else {
@@ -710,12 +714,14 @@ public class BlogController {
                                 blogTag = blogTag1;
                             }
                         } catch (Exception e) {
+                            logger.error("ブログエラー");
                             e.printStackTrace();
                         }
                     }
                 }
             }
         } catch (Exception e) {
+            logger.error("ブログエラー");
             e.printStackTrace();
         }
         return blogTag;

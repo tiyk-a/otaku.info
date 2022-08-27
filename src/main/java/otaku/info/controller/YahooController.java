@@ -60,6 +60,7 @@ public class YahooController {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
+                logger.error("Yahooエラー");
                 e.printStackTrace();
             }
             return responseEntity.getBody();

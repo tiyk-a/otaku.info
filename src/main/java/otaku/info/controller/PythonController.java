@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
@@ -29,6 +30,34 @@ public class PythonController {
 
     @Autowired
     private final Setting setting;
+
+    /**
+     * ルートへ接続テスト
+     *
+     * @return
+     */
+    public String test() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+        try {
+            // herokuの次のpytwi2
+            System.out.println(setting.getPyTwi2());
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2(), String.class);
+            if (response.getStatusCode() != HttpStatus.ACCEPTED && response.getStatusCode() != HttpStatus.CREATED) {
+                logger.debug(response.getBody());
+            }
+        } catch (Exception e) {
+            logger.error("Pythonエラー");
+            e.printStackTrace();
+        }
+        System.out.println("koko");
+        return "FIN.";
+    }
 
     /**
      * Pythonにツイートするようにデータを送る
@@ -63,13 +92,18 @@ public class PythonController {
                 restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
                 try {
-                    ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi?teamId=" + teamId, entity, String.class);
+//                    ResponseEntity<String> response = restTemplate.postForEntity(setting.getPythonTwitter() + "twi?teamId=" + teamId, entity, String.class);
+//                    ResponseEntity<String> response = restTemplate.postForEntity(setting.getPyTwi2() + "twi?teamId=" + teamId, entity, String.class);
+                    ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twi?teamId=" + teamId + "&title=" + text, String.class);
                     if (response.getStatusCode() != HttpStatus.ACCEPTED && response.getStatusCode() != HttpStatus.CREATED) {
                         logger.debug("Response status CHECKER HIT");
                         logger.debug(response.getBody());
                     }
                     logger.debug("Twitter posted ID:" + teamId + ": " + response.getStatusCode() + ":" + text);
+                } catch (HttpServerErrorException e) {
+                    logger.debug("500エラーが返ってきました");
                 } catch (Exception e) {
+                    logger.error("Pythonエラー");
                     e.printStackTrace();
                 }
 

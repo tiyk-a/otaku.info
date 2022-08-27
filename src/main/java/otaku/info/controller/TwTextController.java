@@ -107,6 +107,7 @@ public class TwTextController {
         try {
             url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
         } catch (Exception e) {
+            logger.error("TW textエラー");
             e.printStackTrace();
         }
 

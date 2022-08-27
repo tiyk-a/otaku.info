@@ -87,6 +87,7 @@ public class FutureItemReminderTasklet implements Tasklet {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                loggerController.printFutureItemReminderTasklet("リマインダーエラー");
                 e.printStackTrace();
             }
         }

@@ -1,6 +1,5 @@
 package otaku.info.controller;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import javax.validation.Valid;
@@ -213,14 +212,16 @@ public class ApiTvController {
             }
 
             // 放送局の登録を行います
-            if (pmVerForm.getStationArr() != null && !pmVerForm.getStationArr().equals("")) {
-                String staArr = "";
-                staArr = pmVerForm.getStationArr();
-                pm.setStationArr(StringUtilsMine.removeBrackets(staArr));
+            if (pmVerForm.getStation_id() != null && !pmVerForm.getStation_id().equals("")) {
+                if (pm.getStationArr() == null || pm.getStationArr().equals("")) {
+                    pm.setStationArr("");
+                }
+                pm.setStationArr(StringUtilsMine.addToStringArr(pm.getStationArr(), pmVerForm.getStation_id()));
             }
 
+            PM savedPm = pmService.save(pm);
             // programのpm_idを登録します
-            program.setPm_id(pm.getPm_id());
+            program.setPm_id(savedPm.getPm_id());
             program.setFct_chk(true);
             programService.save(program);
 

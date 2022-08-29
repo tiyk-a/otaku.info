@@ -24,9 +24,6 @@ public interface PMRepository extends JpaRepository<PM, Long> {
             "where a.on_air_date < '2022-01-01' and t.team_arr is null limit 50")
     List<PM> tmpMethod2();
 
-    @Query(nativeQuery = true, value = "select * from pm where regular_pm_id is not null and del_flg = 0")
-    List<PM> findByRelIdNotNull();
-
     @Query(nativeQuery = true, value = "SELECT * FROM pm i WHERE team_arr like '%[%' or mem_arr like '%[%'")
     List<PM> findbyInvalidArr();
 
@@ -42,25 +39,25 @@ public interface PMRepository extends JpaRepository<PM, Long> {
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where FIND_IN_SET(?1, a.team_arr) and b.on_air_date >= CURRENT_DATE and a.del_flg = 0 and b.del_flg = 0 order by b.on_air_date asc")
+    @Query(nativeQuery = true, value = "select a.* from pm a where FIND_IN_SET(?1, a.team_arr) and a.on_air_date >= CURRENT_DATE and a.del_flg = 0 and a.del_flg = 0 order by a.on_air_date asc")
     List<PM> findByTeamIdFuture(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where a.title = ?1 and b.on_air_date = ?2")
+    @Query(nativeQuery = true, value = "select a.* from pm a where a.title = ?1 and a.on_air_date = ?2")
     List<PM> findByTitleOnAirDate(String title, LocalDateTime date);
 
     @Query("select t from pm t where title = 'findByTitle'")
     List<PM> findByTitle(String title);
 
-    @Query(nativeQuery = true, value = "select a.* from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date >= current_date and a.del_flg = ?1")
+    @Query(nativeQuery = true, value = "select a.* from pm a where a.on_air_date >= current_date and a.del_flg = ?1")
     List<PM> findFutureDelFlg(Boolean delFlg);
 
     @Query(nativeQuery = true, value = "select a.* from pm a where a.title like %?1% order by pm_id desc limit ?2")
     List<PM> findByKeyLimit(String key, Integer limit);
 
-    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where date(b.on_air_date) = ?1 and b.station_id = ?2 order by b.on_air_date desc limit 3")
+    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, a.on_air_date, a.station_arr from pm a where date(a.on_air_date) = ?1 and FIND_IN_SET(?2, a.station_arr) order by a.on_air_date desc limit 3")
     List<Object[]> findPmFuByllDtoOnAirDateStationId(LocalDate date, Long stationId);
 
-    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, b.on_air_date, b.station_id from pm a inner join pm_ver b on a.pm_id = b.pm_id where b.on_air_date = ?1 and b.station_id != ?2 order by b.on_air_date desc limit 3")
+    @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, a.on_air_date, a.station_arr from pm a where a.on_air_date = ?1 and not FIND_IN_SET(?2, a.station_arr) order by a.on_air_date desc limit 3")
     List<Object[]> findPmFuByllDtoOnAirDateExStationId(LocalDateTime ldt, Long stationId);
 
     @Query(nativeQuery = true, value = "select a.pm_id, a.title, a.description, a.on_air_date, a.station_id from pm a where a.on_air_date = ?1")

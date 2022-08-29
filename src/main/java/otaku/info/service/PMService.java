@@ -33,10 +33,6 @@ public class PMService {
         return pmRepository.tmpMethod2();
     }
 
-    public List<PM> findByRelIdNotNull () {
-        return pmRepository.findByRelIdNotNull();
-    }
-
     public List<PM> findbyInvalidArr() {
         return pmRepository.findbyInvalidArr();
     }

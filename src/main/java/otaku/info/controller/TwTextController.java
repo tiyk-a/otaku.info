@@ -43,12 +43,6 @@ public class TwTextController {
     @Autowired
     private PMService pmService;
 
-//    @Autowired
-//    private RegularPmService regularPmService;
-
-//    @Autowired
-//    private PmVerService pmVerService;
-
     @Autowired
     private Setting setting;
 
@@ -136,7 +130,7 @@ public class TwTextController {
         String a_url = "";
 
         if (im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
-            a_url = stringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("") + "%0A";
+            a_url = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("") + "%0A";
         }
 
         if (!r_url.equals("")) {
@@ -190,17 +184,16 @@ public class TwTextController {
 
         String info = "";
         for (PM pm : ele.getValue()) {
-//            PM pm = pmService.findByPmId(p.getPm_id());
-//            RegularPM regularPM = null;
-//            if (pm.getRegular_pm_id() != null) {
-//                regularPM = regularPmService.findById(pm.getRegular_pm_id());
-//            }
-
-//            if (regularPM == null) {
-                info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(pm.getStation_id()) + ")%0A";
-//            } else {
-//                info = info + dtf1.format(p.getOn_air_date()) + " " + regularPM.getTitle() + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(p.getStation_id()) + ")%0A";
-//            }
+            String stationNameList = "";
+            if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
+                List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
+                stationNameList = "(";
+                for (Long stationId : stationIdList) {
+                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                }
+                stationNameList = stationNameList + ")";
+            }
+                info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + stationNameList + "%0A";
         }
 
         // blogへの誘導
@@ -222,9 +215,6 @@ public class TwTextController {
      */
     public String tvAlert(PM pm) {
         String result = "";
-
-//        PM pm = pmService.findByPmId(verList.get(0).getPm_id());
-//        RegularPM regularPM = regularPmService.findById(pm.getPm_id());
 
         List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
         List<String> tagList = new ArrayList<>();
@@ -282,15 +272,14 @@ public class TwTextController {
         // Format LocalDateTime
         String formattedDateTime = pm.getOn_air_date().format(dtf2);
 
-        String stationName = "";
-//        for (PMVer ver : verList) {
-        stationName = stationService.findById(pm.getStation_id()).getStation_name();
-//            if (stationName.equals("")) {
-//                stationName = tmp;
-//            } else {
-//                stationName = stationName + "\n" + tmp;
-//            }
-//        }
+        String stationNameList = "";
+        if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
+            List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
+            stationNameList = "\n\nチャンネル：";
+            for (Long stationId : stationIdList) {
+                stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+            }
+        }
 
         IM im = imService.findUpcomingImWithUrls(teamIdList.get(0)).orElse(null);
 
@@ -299,25 +288,12 @@ public class TwTextController {
             a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
         }
 
-        String r_url = "";
-//          if () {
-//
-//          }
-
         if (im != null) {
-//            if (regularPM == null) {
-                result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
-                        + names + "が出演します。"
-                        + "\n\nチャンネル：" + stationName
-                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
-                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？%0A" + a_url;
-//            } else {
-//                result = "このあと" + formattedDateTime + "から『" + regularPM.getTitle() + " " + pm.getTitle() + "』に"
-//                        + names + "が出演します。"
-//                        + "\n\nチャンネル：" + stationName
-//                        + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
-//                        + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "はこちらから！%0A" + a_url;
-//            }
+            result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
+                + names + "が出演します。"
+                + stationNameList
+                + "%0A" + tagList.stream().collect(Collectors.joining(" #","#",""))
+                + "%0A%0A" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？%0A" + a_url;
         }
         return result;
     }

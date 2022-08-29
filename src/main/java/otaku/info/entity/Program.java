@@ -5,12 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import otaku.info.form.PForm;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Entity(name = "program")
 @Data
@@ -60,13 +58,4 @@ public class Program {
 
     @Column(nullable = true)
     private String url;
-
-    public Program absorb(PForm form) {
-        this.setTitle(form.getTitle());
-        this.setDescription(form.getDescription());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        LocalDateTime dateTime = LocalDateTime.parse(form.getOn_air_date(), formatter);
-        this.setOn_air_date(dateTime);
-        return this;
-    }
 }

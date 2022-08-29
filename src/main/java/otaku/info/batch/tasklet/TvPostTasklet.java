@@ -37,7 +37,6 @@ public class TvPostTasklet implements Tasklet {
         Calendar calToday = Calendar.getInstance();
         Calendar calTmrw = Calendar.getInstance();
         calTmrw.add(Calendar.DATE, 1);
-//        List<PMVer> pmVerList;
         List<PM> pmList;
 
         int postCount = 0;

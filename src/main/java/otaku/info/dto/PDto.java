@@ -17,5 +17,5 @@ public class PDto {
     private String station_name;
 
     /** 関連ありそうなpmを取ってくる"on_air_date title description"を3件くらい */
-    private List<String> relPmList;
+    private List<RelPmDto> relPmList;
 }

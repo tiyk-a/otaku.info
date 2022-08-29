@@ -70,9 +70,6 @@ public class BlogController {
     @Autowired
     PMService pmService;
 
-//    @Autowired
-//    PmVerService pmVerService;
-
     @Autowired
     IMService imService;
 
@@ -820,52 +817,6 @@ public class BlogController {
             }
         }
     }
-
-//    /**
-//     * wpIdがしっかり繋がっているか確認する。繋がっていないかったらwpId抜いてあげる
-//     * PENDING: wpの投稿全部落として、wpidがdbに保存されてないやつはどうにかしないといけない
-//     * -> tmpmethodのためあまり重要ではなく放置
-//     */
-//    public void chkWpId() throws InterruptedException {
-//        List<IMRel> imRelList = iMRelService.findAllWpIdNotNull();
-//        List<IMRel> updateList = new ArrayList<>();
-//
-//        for (IMRel rel : imRelList) {
-//            BlogEnum blogEnum = BlogEnum.get(TeamEnum.get(rel.getTeam_id()).getBlogEnumId());
-//            String subDomain = blogEnum.getSubDomain();
-//            if (subDomain != null) {
-//                String url = subDomain + setting.getBlogApiPath() + "posts/" + rel.getWp_id();
-//                // request
-//                HttpHeaders headers = generalHeaderSet(new HttpHeaders(), blogEnum);
-//                JSONObject jsonObject = new JSONObject();
-//                HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headers);
-//                String res = request(url, request, HttpMethod.GET, "updateTvPage()_4");
-//
-//                try {
-//                    if (StringUtils.hasText(res)) {
-//                        JSONObject jo = jsonUtils.createJsonObject(res, rel.getTeam_id());
-//                        if (jo.has("data")) {
-//                            JSONObject jo1 = jo.getJSONObject("data");
-//                            if (jo1.has("status")) {
-//                                int status = jo1.getInt("status");
-//                                if (status == 404) {
-//                                    rel.setWp_id(null);
-//                                    updateList.add(rel);
-//                                }
-//                            }
-//                        }
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                Thread.sleep(500);
-//            } else {
-//                logger.debug("subdomain not found im_rel_id: " + rel.getIm_rel_id() + "getTeam_id: " + rel.getTeam_id() + "getWp_id: " + rel.getWp_id() + "getIm_id: " + rel.getIm_id());
-//            }
-//        }
-//        iMRelService.saveAll(updateList);
-//        logger.debug("chkWpId() Done");
-//    }
 
     /**
      * 明日の1日の予定の投稿をポストします

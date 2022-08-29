@@ -192,7 +192,7 @@ public class SampleController {
                 System.out.println("koko");
                 break;
             case 18:
-                tmpController.eliminateStationId();
+//                tmpController.eliminateStationId();
 //                tmpController.moveToPm();
 //                tmpController.insertBlogPost();
 //                tmpController.moveTo(from, to);
@@ -224,93 +224,6 @@ public class SampleController {
     private void callError(String arg1, String arg2) {
         arg1.equals("test");
     }
-
-//    /**
-//     * irelの整理(からteamを入れてあげる)
-//     */
-//    private void orderiRel() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IRel> iRelList = iRelService.findAll();
-//        List<IRel> updateList = new ArrayList<>();
-//        List<IRel> removeList = new ArrayList<>();
-//        for (IRel rel : iRelList) {
-//            // もしteamIdがなかったら同じitemIdを持つレコードとってくる
-//            if (rel.getTeam_id() == 0) {
-//                List<IRel> groupList = iRelService.findByItemIdTeamIdNotNull(rel.getItem_id());
-//                if (groupList.size() > 0) {
-//                    IRel subRel = groupList.get(0);
-//                    rel.setTeam_id(subRel.getTeam_id());
-//                    updateList.add(rel);
-//                } else {
-//                    removeList.add(rel);
-//                }
-//            }
-//        }
-//        iRelService.saveAll(updateList);
-//        iRelService.removeAll(removeList);
-//    }
-
-    /**
-     * irelの整理(からteamを入れてあげる)
-     */
-//    private void orderM() {
-////        ・全部取得ー＞itemでまとめる→teamでまとめる
-//        List<IMRel> iRelList = iMRelService.findAll();
-//        List<IMRel> updateList = new ArrayList<>();
-//        List<IMRel> removeList = new ArrayList<>();
-//        for (IMRel rel : iRelList) {
-//            // もしteamIdがなかったら同じitemIdを持つレコードとってくる
-//            if (rel.getTeam_id() == 0) {
-//                List<IMRel> groupList = iMRelService.findByItemIdTeamIdNotNull(rel.getIm_id());
-//                if (groupList.size() > 0) {
-//                    IMRel subRel = groupList.get(0);
-//                    rel.setTeam_id(subRel.getTeam_id());
-//                    updateList.add(rel);
-//                } else {
-//                    removeList.add(rel);
-//                }
-//            }
-//        }
-//        iMRelService.saveAll(updateList);
-//        iMRelService.removeAll(removeList);
-//    }
-
-    /**
-     * Itemに不適切な商品が入ってしまっていたらItemId指定でdel_flgをonにします。
-     * パラメータの指定：00-001-22（数字をハイフンで区切ることで複数商品を1リクエストで処理）
-     *
-     * @return String
-     */
-//    @GetMapping("/moveToDelItem/{itemIdListStr}")
-//    public String moveToDelItem(@PathVariable String itemIdListStr) {
-//        List<Long> itemIdList = new ArrayList<>();
-//        List.of(itemIdListStr.split("-")).forEach(e -> itemIdList.add(Long.valueOf(e)));
-//
-//        if (itemIdList.size() == 0) return "No Id provided";
-//
-//        List<Long> notFoundIdList = new ArrayList<>();
-//        int successCount = 0;
-//        String result = "";
-//        for (Long itemId : itemIdList) {
-//            Item item = itemService.findByItemId(itemId).orElse(new Item());
-//            if (item.getItem_id() == null) {
-//                notFoundIdList.add(itemId);
-//            } else {
-//                successCount ++;
-//                item.setDel_flg(true);
-//                itemService.saveItem(item);
-//                result = result + "【" + successCount + "】itemId:" + item.getItem_id() + "Title: " + item.getTitle() + "-------------------";
-//            }
-//
-//            if (notFoundIdList.size() > 0) {
-//                result = result + "Not found item";
-//                for (Long id : notFoundIdList) {
-//                    result = result + " item_id=" + id;
-//                }
-//            }
-//        }
-//        return result;
-//    }
 
     /**
      * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド
@@ -428,40 +341,6 @@ public class SampleController {
         }
         return false;
     }
-
-    /**
-     * PRelに入ってるmemberをPRelMemに移行します
-     * このメソッドが安全に完了したらprelのmemberidは削除可能
-     *
-     */
-//    private void managePRel() {
-//        // memberの入っているprelを全て取得
-//        List<PRel> pRelList = pRelService.findAllMemNotNull();
-//        for (PRel rel : pRelList) {
-//            logger.debug("prelId:" + rel.getP_rel_id() + " memId:" + rel.getMember_id());
-//            PRelMem relMem = new PRelMem(null, rel.getP_rel_id(), rel.getMember_id(), null, null);
-//            try {
-//                pRelMemService.save(relMem);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-
-//    /**
-//     * 商品の金額（多分これが正しい）を返す
-//     *
-//     * @param itemList
-//     * @return
-//     */
-//    private Integer getPrice(List<Item> itemList) {
-//        List<Integer> priceList = itemList.stream().map(Item::getPrice).distinct().collect(Collectors.toList());
-//        if (priceList.size() == 1) {
-//            return priceList.get(0);
-//        } else {
-//            return priceList.stream().max(Integer::compare).orElse(0);
-//        }
-//    }
 
     /**
      * 同じ名前で重複してしまっているstationレコードをどうにかします

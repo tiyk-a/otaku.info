@@ -38,17 +38,11 @@ public class ApiPmController {
     @Autowired
     PMService pmService;
 
-//    @Autowired
-//    PmVerService pmVerService;
-
     @Autowired
     StationService stationService;
 
     @Autowired
     DelCalService delCalService;
-
-//    @Autowired
-//    RegularPmService regularPmService;
 
     @Autowired
     DateUtils dateUtils;
@@ -106,52 +100,6 @@ public class ApiPmController {
         return ResponseEntity.ok(true);
     }
 
-//    /**
-//     * RegPmを新規登録します
-//     *
-//     * @return Boolean
-//     */
-//    @PostMapping("/reg/new")
-//    public ResponseEntity<Boolean> addRegPm(@RequestBody Map<String, Object> input) {
-//
-//        if (!input.containsKey("title") || !input.containsKey("tm_id_arr")) {
-//            return ResponseEntity.ok(false);
-//        }
-//
-//        // reg_pmの登録
-//        String title = input.get("title").toString();
-//        if (!regularPmService.existData(title)) {
-//            RegularPM newRegPm = new RegularPM();
-//            newRegPm.setTitle(title);
-//
-//            List<Integer> castArr = (List<Integer>) input.get("tm_id_arr");
-//            String teamStr = "";
-//            String memStr = "";
-//            for (Integer sta : castArr) {
-//                Long l = new Long(sta);
-//                if (l < 30L) {
-//                    teamStr = StringUtilsMine.addToStringArr(teamStr, l);
-//                } else {
-//                    memStr = StringUtilsMine.addToStringArr(memStr, l);
-//                }
-//            }
-//
-//            newRegPm.setTeamArr(StringUtilsMine.removeBrackets(teamStr));
-//            newRegPm.setMemArr(StringUtilsMine.removeBrackets(memStr));
-//            // 放送局の登録
-//            if (input.containsKey("station_id_arr")) {
-//                try {
-//                    List<Long> stationIdList = (List<Long>) input.get("station_id_arr");
-//                    newRegPm.setStationArr(StringUtilsMine.longListToString(stationIdList));
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            regularPmService.save(newRegPm);
-//        }
-//        return ResponseEntity.ok(true);
-//    }
-
     /**
      * キーワードから放送局を検索します
      *
@@ -188,11 +136,6 @@ public class ApiPmController {
             updPmFlg = true;
         }
 
-//        if (!form.getRegular_pm_id().equals(pm.getRegular_pm_id())) {
-//            pm.setRegular_pm_id(form.getRegular_pm_id());
-//            updPmFlg = true;
-//        }
-
         if (!StringUtilsMine.sameElementArrays(form.getTeamArr(), pm.getTeamArr())) {
             pm.setTeamArr(StringUtilsMine.removeBrackets(form.getTeamArr()));
             updPmFlg = true;
@@ -211,46 +154,6 @@ public class ApiPmController {
         if (updPmFlg) {
             pmService.save(pm);
         }
-
-//        // pmver
-//        List<PMVer> updVList = new ArrayList<>();
-//        for (Object verObj : form.getVerList()) {
-//            PMVer ver = new PMVer();
-//
-//            Map<String, Object> map = new ObjectMapper().convertValue(verObj, Map.class);
-//            if (map.containsKey("v_id")) {
-//                ver = pmVerService.findById((Long) map.get("v_id"));
-//            }
-//
-//            ver.setPm_id(pm.getPm_id());
-//
-//            if (map.containsKey("on_air_date")) {
-//                String dateStr = (String) map.get("on_air_date");
-//                LocalDateTime localDateTime = dateUtils.stringToLocalDateTime(dateStr, "YYYY-MM-DD HH:mm");
-//                ver.setOn_air_date(localDateTime);
-//            }
-//
-//            if (map.containsKey("station_name")) {
-//                String stationName = (String) map.get("station_name");
-//                List<Station> stationList = stationService.findByName(stationName);
-//
-//                if (stationList.size() > 0) {
-//                    ver.setStation_id(stationList.get(0).getStation_id());
-//                }
-//            }
-//
-//            if (map.containsKey("del_flg")) {
-//                ver.setDel_flg((boolean) map.get("del_flg"));
-//            }
-//
-//            if (ver.getOn_air_date() != null) {
-//                updVList.add(ver);
-//            }
-//        }
-//
-//        if (updVList.size() > 0) {
-//            pmVerService.saveAll(updVList);
-//        }
 
         logger.debug("fin");
         return ResponseEntity.ok(true);
@@ -297,19 +200,4 @@ public class ApiPmController {
 
         return ResponseEntity.ok(pmService.findByKeyLimit(key, 5));
     }
-
-//    /**
-//     * IMを検索する
-//     *
-//     * @param key
-//     * @return
-//     */
-//    @GetMapping("/searchReg")
-//    public ResponseEntity<List<RegularPM>> searchRegPm(@RequestParam("key") String key) {
-//        if (key.equals("") ) {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        return ResponseEntity.ok(regularPmService.findByKeyLimit(key, 10L));
-//    }
 }

@@ -54,9 +54,6 @@ public class TextController {
     @Autowired
     private PMService pmService;
 
-//    @Autowired
-//    RegularPmService regularPmService;
-
     @Autowired
     private Setting setting;
 
@@ -87,8 +84,17 @@ public class TextController {
 
         String info = "";
         for (PM pm : ele.getValue()) {
-//            PM pm = pmService.findByPmId(p.getPm_id());
-            info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + " (" + stationService.getStationNameByEnumDB(pm.getStation_id()) + ")%0A";
+            String stationNameList = "";
+            if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
+                List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
+                stationNameList = "(";
+                for (Long stationId : stationIdList) {
+                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                }
+                stationNameList = stationNameList + ")";
+            }
+
+            info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + stationNameList + "%0A";
         }
 
         // blogへの誘導
@@ -319,7 +325,6 @@ public class TextController {
                 Map<String, List<PM>> tmpMap = new TreeMap<>();
                 List<PM> tmpList;
                 for (PM pm : e.getValue()) {
-//                    PM pm = pmService.findByPmId(p.getPm_id());
                     if (tmpMap.containsKey(pm.getTitle())) {
                         tmpList = tmpMap.get(pm.getTitle());
                         if (!tmpList.get(0).getOn_air_date().equals(pm.getOn_air_date())) {
@@ -346,17 +351,8 @@ public class TextController {
             String tmp = "";
             for (Map.Entry<String, List<PM>> p : e.getValue().entrySet()) {
                 PM pm = p.getValue().get(0);
-//                PM pm = pmService.findByPmId(masterP.getPm_id());
-//                RegularPM regularPM = regularPmService.findById(pm.getPm_id());
 
                 String teamName = "";
-
-                // regularPmがある場合はteam名を入れてあげる
-//                if (regularPM != null) {
-//                    List<Long> teamIdList = StringUtilsMine.stringToLongList(regularPM.getTeamArr());
-//                    List<String> teamNameList = TeamEnum.findTeamNameListByTeamIdList(teamIdList);
-//                    teamName = String.join("/", teamNameList);
-//                }
 
                 String[] pTeamIdArr = pm.getTeamArr().split(",");
                 if (pTeamIdArr.length > 0 && Long.parseLong(pTeamIdArr[0]) != (0L)) {
@@ -367,13 +363,6 @@ public class TextController {
 
                 String memberName = "";
 
-                // regularPmがある場合はmem名を入れてあげる
-//                if (regularPM != null) {
-//                    List<Long> memIdList = StringUtilsMine.stringToLongList(regularPM.getMemArr());
-//                    List<String> memberNameList = MemberEnum.findMNameListByIdList(memIdList);
-//                    teamName = String.join("/", memberNameList);
-//                }
-
                 String[] pMemIdArr = pm.getMemArr().split(",");
                 if (pMemIdArr != null && pMemIdArr.length > 0 && Long.parseLong(pMemIdArr[0]) != (0L)) {
                     List<Long> pMemIdList = Arrays.stream(pMemIdArr).map(Long::parseLong).collect(Collectors.toList());
@@ -381,20 +370,22 @@ public class TextController {
                     memberName = String.join("/", memberNameList);
                 }
 
-//                if (regularPM != null) {
-//                    String description = StringUtils.hasText(regularPM.getDescription()) ? regularPM.getDescription() + "\n" + pm.getDescription() : pm.getDescription();
-//                    tmp = tmp + "</br ><h6>" + dtf1.format(masterP.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + regularPM.getTitle() + " " + pm.getTitle() + "</h6>" +
-//                            "<br /><p>番組概要：" + description + "</p>";
-//                } else {
-                    String description = pm.getDescription();
-                    tmp = tmp + "</br ><h6>" + dtf1.format(pm.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6>" +
-                            "<br /><p>番組概要：" + description + "</p>";
-//                }
+                String description = pm.getDescription();
+                tmp = tmp + "</br ><h6>" + dtf1.format(pm.getOn_air_date()) + ":　" + teamName + " " + memberName + "：" + pm.getTitle() + "</h6>" +
+                        "<br /><p>番組概要：" + description + "</p>";
 
                 String broad = "<p>放送局：";
                 for (PM r : p.getValue()) {
-                    String stationName = stationService.getStationNameByEnumDB(r.getStation_id());
-                    broad = broad + stationName + "<br />";
+                    String stationNameList = "";
+                    if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
+                        List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
+                        stationNameList = "(";
+                        for (Long stationId : stationIdList) {
+                            stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                        }
+                        stationNameList = stationNameList + ")";
+                    }
+                    broad = broad + stationNameList + "<br />";
                 }
                 broad = broad + "</p>";
                 tmp = tmp + broad;
@@ -450,18 +441,17 @@ public class TextController {
         // TV
         List<String> pTextList = new ArrayList<>();
         for (PM pm : plist) {
-//            PM pm = pmService.findByPmId(p.getPm_id());
-            StationEnum e = StationEnum.get(pm.getStation_id());
-            String stationName = "";
-            if (e == null) {
-                Station s = stationService.findById(pm.getStation_id());
-                if (s != null) {
-                    stationName = s.getStation_name();
+            String stationNameList = "";
+            if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
+                List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
+                stationNameList = "(";
+                for (Long stationId : stationIdList) {
+                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
                 }
-            } else {
-                stationName = e.getName();
+                stationNameList = stationNameList + ")";
             }
-            String tmp = dtf1.format(pm.getOn_air_date()) + "~ " + pm.getTitle() + "(" + stationName + ")";
+
+            String tmp = dtf1.format(pm.getOn_air_date()) + "~ " + pm.getTitle() + stationNameList;
             pTextList.add(tmp);
         }
 
@@ -493,7 +483,7 @@ public class TextController {
         }
 
         boolean contentFlg = false;
-        if (tvContentFlg || tvContentFlg) {
+        if (tvContentFlg) {
             contentFlg = true;
         }
 

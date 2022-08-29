@@ -44,7 +44,7 @@ public class PM implements Comparable<PM> {
     @Column(nullable = true)
     private LocalDateTime on_air_date;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String stationArr;
 
     @CreationTimestamp

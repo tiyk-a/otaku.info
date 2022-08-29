@@ -2,7 +2,6 @@ package otaku.info.controller;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -38,9 +37,6 @@ public class ApiTvController {
     @Autowired
     PMService pmService;
 
-//    @Autowired
-//    PmVerService pmVerService;
-
     @Autowired
     PMCalService pmCalService;
 
@@ -49,9 +45,6 @@ public class ApiTvController {
 
     @Autowired
     DelCalService delCalService;
-
-//    @Autowired
-//    RegularPmService regularPmService;
 
     @Autowired
     DateUtils dateUtils;
@@ -81,7 +74,7 @@ public class ApiTvController {
 
         // teamIdが不正値だったらチームごとの件数だけ取得して返す
         boolean skipItemFlg = false;
-        if (teamId < 6 || teamId > 21) {
+        if (teamId < 6L || teamId > 21L) {
             skipItemFlg = true;
         }
 
@@ -91,7 +84,7 @@ public class ApiTvController {
             List<PDto> pDtoList = new ArrayList<>();
             List<Program> pList = null;
 
-            if (teamId == null || teamId == 5) {
+            if (teamId == 5L) {
                 // teamId不正の場合
                 return ResponseEntity.ok(null);
             } else {
@@ -105,13 +98,19 @@ public class ApiTvController {
 
                 // 関連ありそうなPMを集める
                 // 同じ日の同じ放送局のもの
-                List<String> relPmList = new ArrayList<>();
-//            List<PmFullDto> relPmList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
-//            relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
+                List<RelPmDto> relPmList = new ArrayList<>();
 
-                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
                 List<PmFullDto> pmFullDtoList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
-                relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
+                for (PmFullDto dto : pmFullDtoList) {
+                    RelPmDto relPmDto = new RelPmDto();
+                    relPmDto.setPm_id(dto.getPmId().longValue());
+                    relPmDto.setTitle(dto.getTitle());
+                    relPmDto.setDescription(dto.getDescription());
+                    relPmDto.setOn_air_date(dto.getOnAirDate());
+                    relPmList.add(relPmDto);
+                }
+
+//                relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().toString() + e.getTitle() + e.getDescription()).collect(Collectors.toList()));
 
 //            List<PmFullDto> pmFullDtoList = pmService.findPmFuByllDtoOnAirDateStationId(p.getOn_air_date(), p.getStation_id());
 //            relPmList.addAll(pmFullDtoList.stream().map(e -> e.getOnAirDate().format(dateTimeFormatter) + " " + e.getTitle() + " " + e.getDescription()).collect(Collectors.toList()));
@@ -147,40 +146,11 @@ public class ApiTvController {
                 PMDto dto = new PMDto();
                 dto.setPm(pm);
 
-                // verを取ってくる
-//                List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), false);
-//                List<PMVerDto> verDtoList = new ArrayList<>();
-//                for (PMVer ver : pmVerList) {
-//                    // 放送局名を取得
-//                    String stationName = stationService.getStationNameByEnumDB(ver.getStation_id());
-//                    PMVerDto pmVerDto = new PMVerDto(ver.getPm_v_id(), ver.getOn_air_date(), ver.getStation_id(), stationName, ver.getDel_flg());
-//                    verDtoList.add(pmVerDto);
-//                }
-//                dto.setVerList(verDtoList);
-
-//                // verの放送局が放送局マップに存在しない場合、追加する
-//                for (PMVer v : pmVerList) {
-//                    if (stationMap.entrySet().stream().noneMatch(e -> e.getKey().equals(v.getStation_id()))) {
-//                        stationMap.put(v.getStation_id(), stationService.getStationNameByEnumDB(v.getStation_id()));
-//                    }
-//                }
-
                 // リストに入れる
                 pmDtoList.add(dto);
             }
             // 返却リストに入れる
             pAllDto.setPm(pmDtoList);
-
-//            // regular_pmを入れる
-//            List<RegularPM> regPmList = regularPmService.findByTeamId(teamId);
-//            List<RegPMDto> regPMDtoList = new ArrayList<>();
-//            for (RegularPM regPm : regPmList) {
-//                RegPMDto regPMDto = new RegPMDto();
-//                regPMDto.setRegularPM(regPm);
-//                regPMDto.setStationMap(stationService.findStationIdNameMap(StringUtilsMine.stringToLongList(regPm.getStationArr())));
-//                regPMDtoList.add(regPMDto);
-//            }
-//            pAllDto.setRegPmList(regPMDtoList);
         }
 
         // 各チームごとに未確認のprogram数を取得しセット
@@ -190,39 +160,6 @@ public class ApiTvController {
         logger.debug("fin");
         return ResponseEntity.ok(pAllDto);
     }
-
-//    /**
-//     * regular_pmの登録・更新
-//     *
-//     * @return Boolean true: success / false: failed
-//     */
-//    @PostMapping("/saveReg")
-//    public ResponseEntity<Boolean> addNewRegPm(@Valid @RequestBody RegPmForm regPmForm) {
-//        if (regPmForm == null || regPmForm.getTitle().equals("")) {
-//            logger.info("RegPmFormの中身が不足でregular_pm登録できません");
-//            return ResponseEntity.ok(false);
-//        }
-//
-//        // 既存データがないかチェック
-//        Boolean existData = regularPmService.existData(regPmForm.getTitle());
-//        RegularPM regPm;
-//        if (!existData) {
-//            // 新規データの場合
-//            regPm = new RegularPM();
-//        } else {
-//            // 既存データがある場合
-//            regPm = regularPmService.findById(regPmForm.getRegular_pm_id());
-//        }
-//
-//        BeanUtils.copyProperties(regPmForm, regPm);
-//
-//        // 日付をstringからDateにして詰める
-//        if (!regPmForm.getStart_date().equals("")) {
-//            regPm.setStart_date(dateUtils.stringToLocalDateTime(regPmForm.getStart_date(), "yyyy/MM/dd hh:mm"));
-//        }
-//
-//        return ResponseEntity.ok(true);
-//    }
 
     /**
      * PM+付随データを登録します。すでにPMがある場合は更新
@@ -295,25 +232,6 @@ public class ApiTvController {
             // TODO: calendar更新
 //            List<PMCal> pmCalList = pmCalService.findByVerIdListTeamIdListDelFlg(verIdList, , false);
 //            List<PMCal> updCalList = new ArrayList<>();
-//
-//            // 既存データのないものは作成する
-//            for (PMVer ver : verList) {
-//                for (PMRel rel : relList) {
-//                    if (pmCalList.stream().noneMatch(e -> e.getPm_ver_id().equals(ver.getPm_v_id()) && e.getPm_rel_id().equals(rel.getPm_rel_id()))) {
-//                        // 作成条件合致したらまず既存削除データがないか確認する
-//                        PMCal delCal = pmCalService.findByVerIdRelIdDelFlg(ver.getPm_v_id(), rel.getPm_rel_id(), true);
-//                        if (delCal != null) {
-//                            // 既存があればフラグの変更のみ
-//                            delCal.setDel_flg(false);
-//                            updCalList.add(delCal);
-//                        } else {
-//                            // 既存がないなら新規作成
-//                            PMCal cal = new PMCal(null, ver.getPm_v_id(), rel.getPm_rel_id(), false, null, false);
-//                            updCalList.add(cal);
-//                        }
-//                    }
-//                }
-//            }
 
             // 既存データの不要なものは削除する
 //            for (PMCal cal : pmCalList) {
@@ -349,21 +267,35 @@ public class ApiTvController {
         }
     }
 
+    /**
+     * PMに放送局を追加して
+     * ProgramはPMIDを登録します
+     *
+     * @param input
+     * @return
+     */
     @PostMapping("/addStation")
     public ResponseEntity<Boolean> addPMStation(@RequestBody Map<String, Object> input) {
         if (!input.containsKey("pm_id") || !input.containsKey("program_id") || !input.containsKey("station_id")) {
             return ResponseEntity.ok(false);
         }
 
-        PM pm = pmService.findByPmId(Long.parseLong((String) input.get("pm_id")));
+        PM pm = pmService.findByPmId(Long.parseLong(input.get("pm_id").toString()));
         if (pm != null) {
             if (pm.getStationArr() == null) {
                 pm.setStationArr("");
             }
-            Long staId = Long.parseLong((String) input.get("station_id"));
+            Long staId = Long.parseLong(input.get("station_id").toString());
             pm.setStationArr(StringUtilsMine.addToStringArr(pm.getStationArr(), staId));
         }
         pmService.save(pm);
+
+        Long programId = Long.parseLong(input.get("program_id").toString());
+        Program program = programService.findByPId(programId);
+        if (program != null) {
+            program.setPm_id(pm.getPm_id());
+            programService.save(program);
+        }
         return ResponseEntity.ok(true);
     }
 

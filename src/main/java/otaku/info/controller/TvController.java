@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import otaku.info.entity.*;
 import otaku.info.enums.MemberEnum;
-import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.utils.StringUtilsMine;
@@ -39,9 +38,6 @@ public class TvController  {
     @Autowired
     private final StationService stationService;
 
-//    @Autowired
-//    private final PmVerService pmVerService;
-
     private static org.springframework.util.StringUtils StringUtilsSpring;
 
     final Pattern datePattern = Pattern.compile("^[0-9][0-9]?/[0-9][0-9]? \\((Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\) [0-9][0-9]?:[0-9][0-9]?");
@@ -62,15 +58,12 @@ public class TvController  {
     /**
      * PMリストをteamIdごとにマップして返却します。
      *
-     * @param verList
+     * @param pmList
      * @return
      */
     public Map<Long, List<PM>>  mapByGroup(List<PM> pmList) {
         // teamId, List<PM>
         Map<Long, List<PM>> tvListMapByGroup = new HashMap<>();
-
-        // 全グループIDを取得して、それぞれを空プログラムリストを値としてMapに入れる。Mapサイズはここで完成。
-//        Arrays.stream(TeamEnum.values()).map(TeamEnum::getId).forEach(e -> tvListMapByGroup.put(e, new ArrayList<>()));
 
         // マップのvalueに情報を追加していく
         for (PM pm : pmList) {
@@ -196,63 +189,4 @@ public class TvController  {
         }
         return resultArr;
     }
-
-//    /**
-//     * 2つの番組が完全に同じか確認する。
-//     * Title, Station_id, On_air_dateで比較元番組を取得しているため、この3項目はこのメソッド内でチェックしない。
-//     *
-//     * @param existingP
-//     * @param description
-//     * @param teamIdList
-//     * @param memberIdList
-//     * @return
-//     */
-//    private boolean isTotallySame(Program existingP, String description, List<Long> teamIdList, List<Long> memberIdList) {
-//
-//        // 簡単なものから確認してreturnしていく
-//        // description
-//        if (existingP.getDescription() == null) {
-//            if (description != null) {
-//                return false;
-//            }
-//        } else {
-//            if (!existingP.getDescription().equals(description)) {
-//                return false;
-//            }
-//        }
-//
-//
-//        // member_id
-//        List<Long> eMemberIdList = pRelService.getMemberIdList(existingP.getProgram_id());
-//        if (memberIdList == null) {
-//            if (eMemberIdList != null) {
-//                return false;
-//            }
-//        } else {
-//            if (eMemberIdList == null || memberIdList.size() != eMemberIdList.size()) {
-//                return false;
-//            }
-//            for (Long memberId : memberIdList) {
-//                if (eMemberIdList.stream().noneMatch(e -> e.equals(memberId))) {
-//                    return false;
-//                }
-//            }
-//        }
-//
-//        // team_id
-//        List<Long> eTeamIdList = pRelService.getTeamIdList(existingP.getProgram_id());
-//        if (teamIdList == null) {
-//            return eTeamIdList == null;
-//        } else {
-//            if (eTeamIdList == null || teamIdList.size() != eTeamIdList.size()) {
-//                return false;
-//            }
-//            for (Long teamId : teamIdList) {
-//                if (eTeamIdList.stream().noneMatch(e -> e.equals(teamId))) {
-//                    return false;
-//                }
-//            }
-//        }
-//        return true;
-//    }
 }

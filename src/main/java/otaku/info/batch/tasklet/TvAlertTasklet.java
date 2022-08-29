@@ -38,9 +38,6 @@ public class TvAlertTasklet implements Tasklet {
     @Autowired
     PMService pmService;
 
-//    @Autowired
-//    PmVerService pmVerService;
-
     /**
      * 1つの番組を同時間に複数放送局で放送される場合、
      * 1つのツイートにまとめる
@@ -60,57 +57,25 @@ public class TvAlertTasklet implements Tasklet {
         List<PM> pmList = pmService.findByOnAirDateNotDeleted(LocalDateTime.now(),1);
         loggerController.printTvAlertTasklet("*** pmList: " + pmList.size());
         if (pmList.size() > 0) {
-            // pmIdでverをまとめる
-            // pmId, List<PMVer>
-//            Map<Long, List<PMVer>> pmPmVerMap = new HashMap<>();
-//            for (PMVer pmVer : pmVerList) {
-//                List<PMVer> verList;
-//                if (pmPmVerMap.containsKey(pmVer.getPm_id())) {
-//                    verList = pmPmVerMap.get(pmVer.getPm_id());
-//                } else {
-//                    verList = new ArrayList<>();
-//                }
-//                verList.add(pmVer);
-//                pmPmVerMap.put(pmVer.getPm_id(), verList);
-//            }
-
             // Postする番組の投稿文を作る Map<TeamId, text>
             Map<Long, String> postMap = new HashMap<>();
             for (PM pm : pmList) {
-//                PM pm = pmService.findByPmId(pmPmVerElem.getKey());
+                String text = twTextController.tvAlert(pm);
 
-                // 放送日時,verリスト
-//                Map<LocalDateTime, List<PMVer>> onAirDateMap = new HashMap<>();
-//                for (PMVer pmVer : pmPmVerElem.getValue()) {
-//                    List<PMVer> tmpList;
-//                    if (onAirDateMap.containsKey(pmVer.getOn_air_date())) {
-//                        tmpList = onAirDateMap.get(pmVer.getOn_air_date());
-//                    } else {
-//                        tmpList = new ArrayList<>();
-//                    }
-//                    tmpList.add(pmVer);
-//                    onAirDateMap.put(pmVer.getOn_air_date(), tmpList);
-//                }
-
-                // 放送日時の数だけそれぞれ文章を作る
-//                for (Map.Entry<LocalDateTime, List<PMVer>> elem : onAirDateMap.entrySet()) {
-                    String text = twTextController.tvAlert(pm);
-
-                    List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
-                    // generalブログのteamIdを詰めていくリスト
-                    List<Long> generalBlogTeamIdList = new ArrayList<>();
-                    for (Long teamId : teamIdList) {
-                        if (TeamEnum.get(teamId).getBlogEnumId().equals(BlogEnum.MAIN.getId())) {
-                            generalBlogTeamIdList.add(teamId);
-                        } else {
-                            postMap.put(teamId, text);
-                        }
+                List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
+                // generalブログのteamIdを詰めていくリスト
+                List<Long> generalBlogTeamIdList = new ArrayList<>();
+                for (Long teamId : teamIdList) {
+                    if (TeamEnum.get(teamId).getBlogEnumId().equals(BlogEnum.MAIN.getId())) {
+                        generalBlogTeamIdList.add(teamId);
+                    } else {
+                        postMap.put(teamId, text);
                     }
+                }
 
-                    if (generalBlogTeamIdList.size() > 0) {
-                        postMap.put(generalBlogTeamIdList.get(0), text);
-                    }
-//                }
+                if (generalBlogTeamIdList.size() > 0) {
+                    postMap.put(generalBlogTeamIdList.get(0), text);
+                }
             }
 
             // Post(総合Twitterは1投稿だけする)

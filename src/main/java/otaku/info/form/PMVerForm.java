@@ -40,6 +40,8 @@ public class PMVerForm {
 
     private Long station_id;
 
+    private String stationArr;
+
     private boolean del_flg;
 
 }

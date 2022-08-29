@@ -47,8 +47,112 @@ public class TmpController {
     @Autowired
     BlogController blogController;
 
+//    @Autowired
+//    RegularPmService regularPmService;
+//
+//    @Autowired
+//    PmVerService pmVerService;
+
     @Autowired
     BlogPostService blogPostService;
+
+//    public void moveToPm() {
+//        // regpm
+//        List<PM> pmList = pmService.findByRelIdNotNull();
+//        List<PM> updList = new ArrayList<>();
+//        for (PM pm : pmList) {
+//            RegularPM regularPM = regularPmService.findById(pm.getRegular_pm_id());
+//            if (regularPM != null) {
+//                pm.setTitle(regularPM.getTitle() + " " + pm.getTitle());
+////                description
+//                if (regularPM.getDescription() != null) {
+//                    pm.setDescription
+//                            (regularPM.getDescription() + " " + pm.getDescription());
+//                }
+////                teamarr
+//                if (regularPM.getTeamArr() != null && !regularPM.getTeamArr().equals("")) {
+//                    for (Long teamId : StringUtilsMine.stringToLongList(regularPM.getTeamArr())) {
+//                        List<Long> tmpList = StringUtilsMine.stringToLongList(pm.getTeamArr());
+//                        if (!tmpList.contains(teamId)) {
+//                            tmpList.add(teamId);
+//                            pm.setTeamArr(StringUtilsMine.longListToString(tmpList));
+//                        }
+//                    }
+//                }
+////                memarr
+//                if (regularPM.getMemArr() != null && !regularPM.getMemArr().equals("")) {
+//                    for (Long memId : StringUtilsMine.stringToLongList(regularPM.getMemArr())) {
+//                        List<Long> tmpList = StringUtilsMine.stringToLongList(pm.getMemArr());
+//                        if (!tmpList.contains(memId)) {
+//                            tmpList.add(memId);
+//                            pm.setMemArr(StringUtilsMine.longListToString(tmpList));
+//                        }
+//                    }
+//                }
+//                Long testId = pm.getPm_id();
+//                if (updList.stream().anyMatch(e -> e.getPm_id().equals(testId))) {
+//                    updList = updList.stream().filter(e -> !e.getPm_id().equals(testId)).collect(Collectors.toList());
+//                }
+//                updList.add(pm);
+//            }
+//        }
+//        if (updList.size() > 0) {
+//            pmService.saveAll(updList);
+//        }
+//        updList = new ArrayList<>();
+//
+//        // pmver
+//        List<PMVer> pmVerList = pmVerService.findByNotDeleted();
+//        for (PMVer pmVer : pmVerList) {
+//            PM pm = pmService.findByPmId(pmVer.getPm_id());
+//            // pmのstation_idがまだ入ってない（=0）ならpmを更新、もう入ってたらもうちょっと判定
+//            if (pm.getStation_id().equals(0L)) {
+//                String tmp = StringUtilsMine.addToStringArr("", pmVer.getStation_id());
+//                pm.setStationArr(tmp);
+//                pm.setOn_air_date(pmVer.getOn_air_date());
+//            } else {
+//                // station_idは既に入っているので、放送日時が同じなら追加、違うなら新規pm作成
+//                if (pmVer.getOn_air_date().equals(pm.getOn_air_date())) {
+//                    String tmp = StringUtilsMine.addToStringArr("", pmVer.getStation_id());
+//                    pm.setStationArr(tmp);
+//                } else {
+//                    PM nextPm = new PM();
+//                    BeanUtils.copyProperties(pm, nextPm);
+//                    nextPm.setStationArr(StringUtilsMine.addToStringArr("", pmVer.getStation_id()));
+//                    nextPm.setOn_air_date(pmVer.getOn_air_date());
+//                    nextPm.setPm_id(null);
+//                    nextPm.setCreated_at(null);
+//                    nextPm.setUpdated_at(null);
+//                    pm = nextPm;
+//                }
+//            }
+//            Long testId = pm.getPm_id();
+//            if (pm.getPm_id() != null) {
+//                if (updList.stream().anyMatch(e -> e.getPm_id().equals(testId))) {
+//                    updList = updList.stream().filter(e -> !e.getPm_id().equals(testId)).collect(Collectors.toList());
+//                }
+//            }
+//            updList.add(pm);
+//        }
+//        if (updList.size() > 0) {
+//            pmService.saveAll(updList);
+//        }
+//    }
+
+    public void eliminateStationId() {
+        List<PM> pmList = pmService.findByStationIdNotNull();
+        List<PM> updList = new ArrayList<>();
+        if (pmList.size() > 0) {
+            for (PM pm : pmList) {
+                pm.setStationArr(StringUtilsMine.addToStringArr(pm.getStationArr(), pm.getStation_id()));
+                updList.add(pm);
+            }
+
+            if (updList.size() > 0) {
+                pmService.saveAll(updList);
+            }
+        }
+    }
 
     public void adjustArr() {
         // teamArr

@@ -1,6 +1,5 @@
 package otaku.info.controller;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -227,106 +226,66 @@ public class ApiTvController {
 
     /**
      * PM+付随データを登録します。すでにPMがある場合は更新
+     * 放送局追加は判定できないのでフロントでがんばって！
      *
      * @return Boolean true: success / false: failed
      */
     @PostMapping("/")
     public ResponseEntity<Boolean> newPMyVer(@Valid @RequestBody PMVerForm pmVerForm) {
         logger.debug("accepted");
-        Boolean updFlg = false;
 
         try {
             PM pm;
             Program program = programService.findByPId(pmVerForm.getProgram_id());
-//            RegularPM regularPM = null;
 
             if (program == null) {
                 return ResponseEntity.ok(false);
             }
 
-//            if (pmVerForm.getRegular_pm_id() != null) {
-//                regularPM = regularPmService.findById(pmVerForm.getRegular_pm_id());
-//            }
-
             // pm_idが入っていたらverだけ追加処理処理、入っていなかったらpm新規登録とあればver追加処理、と判断（ここではpmのタイトル変更などはできない）
             // まずはpm
             if (pmVerForm.getPm_id() == null || pmVerForm.getPm_id() == 0) {
-
-                // 対象のItemが見つからなかったら処理しません。見つかったら処理する。
                 pm = new PM();
-
-                // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
-                BeanUtils.copyProperties(pmVerForm, pm);
-
-//                if (regularPM != null) {
-//                    pm.setRegular_pm_id(regularPM.getRegular_pm_id());
-//                }
-
-                // wordpressでエラーになる記号を処理し、設定し直す
-                pm.setTitle(textController.replaceSignals(pm.getTitle()));
-
-                // 登録前に本当に重複登録がないかチェック
-                // 同じタイトルのpmがあるなら、登録せずに0番目のpmをセットする
-                List<PM> checkedPmList = pmService.findByTitle(pmVerForm.getTitle());
-                if (checkedPmList.size() == 0) {
-                    PM savedPm = pmService.save(pm);
-                    pm = savedPm;
-                } else {
-                    pm = checkedPmList.get(0);
-                }
             } else {
                 pm = pmService.findByPmId(pmVerForm.getPm_id());
             }
 
+            // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
+            BeanUtils.copyProperties(pmVerForm, pm);
+
+            // wordpressでエラーになる記号を処理し、設定し直す
+            pm.setTitle(textController.replaceSignals(pm.getTitle()));
+
+            // 登録前に本当に重複登録がないかチェック
+            // 同じタイトルのpmがあるなら、登録せずに0番目のpmをセットする
+            List<PM> checkedPmList = pmService.findByTitle(pmVerForm.getTitle());
+            if (checkedPmList.size() != 0) {
+                pm = checkedPmList.get(0);
+            }
+
             // チームの登録を行います
             if (pmVerForm.getTeamArr() != null && !pmVerForm.getTeamArr().equals("")) {
-                String teamArr = "";
-//                if (regularPM == null) {
-                    teamArr = pmVerForm.getTeamArr();
-//                } else {
-//                    teamArr = StringUtilsMine.elemsToSave(regularPM.getTeamArr(), pmVerForm.getTeamArr());
-//                }
+                String teamArr  = pmVerForm.getTeamArr();
                 pm.setTeamArr(StringUtilsMine.removeBrackets(teamArr));
             }
 
             // メンバーの登録を行います
             if (pmVerForm.getMemArr() != null && !pmVerForm.getMemArr().equals("")) {
-                String memArr = "";
-//                if (regularPM == null) {
-                    memArr = pmVerForm.getMemArr();
-//                } else {
-//                    memArr = StringUtilsMine.elemsToSave(regularPM.getMemArr(), pmVerForm.getMemArr());
-//                }
+                String memArr = pmVerForm.getMemArr();
                 pm.setMemArr(StringUtilsMine.removeBrackets(memArr));
+            }
+
+            // 放送局の登録を行います
+            if (pmVerForm.getStationArr() != null && !pmVerForm.getStationArr().equals("")) {
+                String staArr = "";
+                staArr = pmVerForm.getStationArr();
+                pm.setStationArr(StringUtilsMine.removeBrackets(staArr));
             }
 
             // programのpm_idを登録します
             program.setPm_id(pm.getPm_id());
             program.setFct_chk(true);
             programService.save(program);
-
-            // verがあれば登録します
-//            List<PMVer> pmVerList = pmVerService.findByPmIdDelFlg(pm.getPm_id(), null);
-
-//            PMVer targetVer = null;
-//            if (pmVerList == null || pmVerList.size() == 0) {
-//                targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
-//            } else {
-//                if (pmVerList.stream().noneMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
-//                    targetVer = new PMVer(null, pm.getPm_id(), program.getOn_air_date(), program.getStation_id(), false, null, null);
-//                } else if (pmVerList.stream().anyMatch(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date()))) {
-//                    targetVer = pmVerList.stream().filter(e -> e.getStation_id().equals(program.getStation_id()) && e.getOn_air_date().equals(program.getOn_air_date())).findFirst().get();
-//                    if (targetVer.getDel_flg().equals(true)) {
-//                        targetVer.setDel_flg(false);
-//                    } else {
-//                        targetVer = null;
-//                    }
-//                }
-//            }
-
-//            if (targetVer != null) {
-//                pmVerService.save(targetVer);
-//            }
 
             // カレンダーを登録・更新する
             // 既存カレンダーデータ取得する
@@ -388,6 +347,24 @@ public class ApiTvController {
             e.printStackTrace();
             return ResponseEntity.ok(false);
         }
+    }
+
+    @PostMapping("/addStation")
+    public ResponseEntity<Boolean> addPMStation(@RequestBody Map<String, Object> input) {
+        if (!input.containsKey("pm_id") || !input.containsKey("program_id") || !input.containsKey("station_id")) {
+            return ResponseEntity.ok(false);
+        }
+
+        PM pm = pmService.findByPmId(Long.parseLong((String) input.get("pm_id")));
+        if (pm != null) {
+            if (pm.getStationArr() == null) {
+                pm.setStationArr("");
+            }
+            Long staId = Long.parseLong((String) input.get("station_id"));
+            pm.setStationArr(StringUtilsMine.addToStringArr(pm.getStationArr(), staId));
+        }
+        pmService.save(pm);
+        return ResponseEntity.ok(true);
     }
 
     /**

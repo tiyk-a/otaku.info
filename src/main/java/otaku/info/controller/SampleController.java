@@ -108,7 +108,11 @@ public class SampleController {
      * @return
      */
     @GetMapping("/test")
-    public ResponseEntity<Void> sample1() {
+    public ResponseEntity<Void> sample1() throws JSONException {
+        // 接続テスト
+        TwitterController.test();
+//        pythonController.test();
+//        pythonController.post(17L, "test" + System.currentTimeMillis());
         return ResponseEntity.ok().build();
 //        res.se
 //        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -188,6 +192,8 @@ public class SampleController {
                 System.out.println("koko");
                 break;
             case 18:
+                tmpController.eliminateStationId();
+//                tmpController.moveToPm();
 //                tmpController.insertBlogPost();
 //                tmpController.moveTo(from, to);
                 break;

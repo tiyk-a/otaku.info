@@ -11,6 +11,9 @@ import java.util.List;
 
 public interface PMRepository extends JpaRepository<PM, Long> {
 
+    @Query(nativeQuery = true, value = "select * from pm where station_id is not null")
+    List<PM> findByStationIdNotNull();
+
     @Query(nativeQuery = true, value = "select t.* from pm t " +
             "inner join pm_ver a on t.pm_id = a.pm_id " +
             "where a.on_air_date >= '2022-01-01' and t.team_arr is null limit 50")
@@ -20,6 +23,9 @@ public interface PMRepository extends JpaRepository<PM, Long> {
             "inner join pm_ver a on t.pm_id = a.pm_id " +
             "where a.on_air_date < '2022-01-01' and t.team_arr is null limit 50")
     List<PM> tmpMethod2();
+
+    @Query(nativeQuery = true, value = "select * from pm where regular_pm_id is not null and del_flg = 0")
+    List<PM> findByRelIdNotNull();
 
     @Query(nativeQuery = true, value = "SELECT * FROM pm i WHERE team_arr like '%[%' or mem_arr like '%[%'")
     List<PM> findbyInvalidArr();

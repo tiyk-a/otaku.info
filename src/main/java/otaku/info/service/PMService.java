@@ -21,12 +21,20 @@ public class PMService {
     @Autowired
     PMRepository pmRepository;
 
+    public List<PM> findByStationIdNotNull() {
+        return pmRepository.findByStationIdNotNull();
+    }
+
     public List<PM> tmpMethod() {
         return pmRepository.tmpMethod();
     }
 
     public List<PM> tmpMethod2() {
         return pmRepository.tmpMethod2();
+    }
+
+    public List<PM> findByRelIdNotNull () {
+        return pmRepository.findByRelIdNotNull();
     }
 
     public List<PM> findbyInvalidArr() {

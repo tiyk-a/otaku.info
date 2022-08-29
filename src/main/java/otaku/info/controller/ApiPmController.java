@@ -203,6 +203,11 @@ public class ApiPmController {
             updPmFlg = true;
         }
 
+        if (!StringUtilsMine.sameElementArrays(form.getStationArr(), pm.getStationArr())) {
+            pm.setStationArr(StringUtilsMine.removeBrackets(form.getStationArr()));
+            updPmFlg = true;
+        }
+
         if (updPmFlg) {
             pmService.save(pm);
         }

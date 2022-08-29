@@ -1,4 +1,4 @@
-# オタク.インフォ.v0.1
+# オタク.インフォ.v0.1 *Simple as much as possible*
 
 ### Compile Command
 ```
@@ -96,3 +96,9 @@ DiffNode.State f = diff.getChild("image1").getState();
     <version>0.95</version>
 </dependency>
 ```
+
+# PMの管理について
+PMは放送内容情報、放送時間、放送局リスト、チーム情報、メンバー情報を持つ。
+別時間の同じ内容の放送や再放送は別物として管理する。
+Q：関連放送や番組を見つけたい時は？
+A：番組名などで検索すれば引っかかるはず

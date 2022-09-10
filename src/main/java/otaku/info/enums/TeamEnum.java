@@ -117,7 +117,7 @@ public enum TeamEnum {
                     continue;
                 }
                 if (e.getId().equals(teamId)) {
-                    resultList.add(e.getMnemonic());
+                    resultList.add(e.getName());
                     break;
                 }
             }

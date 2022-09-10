@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -74,10 +75,10 @@ public class PythonController {
 
         // 開発環境の場合Twitterに投稿しない
         logger.debug("Env: " + setting.getTest());
-        if (setting.getTest() != null && setting.getTest().equals("dev")) {
-//            lineList.add(text + " ■teamId=" + teamId);
-            twLog.debug("teamId:" + teamId + "■" + text);
-        } else {
+//        if (setting.getTest() != null && setting.getTest().equals("dev")) {
+////            lineList.add(text + " ■teamId=" + teamId);
+//            twLog.debug("teamId:" + teamId + "■" + text);
+//        } else {
             if (teamId != null && StringUtils.hasText(text)) {
                 logger.debug("🕊 " + text);
 
@@ -92,7 +93,7 @@ public class PythonController {
                 restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
                 try {
-                    ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twi?teamId=" + teamId + "&title=" + text, String.class);
+                    ResponseEntity<String> response = restTemplate.postForEntity(setting.getPyTwi2() + "twi?teamId=" + teamId, entity, String.class);
                     if (response.getStatusCode() != HttpStatus.ACCEPTED && response.getStatusCode() != HttpStatus.CREATED) {
                         logger.debug("Response status CHECKER HIT");
                         logger.debug(response.getBody());
@@ -108,7 +109,7 @@ public class PythonController {
 //                lineList.add(text + " ■teamId=" + teamId);
                 twLog.debug("teamId:" + teamId + "■" + text);
             }
-        }
+//        }
         return "done";
     }
 }

@@ -1,5 +1,7 @@
 package otaku.info.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import javax.validation.Valid;
@@ -96,9 +98,9 @@ public class ApiTvController {
                 PDto pDto = new PDto();
 
                 // 関連ありそうなPMを集める
-                // 同じ日の同じ放送局のもの
                 List<RelPmDto> relPmList = new ArrayList<>();
 
+                // 同じ日の同じ放送局のもの
                 List<PmFullDto> pmFullDtoList = pmService.findByOnAirDateNotDeleted(p.getOn_air_date());
                 for (PmFullDto dto : pmFullDtoList) {
                     RelPmDto relPmDto = new RelPmDto();
@@ -171,6 +173,7 @@ public class ApiTvController {
         logger.debug("accepted");
 
         try {
+            System.out.println(pmVerForm.getOn_air_date());
             PM pm;
             Program program = programService.findByPId(pmVerForm.getProgram_id());
 
@@ -188,8 +191,14 @@ public class ApiTvController {
 
             // 上書きしてくれるから新規登録も更新もこれだけでいけるはず
             BeanUtils.copyProperties(pmVerForm, pm);
+            //DateTimeFormatterクラスのオブジェクトを生成
+            DateTimeFormatter dtFt = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+            //String型の日付からLocalDateTimeクラスのオブジェクトを生成
+            LocalDateTime datePar = LocalDateTime.parse(pmVerForm.getOn_air_date(), dtFt);
+            pm.setOn_air_date(datePar);
+            System.out.println(pm.getOn_air_date());
 
-            // wordpressでエラーになる記号を処理し、設定し直す
+            // wordpressでエラーになる記号を処理し、不要な文字を削除して設定し直す
             pm.setTitle(textController.replaceSignals(pm.getTitle()));
 
             // 登録前に本当に重複登録がないかチェック

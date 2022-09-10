@@ -49,7 +49,7 @@ public class TwFavTasklet implements Tasklet {
             restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
             loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ中");
-            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twSearch?q=" + TeamEnum.get(teamId).getMnemonic() + "&teamId=" + teamId, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(setting.getPyTwi2() + "twSearch?q=" + TeamEnum.get(teamId).getName() + "&teamId=" + teamId, String.class);
             loggerController.printTwFavTasklet("teamId=" + teamId + "の検索＆ファボ結果：" + Objects.requireNonNull(response.getBody()));
         }
         loggerController.printTwFavTasklet("ジャニTwitter Fav END");

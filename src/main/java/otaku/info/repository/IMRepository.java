@@ -28,7 +28,7 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query(nativeQuery = true, value = "select a.* from im a where FIND_IN_SET(?1, a.team_arr) and a.publication_date >= CURRENT_DATE and a.del_flg = false and not exists ( select * from blog_post b where a.im_id = b.im_id)")
     List<IM> findByTeamIdFutureOrWpIdNull(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from im where FIND_IN_SET(?1, team_arr) and publication_date > CURRENT_DATE AND ((DATEDIFF(publication_date, CURRENT_DATE) <= 8)  OR (DATEDIFF(publication_date, CURRENT_DATE) % 5 = 0)) order by publication_date")
+    @Query(nativeQuery = true, value = "select * from im where FIND_IN_SET(?1, team_arr) and publication_date > CURRENT_DATE AND ((DATEDIFF(publication_date, CURRENT_DATE) <= 8)  OR (DATEDIFF(publication_date, CURRENT_DATE) % 5 = 0)) order by publication_date")
     List<IM> findNearFutureIMByTeamId(Long teamId);
 
     @Query("SELECT t FROM im t WHERE publication_date = CURRENT_DATE and del_flg = 0")
@@ -65,6 +65,6 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query("select t from im t where publication_date >= CURRENT_DATE and del_flg = 0")
     List<IM> findFuture();
 
-    @Query(nativeQuery = true, value = "select * from im a where a.del_flg = 0 and a.publication_date => CURRENT_DATE and a.amazon_image is not null order by a.publication_date asc limit 1")
+    @Query(nativeQuery = true, value = "select * from im a where a.del_flg = 0 and a.publication_date >= CURRENT_DATE and a.amazon_image is not null order by a.publication_date asc limit 1")
     Optional<IM> findUpcomingImWithUrls(Long teamId);
 }

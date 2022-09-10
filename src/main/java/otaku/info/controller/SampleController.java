@@ -45,6 +45,9 @@ public class SampleController {
     private RakutenController rakutenController;
 
     @Autowired
+    private  PMService pmService;
+
+    @Autowired
     private YahooController yahooController;
 
     @Autowired
@@ -136,6 +139,13 @@ public class SampleController {
                 scheduler.run2();
                 break;
             case 3:
+                PM pm = pmService.findByPmId(Long.parseLong(from));
+                String text = twTextController.tvAlert(pm);
+                System.out.println("alert1:" + text);
+                pythonController.post(17L, text);
+                String text2 = twTextController.tvAlert2(pm);
+                System.out.println("alert2:" + text2);
+                pythonController.post(17L, text2);
 //                blogController.chkWpId();
                 break;
             case 4:

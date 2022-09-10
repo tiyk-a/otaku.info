@@ -514,15 +514,19 @@ public class TextController {
      * @return
      */
     public String replaceSignals(String originStr) {
-        if (originStr.contains("(")) {
-            originStr.replace("(", "（");
+        String res = originStr;
+        if (res.contains("(")) {
+            res = res.replace("(", "（");
         }
 
-        if (originStr.contains(")")) {
-            originStr.replace(")", "）");
+        if (res.contains(")")) {
+            res = res.replace(")", "）");
         }
 
-        return originStr;
+        if (res.contains("[字]")) {
+            res = res.replaceAll("[字]", "");
+        }
+        return res;
     }
 
     /**

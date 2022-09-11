@@ -524,7 +524,7 @@ public class TextController {
         }
 
         if (res.contains("[字]")) {
-            res = res.replaceAll("[字]", "");
+            res = res.replaceAll("\\[字\\]", "");
         }
         return res;
     }

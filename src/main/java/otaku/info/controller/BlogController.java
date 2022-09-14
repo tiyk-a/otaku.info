@@ -583,7 +583,7 @@ public class BlogController {
                             String r_url = rakutenController.getRakutenUrl(im.getIm_id());
 
                             List<String> memNameList = StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(f -> MemberEnum.get(f).getName()).collect(Collectors.toList());
-                            List<String> teamNameList = StringUtilsMine.stringToLongList(im.getTeamArr()).stream().map(e -> TeamEnum.get(e).getName()).collect(Collectors.toList());
+                            List<String> teamNameList = StringUtilsMine.stringToLongList(im.getTeamArr()).stream().map(e -> TeamEnum.get(e).getMnemonic()).collect(Collectors.toList());
                             TwiDto twiDto = new TwiDto(im.getTitle(), a_url, r_url, url, im.getPublication_date(), null, teamNameList, memNameList);
 
                             twiDto.setRakuten_url(rakutenController.findRakutenUrl(im.getTitle(), teamIdList.get(0)));

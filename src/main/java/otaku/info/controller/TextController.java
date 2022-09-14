@@ -87,11 +87,19 @@ public class TextController {
             String stationNameList = "";
             if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
                 List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-                stationNameList = "(";
+                stationNameList = "";
                 for (Long stationId : stationIdList) {
-                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                    String stationName = stationService.getStationNameByEnumDB(stationId);
+                    if (!stationName.equals("")) {
+                        if (stationNameList.equals("")) {
+                            stationNameList = "(";
+                        }
+                        stationNameList = stationNameList + ", " + stationName;
+                    }
                 }
-                stationNameList = stationNameList + ")";
+                if (!stationNameList.equals("")) {
+                    stationNameList = stationNameList + ")";
+                }
             }
 
             info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + stationNameList + "%0A";
@@ -379,11 +387,19 @@ public class TextController {
                     String stationNameList = "";
                     if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
                         List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-                        stationNameList = "(";
+                        stationNameList = "";
                         for (Long stationId : stationIdList) {
-                            stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                            String stationName = stationService.getStationNameByEnumDB(stationId);
+                            if (!stationName.equals("")) {
+                                if (stationNameList.equals("")) {
+                                    stationNameList = "(";
+                                }
+                                stationNameList = stationNameList + ", " + stationName;
+                            }
                         }
-                        stationNameList = stationNameList + ")";
+                        if (!stationNameList.equals("")) {
+                            stationNameList = stationNameList + ")";
+                        }
                     }
                     broad = broad + stationNameList + "<br />";
                 }
@@ -444,11 +460,19 @@ public class TextController {
             String stationNameList = "";
             if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
                 List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-                stationNameList = "(";
+                stationNameList = "";
                 for (Long stationId : stationIdList) {
-                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                    String stationName = stationService.getStationNameByEnumDB(stationId);
+                    if (!stationName.equals("")) {
+                        if (stationNameList.equals("")) {
+                            stationNameList = "(";
+                        }
+                        stationNameList = stationNameList + ", " + stationName;
+                    }
                 }
-                stationNameList = stationNameList + ")";
+                if (!stationNameList.equals("")) {
+                    stationNameList = stationNameList + ")";
+                }
             }
 
             String tmp = dtf1.format(pm.getOn_air_date()) + "~ " + pm.getTitle() + stationNameList;

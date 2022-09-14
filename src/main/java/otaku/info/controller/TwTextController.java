@@ -87,7 +87,7 @@ public class TwTextController {
 
     public String futureItemReminder(IM im, Long teamId, String itemUrl) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
-        String tags = "#" + TeamEnum.get(teamId).getName();
+        String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 
         if (im.getMemArr() != null && !im.getMemArr().equals("")) {
             List<String> menNameList = StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(e -> MemberEnum.get(e).getName().replaceAll(" ", "")).collect(Collectors.toList());
@@ -141,7 +141,7 @@ public class TwTextController {
 
         // twitterタグ、DB使わないで取れてる
         String tags = TeamEnum.findMnemonicListByTeamIdList(StringUtilsMine.stringToLongList(im.getTeamArr())).stream().collect(Collectors.joining(" #","#",""));
-        return str1 + "%\n" + tags;
+        return str1 + "\n" + tags;
     }
 
     public String twitterPerson(TwiDto twiDto, String memberName) {
@@ -187,11 +187,20 @@ public class TwTextController {
             String stationNameList = "";
             if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
                 List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-                stationNameList = "(";
+                stationNameList = "";
                 for (Long stationId : stationIdList) {
-                    stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                    String stationName = stationService.getStationNameByEnumDB(stationId);
+                    if (!stationName.equals("")) {
+                        if (stationNameList.equals("")) {
+                            stationNameList = "(";
+                        }
+                        stationNameList = stationNameList + ", " + stationName;
+                    }
                 }
-                stationNameList = stationNameList + ")";
+
+                if (!stationNameList.equals("")) {
+                    stationNameList = stationNameList + ")";
+                }
             }
                 info = info + dtf1.format(pm.getOn_air_date()) + " " + pm.getTitle() + stationNameList + "\n";
         }
@@ -222,7 +231,7 @@ public class TwTextController {
         String teamName = "";
         for (Long teamId : teamIdList) {
             // チーム名をセット
-            String tmp = TeamEnum.get(teamId).getName();
+            String tmp = TeamEnum.get(teamId).getMnemonic();
             if (teamName.equals("")) {
                 teamName = tmp;
             } else {
@@ -275,112 +284,42 @@ public class TwTextController {
         String stationNameList = "";
         if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
             List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-            stationNameList = "チャンネル：";
+            stationNameList = "";
             for (Long stationId : stationIdList) {
-                stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
+                String stationName = stationService.getStationNameByEnumDB(stationId);
+                if (!stationName.equals("")) {
+                    if (stationNameList.equals("")) {
+                        stationNameList = "チャンネル：";
+                    }
+                    stationNameList = stationNameList + ", " + stationName;
+                }
             }
         }
 
-        IM im = imService.findUpcomingImWithUrls(teamIdList.get(0)).orElse(null);
-
-        String a_url = "";
-        if (im != null && im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
-            a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
-        }
-
-        if (im != null) {
-            result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
-                + names + "が出演します。"
-                + stationNameList
-                + "\n" + tagList.stream().collect(Collectors.joining(" #","#",""))
-                + "\n" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？\n" + a_url;
-        }
+        result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
+            + names + "が出演します。"
+            + stationNameList
+            + "\n" + tagList.stream().collect(Collectors.joining(" #","#",""));
         return result;
     }
 
-    public String tvAlert2(PM pm) {
-        String result = "";
-
-        List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
-        List<String> tagList = new ArrayList<>();
-
-        String teamName = "";
-        for (Long teamId : teamIdList) {
-            // チーム名をセット
-            String tmp = TeamEnum.get(teamId).getName();
-            if (teamName.equals("")) {
-                teamName = tmp;
-            } else {
-                teamName = teamName + "、" + tmp;
-            }
-
-            // タグにチーム名をセット
-            tagList.add(tmp);
-        }
-
-        List<Long> memIdList = StringUtilsMine.stringToLongList(pm.getMemArr());
-
-        String memName = "";
-        for (Long memId : memIdList) {
-            // mem名をセット
-            String tmp = MemberEnum.get(memId).getName();
-            if (memName.equals("")) {
-                memName = tmp;
-            } else {
-                memName = memName + "、" + tmp;
-            }
-
-            // タグにメンバー名をセット
-            tagList.add(MemberEnum.get(memId).getName());
-        }
-
-        // team&mem名を合わせる
-        String names = "";
-        if (!teamName.equals("") && !memName.equals("")) {
-            names = teamName + "、" + memName;
-        } else if (!teamName.equals("") && memName.equals("")) {
-            names = teamName;
-        } else if (teamName.equals("") && !memName.equals("")) {
-            names = memName;
-        }
-
-        if (tagList.size() > 0) {
-            for (String tag : tagList) {
-                if (tag.contains(" ")) {
-                    tagList.remove(tag);
-                    String removedSpaceName = tag.replaceAll(" ", "");
-                    tagList.add(removedSpaceName);
-                }
-            }
-        }
-
-        // Format LocalDateTime
-        String formattedDateTime = pm.getOn_air_date().format(dtf2);
-
-        String stationNameList = "";
-        if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
-            List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-            stationNameList = "チャンネル：";
-            for (Long stationId : stationIdList) {
-                stationNameList = stationNameList + ", " + stationService.getStationNameByEnumDB(stationId);
-            }
-        }
-
-        IM im = imService.findUpcomingImWithUrls(teamIdList.get(0)).orElse(null);
-
-        String a_url = "";
-        if (im != null && im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
-            a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
-        }
+    /**
+     * 引数チームIDのお勧め商品のテキストを作る
+     *
+     * @param teamId
+     * @return
+     */
+    public String createRecomItemText(Long teamId) {
+        String res = "";
+        IM im = imService.findUpcomingImWithUrls(teamId).orElse(null);
 
         if (im != null) {
-            result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
-                    + names + "が出演します。"
-                    + stationNameList
-                    + "\n" + tagList.stream().collect(Collectors.joining(" #","#",""))
-                    + "\n" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？\n" + a_url;
+            if (im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
+                String a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
+                res = "\n" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？\n" + a_url;
+            }
         }
-        return result;
+        return res;
     }
 
     /**

@@ -60,12 +60,14 @@ public class TvAlertTasklet implements Tasklet {
             // Postする番組の投稿文を作る Map<TeamId, text>
             Map<Long, String> postMap = new HashMap<>();
             for (PM pm : pmList) {
+                // teamIdに依存しない部分の文章だけ作る
                 String text = twTextController.tvAlert(pm);
 
                 List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
                 // generalブログのteamIdを詰めていくリスト
                 List<Long> generalBlogTeamIdList = new ArrayList<>();
                 for (Long teamId : teamIdList) {
+                    text = text + twTextController.createRecomItemText(teamId);
                     if (TeamEnum.get(teamId).getBlogEnumId().equals(BlogEnum.MAIN.getId())) {
                         generalBlogTeamIdList.add(teamId);
                     } else {

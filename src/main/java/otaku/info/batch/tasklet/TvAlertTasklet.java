@@ -17,10 +17,7 @@ import otaku.info.service.PMService;
 import otaku.info.utils.StringUtilsMine;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @StepScope
@@ -67,15 +64,23 @@ public class TvAlertTasklet implements Tasklet {
                 // generalブログのteamIdを詰めていくリスト
                 List<Long> generalBlogTeamIdList = new ArrayList<>();
                 for (Long teamId : teamIdList) {
-                    text = text + twTextController.createRecomItemText(teamId);
                     if (TeamEnum.get(teamId).getBlogEnumId().equals(BlogEnum.MAIN.getId())) {
                         generalBlogTeamIdList.add(teamId);
                     } else {
+                        // そのチームのおすすめを追加する
+                        text = text + twTextController.createRecomItemText(teamId);
                         postMap.put(teamId, text);
                     }
                 }
 
                 if (generalBlogTeamIdList.size() > 0) {
+                    Long id;
+                    if (generalBlogTeamIdList.size() == 1) {
+                        id = generalBlogTeamIdList.get(0);
+                    } else {
+                        id = generalBlogTeamIdList.get(new Random().nextInt(generalBlogTeamIdList.size()));
+                    }
+                    text = text + twTextController.createRecomItemText(id);
                     postMap.put(generalBlogTeamIdList.get(0), text);
                 }
             }

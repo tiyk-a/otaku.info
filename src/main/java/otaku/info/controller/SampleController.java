@@ -112,8 +112,10 @@ public class SampleController {
      */
     @GetMapping("/test")
     public ResponseEntity<Void> sample1() throws JSONException {
+        String res = textController.replaceSignals("前[字]後");
+        System.out.println(res);
         // 接続テスト
-        TwitterController.test();
+//        TwitterController.test();
 //        pythonController.test();
 //        pythonController.post(17L, "test" + System.currentTimeMillis());
         return ResponseEntity.ok().build();
@@ -143,7 +145,7 @@ public class SampleController {
                 String text = twTextController.tvAlert(pm);
                 System.out.println("alert1:" + text);
                 pythonController.post(17L, text);
-                String text2 = twTextController.tvAlert2(pm);
+                String text2 = twTextController.tvAlert(pm);
                 System.out.println("alert2:" + text2);
                 pythonController.post(17L, text2);
 //                blogController.chkWpId();

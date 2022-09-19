@@ -96,8 +96,8 @@ public enum MemberEnum {
     KAZUYA_KAMENASHI(112L,new Date(1986-1900,2-1,23), "かめなしかずや","亀梨和也","亀亀ちゃん",20L),
     TATSUYA_UEDA(113L,new Date(1983-1900,10-1,4), "うえだたつや","上田竜也","たっちゃん上ぽむ",20L),
     YUICHI_NAKAMARU(114L,new Date(1983-1900,9-1,4), "なかまるゆういち","中丸雄一","ゆっち鼻鼻丸ポット",20L),
-    KOICHI_DOMOTO(114L,new Date(1979-1900,1-1,1), "どうもとこういち","堂本光一","王子",21L),
-    TSUYOSHI_DOMOTO(114L,new Date(1979-1900,4-1,10), "どうもとつよし","堂本剛","剛くん",21L);
+    KOICHI_DOMOTO(115L,new Date(1979-1900,1-1,1), "どうもとこういち","堂本光一","王子",21L),
+    TSUYOSHI_DOMOTO(116L,new Date(1979-1900,4-1,10), "どうもとつよし","堂本剛","剛くん",21L);
 
     private final Long id;
     private final Date birthday;

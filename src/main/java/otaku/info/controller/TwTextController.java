@@ -64,12 +64,31 @@ public class TwTextController {
      */
     public String twitter(TwiDto twiDto) {
 
+        // memberのタグを作る
         String memTag = "";
-        if (twiDto.getMemList() != null && twiDto.getMemList().size() > 0) {
+        if (twiDto.getMemList() != null && twiDto.getMemList().size() > 1) {
             memTag = String.join(" #", twiDto.getMemList());
+        } else if (twiDto.getMemList() != null && twiDto.getMemList().size() == 1) {
+            memTag = "#" + twiDto.getMemList().get(0);
         }
 
-        String tags = String.join("#", twiDto.getTeamNameList()) + " " + memTag;
+        // teamのタグを作る
+        String teamTag = "";
+        if (twiDto.getTeamNameList() != null && twiDto.getTeamNameList().size() > 1) {
+            teamTag = String.join(" #", twiDto.getTeamNameList());
+        } else if (twiDto.getTeamNameList() != null && twiDto.getTeamNameList().size() == 1) {
+            teamTag = "#" + twiDto.getTeamNameList().get(0);
+        }
+
+        // タグをまとめる
+        String tags = "";
+        if (!teamTag.equals("")) {
+            tags = teamTag;
+        }
+
+        if (!memTag.equals("")) {
+            tags = tags + " " + memTag;
+        }
 
         // URL
         String a_url = "";
@@ -289,9 +308,10 @@ public class TwTextController {
                 String stationName = stationService.getStationNameByEnumDB(stationId);
                 if (!stationName.equals("")) {
                     if (stationNameList.equals("")) {
-                        stationNameList = "チャンネル：";
+                        stationNameList = "チャンネル：" + stationName;
+                    } else {
+                        stationNameList = stationNameList + ", " + stationName;
                     }
-                    stationNameList = stationNameList + ", " + stationName;
                 }
             }
         }
@@ -315,8 +335,15 @@ public class TwTextController {
 
         if (im != null) {
             if (im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
-                String a_url = "Amazon:" + StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
-                res = "\n" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？\n" + a_url;
+                String tmp = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
+                String a_url = "";
+                if (!tmp.equals("")) {
+                    a_url = "Amazon:" + tmp;
+                }
+
+                if (!a_url.equals("")) {
+                    res = "\n" + sdf2.format(im.getPublication_date()) + "発売の" + im.getTitle() + "は入手済みですか？\n" + a_url;
+                }
             }
         }
         return res;

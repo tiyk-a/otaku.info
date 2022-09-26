@@ -27,4 +27,7 @@ public class FAllDto {
 
     // 各チームの未チェックID件数
     private Map<Long, Integer> itemNumberMap;
+
+    // TV未チェック件数
+    private Integer tvCount;
 }

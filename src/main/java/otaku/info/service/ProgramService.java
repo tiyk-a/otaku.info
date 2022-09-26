@@ -97,4 +97,19 @@ public class ProgramService  {
         }
         return mappedResult;
     }
+
+    /**
+     * PMIDからProgram数を取得します
+     * Nullを引数にしたらPMIDがNullのProgram数を返す
+     *
+     * @param pmId
+     * @return
+     */
+    public Integer findByPmId(Long pmId) {
+        if (pmId == null) {
+            return programRepository.findByPmIdIsNull();
+        } else {
+            return programRepository.findByPmId(pmId);
+        }
+    }
 }

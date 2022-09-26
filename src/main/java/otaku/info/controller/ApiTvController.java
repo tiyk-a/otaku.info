@@ -48,6 +48,9 @@ public class ApiTvController {
     DelCalService delCalService;
 
     @Autowired
+    ItemService itemService;
+
+    @Autowired
     DateUtils dateUtils;
 
     @Autowired
@@ -158,6 +161,8 @@ public class ApiTvController {
         Map<Long, Integer> numberMap = programService.getNumbersOfEachTeamIdFutureNotDeletedNoPM();
         pAllDto.setPNumberMap(numberMap);
 
+        // ITEMの未チェック件数を設定する
+        pAllDto.setItemCount(itemService.findByImId(null));
         logger.debug("fin");
         return ResponseEntity.ok(pAllDto);
     }

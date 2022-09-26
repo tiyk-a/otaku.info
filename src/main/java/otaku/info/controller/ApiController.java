@@ -56,6 +56,9 @@ public class ApiController {
     DelCalService delCalService;
 
     @Autowired
+    ProgramService programService;
+
+    @Autowired
     DateUtils dateUtils;
 
     @Autowired
@@ -117,6 +120,9 @@ public class ApiController {
         // 各チームのIMなし未来のitem件数を取得しDTOにセットします<TeamId, numberOfItems>
         Map<Long, Integer> numberMap = itemService.getNumbersOfEachTeamIdFutureNotDeletedNoIM();
         dto.setItemNumberMap(numberMap);
+
+        // TVの未チェック件数を設定する
+        dto.setTvCount(programService.findByPmId(null));
         logger.debug("fin");
         return ResponseEntity.ok(dto);
     }

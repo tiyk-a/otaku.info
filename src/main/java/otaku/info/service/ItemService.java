@@ -187,5 +187,20 @@ public class ItemService {
     public List<Item> findByImIdSiteId(Long imId, Long siteId) {
         return itemRepository.findByImIdSiteId(imId, siteId);
     }
+
+    /**
+     * IMIDからProgram数を取得します
+     * Nullを引数にしたらIMIDがNullのITEM数を返す
+     *
+     * @param imId
+     * @return
+     */
+    public Integer findByImId(Long imId) {
+        if (imId == null) {
+            return itemRepository.findByImIdIsNull();
+        } else {
+            return itemRepository.findByImId(imId);
+        }
+    }
 }
 

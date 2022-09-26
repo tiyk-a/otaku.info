@@ -113,4 +113,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query(nativeQuery = true, value = "select * from item where im_id = ?1 and site_id = ?2")
     List<Item> findByImIdSiteId(Long imId, Long siteId);
+
+    @Query(nativeQuery = true, value = "SELECT count(*) FROM item p WHERE im_id = ?1 and del_flg = 0 and publication_date >= CURRENT_DATE")
+    int findByImId(Long imId);
+
+    @Query(nativeQuery = true, value = "SELECT count(*) FROM item p WHERE im_id is null and del_flg = 0 and publication_date >= CURRENT_DATE")
+    int findByImIdIsNull();
 }

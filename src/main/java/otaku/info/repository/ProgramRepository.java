@@ -61,4 +61,10 @@ public interface ProgramRepository extends JpaRepository<Program, Long> {
 
     @Query(nativeQuery = true, value = "select count(*) from program a where a.del_flg = 0 and a.on_air_date >= CURRENT_DATE and a.pm_id is null and a.del_flg = 0 and FIND_IN_SET(?1, a.team_arr)")
     int getNumberOfTeamIdFutureNotDeletedNoPM(Long teamId);
+
+    @Query(nativeQuery = true, value = "SELECT count(*) FROM program p WHERE pm_id = ?1 and del_flg = 0 and on_air_date >= CURRENT_DATE")
+    int findByPmId(Long pmId);
+
+    @Query(nativeQuery = true, value = "SELECT count(*) FROM program p WHERE pm_id is null and del_flg = 0 and on_air_date >= CURRENT_DATE")
+    int findByPmIdIsNull();
 }

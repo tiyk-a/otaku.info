@@ -24,4 +24,7 @@ public class PAllDto {
 
     // 各チームの未チェックID件数
     private Map<Long, Integer> pNumberMap;
+
+    // ITEM未チェック件数
+    private Integer itemCount;
 }

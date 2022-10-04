@@ -385,12 +385,13 @@ public class ApiController {
             if (verArr.size() > 0) {
                 for (String[] ver : verArr) {
                     String verName = ver[1];
-
-                    ImVer newVer = new ImVer();
-                    newVer.setVer_name(textController.replaceSignals(verName));
-                    newVer.setIm_id(savedIm.getIm_id());
-                    newVer.setDel_flg(false);
-                    imVerService.save(newVer);
+                    if (verName != null) {
+                        ImVer newVer = new ImVer();
+                        newVer.setVer_name(textController.replaceSignals(verName));
+                        newVer.setIm_id(savedIm.getIm_id());
+                        newVer.setDel_flg(false);
+                        imVerService.save(newVer);
+                    }
                 }
             }
 
@@ -414,7 +415,7 @@ public class ApiController {
 //            }
 
             // itemのim_idを登録します
-            item.setIm_id(im.getIm_id());
+            item.setIm_id(savedIm.getIm_id());
             item.setFct_chk(true);
             itemService.save(item);
 

@@ -575,7 +575,7 @@ public class BlogController {
 
                             // amazon url
                             String a_url = "";
-                            if (!im.getAmazon_image().equals("")) {
+                            if (im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
                                 a_url = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse("");
                             }
 
@@ -586,10 +586,13 @@ public class BlogController {
                             List<String> teamNameList = StringUtilsMine.stringToLongList(im.getTeamArr()).stream().map(e -> TeamEnum.get(e).getMnemonic()).collect(Collectors.toList());
                             TwiDto twiDto = new TwiDto(im.getTitle(), a_url, r_url, url, im.getPublication_date(), null, teamNameList, memNameList);
 
-                            twiDto.setRakuten_url(rakutenController.findRakutenUrl(im.getTitle(), teamIdList.get(0)));
+                            if (r_url != null && !r_url.equals("")) {
+                                twiDto.setRakuten_url(r_url);
+                            }
+
                             twiDto.setBlog_url(url);
 
-                            if (im.getAmazon_image() != null) {
+                            if (im.getAmazon_image() != null && !im.getAmazon_image().equals("")) {
                                 twiDto.setAmazon_url(StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(url));
                             }
 

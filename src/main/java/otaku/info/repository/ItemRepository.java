@@ -85,7 +85,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param teamId
      * @return
      */
-    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and a.publication_date >= CURRENT_DATE and a.im_id is null")
+    @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and a.publication_date >= (CURRENT_DATE - interval 10 day) and a.im_id is null")
     List<Item> findByTeamIdFutureNotDeletedNoIM(Long teamId);
 
     @Query(nativeQuery = true, value = "select a.* from item a where FIND_IN_SET(?1, team_arr) and a.del_flg = 0 and publication_date >= CURRENT_DATE and a.im_id is not null")

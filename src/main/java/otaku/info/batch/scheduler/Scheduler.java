@@ -66,6 +66,10 @@ public class Scheduler {
     @Qualifier("blogUpdateJob")
     private Job blogUpdateJob;
 
+    @Autowired
+    @Qualifier("blogPostJob")
+    private Job blogPostJob;
+
 //    @Autowired
 //    @Qualifier("blogCatchupJob")
 //    private Job blogCatchupJob;
@@ -336,5 +340,27 @@ public class Scheduler {
         Long diff = endTime - startTime;
         logger.debug("run13: " + diff);
         logger.debug("--- run13: Twitter Follow Back END ---");
+    }
+
+    /**
+     * ブログ投稿処理
+     */
+    @Scheduled(cron = "${cron.blogUpd}")
+    public void run14() {
+        logger.debug("--- run14: Twitter Blog Post START ---");
+        Long startTime = System.currentTimeMillis();
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run14", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(blogPostJob, jobParameters);
+        }catch (Exception ex) {
+            logger.debug(ex.getMessage());
+            lineController.post("run14: Twitter Blog Post" + ex.getMessage());
+        }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        logger.debug("run14: " + diff);
+        logger.debug("--- run14: Twitter Blog Post END ---");
     }
 }

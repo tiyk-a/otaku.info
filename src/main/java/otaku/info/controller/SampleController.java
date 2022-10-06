@@ -181,13 +181,14 @@ public class SampleController {
                 scheduler.run13();
                 break;
             case 14:
-                // 商品の情報を投稿する
-                logger.debug("---START---");
-                Font [] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
-                for (i=0;i<fonts.length; i++) {
-                    System.out.println(fonts[i].getName());
-                }
-                logger.debug("---END---");
+//                // 商品の情報を投稿する
+//                logger.debug("---START---");
+//                Font [] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
+//                for (i=0;i<fonts.length; i++) {
+//                    System.out.println(fonts[i].getName());
+//                }
+//                logger.debug("---END---");
+                scheduler.run14();
                 break;
             case 15:
                 tmpController.adjustArr();

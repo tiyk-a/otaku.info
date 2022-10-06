@@ -32,6 +32,7 @@ class BatchConfig {
     private final TvTasklet tvTasklet;
     private final TwFavTasklet twFavTasklet;
     private final TwFolBTasklet twFolBTasklet;
+    private final BlogPostTasklet blogPostTasklet;
 //    private final CalendarCatchupTasklet calendarCatchupTasklet;
 
     @Bean
@@ -230,5 +231,18 @@ class BatchConfig {
     Job twFolBJob() {
         return this.jobBuilderFactory.get("twFolBJob").incrementer(new RunIdIncrementer())
                 .start(twFolBStep()).build();
+    }
+
+    @Bean
+    Step blogPostStep() {
+        return stepBuilderFactory.get("blogPostStep")
+                .tasklet(blogPostTasklet)
+                .build();
+    }
+
+    @Bean
+    Job blogPostJob() {
+        return this.jobBuilderFactory.get("blogPostJob").incrementer(new RunIdIncrementer())
+                .start(blogPostStep()).build();
     }
 }

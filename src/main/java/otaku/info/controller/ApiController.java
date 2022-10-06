@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
+import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.dto.*;
 import otaku.info.entity.*;
 import otaku.info.form.*;
@@ -47,6 +48,9 @@ public class ApiController {
     ImVerService imVerService;
 
     @Autowired
+    BlogUpdService blogUpdService;
+
+    @Autowired
     ErrorJsonService errorJsonService;
 
     @Autowired
@@ -69,6 +73,9 @@ public class ApiController {
 
     @Autowired
     StringUtilsMine stringUtilsMine;
+
+    @Autowired
+    Scheduler scheduler;
 
     /**
      * 各グループ画面のデータ取得
@@ -270,7 +277,9 @@ public class ApiController {
         logger.debug("accepted");
         IM im = imService.findById(imId);
         if (im != null) {
-            blogController.postOrUpdate(im);
+            BlogUpd blogUpd = new BlogUpd();
+            blogUpd.setIm_id(im.getIm_id());
+            blogUpdService.save(blogUpd);
         }
         logger.debug("fin");
         return ResponseEntity.ok(true);

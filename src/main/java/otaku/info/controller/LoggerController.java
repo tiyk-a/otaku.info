@@ -37,6 +37,8 @@ public class LoggerController {
 
     final Logger calendarCatchupTaskletLogger = Log4jUtils.newConsoleCsvAllLogger("CalendarCatchupTasklet");
 
+    final Logger blogPostLogger = Log4jUtils.newConsoleCsvAllLogger("blogPostTasklet");
+
     public void printBlogCatchupTaskletLogger(String arg) {
         blogCatchupTaskletLogger.info(arg);
     }
@@ -92,4 +94,6 @@ public class LoggerController {
     public void printCalendarCatchupTaskletLogger(String arg) {
         calendarCatchupTaskletLogger.info(arg);
     }
+
+    public void printBlogPostTasklet(String arg) { blogPostLogger.info(arg); }
 }

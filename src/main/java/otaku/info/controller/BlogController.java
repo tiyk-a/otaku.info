@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -36,6 +37,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Controller
@@ -331,7 +333,7 @@ public class BlogController {
      * IMだけ渡されるので、その子の持つteamを確認して、
      * teamのサブドメインを確認して、サブドメインの数だけ投稿が必要
      */
-    public Map<Long, Long> postOrUpdate(IM im) throws InterruptedException {
+    public void postOrUpdate(IM im) {
         Map<Long, Long> resMap = new TreeMap<>();
 
         logger.debug("postOrUpdateです。IMid：" + im.getIm_id());
@@ -627,8 +629,7 @@ public class BlogController {
         }
 
         logger.debug("postOrUpdate終わり");
-        Thread.sleep(500);
-        return resMap;
+//        Thread.sleep(500);
     }
 
     /**

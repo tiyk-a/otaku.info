@@ -2,11 +2,17 @@ package otaku.info.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import otaku.info.enums.MemberEnum;
+import otaku.info.enums.TeamEnum;
 import otaku.info.setting.Setting;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class ServerUtils {
@@ -45,5 +51,27 @@ public class ServerUtils {
             ++count;
         }
         return newPath;
+    }
+
+    /**
+     * これは、そのうち新しい別クラスに所属させるGroupに関するメソッド
+     * 引数のTeamEnumとMemberEnumをグループごとに分けます。
+     *
+     */
+    public Map<TeamEnum, List<MemberEnum>> groupMem(List<TeamEnum> teamEnumList, List<MemberEnum> memberEnumList) {
+        Map<TeamEnum, List<MemberEnum>> resMap = new HashMap<>();
+        for (TeamEnum teamEnum : teamEnumList) {
+            resMap.put(teamEnum, null);
+        }
+
+        for (MemberEnum memberEnum : memberEnumList) {
+            List<MemberEnum> tmpList = new ArrayList<>();
+            TeamEnum teamEnum = TeamEnum.get(memberEnum.getTeamId());
+            if (resMap.containsKey(teamEnum)) {
+                tmpList = resMap.get(teamEnum);
+            }
+            resMap.put(teamEnum, tmpList);
+        }
+        return resMap;
     }
 }

@@ -25,7 +25,7 @@ public interface IMRepository extends JpaRepository<IM, Long> {
     @Query(nativeQuery = true, value = "select * from im t where FIND_IN_SET(?1, team_arr) and t.publication_date >= CURRENT_DATE and t.del_flg = false")
     List<IM> findByTeamIdFuture(Long teamId);
 
-    @Query(nativeQuery = true, value = "select a.* from im a where FIND_IN_SET(?1, a.team_arr) and a.publication_date >= CURRENT_DATE and a.del_flg = false and not exists ( select * from blog_post b where a.im_id = b.im_id)")
+    @Query(nativeQuery = true, value = "select a.* from im a where FIND_IN_SET(?1, a.team_arr) and a.publication_date >= CURRENT_DATE and a.del_flg = false and not exists ( select * from blog_post b where a.im_id = b.im_id) and not exists (select * from blog_upd c where a.im_id = c.im_id)")
     List<IM> findByTeamIdFutureOrWpIdNull(Long teamId);
 
     @Query(nativeQuery = true, value = "select * from im where FIND_IN_SET(?1, team_arr) and publication_date > CURRENT_DATE AND ((DATEDIFF(publication_date, CURRENT_DATE) <= 8)  OR (DATEDIFF(publication_date, CURRENT_DATE) % 5 = 0)) order by publication_date")

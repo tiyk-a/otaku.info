@@ -13,6 +13,7 @@ import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
 import otaku.info.setting.Setting;
 import otaku.info.utils.DateUtils;
+import otaku.info.utils.ServerUtils;
 import otaku.info.utils.StringUtilsMine;
 
 import java.text.SimpleDateFormat;
@@ -48,6 +49,9 @@ public class TwTextController {
 
     @Autowired
     private StringUtilsMine stringUtilsMine;
+
+    @Autowired
+    private ServerUtils serverUtils;
 
     private final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy年MM月dd日");
     private final SimpleDateFormat sdf2 = new SimpleDateFormat("M/d");
@@ -244,48 +248,52 @@ public class TwTextController {
     public String tvAlert(PM pm) {
         String result = "";
 
-        List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
+        // チームとメンバーは2つ用意が必要
+        // ①チーム（正式） メンバ（正式）、チーム（正式） メンバ（正式）
+        // ②チーム(tag)　チーム(tag)　メンバ(tag)　メンバ(tag)
+        List<TeamEnum> teamEnumList = StringUtilsMine.stringToLongList(pm.getTeamArr()).stream().map(TeamEnum::get).collect(Collectors.toList());
+        List<MemberEnum> memberEnumList = StringUtilsMine.stringToLongList(pm.getMemArr()).stream().map(MemberEnum::get).collect(Collectors.toList());
+
+        Map<TeamEnum, List<MemberEnum>> groupEnum = serverUtils.groupMem(teamEnumList, memberEnumList);
+
+        // ①を入れる
+        String teamAndMemCont = "";
+        // ②を入れる→タグにする
         List<String> tagList = new ArrayList<>();
+        List<String> tagListTeam = new ArrayList<>();
+        List<String> tagListMem = new ArrayList<>();
 
-        String teamName = "";
-        for (Long teamId : teamIdList) {
-            // チーム名をセット
-            String tmp = TeamEnum.get(teamId).getMnemonic();
-            if (teamName.equals("")) {
-                teamName = tmp;
-            } else {
-                teamName = teamName + "、" + tmp;
+        for (Map.Entry<TeamEnum, List<MemberEnum>> elem : groupEnum.entrySet()) {
+            // ②に入れる
+            tagListTeam.add(elem.getKey().getMnemonic());
+
+            // メンバーがある場合
+            List<MemberEnum> memberList = elem.getValue();
+            String tmpMemNames = "";
+            if (memberList != null && memberList.size() > 0) {
+
+                for (MemberEnum memberEnum : memberList) {
+                    // ②に入れる
+                    tagListMem.add(memberEnum.getMnemonic());
+
+                    // ①の用意
+                    if (!tmpMemNames.equals("")) {
+                        tmpMemNames = tmpMemNames + "・";
+                    }
+                    tmpMemNames = tmpMemNames + memberEnum.getName();
+                }
             }
 
-            // タグにチーム名をセット
-            tagList.add(tmp);
-        }
-
-        List<Long> memIdList = StringUtilsMine.stringToLongList(pm.getMemArr());
-
-        String memName = "";
-        for (Long memId : memIdList) {
-            // mem名をセット
-            String tmp = MemberEnum.get(memId).getName();
-            if (memName.equals("")) {
-                memName = tmp;
-            } else {
-                memName = memName + "、" + tmp;
+            // ①を作る
+            if (!teamAndMemCont.equals("")) {
+                teamAndMemCont = teamAndMemCont + "、";
             }
 
-            // タグにメンバー名をセット
-            tagList.add(MemberEnum.get(memId).getName());
+            teamAndMemCont = teamAndMemCont + elem.getKey().getName() + " " + tmpMemNames;
         }
 
-        // team&mem名を合わせる
-        String names = "";
-        if (!teamName.equals("") && !memName.equals("")) {
-            names = teamName + "、" + memName;
-        } else if (!teamName.equals("") && memName.equals("")) {
-            names = teamName;
-        } else if (teamName.equals("") && !memName.equals("")) {
-            names = memName;
-        }
+        tagList.addAll(tagListTeam);
+        tagList.addAll(tagListMem);
 
         if (tagList.size() > 0) {
             for (String tag : tagList) {
@@ -303,21 +311,23 @@ public class TwTextController {
         String stationNameList = "";
         if (pm.getStationArr() != null || !pm.getStationArr().equals("")) {
             List<Long> stationIdList = StringUtilsMine.stringToLongList(pm.getStationArr());
-            stationNameList = "";
             for (Long stationId : stationIdList) {
                 String stationName = stationService.getStationNameByEnumDB(stationId);
                 if (!stationName.equals("")) {
-                    if (stationNameList.equals("")) {
-                        stationNameList = "チャンネル：" + stationName;
-                    } else {
-                        stationNameList = stationNameList + ", " + stationName;
+                    if (!stationNameList.equals("")) {
+                        stationNameList = stationNameList + ", ";
                     }
+                    stationNameList = stationNameList + stationName;
                 }
+            }
+
+            if (!stationNameList.equals("")) {
+                stationNameList = stationNameList + "です！";
             }
         }
 
         result = "このあと" + formattedDateTime + "から『" + pm.getTitle() + "』に"
-            + names + "が出演します。"
+            + teamAndMemCont + "が出演します。"
             + stationNameList
             + "\n" + tagList.stream().collect(Collectors.joining(" #","#",""));
         return result;

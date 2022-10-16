@@ -10,7 +10,7 @@ import java.util.List;
 public enum TeamEnum {
 
     SNOWMAN(6L,null,"","SnowMan","Snow Man","snowmanhayainfo", "gfb6rs9140td7etmbup4qeu95c@group.calendar.google.com", "https://mentrecording.jp/snowman/", null, 6L, null),
-    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","", "1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com", "https://www.infinity-r.jp/", null, 7L, null),
+    KANJANI8(7L,null,"カンジャニエイト","関ジャニ","関ジャニ∞","kanjaninfo", "1sb8fb0nlu2l7t8hc1fsncau2g@group.calendar.google.com", "https://www.infinity-r.jp/", null, 7L, null),
     SEXYZONE(8L,null,"セクシーゾーン","SexyZone","Sexy Zone","sexyz0neinfo", "kmikj1iusd3j8rquta40adqjek@group.calendar.google.com", "https://topjrecords.jp/", null, 7L, null),
     TOKIO(9L,null,"トキオ","TOKIO","TOKIO","", "jjr7ntm72bhm2kpmu7im4p8de0@group.calendar.google.com", "https://www.tokio.inc/s/tokio/", null, 7L, null),
     V6(10L,null,"ブイシックス","V6","V6","", "jivfndb5tl2jhrie3jj0mg3rf4@group.calendar.google.com", "https://avex.jp/v6/", null, 7L, null),
@@ -22,9 +22,9 @@ public enum TeamEnum {
     KINGPRINCE(16L,null,"キングアンドプリンス ","KingandPrince","King & Prince","princehayainfo", "93v42jd3m5tkf2e7k42fa1id34@group.calendar.google.com", "https://www.universal-music.co.jp/king-and-prince/", null, 16L, false),
     SIXTONES(17L,null,"ストーンズ ","SixTONES","SixTONES","sixtoneshayain1", "kan71rrmb42l2mh1qnp5br1hb0@group.calendar.google.com", "https://www.sixtones.jp/", null, 17L, null),
     NANIWADANSHI(18L,null,"ナニワダンシ ","なにわ男子","なにわ男子","naniwa_hayainfo", "enf647q0ka2ijj35n9ibvmdbbg@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0011", null, 18L, null),
-    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP","", "pjlojsmpi6vjhmu4v3ve6a5jlo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0007", null, 7L, null),
+    HEYSAYJUMP(19L,null,"ヘイセイジャンプ ","HeySayJUMP","Hey! Say! JUMP","jump_hayainfo", "pjlojsmpi6vjhmu4v3ve6a5jlo@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0007", null, 7L, null),
     KATTUN(20L,null,"カトゥーン ","KATTUN","KAT-TUN","", "1mol4ar70n9ch4737rg8s6bs3k@group.calendar.google.com", "https://www.j-storm.co.jp/s/js/artist/J0006", null, 7L, null),
-    KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids","", "16o2mrgjfscpti4pib9stma0b8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0003", null, 7L, null);
+    KINKIKIDS(21L,null,"キンキキッズ ","KinkiKids","KinKi Kids","kinki_hayainfo", "16o2mrgjfscpti4pib9stma0b8@group.calendar.google.com", "https://www.jehp.jp/s/je/artist/J0003", null, 7L, null);
 
     private final Long id;
     private final String anniversary;

@@ -1,6 +1,5 @@
 package otaku.info.controller;
 
-import java.awt.*;
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
@@ -234,9 +233,6 @@ public class SampleController {
             return "Done";
     }
 
-    private void callError(String arg1, String arg2) {
-        arg1.equals("test");
-    }
 
     /**
      * バッチで動かしてる定時楽天検索→Pythonにツイート命令を出すまでのメソッド

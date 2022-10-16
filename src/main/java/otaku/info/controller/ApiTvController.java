@@ -129,12 +129,21 @@ public class ApiTvController {
                 pDto.setRelPmList(relPmList);
             }
 
+            // Comparatorを実装した匿名クラス
+            Comparator<PDto> comparatorPDto = new Comparator<PDto>() {
+                @Override
+                public int compare(PDto o1, PDto o2) {
+                    return o1.getProgram().getOn_air_date().compareTo(o2.getProgram().getOn_air_date());
+                }
+            };
+
+            // ソート実行
+            pDtoList.sort(comparatorPDto);
+
             pAllDto.setP(pDtoList);
 
             // PMの方をつめる
             List<PMDto> pmDtoList = new ArrayList<>();
-            // 放送局のマップ
-            HashMap<Long, String> stationMap = new HashMap<>();
 
             // 全チームデータ取得の場合
             List<PM> pmList = null;
@@ -153,6 +162,18 @@ public class ApiTvController {
                 // リストに入れる
                 pmDtoList.add(dto);
             }
+
+            // Comparatorを実装した匿名クラス
+            Comparator<PMDto> comparatorPmDto = new Comparator<PMDto>() {
+                @Override
+                public int compare(PMDto o1, PMDto o2) {
+                    return o1.getPm().getOn_air_date().compareTo(o2.getPm().getOn_air_date());
+                }
+            };
+
+            // ソート実行
+            pmDtoList.sort(comparatorPmDto);
+
             // 返却リストに入れる
             pAllDto.setPm(pmDtoList);
         }

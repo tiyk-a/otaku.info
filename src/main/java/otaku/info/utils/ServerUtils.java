@@ -67,9 +67,10 @@ public class ServerUtils {
         for (MemberEnum memberEnum : memberEnumList) {
             List<MemberEnum> tmpList = new ArrayList<>();
             TeamEnum teamEnum = TeamEnum.get(memberEnum.getTeamId());
-            if (resMap.containsKey(teamEnum)) {
+            if (resMap.containsKey(teamEnum) && resMap.get(teamEnum) != null) {
                 tmpList = resMap.get(teamEnum);
             }
+            tmpList.add(memberEnum);
             resMap.put(teamEnum, tmpList);
         }
         return resMap;

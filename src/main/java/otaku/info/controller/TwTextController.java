@@ -236,9 +236,9 @@ public class TwTextController {
 
     /**
      * 直近のTV番組1件のアラート文章を作ります。
-     * このあと06/13 05:25〜めざましテレビ[デ](フジテレビ)に、なにわ男子が出演します。ぜひご覧ください！#なにわ男子
+     * このあと06/13 05:25〜めざましテレビ[デ](フジテレビ)に、西畑大吾くんが出演します。#西畑大吾 #なにわ男子
      *
-     * <MM/dd HH:mm>から<TITLE>に、<MEMBER || TEAM>が出演します。\n<CHANNEL>\nぜひご覧ください！#<MEMBER || TEAM>
+     * <MM/dd HH:mm>から<TITLE>に、<MEMBER || TEAM>が出演します。\n<CHANNEL>\n#<MEMBER || TEAM>
      * 1 ver1つ投稿する
      * ついでに発売前商品とかのIMリンクを表示
      *
@@ -249,8 +249,8 @@ public class TwTextController {
         String result = "";
 
         // チームとメンバーは2つ用意が必要
-        // ①チーム（正式） メンバ（正式）、チーム（正式） メンバ（正式）
-        // ②チーム(tag)　チーム(tag)　メンバ(tag)　メンバ(tag)
+        // ①メンバ（正式） or チーム（正式）（メンバー名があるならチーム名は入れない）
+        // ②チーム(tag)　チーム(tag) メンバ(tag)　メンバ(tag)
         List<TeamEnum> teamEnumList = StringUtilsMine.stringToLongList(pm.getTeamArr()).stream().map(TeamEnum::get).collect(Collectors.toList());
         List<MemberEnum> memberEnumList = StringUtilsMine.stringToLongList(pm.getMemArr()).stream().map(MemberEnum::get).collect(Collectors.toList());
 
@@ -269,27 +269,31 @@ public class TwTextController {
 
             // メンバーがある場合
             List<MemberEnum> memberList = elem.getValue();
-            String tmpMemNames = "";
+            // ①にそのチームのメンバーを全部入れる
+            List<String> tmpMemNameList = new ArrayList<>();
             if (memberList != null && memberList.size() > 0) {
-
                 for (MemberEnum memberEnum : memberList) {
                     // ②に入れる
-                    tagListMem.add(memberEnum.getMnemonic());
-
-                    // ①の用意
-                    if (!tmpMemNames.equals("")) {
-                        tmpMemNames = tmpMemNames + "・";
-                    }
-                    tmpMemNames = tmpMemNames + memberEnum.getName();
+                    tagListMem.add(memberEnum.getName());
+                    tmpMemNameList.add(memberEnum.getName());
                 }
             }
 
-            // ①を作る
-            if (!teamAndMemCont.equals("")) {
-                teamAndMemCont = teamAndMemCont + "、";
+            // そのチームのメンバーがあるようなら①にメンバーを入れる
+            if (tmpMemNameList.size() > 0) {
+                for (String tmpMemName : tmpMemNameList) {
+                    if (!teamAndMemCont.equals("")) {
+                        teamAndMemCont = teamAndMemCont + "、";
+                    }
+                    teamAndMemCont = teamAndMemCont + tmpMemName;
+                }
+            } else {
+                // そのチームのメンバーがないようなら①にチームを入れる
+                if (!teamAndMemCont.equals("")) {
+                    teamAndMemCont = teamAndMemCont + "、";
+                }
+                teamAndMemCont = teamAndMemCont + elem.getKey().getName();
             }
-
-            teamAndMemCont = teamAndMemCont + elem.getKey().getName() + " " + tmpMemNames;
         }
 
         tagList.addAll(tagListTeam);

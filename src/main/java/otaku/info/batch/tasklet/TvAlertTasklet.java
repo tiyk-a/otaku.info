@@ -11,7 +11,6 @@ import otaku.info.controller.LoggerController;
 import otaku.info.controller.PythonController;
 import otaku.info.controller.TwTextController;
 import otaku.info.entity.*;
-import otaku.info.enums.BlogEnum;
 import otaku.info.enums.TeamEnum;
 import otaku.info.service.PMService;
 import otaku.info.utils.StringUtilsMine;
@@ -64,7 +63,7 @@ public class TvAlertTasklet implements Tasklet {
                 // generalブログのteamIdを詰めていくリスト
                 List<Long> generalBlogTeamIdList = new ArrayList<>();
                 for (Long teamId : teamIdList) {
-                    if (TeamEnum.get(teamId).getBlogEnumId().equals(BlogEnum.MAIN.getId())) {
+                    if (TeamEnum.get(teamId).getTw_id().equals("")) {
                         generalBlogTeamIdList.add(teamId);
                     } else {
                         // そのチームのおすすめを追加する

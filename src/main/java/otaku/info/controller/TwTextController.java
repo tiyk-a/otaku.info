@@ -108,13 +108,31 @@ public class TwTextController {
         return "新商品の情報です！\n" + twiDto.getTitle() + "\n発売日：" + sdf1.format(twiDto.getPublication_date()) + a_url + r_url + "\n" + tags;
     }
 
+    /**
+     * 商品発売予告のツイート文章
+     *
+     * @param im
+     * @param teamId
+     * @param itemUrl
+     * @return
+     */
     public String futureItemReminder(IM im, Long teamId, String itemUrl) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 
+        // メンバー登録があるなら
         if (im.getMemArr() != null && !im.getMemArr().equals("")) {
             List<String> menNameList = StringUtilsMine.stringToLongList(im.getMemArr()).stream().map(e -> MemberEnum.get(e).getName().replaceAll(" ", "")).collect(Collectors.toList());
-            tags = tags + String.join(" #" + menNameList);
+            String memTag = "";
+            // メンバー一人の場合
+            if (menNameList.size() <2) {
+                memTag = "#" + menNameList.get(0);
+            } else {
+                // メンバー複数の場合
+                memTag = String.join(" #", menNameList);
+            }
+            // #team + " " + #memTags
+            tags = tags + " " + memTag;
         }
 
         BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId());
@@ -138,7 +156,12 @@ public class TwTextController {
             title = im.getTitle();
         }
 
-        return "【発売まで" + diff + "日】\n" + title + "\n発売日：" + sdf1.format(im.getPublication_date()) + "\n" + tags + "\n" + url;
+        // ノート（フリー記述）
+        String note = "";
+        if (im.getNote() != null && !im.getNote().equals("")) {
+            note = im.getNote();
+        }
+        return "【発売まで" + diff + "日】\n" + title + "\n" + sdf1.format(im.getPublication_date()) + "発売！" + note + "\n" + tags + "\n" + url;
     }
 
     /**

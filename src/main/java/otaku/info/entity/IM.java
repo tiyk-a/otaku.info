@@ -62,6 +62,10 @@ public class IM implements Comparable<IM> {
     @Column(nullable = true)
     private String memArr;
 
+    /** 自由記述、商品説明 */
+    @Column(nullable = true)
+    private String note;
+
     @Override
     public int compareTo(IM target) {
         if (this.getIm_id() < target.getIm_id()) {

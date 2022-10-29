@@ -547,9 +547,22 @@ public class TextController {
             res = res.replace(")", "）");
         }
 
-        if (res.contains("[字]")) {
-            res = res.replaceAll("\\[字\\]", "");
+        String tmpRes = "";
+        if (res.contains("[") && res.contains("]")) {
+            // 中括弧1つずつ削除すべきか判定して処理
+            String[] resArr = res.split("]");
+            for (String sArr : resArr) {
+                if (!sArr.contains("[再")) {
+                    tmpRes = tmpRes + sArr.replaceAll("\\[.*", "");
+                } else {
+                    tmpRes = tmpRes + sArr + "]";
+                }
+            }
+        } else {
+            tmpRes = res;
         }
+
+        res = tmpRes;
         return res;
     }
 

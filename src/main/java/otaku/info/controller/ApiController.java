@@ -660,6 +660,21 @@ public class ApiController {
     }
 
     /**
+     * Item一括削除
+     *
+     * @return Boolean true: success / false: failed
+     */
+    @PostMapping("/item/bundle/del")
+    public ResponseEntity<Boolean> deleteItems(@Valid @RequestBody Integer[] itemIdList) {
+        logger.debug("accepted");
+
+        for (Integer itemId : itemIdList) {
+            delItem(itemId.longValue());
+        }
+        return ResponseEntity.ok(true);
+    }
+
+    /**
      * Itemにim_idを追加してfct_chkを更新します（既存imある場合ですね）
      *
      * @return Boolean true: success / false: failed

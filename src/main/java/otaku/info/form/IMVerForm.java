@@ -15,6 +15,8 @@ public class IMVerForm {
 
     private String title;
 
+    private String note;
+
     private String teamArr;
 
     private String memArr;

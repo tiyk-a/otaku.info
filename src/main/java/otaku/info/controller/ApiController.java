@@ -545,6 +545,14 @@ public class ApiController {
                 logger.info("IMのtitle変更ではありません");
             }
 
+            if (!imVerForm.getNote().equals(im.getNote())) {
+                logger.info("IMのnote変更");
+                im.setNote(imVerForm.getNote());
+                updatedFlg = true;
+            } else {
+                logger.info("IMのtitle変更ではありません");
+            }
+
             if (!imVerForm.getAmazon_image().equals(im.getAmazon_image())) {
                 logger.info("IMのamazon_image変更");
                 im.setAmazon_image(imVerForm.getAmazon_image());

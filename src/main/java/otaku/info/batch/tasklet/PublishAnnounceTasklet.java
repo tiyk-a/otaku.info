@@ -75,14 +75,14 @@ public class PublishAnnounceTasklet implements Tasklet {
                     } else {
                         List<Long> teamIdList2 = new ArrayList<>();
                         teamIdList2.add(teamId);
-                        post(im, teamId, teamIdList2);
+                        post(im, teamId);
                         ++postCount;
                     }
                 }
 
                 // general twitterへのポストが必要な時、ポストする
                 if (teamIdList.size() > 0) {
-                    post(im, teamIdHead, teamIdList);
+                    post(im, teamIdHead);
                 }
             }
 
@@ -101,11 +101,10 @@ public class PublishAnnounceTasklet implements Tasklet {
      *
      * @param im データもと
      * @param teamId Twitteｒポストの際にキーとするteam
-     * @param teamIdList テキストに入れるteamのリスト
      * @throws JSONException
      * @throws InterruptedException
      */
-    private void post(IM im, Long teamId, List<Long> teamIdList) throws JSONException, InterruptedException {
+    private void post(IM im, Long teamId) throws JSONException, InterruptedException {
 
         String url = StringUtilsMine.getAmazonLinkFromCard(im.getAmazon_image()).orElse(null);
         if (url == null) {

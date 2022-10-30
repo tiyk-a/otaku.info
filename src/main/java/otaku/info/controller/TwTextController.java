@@ -114,9 +114,10 @@ public class TwTextController {
      * @param im
      * @param teamId
      * @param itemUrl
+     * @param frontFlg フロントからの呼び出しの場合、true->楽天URL検索とかなし
      * @return
      */
-    public String futureItemReminder(IM im, Long teamId, String itemUrl) {
+    public String futureItemReminder(IM im, Long teamId, String itemUrl, boolean frontFlg) {
         int diff = dateUtils.dateDiff(new Date(), im.getPublication_date()) + 1;
         String tags = "#" + TeamEnum.get(teamId).getMnemonic();
 
@@ -135,12 +136,15 @@ public class TwTextController {
             tags = tags + " " + memTag;
         }
 
-        BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId());
+        BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId()).get(0);
         String title = "";
         String url = "";
 
         try {
-            url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
+            url = im.getRakuten_url();
+            if (url == null || url.equals("") && !frontFlg) {
+                url = rakutenController.findRakutenUrl(im.getTitle(), teamId);
+            }
         } catch (Exception e) {
             logger.error("TW textエラー");
             e.printStackTrace();
@@ -183,7 +187,13 @@ public class TwTextController {
             r_url = "楽天：" + r_url + "\n";
         }
 
-        String str1 = "本日発売！\n" + im.getTitle() + "" + a_url + r_url;
+        // ノート（フリー記述）
+        String note = "";
+        if (im.getNote() != null && !im.getNote().equals("")) {
+            note = im.getNote();
+        }
+
+        String str1 = "本日発売！\n" + im.getTitle() + "" + a_url + r_url + note;
 
         // twitterタグ、DB使わないで取れてる
         String tags = TeamEnum.findMnemonicListByTeamIdList(StringUtilsMine.stringToLongList(im.getTeamArr())).stream().collect(Collectors.joining(" #","#",""));

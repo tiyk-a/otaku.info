@@ -395,7 +395,7 @@ public class BlogController {
             }
 
             // ここ、既存データ見つからない場合は新規BlogPostオブジェクト作って返す
-            BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), blogEnum.getId());
+            BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), blogEnum.getId()).get(0);
             Boolean generalBlogFlg = blogEnum.equals(BlogEnum.MAIN);
 
             // inner_imageがまだ投稿されていない場合は投稿していく

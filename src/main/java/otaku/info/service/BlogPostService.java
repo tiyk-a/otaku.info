@@ -30,7 +30,11 @@ public class BlogPostService {
      * @param blogEnumId
      * @return
      */
-    public BlogPost findByImIdBlogEnumId(Long imId, Long blogEnumId) {
-        return blogPostRepository.findByImIdBlogEnumId(imId, blogEnumId).orElse(new BlogPost());
+    public List<BlogPost> findByImIdBlogEnumId(Long imId, Long blogEnumId) {
+        List<BlogPost> tmpList = blogPostRepository.findByImIdBlogEnumId(imId, blogEnumId);
+        if (tmpList.size() == 0) {
+            tmpList.add(new BlogPost());
+        }
+        return blogPostRepository.findByImIdBlogEnumId(imId, blogEnumId);
     }
 }

@@ -18,6 +18,9 @@ import otaku.info.utils.StringUtilsMine;
 
 import java.util.List;
 
+/**
+ *
+ */
 @Component
 @StepScope
 public class FutureItemReminderTasklet implements Tasklet {
@@ -79,7 +82,7 @@ public class FutureItemReminderTasklet implements Tasklet {
 
             String text = "";
             if (rakutenUrl != null) {
-                text = twTextController.futureItemReminder(im, teamEnum.getId(), im.getRakuten_url());
+                text = twTextController.futureItemReminder(im, teamEnum.getId(), im.getRakuten_url(), false);
                 pythonController.post(teamEnum.getId(), text);
                 ++postCount;
             }

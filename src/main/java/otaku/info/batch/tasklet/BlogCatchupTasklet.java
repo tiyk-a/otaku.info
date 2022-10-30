@@ -46,7 +46,7 @@ public class BlogCatchupTasklet implements Tasklet {
         for (IM im : imList) {
             if (im.getTeamArr() != null) {
                 for (Long teamId : StringUtilsMine.stringToLongList(im.getTeamArr())) {
-                    BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId());
+                    BlogPost blogPost = blogPostService.findByImIdBlogEnumId(im.getIm_id(), TeamEnum.get(teamId).getBlogEnumId()).get(0);
                     if (blogPost.getWp_id() == null) {
                         blogController.postOrUpdate(im);
                     }

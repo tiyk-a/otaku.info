@@ -39,6 +39,9 @@ public class ApiController {
     RakutenController rakutenController;
 
     @Autowired
+    TwTextController twTextController;
+
+    @Autowired
     ItemService itemService;
 
     @Autowired
@@ -104,7 +107,7 @@ public class ApiController {
             List<Item> itemList = itemService.findByTeamIdFutureNotDeletedNoIM(teamId);
 
             // 未来有効でWPIDがnullのIMを取得する
-            List<IM> imList = imService.findByTeamIdFutureOrWpIdNull(teamId);
+            List<IM> imList = imService.findByTeamIdFuture(teamId);
             List<ErrorJson> errorJsonList = errorJsonService.findByTeamIdNotSolved(teamId);
 
             // IMリスト
@@ -758,4 +761,29 @@ public class ApiController {
 //
 //        return ResponseEntity.ok(true);
 //    }
+
+    /**
+     * 未来商品予告の文章がどうなるかを見れます
+     *
+     * @return
+     */
+    @GetMapping("im/futureItemReminder")
+    public ResponseEntity<String> futureItemReminder(@RequestParam("imid") Long imId, @RequestParam("teamid") Long teamId) {
+        IM im = imService.findById(imId);
+        String res = twTextController.futureItemReminder(im, teamId, "フロント用仮のURL", true);
+        return ResponseEntity.ok(res);
+    }
+
+    /**
+     * 売り出し開始アナウンス
+     *
+     * @param imId
+     * @return
+     */
+    @GetMapping("im/publishAnnounceTasklet")
+    public ResponseEntity<String> publishAnnounceTasklet(@RequestParam("imid") Long imId) {
+        IM im = imService.findById(imId);
+        String res = twTextController.releasedItemAnnounce (im, "フロント用仮のURL");
+        return ResponseEntity.ok(res);
+    }
 }

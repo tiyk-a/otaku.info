@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import lombok.AllArgsConstructor;
 import otaku.info.entity.*;
+import otaku.info.enums.TeamEnum;
 import otaku.info.form.*;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
@@ -31,6 +32,9 @@ public class ApiPmController {
 
     @Autowired
     BlogController blogController;
+
+    @Autowired
+    TwTextController twTextController;
 
     @Autowired
     ProgramService programService;
@@ -199,5 +203,26 @@ public class ApiPmController {
         }
 
         return ResponseEntity.ok(pmService.findByKeyLimit(key, 5));
+    }
+
+    /**
+     * 売り出し開始アナウンス
+     *
+     * @param pmId
+     * @return
+     */
+    @GetMapping("/tvAlertTasklet")
+    public ResponseEntity<String> tvAlertTasklet(@RequestParam("pmid") Long pmId) {
+        // teamIdに依存しない部分の文章だけ作る
+        PM pm = pmService.findByPmId(pmId);
+        String text = twTextController.tvAlert(pm);
+
+        List<Long> teamIdList = StringUtilsMine.stringToLongList(pm.getTeamArr());
+        for (Long teamId : teamIdList) {
+            if (!TeamEnum.get(teamId).getTw_id().equals("")) {
+                text = text + twTextController.createRecomItemText(teamId);
+            }
+        }
+        return ResponseEntity.ok(text);
     }
 }

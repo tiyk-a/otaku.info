@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -37,7 +36,6 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Controller
@@ -213,7 +211,7 @@ public class BlogController {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("content", e.getValue());
                     HttpEntity<String> request = new HttpEntity<>(jsonObject.toString(), headersMap);
-                    String finalUrl = e.getKey() + setting.getBlogApiPath() + "pages/" + e.getKey().getItemPageId();
+                    String finalUrl = e.getKey().getSubDomain() + setting.getBlogApiPath() + "pages/" + e.getKey().getItemPageId();
                     String res = request(finalUrl, request, HttpMethod.POST, "updateReleaseItems()");
                 }
             }
@@ -808,8 +806,7 @@ public class BlogController {
         if (postChkMap.entrySet().stream().anyMatch(e -> e.getValue().equals(false))) {
             for (Map.Entry<BlogEnum, Boolean> e : postChkMap.entrySet()) {
                 if (e.getValue().equals(false)) {
-                    String subDomain = e.getKey().getSubDomain();
-                    String url = subDomain + setting.getBlogApiPath() + "pages/" + e.getKey().getTvPageId();
+                    String url = e.getKey().getSubDomain() + setting.getBlogApiPath() + "pages/" + e.getKey().getTvPageId();
 
                     HttpHeaders headers = generalHeaderSet(new HttpHeaders(), e.getKey());
                     JSONObject jsonObject = new JSONObject();

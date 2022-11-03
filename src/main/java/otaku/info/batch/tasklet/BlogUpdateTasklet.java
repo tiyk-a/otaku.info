@@ -29,7 +29,7 @@ public class BlogUpdateTasklet implements Tasklet {
     LoggerController loggerController;
 
     @Override
-    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
         loggerController.printBlogUpdateTasklet("①固定商品ページ");
 //        logger.debug(System.getProperty("user.name"));
 //        // もし月末が近かったら来月のWpタグ(yyyyMM)があるか確認し、なかったら追加する。

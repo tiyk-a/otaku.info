@@ -35,6 +35,6 @@ public class BlogPostService {
         if (tmpList.size() == 0) {
             tmpList.add(new BlogPost());
         }
-        return blogPostRepository.findByImIdBlogEnumId(imId, blogEnumId);
+        return tmpList;
     }
 }

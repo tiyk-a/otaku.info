@@ -745,7 +745,7 @@ public class ApiController {
 
         try {
             IM im = imService.findById(imId);
-                blogController.tmpEyeCatchAmazonSet(im);
+            blogController.tmpEyeCatchAmazonSet(im);
         } catch (Exception e) {
             return ResponseEntity.ok(false);
         }

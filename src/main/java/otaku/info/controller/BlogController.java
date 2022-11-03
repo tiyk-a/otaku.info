@@ -561,7 +561,7 @@ public class BlogController {
                         amazonImagePath = imageUrl;
                     }
 
-                    Integer eyeCatchId = loadMedia(amazonImagePath, im, blogPost);
+                    Integer eyeCatchId = loadMedia(amazonImagePath, blogPost);
 
                     if (eyeCatchId != null) {
                         blogPost.setWp_eye_catch_id(eyeCatchId);
@@ -1026,7 +1026,7 @@ public class BlogController {
      *
      * @param imageUrl 　postする画像パス
      */
-    public Integer loadMedia(String imageUrl, IM im, BlogPost blogPost) {
+    public Integer loadMedia(String imageUrl, BlogPost blogPost) {
         Integer featuredMedia = null;
 
         if (StringUtils.hasText(imageUrl)) {
@@ -1116,7 +1116,7 @@ public class BlogController {
             List<BlogPost> blogPostList = blogPostService.findByImId(im.getIm_id());
             List<BlogPost> updateList = new ArrayList<>();
             for (BlogPost blogPost : blogPostList) {
-                Integer featuredId = loadMedia(amazonImagePath, im, blogPost);
+                Integer featuredId = loadMedia(amazonImagePath, blogPost);
                 blogPost.setWp_eye_catch_id(featuredId);
                 updateList.add(blogPost);
             }

@@ -318,7 +318,7 @@ public class TwTextController {
                     if (!teamAndMemCont.equals("")) {
                         teamAndMemCont = teamAndMemCont + "、";
                     }
-                    teamAndMemCont = teamAndMemCont + tmpMemName;
+                    teamAndMemCont = teamAndMemCont + tmpMemName + "くん";
                 }
             } else {
                 // そのチームのメンバーがないようなら①にチームを入れる

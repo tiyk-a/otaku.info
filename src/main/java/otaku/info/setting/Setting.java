@@ -38,4 +38,7 @@ public class Setting {
     private String generatedImage;
     private String youtuberedential;
     private String imageItem;
+
+    private String roomApi;
+    private String roomLike;
 }

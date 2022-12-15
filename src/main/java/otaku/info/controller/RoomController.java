@@ -16,7 +16,6 @@ import otaku.info.utils.JsonUtils;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 楽天ROOMのコントローラ
@@ -34,6 +33,17 @@ public class RoomController {
 
     @Autowired
     Setting setting;
+
+    /**
+     * すでにDigしてあるユーザーリストを返す
+     * @return
+     */
+    @GetMapping("/")
+    public ResponseEntity<List<String>> getRoot() {
+        // TODO: そのうち帰るね、ユーザーネーム返したり
+        List<String> userList = roomSampleDataService.findUserIdList();
+        return ResponseEntity.ok(userList);
+    }
 
     /**
      * アカウントのリンク入力したらID読み出して、その人の最近1000件いいね誰にしてるのかをだす、そしたら比較できる

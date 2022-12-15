@@ -6,6 +6,7 @@ import otaku.info.entity.RoomSampleData;
 import otaku.info.repository.RoomSampleDataRepository;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = Throwable.class)
@@ -20,5 +21,9 @@ public class RoomSampleDataService {
 
     public RoomSampleData save(RoomSampleData roomSampleData) {
         return roomSampleDataRepository.save(roomSampleData);
+    }
+
+    public List<String> findUserIdList() {
+        return roomSampleDataRepository.findUserIdList();
     }
 }

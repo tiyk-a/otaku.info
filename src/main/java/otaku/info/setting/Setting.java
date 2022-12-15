@@ -40,5 +40,8 @@ public class Setting {
     private String imageItem;
 
     private String roomApi;
+    private String roomUserId;
     private String roomLike;
+    private String roomCollects;
+    private String roomUsersLiked;
 }

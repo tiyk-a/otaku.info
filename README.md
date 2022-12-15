@@ -102,3 +102,19 @@ PMは放送内容情報、放送時間、放送局リスト、チーム情報、
 別時間の同じ内容の放送や再放送は別物として管理する。
 Q：関連放送や番組を見つけたい時は？
 A：番組名などで検索すれば引っかかるはず
+
+# 楽天ROOMのAPI
+## ユーザーIDに対して
+https://room.rakuten.co.jp/api/1000004141968196/likes_collect?limit=100&after_id=1700187672595828
+https://room.rakuten.co.jp/api/1000001788282356/collects?limit=100
+
+## コレIDに対して
+https://room.rakuten.co.jp/api/1700183991491820/users_liked?limit=100
+
+# 楽天ROOMのフロント画面
+## ユーザー画面
+https://room.rakuten.co.jp/9191/items
+→ユーザー名がわからないといけない
+
+## コレ画面
+https://room.rakuten.co.jp/9191/1700183991491820

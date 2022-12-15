@@ -74,6 +74,10 @@ public class Scheduler {
 //    @Qualifier("blogCatchupJob")
 //    private Job blogCatchupJob;
 
+    @Autowired
+    @Qualifier("roomLikeCountJob")
+    private Job roomLikeCountJob;
+
     /**
      * Twitterファボ
      */
@@ -362,5 +366,27 @@ public class Scheduler {
         Long diff = endTime - startTime;
         logger.debug("run14: " + diff);
         logger.debug("--- run14: Twitter Blog Post END ---");
+    }
+
+    /**
+     * 楽天ROOM前日とのいいね差分カウント
+     */
+    @Scheduled(cron = "${cron.roomLikeCount}")
+    public void run15() {
+        logger.debug("--- run15: ROOM like count START ---");
+        Long startTime = System.currentTimeMillis();
+        Map<String, JobParameter> confMap = new HashMap<>();
+        confMap.put("run15", new JobParameter(System.currentTimeMillis()));
+        JobParameters jobParameters = new JobParameters(confMap);
+        try {
+            jobLauncher.run(roomLikeCountJob, jobParameters);
+        }catch (Exception ex) {
+            logger.debug(ex.getMessage());
+            lineController.post("run15: ROOM like count" + ex.getMessage());
+        }
+        Long endTime = System.currentTimeMillis();
+        Long diff = endTime - startTime;
+        logger.debug("run15: " + diff);
+        logger.debug("--- run15: ROOM like count END ---");
     }
 }

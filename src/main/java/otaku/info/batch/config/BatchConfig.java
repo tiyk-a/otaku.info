@@ -34,6 +34,7 @@ class BatchConfig {
     private final TwFolBTasklet twFolBTasklet;
     private final BlogPostTasklet blogPostTasklet;
 //    private final CalendarCatchupTasklet calendarCatchupTasklet;
+    private final RoomLikeCountTasklet roomLikeCountTasklet;
 
     @Bean
     Step itemSearchStep() {
@@ -244,5 +245,18 @@ class BatchConfig {
     Job blogPostJob() {
         return this.jobBuilderFactory.get("blogPostJob").incrementer(new RunIdIncrementer())
                 .start(blogPostStep()).build();
+    }
+
+    @Bean
+    Step roomLikeCountStep() {
+        return stepBuilderFactory.get("roomLikeCountStep")
+                .tasklet(roomLikeCountTasklet)
+                .build();
+    }
+
+    @Bean
+    Job roomLikeCountJob() {
+        return this.jobBuilderFactory.get("roomLikeCountJob").incrementer(new RunIdIncrementer())
+                .start(roomLikeCountStep()).build();
     }
 }

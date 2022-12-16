@@ -25,7 +25,7 @@ public class RoomUserService {
         return roomUserRepository.findUserNameByUserId(userId).orElse(null);
     }
 
-    public List<String> findDuplUserIdList() {
-        return roomUserRepository.findDuplUserIdList();
+    public List<String> findUserIdListByUserId(List<String> userIdList) {
+        return roomUserRepository.findUserIdListByUserId(userIdList);
     }
 }

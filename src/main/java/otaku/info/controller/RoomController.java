@@ -24,7 +24,6 @@ import otaku.info.utils.JsonUtils;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 楽天ROOMのコントローラ
@@ -228,84 +227,148 @@ public class RoomController {
      */
     public void execRoomLikeCount() {
         // *** APIを叩いて最新100件の商品を取得する
-        String url = setting.getRoomApi() + setting.getRoomUserId() + setting.getRoomCollects();
-        Boolean nextFlg = true;
-        RoomLikeDto roomLikeDto = new RoomLikeDto();
-        roomLikeDto.setNextUrl(url);
+        try {
+            String url = setting.getRoomApi() + setting.getRoomUserId() + setting.getRoomCollects();
+            Boolean nextFlg = true;
+            RoomLikeDto roomLikeDto = new RoomLikeDto();
+            roomLikeDto.setNextUrl(url);
 
-        while (nextFlg) {
-            roomLikeDto = roomLikeCount(roomLikeDto);
-            if (roomLikeDto.getNextUrl().equals("")) {
-                nextFlg = false;
+            while (nextFlg) {
+                roomLikeDto = roomLikeCount(roomLikeDto);
+                if (roomLikeDto.getNextUrl().equals("")) {
+                    nextFlg = false;
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // *** いいね管理DBの方いく。DBより、updateFlg = trueの場合は更新
-        // いいね数に変動があった商品リスト
-        List<RoomMyItem> roomMyItemList = roomMyItemService.findUpdTarget();
+        try {
+            // いいね数に変動があった商品リスト
+            List<RoomMyItem> roomMyItemList = roomMyItemService.findUpdTarget();
 
-        if (roomMyItemList.size() > 0) {
-            for (RoomMyItem roomMyItem : roomMyItemList) {
-                RoomItemLikeUpd roomItemLikeUpd = new RoomItemLikeUpd();
-                RoomLikeDto roomLikeDto1 = new RoomLikeDto();
-                // リクエスト URL: https://room.rakuten.co.jp/api/1700183991491820/users_liked?limit=100
-                String url1 = setting.getRoomApi() + roomMyItem.getItem_id() + setting.getRoomUsersLiked();
-                roomLikeDto1.setNextUrl(url1);
-                roomItemLikeUpd.setRoomLikeDto(roomLikeDto1);
-                roomItemLikeUpd.setUserIdNameMap(new HashMap<>());
+            if (roomMyItemList.size() > 0) {
+                for (RoomMyItem roomMyItem : roomMyItemList) {
+                    RoomItemLikeUpd roomItemLikeUpd = new RoomItemLikeUpd();
+                    RoomLikeDto roomLikeDto1 = new RoomLikeDto();
+                    // リクエスト URL: https://room.rakuten.co.jp/api/1700183991491820/users_liked?limit=100
+                    String url1 = setting.getRoomApi() + roomMyItem.getItem_id() + setting.getRoomUsersLiked();
+                    roomLikeDto1.setNextUrl(url1);
+                    roomItemLikeUpd.setRoomLikeDto(roomLikeDto1);
+                    roomItemLikeUpd.setUserIdNameMap(new HashMap<>());
 
-                Boolean nextFlg1 = true;
-                while (nextFlg1) {
-                    roomItemLikeUpd = roomLikeUpd(roomItemLikeUpd);
-                    if (roomItemLikeUpd.getRoomLikeDto().getNextUrl().equals("")) {
-                        nextFlg1 = false;
+                    Boolean nextFlg1 = true;
+                    while (nextFlg1) {
+                        roomItemLikeUpd = roomLikeUpd(roomItemLikeUpd);
+                        if (roomItemLikeUpd.getRoomLikeDto().getNextUrl().equals("")) {
+                            nextFlg1 = false;
+                        }
+                    }
+
+                    // データ集め終わったので、差分を更新
+                    // APIで取ってきたデータ
+                    Map<String, String> targetUserIdNameMap = roomItemLikeUpd.getUserIdNameMap();
+                    List<String> targetUserIdList = new ArrayList<>(targetUserIdNameMap.keySet());
+                    // DBに保存してあるデータ
+                    List<RoomItemLike> roomItemLikeList = roomItemLikeService.findByItemId(roomMyItem.getItem_id());
+                    List<String> currentLikeUserList = collectCurrentLikeUser(roomItemLikeList);
+
+                    // APIでとってきたデータとDB保存から、差分を見つけ保存する
+                    List<String> newLikedUserList = new ArrayList<>(targetUserIdList);
+                    List<String> newMinusUserList = new ArrayList<>(currentLikeUserList);
+
+                    newLikedUserList.removeAll(currentLikeUserList);
+                    newMinusUserList.removeAll(targetUserIdList);
+
+                    RoomItemLike roomItemLike = new RoomItemLike();
+                    roomItemLike.setItem_id(roomMyItem.getItem_id());
+                    roomItemLike.setAdded_user(String.join(",", newLikedUserList));
+                    roomItemLike.setMinus_user(String.join(",", newMinusUserList));
+                    roomItemLikeService.save(roomItemLike);
+
+                    // いいね数更新の記録が終わったので、マスタデータも更新する
+                    roomMyItem.setNewLikeCount(0);
+                    roomMyItemService.save(roomMyItem);
+
+                    // added_userに追加したユーザーのうち、RoomUserに登録がない人は登録します
+                    List<String> existUserList = roomUserService.findUserIdListByUserId(newLikedUserList);
+                    List<String> diff = new ArrayList<>(newLikedUserList);
+                    diff.removeAll(existUserList);
+                    if (diff.size() > 0) {
+                        for (String userId : diff) {
+                            searchAndInsertRoomUser(userId);
+                        }
                     }
                 }
-
-                // データ集め終わったので、差分を更新
-                // APIで取ってきたデータ
-                Map<String, String> targetUserIdNameMap = roomItemLikeUpd.getUserIdNameMap();
-                List<String> targetUserIdList = new ArrayList<>(targetUserIdNameMap.keySet());
-                // DBに保存してあるデータ
-                List<RoomItemLike> roomItemLikeList = roomItemLikeService.findByItemId(roomMyItem.getItem_id());
-                List<String> currentLikeUserList = collectCurrentLikeUser(roomItemLikeList);
-
-                // APIでとってきたデータとDB保存から、差分を見つけ保存する
-                List<String> newLikedUserList = compareArrayElemsNotArg1Contains(currentLikeUserList, targetUserIdList);
-                List<String> newMinusLuserList = compareArrayElemsNotArg1Contains(targetUserIdList, currentLikeUserList);
-
-                RoomItemLike roomItemLike = new RoomItemLike();
-                roomItemLike.setItem_id(roomMyItem.getItem_id());
-                roomItemLike.setAdded_user(String.join(",", newLikedUserList));
-                roomItemLike.setMinus_user(String.join(",", newMinusLuserList));
-                roomItemLikeService.save(roomItemLike);
-
-                // いいね数更新の記録が終わったので、マスタデータも更新する
-                roomMyItem.setNewLikeCount(0);
-                roomMyItemService.save(roomMyItem);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+//        try {
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
     /**
-     * 引数2のうち、引数1に入っていない要素を返す
+     * APIで楽天ROOMユーザー検索して登録する
      *
-     * @param currentLikeUserList
-     * @param targetUserIdList
-     * @return
+     * @param userId
      */
-    private List<String> compareArrayElemsNotArg1Contains(List<String> currentLikeUserList, List<String> targetUserIdList) {
-        List<String> resList = new ArrayList<>();
-        if (targetUserIdList == null || targetUserIdList.size() == 0) {
-            return resList;
+    public void searchAndInsertRoomUser(String userId) {
+        if (userId == null || userId.equals("")) {
+            return;
         }
 
-        for (String target : targetUserIdList) {
-            if (!currentLikeUserList.contains(target)) {
-                resList.add(target);
+        String userName = roomUserService.findUserNameByUserId(userId);
+        if (userName != null) {
+            return;
+        }
+
+        String url2 = setting.getRoomApi() + userId + "/collects?limit=1";
+        RestTemplate restTemplate = new RestTemplate();
+
+        // API飛ばしたくない時はここ
+        // res = devData();
+        System.out.println(url2);
+        String res = restTemplate.getForObject(url2, String.class);
+
+        // ここからAPI結果の処理
+        if (StringUtils.hasText(res)) {
+            // ここで詰め込む
+            JSONObject jo = null;
+            try {
+                jo = new JSONObject(res);
+                if (jo.get("status").equals("success")) {
+                    JSONArray dataArray = (JSONArray) jo.get("data");
+
+                    JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
+                    JSONObject userO = (JSONObject) jsonObject1.get("user");
+                    String likedUserId = userO.get("id").toString();
+                    String username = userO.get("username").toString();
+                    RoomUser roomUser = new RoomUser();
+                    roomUser.setUser_id(likedUserId);
+                    roomUser.setUsername(username);
+                    Object followable = userO.get("is_followable");
+                    if (followable == null) {
+                        roomUser.setFollow(true);
+                    } else if (followable.equals("null")) {
+                        roomUser.setFollow(true);
+                    } else {
+                        roomUser.setFollow(false);
+                    }
+                    roomUser.setLike_count((int) userO.get("likes"));
+
+                    roomUser.setUser_rank(userO.get("rank").toString());
+                    roomUserService.save(roomUser);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        return resList;
     }
 
     /**
@@ -487,71 +550,71 @@ public class RoomController {
         return roomItemLikeUpd;
     }
 
-    public void userIdToName() {
-        List<String> userIdList = roomItemLikeService.findAll().stream().map(e -> e.getAdded_user()).collect(Collectors.toList());
-        List<String> noDupUserIdList = new ArrayList<>();
-        for (String userIdStr : userIdList) {
-            List<String> tmp = List.of(userIdStr.split(","));
-            for (String u : tmp) {
-                if (!noDupUserIdList.contains(u)) {
-                    noDupUserIdList.add(u);
-                }
-            }
-        }
-
-        for (String userId : noDupUserIdList) {
-            if (userId == null || userId.equals("")) {
-                continue;
-            }
-
-            String userName = roomUserService.findUserNameByUserId(userId);
-            if (userName != null) {
-                continue;
-            }
-
-            String url = setting.getRoomApi() + userId + "/collects?limit=1";
-            RestTemplate restTemplate = new RestTemplate();
-
-            // API飛ばしたくない時はここ
-            // res = devData();
-            System.out.println(url);
-            String res = restTemplate.getForObject(url, String.class);
-
-            // ここからAPI結果の処理
-            if (StringUtils.hasText(res)) {
-                // ここで詰め込む
-                JSONObject jo = null;
-                try {
-                    jo = new JSONObject(res);
-                    if (jo.get("status").equals("success")) {
-                        JSONArray dataArray = (JSONArray) jo.get("data");
-
-                        JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
-                        JSONObject userO = (JSONObject) jsonObject1.get("user");
-                        String likedUserId = userO.get("id").toString();
-                        String username = userO.get("username").toString();
-                        RoomUser roomUser = new RoomUser();
-                        roomUser.setUser_id(likedUserId);
-                        roomUser.setUsername(username);
-                        Object followable = userO.get("is_followable");
-                        if (followable == null) {
-                            roomUser.setFollow(true);
-                        } else if (followable.equals("null")) {
-                            roomUser.setFollow(true);
-                        } else {
-                            roomUser.setFollow(false);
-                        }
-                        roomUser.setLike_count((int) userO.get("likes"));
-
-                        roomUser.setUser_rank(userO.get("rank").toString());
-                        roomUserService.save(roomUser);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    public void userIdToName() {
+//        List<String> userIdList = roomItemLikeService.findAll().stream().map(RoomItemLike::getAdded_user).collect(Collectors.toList());
+//        List<String> noDupUserIdList = new ArrayList<>();
+//        for (String userIdStr : userIdList) {
+//            List<String> tmp = List.of(userIdStr.split(","));
+//            for (String u : tmp) {
+//                if (!noDupUserIdList.contains(u)) {
+//                    noDupUserIdList.add(u);
+//                }
+//            }
+//        }
+//
+//        for (String userId : noDupUserIdList) {
+//            if (userId == null || userId.equals("")) {
+//                continue;
+//            }
+//
+//            String userName = roomUserService.findUserNameByUserId(userId);
+//            if (userName != null) {
+//                continue;
+//            }
+//
+//            String url = setting.getRoomApi() + userId + "/collects?limit=1";
+//            RestTemplate restTemplate = new RestTemplate();
+//
+//            // API飛ばしたくない時はここ
+//            // res = devData();
+//            System.out.println(url);
+//            String res = restTemplate.getForObject(url, String.class);
+//
+//            // ここからAPI結果の処理
+//            if (StringUtils.hasText(res)) {
+//                // ここで詰め込む
+//                JSONObject jo = null;
+//                try {
+//                    jo = new JSONObject(res);
+//                    if (jo.get("status").equals("success")) {
+//                        JSONArray dataArray = (JSONArray) jo.get("data");
+//
+//                        JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
+//                        JSONObject userO = (JSONObject) jsonObject1.get("user");
+//                        String likedUserId = userO.get("id").toString();
+//                        String username = userO.get("username").toString();
+//                        RoomUser roomUser = new RoomUser();
+//                        roomUser.setUser_id(likedUserId);
+//                        roomUser.setUsername(username);
+//                        Object followable = userO.get("is_followable");
+//                        if (followable == null) {
+//                            roomUser.setFollow(true);
+//                        } else if (followable.equals("null")) {
+//                            roomUser.setFollow(true);
+//                        } else {
+//                            roomUser.setFollow(false);
+//                        }
+//                        roomUser.setLike_count((int) userO.get("likes"));
+//
+//                        roomUser.setUser_rank(userO.get("rank").toString());
+//                        roomUserService.save(roomUser);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
     public void method7() {}
 

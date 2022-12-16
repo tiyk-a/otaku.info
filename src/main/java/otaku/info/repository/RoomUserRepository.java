@@ -12,6 +12,6 @@ public interface RoomUserRepository extends JpaRepository<RoomUser, Long> {
     @Query(nativeQuery = true, value = "SELECT username FROM room_user where user_id = ?1")
     Optional<String> findUserNameByUserId(String userId);
 
-    @Query(nativeQuery = true, value = "select user_id from room_user group by user_id having count(*) > 1")
-    List<String> findDuplUserIdList();
+    @Query(nativeQuery = true, value = "select user_id from room_user where user_id in ?1")
+    List<String> findUserIdListByUserId(List<String> userIdList);
 }

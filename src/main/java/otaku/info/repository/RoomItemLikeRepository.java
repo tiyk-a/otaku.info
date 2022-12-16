@@ -11,6 +11,7 @@ public interface RoomItemLikeRepository extends JpaRepository<RoomItemLike, Long
     @Query(nativeQuery = true, value = "SELECT * FROM room_item_like where item_id = ?1")
     List<RoomItemLike> findByItemId(String itemId);
 
-    @Query(nativeQuery = true, value = "SELECT added_user FROM room_item_like where created_at >= DATE_SUB(NOW(),INTERVAL 1 DAY)")
+//    @Query(nativeQuery = true, value = "SELECT added_user FROM room_item_like where created_at >= DATE_SUB(NOW(),INTERVAL 1 DAY)")
+    @Query(nativeQuery = true, value = "SELECT added_user FROM room_item_like where created_at >= DATE(NOW())")
     List<String> findByCreatedInADay();
 }

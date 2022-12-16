@@ -11,39 +11,36 @@ import java.sql.Timestamp;
 
 /**
  * 楽天ROOMで使う
- * 私と関わったアカウントの管理
+ * 私のItem管理マスタ
+ * 毎日、ここにデータあるItemについて管理する
  */
-@Entity(name = "room_user")
+@Entity(name = "room_my_item")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "room_user")
-public class RoomUser {
+@Table(name = "room_my_item")
+public class RoomMyItem {
 
+    /**
+     * 楽天ROOMのItemIdをそのまま使う
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String item_id;
+
+    /**
+     * 毎日更新、その日のいいね数を入れる
+     */
+    @Column(nullable = false)
+    private Integer likes;
 
     @Column(nullable = false)
-    private String user_id;
+    private String postedDate;
 
-    @Column(nullable = true)
-    private String username;
-
-    @Column(nullable = true)
-    private Boolean follow_me;
-
+    /**
+     * 前回バッチからのいいね変動数
+     */
     @Column(nullable = false)
-    private Boolean follow;
-
-    @Column(nullable = true)
-    private Boolean is_recorrer;
-
-    @Column(nullable = false)
-    private Integer like_count;
-
-    @Column(nullable = false)
-    private String user_rank;
+    private Integer newLikeCount;
 
     @CreationTimestamp
     @Column(nullable = true)

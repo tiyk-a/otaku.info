@@ -21,6 +21,10 @@ public class RoomItemLikeService {
         return roomItemLikeRepository.save(roomItemLike);
     }
 
+    public List<RoomItemLike> findAll() {
+        return roomItemLikeRepository.findAll();
+    }
+
     public List<RoomItemLike> findByItemId (String itemId) {
         return  roomItemLikeRepository.findByItemId(itemId);
     }

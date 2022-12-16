@@ -14,14 +14,17 @@ import otaku.info.dto.RoomLikeDto;
 import otaku.info.entity.RoomItemLike;
 import otaku.info.entity.RoomMyItem;
 import otaku.info.entity.RoomSampleData;
+import otaku.info.entity.RoomUser;
 import otaku.info.service.RoomItemLikeService;
 import otaku.info.service.RoomMyItemService;
 import otaku.info.service.RoomSampleDataService;
+import otaku.info.service.RoomUserService;
 import otaku.info.setting.Setting;
 import otaku.info.utils.JsonUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 楽天ROOMのコントローラ
@@ -39,6 +42,9 @@ public class RoomController {
 
     @Autowired
     RoomItemLikeService roomItemLikeService;
+
+    @Autowired
+    RoomUserService roomUserService;
 
     @Autowired
     JsonUtils jsonUtils;
@@ -60,7 +66,6 @@ public class RoomController {
     /**
      * いいねすべき人を返す
      * パラメータによってどんな人を返すか変える
-     * TODO:ユーザーネームも返してあげたいね
      *
      * @return
      */
@@ -85,7 +90,11 @@ public class RoomController {
 
         List<String> resList = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : likedUserCountMap.entrySet()) {
-            resList.add(entry.getKey() + ":" + entry.getValue());
+            String userName = roomUserService.findUserNameByUserId(entry.getKey());
+            if (userName == null) {
+                userName = entry.getKey();
+            }
+            resList.add(entry.getValue() + ":" + userName);
         }
         return ResponseEntity.ok(resList);
     }
@@ -478,7 +487,71 @@ public class RoomController {
         return roomItemLikeUpd;
     }
 
-    public void method6() {}
+    public void userIdToName() {
+        List<String> userIdList = roomItemLikeService.findAll().stream().map(e -> e.getAdded_user()).collect(Collectors.toList());
+        List<String> noDupUserIdList = new ArrayList<>();
+        for (String userIdStr : userIdList) {
+            List<String> tmp = List.of(userIdStr.split(","));
+            for (String u : tmp) {
+                if (!noDupUserIdList.contains(u)) {
+                    noDupUserIdList.add(u);
+                }
+            }
+        }
+
+        for (String userId : noDupUserIdList) {
+            if (userId == null || userId.equals("")) {
+                continue;
+            }
+
+            String userName = roomUserService.findUserNameByUserId(userId);
+            if (userName != null) {
+                continue;
+            }
+
+            String url = setting.getRoomApi() + userId + "/collects?limit=1";
+            RestTemplate restTemplate = new RestTemplate();
+
+            // API飛ばしたくない時はここ
+            // res = devData();
+            System.out.println(url);
+            String res = restTemplate.getForObject(url, String.class);
+
+            // ここからAPI結果の処理
+            if (StringUtils.hasText(res)) {
+                // ここで詰め込む
+                JSONObject jo = null;
+                try {
+                    jo = new JSONObject(res);
+                    if (jo.get("status").equals("success")) {
+                        JSONArray dataArray = (JSONArray) jo.get("data");
+
+                        JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
+                        JSONObject userO = (JSONObject) jsonObject1.get("user");
+                        String likedUserId = userO.get("id").toString();
+                        String username = userO.get("username").toString();
+                        RoomUser roomUser = new RoomUser();
+                        roomUser.setUser_id(likedUserId);
+                        roomUser.setUsername(username);
+                        Object followable = userO.get("is_followable");
+                        if (followable == null) {
+                            roomUser.setFollow(true);
+                        } else if (followable.equals("null")) {
+                            roomUser.setFollow(true);
+                        } else {
+                            roomUser.setFollow(false);
+                        }
+                        roomUser.setLike_count((int) userO.get("likes"));
+
+                        roomUser.setUser_rank(userO.get("rank").toString());
+                        roomUserService.save(roomUser);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     public void method7() {}
 

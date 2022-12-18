@@ -53,11 +53,11 @@ public class RoomController {
 
     /**
      * すでにDigしてあるユーザーリストを返す
+     * TODO：ここ使ってない
      * @return
      */
     @GetMapping("/")
     public ResponseEntity<List<String>> getRoot() {
-        // TODO: そのうち変えるね、ユーザーネーム返したり
         List<String> userList = roomSampleDataService.findUserIdList();
         return ResponseEntity.ok(userList);
     }
@@ -110,6 +110,21 @@ public class RoomController {
         }
 
         String targetUser = input.get("user_id").toString();
+        seekLikeInner(targetUser);
+        return ResponseEntity.ok(true);
+    }
+
+    /**
+     * アカウントのリンク入力したらID読み出して、その人の最近1000件いいね誰にしてるのかをだす、そしたら比較できる
+     * 1ユーザーについてだけ調べる
+     * 時間かかるからフロントに返せない。DBに保存しよう。
+     */
+    public void seekLikeInner(String targetUser) {
+
+        if (targetUser == null || targetUser.equals("")) {
+            return;
+        }
+
         String url = setting.getRoomApi() + targetUser + setting.getRoomLike();
         Boolean nextFlg = true;
 
@@ -123,7 +138,8 @@ public class RoomController {
             }
         }
 
-        return ResponseEntity.ok(true);
+        // room_userにレコードなかったら登録
+        searchAndInsertRoomUser(targetUser);
     }
 
     /**
@@ -202,6 +218,8 @@ public class RoomController {
                     JSONObject metaObj = (JSONObject) jo.get("meta");
                     if (count < 1000 && !metaObj.get("next_page").equals("")) {
                         roomLikeDto.setNextUrl(metaObj.get("next_page").toString());
+                    } else {
+                        roomLikeDto.setNextUrl("");
                     }
                 }
             } catch (Exception e) {
@@ -226,6 +244,16 @@ public class RoomController {
      * いいね数カウントのバッチジョブ中身
      */
     public void execRoomLikeCount() {
+        // 昨日もらった良いねとの差分集計（その人から何件良いねもらってるか、昨日その人から何件いいねもらったか
+
+        // *** 私が昨日いいねした人からレスがあるか、昨日いいねした人ひ過去何件良いねしてて何件返してもらってるか
+        try {
+            // 昨日私がした良いねを全部回収する（誰にいくついいねしたか）
+            seekLikeInner(setting.getRoomUserId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // *** APIを叩いて最新100件の商品を取得する
         try {
             String url = setting.getRoomApi() + setting.getRoomUserId() + setting.getRoomCollects();
@@ -305,12 +333,6 @@ public class RoomController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-//        try {
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
     }
 
     /**
@@ -563,56 +585,7 @@ public class RoomController {
 //        }
 //
 //        for (String userId : noDupUserIdList) {
-//            if (userId == null || userId.equals("")) {
-//                continue;
-//            }
-//
-//            String userName = roomUserService.findUserNameByUserId(userId);
-//            if (userName != null) {
-//                continue;
-//            }
-//
-//            String url = setting.getRoomApi() + userId + "/collects?limit=1";
-//            RestTemplate restTemplate = new RestTemplate();
-//
-//            // API飛ばしたくない時はここ
-//            // res = devData();
-//            System.out.println(url);
-//            String res = restTemplate.getForObject(url, String.class);
-//
-//            // ここからAPI結果の処理
-//            if (StringUtils.hasText(res)) {
-//                // ここで詰め込む
-//                JSONObject jo = null;
-//                try {
-//                    jo = new JSONObject(res);
-//                    if (jo.get("status").equals("success")) {
-//                        JSONArray dataArray = (JSONArray) jo.get("data");
-//
-//                        JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
-//                        JSONObject userO = (JSONObject) jsonObject1.get("user");
-//                        String likedUserId = userO.get("id").toString();
-//                        String username = userO.get("username").toString();
-//                        RoomUser roomUser = new RoomUser();
-//                        roomUser.setUser_id(likedUserId);
-//                        roomUser.setUsername(username);
-//                        Object followable = userO.get("is_followable");
-//                        if (followable == null) {
-//                            roomUser.setFollow(true);
-//                        } else if (followable.equals("null")) {
-//                            roomUser.setFollow(true);
-//                        } else {
-//                            roomUser.setFollow(false);
-//                        }
-//                        roomUser.setLike_count((int) userO.get("likes"));
-//
-//                        roomUser.setUser_rank(userO.get("rank").toString());
-//                        roomUserService.save(roomUser);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
+//            searchAndInsertRoomUser(userId);
 //        }
 //    }
 

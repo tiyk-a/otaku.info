@@ -21,11 +21,19 @@ public class RoomUserService {
         return roomUserRepository.save(roomUser);
     }
 
+    public RoomUser findByUserId(String roomUserId) {
+        return roomUserRepository.findByUserId(roomUserId);
+    }
+
     public String findUserNameByUserId(String userId) {
         return roomUserRepository.findUserNameByUserId(userId).orElse(null);
     }
 
     public List<String> findUserIdListByUserId(List<String> userIdList) {
         return roomUserRepository.findUserIdListByUserId(userIdList);
+    }
+
+    public int findLikeCountByUserId(String userId) {
+        return roomUserRepository.findLikeCountByUserId(userId);
     }
 }

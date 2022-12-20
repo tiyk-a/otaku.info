@@ -3,6 +3,7 @@ package otaku.info.controller;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.joda.time.DateTime;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ import otaku.info.setting.Setting;
 import otaku.info.utils.JsonUtils;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -57,9 +60,14 @@ public class RoomController {
      * @return
      */
     @GetMapping("/")
-    public ResponseEntity<List<String>> getRoot() {
-        List<String> userList = roomSampleDataService.findUserIdList();
-        return ResponseEntity.ok(userList);
+    public ResponseEntity<RoomFront> getRoot() {
+        // 画面に表示するオブジェクト
+        RoomFront roomFront = new RoomFront();
+        roomFront.setUserList(roomSampleDataService.findUserIdList());
+        roomFront.setLikeCount(roomUserService.findLikeCountByUserId(setting.getRoomUserId()));
+        RoomSampleData roomSampleData = roomSampleDataService.findByDataId("latestMyLike", setting.getRoomUserId());
+        roomFront.setLatestLikeCount(Integer.parseInt(roomSampleData.getData1()));
+        return ResponseEntity.ok(roomFront);
     }
 
     /**
@@ -88,12 +96,27 @@ public class RoomController {
         }
 
         List<String> resList = new ArrayList<>();
+        // いいね数でソートしたいのでtmpマップを用意する
+        Map<Integer, List<String>> tmpResMap = new TreeMap<>(Collections.reverseOrder());
         for (Map.Entry<String, Integer> entry : likedUserCountMap.entrySet()) {
             String userName = roomUserService.findUserNameByUserId(entry.getKey());
             if (userName == null) {
                 userName = entry.getKey();
             }
-            resList.add(entry.getValue() + ":" + userName);
+
+            List<String> tmpList;
+            if (tmpResMap.containsKey(entry.getValue())) {
+                tmpList = tmpResMap.get(entry.getValue());
+            } else {
+                tmpList = new ArrayList<>();
+            }
+            tmpList.add(userName);
+            tmpResMap.put(entry.getValue(), tmpList);
+        }
+
+        // mapの中、いいねもらった数ごとにまとまってるのでレスポンスに当てるよう成形する
+        for (Map.Entry<Integer, List<String>> entry : tmpResMap.entrySet()) {
+            entry.getValue().forEach(e -> resList.add(entry.getKey() + ":" + e));
         }
         return ResponseEntity.ok(resList);
     }
@@ -115,6 +138,52 @@ public class RoomController {
     }
 
     /**
+     * 自分の最新いいね数を更新します
+     * APIで取得、取ったデータはroom_sample_dataにtmpデータとして保存
+     *
+     * @return
+     */
+    @GetMapping("/latest_mylike")
+    public ResponseEntity<Integer> getLatestMyLike() {
+        String url = setting.getRoomApi() + setting.getRoomUserId() + "/collects?limit=1";
+        RestTemplate restTemplate = new RestTemplate();
+
+        // API飛ばしたくない時はここ
+        // res = devData();
+        System.out.println(url);
+        String res = restTemplate.getForObject(url, String.class);
+        Integer count = 0;
+
+        // ここからAPI結果の処理
+        if (StringUtils.hasText(res)) {
+            // ここで詰め込む
+            JSONObject jo = null;
+            try {
+                jo = new JSONObject(res);
+                if (jo.get("status").equals("success")) {
+                    JSONArray dataArray = (JSONArray) jo.get("data");
+                    JSONObject jsonObject1 = (JSONObject) dataArray.get(0);
+                    JSONObject user = (JSONObject) jsonObject1.get("user");
+                    count = (int) user.get("likes");
+
+                    RoomSampleData roomSampleData = roomSampleDataService.findByDataId("latestMyLike", setting.getRoomUserId());
+                    if (roomSampleData == null) {
+                        roomSampleData = new RoomSampleData();
+                        roomSampleData.setUser_id(setting.getRoomUserId());
+                        roomSampleData.setData_id("latestMyLike");
+                    }
+
+                    roomSampleData.setData1(count.toString());
+                    roomSampleDataService.save(roomSampleData);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return ResponseEntity.ok(count);
+    }
+
+    /**
      * アカウントのリンク入力したらID読み出して、その人の最近1000件いいね誰にしてるのかをだす、そしたら比較できる
      * 1ユーザーについてだけ調べる
      * 時間かかるからフロントに返せない。DBに保存しよう。
@@ -125,6 +194,13 @@ public class RoomController {
             return;
         }
 
+        // 自分ユーザーを調べる場合で、room_userを更新したい時はこれをtrueにしたい。
+        // バッチで動かす時、1日1回は自分のいいねカウントを更新したい→今日いくついいねできるかわかるかな？って思ってる
+        boolean myUserIdFlg = false;
+        if (targetUser.equals(setting.getRoomUserId())) {
+            myUserIdFlg = true;
+        }
+
         String url = setting.getRoomApi() + targetUser + setting.getRoomLike();
         Boolean nextFlg = true;
 
@@ -132,7 +208,7 @@ public class RoomController {
         roomLikeDto.setNextUrl(url);
         roomLikeDto.setCount(0);
         while (nextFlg) {
-            roomLikeDto = seekLike(roomLikeDto, targetUser);
+            roomLikeDto = seekLike(roomLikeDto, targetUser, myUserIdFlg);
             if (roomLikeDto.getCount() >= 1000 || roomLikeDto.getNextUrl().equals("")) {
                 nextFlg = false;
             }
@@ -164,11 +240,12 @@ public class RoomController {
 
     /**
      * LIKEを数える
+     * myUserIdFlg = trueの場合、roomUserを更新する
      *
      * @param roomLikeDto
      * @return
      */
-    private RoomLikeDto seekLike(RoomLikeDto roomLikeDto, String userId) {
+    private RoomLikeDto seekLike(RoomLikeDto roomLikeDto, String userId, Boolean myUserIdFlg) {
         RestTemplate restTemplate = new RestTemplate();
         int count = roomLikeDto.getCount();
 
@@ -200,6 +277,9 @@ public class RoomController {
                 jo = new JSONObject(res);
                 if (jo.get("status").equals("success")) {
                     JSONArray dataArray = (JSONArray) jo.get("data");
+
+                    // 1つめエレメントの時だけtrue
+                    Boolean fstElemFlg = true;
                     for (Object obj : dataArray) {
                         JSONObject jsonObject1 = (JSONObject) obj;
                         JSONObject userO = (JSONObject) jsonObject1.get("user");
@@ -207,6 +287,15 @@ public class RoomController {
                         String username = userO.get("username").toString();
                         userSet.add(likedUserId + ":" + username);
                         count ++;
+
+                        // フラグが合致してたらroomUserのいいねカウントだけ更新する
+                        // 私ユーザーでバッチ流した時にいいねカウントも更新したいの
+                        if (myUserIdFlg && fstElemFlg) {
+                            RoomUser roomUser = roomUserService.findByUserId(userId);
+                            roomUser.setLike_count(userO.getInt("likes"));
+                            roomUserService.save(roomUser);
+                            fstElemFlg = false;
+                        }
                     }
 
                     String stringUserSet = String.join(",", userSet);
@@ -242,6 +331,8 @@ public class RoomController {
 
     /**
      * いいね数カウントのバッチジョブ中身
+     * コレから7日以内：毎日カウント
+     * 7日以上経過：偶数日には偶数IDのみカウント、奇数日には奇数ID飲みカウント
      */
     public void execRoomLikeCount() {
         // 昨日もらった良いねとの差分集計（その人から何件良いねもらってるか、昨日その人から何件いいねもらったか
@@ -278,6 +369,14 @@ public class RoomController {
 
             if (roomMyItemList.size() > 0) {
                 for (RoomMyItem roomMyItem : roomMyItemList) {
+                    // 投稿日から処理有無判断を行う
+                    boolean importFlg = checkIfImportToday(roomMyItem.getPostedDate(), roomMyItem.getItem_id());
+
+                    // 今日インポート対象ではなかったらAPI呼ばず次のレコードへ
+                    if (!importFlg) {
+                        continue;
+                    }
+
                     RoomItemLikeUpd roomItemLikeUpd = new RoomItemLikeUpd();
                     RoomLikeDto roomLikeDto1 = new RoomLikeDto();
                     // リクエスト URL: https://room.rakuten.co.jp/api/1700183991491820/users_liked?limit=100
@@ -333,6 +432,40 @@ public class RoomController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 引数で渡された商品（RoomMyItemから必要項目だけ抽出して渡してる）が
+     * 今日いいねカウント更新すべきか、明日すべきかを判定する
+     *
+     * @param postedDateStr
+     * @param itemId
+     * @return
+     * @throws ParseException
+     */
+    private boolean checkIfImportToday(String postedDateStr, String itemId) throws ParseException {
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        Date postedDate = sdFormat.parse(postedDateStr);
+        boolean importFlg = true;
+        long DAY_IN_MS = 1000 * 60 * 60 * 24;
+        Date sevenDaysAgo = new Date(System.currentTimeMillis() - (7 * DAY_IN_MS));
+
+        // 7日以内に投稿されたコレは処理対象、もっと前なら処理対象外を決める
+        if (postedDate.before(sevenDaysAgo)) {
+            boolean dateFlg = new DateTime(postedDate).getDayOfMonth() % 2 == 0;
+            if (dateFlg) {
+                // 偶数日の場合、itemIdが2で割り切れるなら処理対象、割れないなら処理対象外
+                if (Integer.parseInt(itemId) % 2 != 0) {
+                    importFlg = false;
+                }
+            } else {
+                // 奇数日の場合、itemIdが2で割り切れないなら処理対象、割れるなら処理対象外
+                if (Integer.parseInt(itemId) % 2 == 0) {
+                    importFlg = false;
+                }
+            }
+        }
+        return importFlg;
     }
 
     /**
@@ -467,6 +600,11 @@ public class RoomController {
         return resList;
     }
 
+    /**
+     *
+     * @param roomLikeDto
+     * @return
+     */
     public RoomLikeDto roomLikeCount(RoomLikeDto roomLikeDto) {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -485,7 +623,6 @@ public class RoomController {
                     JSONArray dataArray = (JSONArray) jo.get("data");
                     for (Object obj : dataArray) {
                         JSONObject jsonObject1 = (JSONObject) obj;
-
                         // 商品IDを取得
                         String itemId = jsonObject1.getString("id");
 
@@ -572,23 +709,6 @@ public class RoomController {
         return roomItemLikeUpd;
     }
 
-//    public void userIdToName() {
-//        List<String> userIdList = roomItemLikeService.findAll().stream().map(RoomItemLike::getAdded_user).collect(Collectors.toList());
-//        List<String> noDupUserIdList = new ArrayList<>();
-//        for (String userIdStr : userIdList) {
-//            List<String> tmp = List.of(userIdStr.split(","));
-//            for (String u : tmp) {
-//                if (!noDupUserIdList.contains(u)) {
-//                    noDupUserIdList.add(u);
-//                }
-//            }
-//        }
-//
-//        for (String userId : noDupUserIdList) {
-//            searchAndInsertRoomUser(userId);
-//        }
-//    }
-
     public void method7() {}
 
     /**
@@ -624,4 +744,21 @@ public class RoomController {
 class RoomItemLikeUpd {
     RoomLikeDto roomLikeDto;
     Map<String, String> userIdNameMap;
+}
+
+/**
+ * フロント画面表示の時に使うデータ
+ * 用のクラス
+ */
+@Getter
+@Setter
+class RoomFront {
+    // 初期表示で使いたいユーザーリスト
+    List<String> userList;
+
+    // 私のアカウントのいいねカウント
+    int likeCount;
+
+    // roomSampleDataから最新のいいねカウントがある場合は取得
+    int latestLikeCount;
 }

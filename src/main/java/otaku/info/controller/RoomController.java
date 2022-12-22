@@ -290,7 +290,7 @@ public class RoomController {
 
                         // フラグが合致してたらroomUserのいいねカウントだけ更新する
                         // 私ユーザーでバッチ流した時にいいねカウントも更新したいの
-                        if (myUserIdFlg && fstElemFlg) {
+                        if (myUserIdFlg && fstElemFlg && userO.has("likes")) {
                             RoomUser roomUser = roomUserService.findByUserId(userId);
                             roomUser.setLike_count(userO.getInt("likes"));
                             roomUserService.save(roomUser);
@@ -453,14 +453,15 @@ public class RoomController {
         // 7日以内に投稿されたコレは処理対象、もっと前なら処理対象外を決める
         if (postedDate.before(sevenDaysAgo)) {
             boolean dateFlg = new DateTime(postedDate).getDayOfMonth() % 2 == 0;
+            int lastDigit = Integer.parseInt(itemId.substring(itemId.length() -1));
             if (dateFlg) {
                 // 偶数日の場合、itemIdが2で割り切れるなら処理対象、割れないなら処理対象外
-                if (Integer.parseInt(itemId) % 2 != 0) {
+                if (lastDigit % 2 != 0) {
                     importFlg = false;
                 }
             } else {
                 // 奇数日の場合、itemIdが2で割り切れないなら処理対象、割れるなら処理対象外
-                if (Integer.parseInt(itemId) % 2 == 0) {
+                if (lastDigit % 2 == 0) {
                     importFlg = false;
                 }
             }

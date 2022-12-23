@@ -36,4 +36,8 @@ public class RoomItemLikeService {
     public List<String> findByCreatedInADay() {
         return roomItemLikeRepository.findByCreatedInADay();
     }
+
+    public List<String> findUserNameCreatedInADay() {
+        return roomItemLikeRepository.findUserNameCreatedInADay();
+    }
 }

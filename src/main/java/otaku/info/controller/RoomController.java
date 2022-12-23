@@ -79,19 +79,16 @@ public class RoomController {
     @GetMapping("/sug")
     public ResponseEntity<List<String>> getSuggestion() {
         // 今は前日いいねしてくれた人（added_user）
-        List<String> userList = roomItemLikeService.findByCreatedInADay();
+        List<String> userNameList = roomItemLikeService.findUserNameCreatedInADay();
         Map<String, Integer> likedUserCountMap = new HashMap<>();
 
-        // カンマでsplitして、あと数をカウント
-        for (String users : userList) {
-            List<String> tmp = List.of(users.split(","));
-            for (String u : tmp) {
-                if (likedUserCountMap.containsKey(u)) {
-                    Integer count = likedUserCountMap.get(u) + 1;
-                    likedUserCountMap.put(u, count);
-                } else {
-                    likedUserCountMap.put(u, 1);
-                }
+        // ユーザーごとのいいね数をカウント
+        for (String users : userNameList) {
+            if (likedUserCountMap.containsKey(users)) {
+                Integer count = likedUserCountMap.get(users) + 1;
+                likedUserCountMap.put(users, count);
+            } else {
+                likedUserCountMap.put(users, 1);
             }
         }
 
@@ -99,22 +96,15 @@ public class RoomController {
         // いいね数でソートしたいのでtmpマップを用意する
         Map<Integer, List<String>> tmpResMap = new TreeMap<>(Collections.reverseOrder());
         for (Map.Entry<String, Integer> entry : likedUserCountMap.entrySet()) {
-            String userName = roomUserService.findUserNameByUserId(entry.getKey());
-            if (userName == null) {
-                userName = entry.getKey();
-            }
-
             List<String> tmpList;
             if (tmpResMap.containsKey(entry.getValue())) {
                 tmpList = tmpResMap.get(entry.getValue());
             } else {
                 tmpList = new ArrayList<>();
             }
-            tmpList.add(userName);
+            tmpList.add(entry.getKey());
             tmpResMap.put(entry.getValue(), tmpList);
         }
-
-        // mapの中、いいねもらった数ごとにまとまってるのでレスポンスに当てるよう成形する
         for (Map.Entry<Integer, List<String>> entry : tmpResMap.entrySet()) {
             entry.getValue().forEach(e -> resList.add(entry.getKey() + ":" + e));
         }

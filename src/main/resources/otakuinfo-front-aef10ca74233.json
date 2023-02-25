@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "otakuinfo-front",
+  "private_key_id": "aef10ca742330c13d518944d25927bfcfaaf88c1",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDR//BtIAhOuUM7\n3tXqql6ZtMYegs7s1UKKTWXPLAZwKsfjXZVk5pWtNiuDfJpJIakH4wNsM6GrF6rQ\nz9LvQe5POVVamdiIcnmc9+CjVzw7BAnCZ4gQII5wHZLE5tr8uRyffvkpdMRbfI38\ny+ntQr2MQceBnNrncvYeyD5gkGmumAq6hAsdZgCUH1IflU/1lIll3r4CpbmsbPPd\n10F0kvoLpDiZ8Q9H0cP6sTXDDdwRNotwIgygV6C8uElcTGFjSGXeBoH9MX52WmUQ\n+wiwYVqUv+nWGSn7lIx9rEbpiKAE69mn5myTUe5I8LByB2zDiqXhlIlcAAvhe2tX\nPnvw9b7BAgMBAAECggEAAdp5glZiybfACekm0q4jwnAHwputcgYqKEMpckllb3vV\nLU11ZNarJ1mfyzE1lw56vy99UikSKiAomV9dhs/lEk0Y0taiRFwG9OrJewTpVW0C\nSAq2tvZj7hs4tnpXdZ0NorO8b7r7LlfcVJ5Dx4dhWbmikOMz7xCC7xUd2yd9zfUU\npGFGZPhwr4CUiRN2kM0GipDdxrd6V/H6Lle8RZFmDF6/m2lhBE6u5lxsLwLKxygK\nZLN7z7TLObCefpLkxLyD9guGGSyWXxwfdcwL17A6ER/WudEi7s/zN/alzO/mcL21\ncwxBlhmY65WkYup6ARPZ4GJtlkqqwGbfJ1JNyO+jQQKBgQDyV0+oRHhH9eIu9Rc2\nmejMXjaqAxOvuBvJWBe2x1Q9lVurK7veq/fywP1/77ZOXL5A6pZYbMdFhkDogdm+\nleSlbGUhNUO4cZOJ5doBTyVZssrpC8RDKG7Il4qOGIFoJ9AIOVHdYPB47kspvNaF\nkPRB8v0I/55rVUbznNBKBDDIUQKBgQDd1ftt1x7tRk3wYjjrP79bGpTI5/bGTzNY\noZgsrVEzGqWnSbNSdUHYI8MIlPwa6cV2tdeaJvozrp+4QLK7wD6Y/WvC8qFL2dkn\n2GYx8uOFPstt5J2rpsGUSQkUEAuDjrRjvbZlES3Z43PI7DTPpItFseVyP5MRMU8u\nzNqCExZjcQKBgQDlulrq2i1jmfVWKkRdID2NLmqHc+8/jjnY/kdMn1x+HI4Pj5/C\nkCa12rj0hJq/Yi+AfmETZdrpT0FMp3twrctX/Y9IkaOmvxPrjxbAUvTHOTQdA2iD\neVq7kNxpo1VZFRSiFyRBxdlv6gUahcaeSzEhK2UvGJJmkSp3WVoiMCLGYQKBgQCX\nRH/TkZpML+Gbpk6r0+dXZ1PHf62d4onfySksZe71yxjkbvQxqTWB/jjTFEyoyXnW\nDf975VI9hbjx+mQmdNv6lOwzniFwyJc0fXKKYtbUmFI9mGQPlYFw7TCclqhTSC8n\nyEikuEcsydW9T5xfbxNtLfaIpmNRmO8muZfSlNNycQKBgHNgB/hPvZvyTOJQFCFK\nnHqbKs5v1fGzuRPgYdCD3Jg27xpZdLkpF0cHcGGGKN49vSdL5HHu8lmogPhoJ1yU\nCCHvWOjB7GcWlkNMzh2OhVN7GxwI4HDCSvIqGEOK7aWlbpnTxvj1u/3fsR31Fe0C\n/AFo0xytHFsvLYspfFhaWut7\n-----END PRIVATE KEY-----\n",
+  "client_email": "otakuinfo@otakuinfo-front.iam.gserviceaccount.com",
+  "client_id": "107318385109754207673",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/otakuinfo%40otakuinfo-front.iam.gserviceaccount.com"
+}

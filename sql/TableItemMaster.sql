@@ -1,0 +1,1 @@
+ALTER TABLE item ADD COLUMN item_m_id INT;

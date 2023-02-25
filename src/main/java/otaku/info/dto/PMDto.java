@@ -4,6 +4,7 @@ import lombok.Data;
 import otaku.info.entity.*;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -20,4 +21,22 @@ public class PMDto {
     private Timestamp created_at;
 
     private Timestamp updated_at;
+}
+
+/**
+ * PMverのフロント用DTO
+ *
+ */
+@Data
+class PMVerDto {
+
+    private Long pm_v_id;
+
+    private LocalDateTime on_air_date;
+
+    private Long station_id;
+
+    private String station_name;
+
+    private Boolean del_flg;
 }

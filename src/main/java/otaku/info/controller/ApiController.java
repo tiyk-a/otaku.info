@@ -1,10 +1,13 @@
 package otaku.info.controller;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.*;
 
 import javax.validation.Valid;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -794,4 +797,49 @@ public class ApiController {
         String res = twTextController.releasedItemAnnounce (im, "フロント用仮のURL");
         return ResponseEntity.ok(res);
     }
+}
+
+/**
+ * トップ画面用のDTO
+ * チーム個別画面とは異なり、各アイテムがチームの情報を持ちます
+ *
+ */
+@Setter
+@Getter
+class FAllDto {
+
+    // IMがないItemを詰める
+    private List<Item> i;
+
+    // IMを集める
+    private List<FIMDto> im;
+
+    private List<ErrorJson> errJ;
+
+    // 各チームの未チェックID件数
+    private Map<Long, Integer> itemNumberMap;
+
+    // TV未チェック件数
+    private Integer tvCount;
+}
+
+/**
+ * Front Item Master Dto
+ * chiharu-front(React.js)で使用するimのDTOです。
+ * Teamごとに画面表示してる。Wpidとか合わせて表示したいからimだけだと不足するので。
+ */
+@Getter
+@Setter
+class FIMDto {
+
+    private IM im;
+
+    private List<ImVer> verList;
+
+    // TODO: この項目使ってなくない？
+    private Long merge_im_id;
+
+    private Timestamp created_at;
+
+    private Timestamp updated_at;
 }

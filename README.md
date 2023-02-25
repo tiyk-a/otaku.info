@@ -1,8 +1,13 @@
 # オタク.インフォ.v0.1 *Simple as much as possible*
 
-### Compile Command
+### Compile Command (Run it on local)
 ```
 $ mvn package -Drun.jvmArguments="-Dfile.encoding=UTF-8"
+```
+
+### Login remote
+```
+$ ssh -p45678 root@160.251.22.190 -i ~/.ssh/20210628190324.pem
 ```
 
 ### Java Run

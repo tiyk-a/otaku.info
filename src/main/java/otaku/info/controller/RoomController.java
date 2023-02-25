@@ -1,6 +1,7 @@
 package otaku.info.controller;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.joda.time.DateTime;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import otaku.info.dto.RoomLikeDto;
 import otaku.info.entity.RoomItemLike;
 import otaku.info.entity.RoomMyItem;
 import otaku.info.entity.RoomSampleData;
@@ -224,7 +224,14 @@ public class RoomController {
         if (roomSampleData == null) {
             return ResponseEntity.ok(resSet);
         } else {
-            return ResponseEntity.ok(Set.of(roomSampleData.getData1().split(",")));
+            resSet.addAll(Set.of(roomSampleData.getData1().split(",")));
+            if (roomSampleData.getData2() != null && !roomSampleData.getData2().equals("")) {
+                resSet.addAll(Set.of(roomSampleData.getData2().split(",")));
+            }
+            if (roomSampleData.getData3() != null && !roomSampleData.getData3().equals("")) {
+                resSet.addAll(Set.of(roomSampleData.getData3().split(",")));
+            }
+            return ResponseEntity.ok(resSet);
         }
     }
 
@@ -250,6 +257,12 @@ public class RoomController {
             userSet = new HashSet<>();
         } else {
             userSet = new HashSet<>(Set.of(roomSampleData.getData1().split(",")));
+            if (roomSampleData.getData2() != null && !roomSampleData.getData2().equals("")) {
+                userSet.addAll(Set.of(roomSampleData.getData2().split(",")));
+            }
+            if (roomSampleData.getData3() != null && !roomSampleData.getData3().equals("")) {
+                userSet.addAll(Set.of(roomSampleData.getData3().split(",")));
+            }
         }
 
         // https://room.rakuten.co.jp/api/1000001788282356/likes_collect
@@ -288,8 +301,23 @@ public class RoomController {
                         }
                     }
 
-                    String stringUserSet = String.join(",", userSet);
-                    roomSampleData.setData1(stringUserSet);
+                    String userSetString = String.join(",", userSet);
+                    String[] stringUserSet = divideStringIntoArray(userSetString, 65535);
+                    if (stringUserSet[0] != null && !stringUserSet[0].equals("")) {
+                        roomSampleData.setData1(stringUserSet[0]);
+                    }
+
+                    if (stringUserSet.length >=2 && stringUserSet[1] != null && !stringUserSet[1].equals("")) {
+                        roomSampleData.setData2(stringUserSet[1]);
+                    }
+
+                    if (stringUserSet.length >=3 && stringUserSet[2] != null && !stringUserSet[2].equals("")) {
+                        roomSampleData.setData2(stringUserSet[2]);
+                    }
+
+                    if (stringUserSet.length >=4 && stringUserSet[3] != null && !stringUserSet[3].equals("")) {
+                        roomSampleData.setData3(stringUserSet[3]);
+                    }
 
                     roomSampleDataService.save(roomSampleData);
                     roomLikeDto.setCount(count);
@@ -724,6 +752,43 @@ public class RoomController {
         return res;
     }
 
+    /**
+     * Room_Sample_DataのData向け、StringをArrayに分けるメソッド
+     * 長さが収まらない場合はData2にするので2つ目の要素に入れる
+     *
+     * @param targetArr
+     * @param maxLength
+     * @return
+     */
+    private String[] divideStringIntoArray (String targetArr, int maxLength) {
+        String[] resArr;
+        List<String> tmpList = new ArrayList<>();
+
+        if (targetArr.getBytes().length >= maxLength+1) {
+            int beginIndex = 0;
+            int endIndex = maxLength -1;
+            boolean flg = true;
+            while (flg) {
+                if (targetArr.length() >= endIndex +1) {
+                    tmpList.add(targetArr.substring(beginIndex, endIndex));
+                    if (targetArr.length() > endIndex +2) {
+                        beginIndex = beginIndex + maxLength;
+                        endIndex = endIndex + maxLength;
+                    } else {
+                        flg = false;
+                    }
+                } else {
+                    tmpList.add(targetArr.substring(beginIndex, targetArr.length()-1));
+                    flg = false;
+                }
+
+            }
+        } else {
+            tmpList.add(targetArr);
+        }
+        resArr = tmpList.toArray(new String[tmpList.size()]);
+        return resArr;
+    }
 }
 
 /**
@@ -752,4 +817,12 @@ class RoomFront {
 
     // roomSampleDataから最新のいいねカウントがある場合は取得
     int latestLikeCount;
+}
+
+@Data
+class RoomLikeDto {
+
+    public String nextUrl;
+
+    public int count;
 }

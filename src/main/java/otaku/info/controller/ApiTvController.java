@@ -6,6 +6,9 @@ import java.util.*;
 
 import javax.validation.Valid;
 
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -374,4 +377,54 @@ public class ApiTvController {
         }
         return ResponseEntity.ok(true);
     }
+}
+
+/**
+ * フロントでTV関連データを扱うDTO
+ *
+ */
+@Setter
+@Getter
+class PAllDto {
+
+    // 確認前のprogramリスト
+    private List<PDto> p;
+
+    // 確認済みのPMリスト
+    private List<PMDto> pm;
+
+//    private List<RegPMDto> regPmList;
+
+    // 各チームの未チェックID件数
+    private Map<Long, Integer> pNumberMap;
+
+    // ITEM未チェック件数
+    private Integer itemCount;
+}
+
+/**
+ * プログラムのDTO
+ * P_relを合わせて返します
+ */
+@Data
+class PDto {
+
+    private Program program;
+
+    private String station_name;
+
+    /** 関連ありそうなpmを取ってくる"on_air_date title description"を3件くらい */
+    private List<RelPmDto> relPmList;
+}
+
+@Data
+class RelPmDto {
+
+    public Long pm_id;
+
+    public String title;
+
+    public String description;
+
+    public LocalDateTime on_air_date;
 }

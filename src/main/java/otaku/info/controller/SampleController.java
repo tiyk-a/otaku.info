@@ -1,13 +1,13 @@
 package otaku.info.controller;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.api.services.calendar.model.Event;
 import com.sun.istack.Nullable;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -21,9 +21,9 @@ import otaku.info.batch.scheduler.Scheduler;
 import otaku.info.entity.*;
 import otaku.info.enums.PublisherEnum;
 import otaku.info.enums.StationEnum;
-import otaku.info.enums.TeamEnum;
 import otaku.info.service.*;
 import otaku.info.setting.Log4jUtils;
+import otaku.info.twitter.FollowingLookup;
 import otaku.info.utils.StringUtilsMine;
 
 
@@ -68,6 +68,9 @@ public class SampleController {
     CalendarApiController calendarApiController;
 
     @Autowired
+    LineController lineController;
+
+    @Autowired
     private ItemService itemService;
 
     @Autowired
@@ -86,6 +89,11 @@ public class SampleController {
     private StringUtilsMine stringUtilsMine;
 
     @Autowired
+    private RoomController roomController;
+
+//    @Autowired
+//    private FollowingLookup followingLookup;
+    @Autowired
     Scheduler scheduler;
 
     /**
@@ -96,12 +104,20 @@ public class SampleController {
      * @return
      */
     @GetMapping("/tmpMethod/{teamId}/{eId}")
-    public String tempMethod(@PathVariable Long teamId, @PathVariable String eId) throws IOException, GeneralSecurityException {
+    public String tempMethod(@PathVariable Long teamId, @PathVariable String eId) throws IOException, GeneralSecurityException, JSONException, URISyntaxException {
 
         logger.debug("samplecontroller.tmpMethod() START");
-        Event e = calendarApiController.updateEvent(TeamEnum.get(teamId).getCalendarId(), eId, new Date(), new Date(), "test" + Math.random(), "test description", true);
+//        roomController.userIdToName();
+//        followingLookup.test();
+        scheduler.run15();
+//        pythonController.post(7L, "test");
+//        Event e = calendarApiController.updateEvent(TeamEnum.get(teamId).getCalendarId(), eId, new Date(), new Date(), "test" + Math.random(), "test description", true);
         logger.debug("samplecontroller.tmpMethod() END");
-        return "Status: " + e.getStatus() + " id: " + e.getId();
+
+//        Map<String, Object> map = new HashMap<>();
+//        map.put("user_id", "1000001788282356");
+//        roomController.method1(map);
+        return "Status: ";
     }
 
     /**
@@ -111,22 +127,10 @@ public class SampleController {
      */
     @GetMapping("/test")
     public ResponseEntity<Void> sample1() throws JSONException {
-        String res = textController.replaceSignals("前[字]後");
+        IM im = imService.findById(332L);
+        String res = twTextController.futureItemReminder(im, 6L, "http:test.com", true);
         System.out.println(res);
-        // 接続テスト
-//        TwitterController.test();
-//        pythonController.test();
-//        pythonController.post(17L, "test" + System.currentTimeMillis());
         return ResponseEntity.ok().build();
-//        res.se
-//        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//        Font[] allFonts = ge.getAllFonts();
-//
-//        for (Font font : allFonts) {
-//
-//            System.out.println(font.getFontName(Locale.JAPAN));
-//        }
-//        return "ok";
     }
 
     @GetMapping("/batch/{id}/{from}/{to}")
@@ -143,11 +147,6 @@ public class SampleController {
                 PM pm = pmService.findByPmId(Long.parseLong(from));
                 String text = twTextController.tvAlert(pm);
                 System.out.println("alert1:" + text);
-                pythonController.post(17L, text);
-                String text2 = twTextController.tvAlert(pm);
-                System.out.println("alert2:" + text2);
-                pythonController.post(17L, text2);
-//                blogController.chkWpId();
                 break;
             case 4:
                 scheduler.run4();
@@ -162,9 +161,13 @@ public class SampleController {
                 scheduler.run7();
                 break;
             case 8:
+                String res1 = textController.replaceSignals("テスト文字列[再]こんな[字]野津雨[文字]いえ[再度]づんえ[再]けけいうgかん；気にｒｊえおｌ");
+                System.out.println("テスト文字列[再]こんな[字]野津雨[文字]いえ[再度]づんえ[再]けけいうgかん；気にｒｊえおｌ");
+                System.out.println(res1);
 //                scheduler.run8();
                 break;
             case 9:
+                // TV alert
                 scheduler.run9();
                 break;
             case 10:
@@ -245,6 +248,7 @@ public class SampleController {
      * @throws JSONException
      */
     public String searchItem(Long teamId, String name, Long memberId, Long siteId) throws ParseException, InterruptedException {
+        String lineText = "";
         boolean isTeam = memberId == 0L;
 
         List<String> searchList = new ArrayList<String>(Arrays.asList("雑誌", "CD", "DVD"));
@@ -258,6 +262,7 @@ public class SampleController {
 
         // siteIdで処理切り替え
         if (siteId == 1) {
+            lineText = "楽天検索：";
             // ■■■■■　①楽天検索(item_codeを先に取得して、新しいデータだけ詳細を取得してくる)
             List<String> itemCodeList = rakutenController.search(resultList, teamId);
 
@@ -267,11 +272,13 @@ public class SampleController {
                 newItemList = rakutenController.getDetailsByItemCodeList(itemCodeList, teamId);
             }
         } else if (siteId == 2) {
+            lineText = "Yahoo検索：";
             // ■■■■■　Yahoo検索結果を追加(item_codeだけの取得ができないため、がっぽり取得したデータからitem_codeがDBにあるか見て、登録がない場合は詳細をjsonから吸い上げてリストに入れる)
             newItemList.addAll(yahooController.search(resultList, teamId));
         }
 
         logger.debug("新商品候補数：" + newItemList.size());
+        lineText = lineText + "新商品候補数：" + newItemList.size();
         if (newItemList.size() > 0) {
             for (Item item : newItemList) {
                 Item savedItem = itemService.findByItemCode(item.getItem_code()).orElse(null);
@@ -310,6 +317,7 @@ public class SampleController {
         // 保存する商品リストから不要な商品リストを削除する
         newItemList.removeAll(removeList);
         logger.debug("削除商品除いた後の新商品候補数：" + newItemList.size());
+        lineText = lineText + ":" + "削除商品除いた後の新商品候補数：" + newItemList.size();
 
         // 不要商品リストに入った商品を商品テーブルに格納する
         if (removeList.size() > 0) {
@@ -328,6 +336,7 @@ public class SampleController {
 
             logger.debug("保存に成功した商品数: " + savedItemList.size() + "件");
         }
+        lineController.post(new Date().toString() + ":" + lineText);
         return "Ok";
     }
 
